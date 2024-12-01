@@ -35,6 +35,7 @@ class ZyppiApp extends State<Zyppi> {
         localizationsDelegates: context.localizationDelegates,
         supportedLocales: context.supportedLocales,
         locale: context.locale,
+        debugShowCheckedModeBanner: false,
       ),
     );
   }

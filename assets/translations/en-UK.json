@@ -18,5 +18,17 @@
   "phoneVerification": "Phone Verification",
   "enterOtp": "Enter the 6-digit verification code sent to your number",
   "resendCode": "Resend Code",
-  "submit": "Submit"
+  "submit": "Submit",
+
+  "previous": "Prev",
+  "next": "Next",
+  "getStart": "Get Started",
+  "slider1-t": "Your Perfect Pick Awaits! Explore curated selections and find exactly what you need. Discover top products tailored for you with just a tap!",
+  "slider2-t": "Quick, easy, and tailored for you. Explore our top selections, choose what you need, and get it in a flash!",
+  "slider3-t": "Your perfect products, delivered straight to your door. Fast, reliable, and hassle-free. Order now and enjoy convenience at its best!",
+  "slider4-t": "Fast, easy, and hassle-free! Place your order now and enjoy quick delivery straight to your doorstep. Your convenience, our priority!",
+  "slider1-h": "Your Perfect Pick Awaits!",
+  "slider2-h": "Pickup Products",
+  "slider3-h": "Doorstep Delivery",
+  "slider4-h": "Get Your Order"
 }
