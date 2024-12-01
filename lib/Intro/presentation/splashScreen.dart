@@ -6,7 +6,9 @@ class Splashscreen extends StatelessWidget {
     // TODO: implement build
     return Scaffold(
       appBar: AppBar(),
-      body: Scaffold(),
+      body: const Scaffold(
+        backgroundColor: Colors.red,
+      ),
     );
   }
 }
