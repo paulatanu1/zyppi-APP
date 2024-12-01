@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class SliderOne extends StatelessWidget {
@@ -6,7 +7,7 @@ class SliderOne extends StatelessWidget {
     // TODO: implement build
     return Scaffold(
       body: Center(
-        child: Text('Slider 1'),
+        child: Text('perfectPick'.tr()),
       ),
     );
   }
