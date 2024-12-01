@@ -1,21 +1,33 @@
-import 'package:easy_localization/easy_localization.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+import 'package:zippy/Utils/routes.dart';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+
+  @override
+  void initState() {
+    super.initState();
+    Timer(Duration(seconds: 3), () {
+      context.go('/Slider');
+
+    });
+  }
+
+
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-      ),
-      body: Container(
-        height: 20.h,
-        width: 20.w,
-
-        child: Center(
-          child: Text('submit'.tr(), style: TextStyle(fontSize: 5.sp),),
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Image.asset(
+          'assets/images/splash_image.png',
         ),
       ),
     );
