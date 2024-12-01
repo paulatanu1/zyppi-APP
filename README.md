@@ -2,4 +2,4 @@
 Quick Commerce android-app and IOS-app
 
 
-Flutter - 3.24.1
+Flutter - 3.24.3

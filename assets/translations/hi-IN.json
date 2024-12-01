@@ -1,0 +1,22 @@
+{
+    "perfectPick": "आपकी उत्तम पसंद प्रतीक्षारत है!",
+    "perfectPickDescription": "आपकी उत्तम पसंद प्रतीक्षारत है! ",
+    "pickupProducts": "पिकअप उत्पाद",
+    "pickupProductsDescription": "त्वरित, आसान और आपके लिए तैयार किया गया। ",
+    "doorstepDelivery": "डोरस्टेप डिलिवरी",
+    "doorstepDeliveryDescription": "आपके उत्तम उत्पाद, सीधे आपके दरवाजे पर पहुंचाए गए। ",
+    "getYourOrder": "अपना ऑर्डर प्राप्त करें",
+    "getYourOrderDescription": "तेज़, आसान और परेशानी मुक्त! ",
+    "getYour": "अपना प्राप्त करें",
+    "delivery": "वितरण",
+    "signInWithGoogle": "Google से साइन इन करें",
+    "continueWith": "- या जारी रखें -",
+    "phoneNumber": "फ़ोन नंबर",
+    "login": "लॉग इन करें",
+    "createAnAccount": "खाता बनाएं",
+    "otpVerification": "ओटीपी सत्यापन",
+    "phoneVerification": "फ़ोन सत्यापन",
+    "enterOtp": "आपके नंबर पर भेजा गया 6 अंकों का सत्यापन कोड दर्ज करें",
+    "resendCode": "पुन: कोड भेजे",
+    "submit": "जमा करना"
+  }

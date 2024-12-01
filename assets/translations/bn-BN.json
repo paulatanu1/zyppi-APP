@@ -1,0 +1,22 @@
+{
+    "perfectPick": "আপনার নিখুঁত বাছাই অপেক্ষা করছে!",
+    "perfectPickDescription": "আপনার নিখুঁত বাছাই অপেক্ষা করছে! ",
+    "pickupProducts": "পিকআপ পণ্য",
+    "pickupProductsDescription": "দ্রুত, সহজ, এবং আপনার জন্য উপযোগী. ",
+    "doorstepDelivery": "ডোরস্টেপ ডেলিভারি",
+    "doorstepDeliveryDescription": "আপনার নিখুঁত পণ্য, আপনার দরজা সরাসরি বিতরণ. ",
+    "getYourOrder": "আপনার অর্ডার পান",
+    "getYourOrderDescription": "দ্রুত, সহজ, এবং ঝামেলা-মুক্ত! ",
+    "getYour": "আপনার পান",
+    "delivery": "বিতরণ",
+    "signInWithGoogle": "Google দিয়ে সাইন ইন করুন",
+    "continueWith": "- অথবা এর সাথে চালিয়ে যান -",
+    "phoneNumber": "ফোন নম্বর",
+    "login": "লগইন করুন",
+    "createAnAccount": "একটি অ্যাকাউন্ট তৈরি করুন",
+    "otpVerification": "OTP যাচাইকরণ",
+    "phoneVerification": "ফোন যাচাইকরণ",
+    "enterOtp": "আপনার নম্বরে পাঠানো 6-সংখ্যার যাচাইকরণ কোডটি লিখুন",
+    "resendCode": "কোড পুনরায় পাঠান",
+    "submit": "জমা দিন"
+  }
