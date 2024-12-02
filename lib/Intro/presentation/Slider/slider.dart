@@ -18,10 +18,10 @@ class _SliderState extends State<Slider> {
   // Define data for each step
   final List<String> stepIndicators = ['1/4', '2/4', '3/4', '4/4'];
   final List<String> images = [
-    'assets/images/Splash-1.png',
-    'assets/images/Splash-2.png',
-    'assets/images/Splash-3.png',
-    'assets/images/Splash-4.png',
+    'assets/icons/Splash-1.png',
+    'assets/icons/Splash-2.png',
+    'assets/icons/Splash-3.png',
+    'assets/icons/Splash-4.png',
   ];
   final List<String> text2 = [
     'slider1-t'.tr(),
