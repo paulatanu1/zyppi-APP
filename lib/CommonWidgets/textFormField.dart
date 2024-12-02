@@ -15,10 +15,9 @@ class TextformField extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(left: 30.sp, right: 30.sp),
       decoration: BoxDecoration(
-        color: AppColors.textFormFieldColor,
-        borderRadius: BorderRadius.circular(30.sp)
-        ),
-      child: TextFormField(
+          color: AppColors.textFormFieldColor,
+          borderRadius: BorderRadius.circular(30.sp)),
+      child: TextField(
         controller: textFormFieldController,
         decoration: InputDecoration(
           hintText: labelText,

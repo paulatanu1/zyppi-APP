@@ -88,7 +88,7 @@ class _SliderState extends State<Slider> {
                   ],
                 ),
               ),
-                
+
               SizedBox(
                 height: 200.h,
                 width: double.infinity,
@@ -96,7 +96,7 @@ class _SliderState extends State<Slider> {
                   images[currentStep],
                 ),
               ),
-                
+
               Text(
                 text1[currentStep],
                 style: TextStyle(
@@ -104,7 +104,7 @@ class _SliderState extends State<Slider> {
                     color: AppColors.black,
                     fontWeight: FontWeight.bold),
               ),
-                
+
               SizedBox(
                 height: 5.h,
               ),
@@ -118,7 +118,7 @@ class _SliderState extends State<Slider> {
                     fontFamily: "Montserrat"),
               ),
               Spacer(),
-                
+
               // Navigation Buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
