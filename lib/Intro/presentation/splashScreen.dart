@@ -1,36 +1,33 @@
-import 'dart:developer';
-import 'package:easy_localization/easy_localization.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:zippy/CommonWidgets/googleSignInButton.dart';
-import 'package:zippy/CommonWidgets/primaryButton.dart';
-import 'package:zippy/CommonWidgets/textFormField.dart';
+import 'package:go_router/go_router.dart';
+import 'package:zippy/Utils/routes.dart';
 
-class SplashScreen extends StatelessWidget {
-  TextEditingController controller = TextEditingController();
-  
+class SplashScreen extends StatefulWidget {
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+
+  @override
+  void initState() {
+    super.initState();
+    Timer(Duration(seconds: 3), () {
+      context.go('/Slider');
+
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-      ),
+      backgroundColor: Colors.white,
       body: Center(
-        child: Padding(
-          padding: EdgeInsets.only(left: 30.sp, right: 30.sp),
-          child: Column(
-            children: [
-              GoogleSignInButton(action: () => log('Google Sign In')),
-              SizedBox(height: 20.h),
-              PrimaryButton(
-                  buttonTitle: 'login'.tr(), action: () => log('Clicked')),
-                  SizedBox(height: 20),
-              TextformField(textFormFieldController: controller, labelText: 'phoneNumber'.tr()),
-              SizedBox(height: 20.h)
-            ],
-          ),
+        child: Image.asset(
+          'assets/icons/splash_image.png',
         ),
       ),
     );
