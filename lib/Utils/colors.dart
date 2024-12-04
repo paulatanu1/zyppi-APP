@@ -6,10 +6,15 @@ class AppColors {
   static const Color googleSignInShadowColor = Colors.grey;
   static const Color textFormFieldColor = Color.fromARGB(255, 207, 207, 207);
   static const Color hintTextColor = Color(0xFF676767);
+  static const Color hintTextColor1 = Color(0xFFF3F3F3);
   static const Color unselectedOTP = Color.fromRGBO(248, 55, 88, 0.33);
   static const Color selectedOTP = Color(0xFFF32AA0);
+  static const Color selectedOTP1 = Color(0xFFF83758);
   static const Color white = Color(0xFFFFFFFF);
   static const Color deepBlue = Color(0xFF3158E9);
   static const Color black = Color(0xFF000000);
   static const Color grey = Color(0xFFA8A8A9);
+  static const Color grey1 = Color(0xFF575757);
+  static const Color deepBlue1 = Color(0xFF1541E6);
+  static const Color lightBlue = Color(0xFF597AF1);
 }

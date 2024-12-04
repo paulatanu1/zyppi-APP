@@ -1,27 +1,31 @@
 import 'package:go_router/go_router.dart';
-import 'package:zippy/Auth/Login/presentation/signUpScreen.dart';
+import 'package:zippy/Auth/Login/presentation/loginScreen.dart';
+import 'package:zippy/Auth/OTPVerification/presentation/otpVerificationScreen.dart';
 import 'package:zippy/Intro/presentation/Slider/slider.dart';
 import 'package:zippy/Intro/presentation/splashScreen.dart';
 
-class AppRoutes {
-  final GoRouter router = GoRouter(
-      initialLocation: '/Slider',
-      routes: <RouteBase>[
+//class AppRoutes {
+  final GoRouter router =
+      GoRouter(initialLocation: '/Slider', routes: <RouteBase>[
+    // GoRoute(
+    //   path: '/',
+    //   name: 'splash',
+    //   builder: (context, state) => SplashScreen(),
+    // ),
     GoRoute(
-      path: '/',
-      name: 'splash',
-      builder: (context, state) => SplashScreen(),
-    ),
-    GoRoute(
-      path: '/Slider',
+      path: '/slider',
       name: 'Slider',
       builder: (context, state) => Slider(),
     ),
     GoRoute(
-      path: '/signupScreen',
-      name: 'SignupScreen',
-      builder: (context, state) => SignupScreen(),
+      path: '/loginScreen',
+      name: 'LoginScreen',
+      builder: (context, state) => LoginScreen(),
     ),
-
+    GoRoute(
+      path: '/otpVerificationScreen',
+      name: 'OtpVerificationScreen',
+      builder: (context, state) => OtpVerificationScreen(),
+    ),
   ]);
-}
+//}

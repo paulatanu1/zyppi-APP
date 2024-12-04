@@ -13,8 +13,9 @@
   "continueWith": "- OR Continue with -",
   "phoneNumber": "Phone Number",
   "login": "Login",
-  "createAnAccount": "Create An Account",
-  "otpVerification": "OTP Verification",
+  "createAnAccount": "Create An Account ",
+  "signUp": "Sign Up",
+  "otpVerification": "OTP \nVerification",
   "phoneVerification": "Phone Verification",
   "enterOtp": "Enter the 6-digit verification code sent to your number",
   "resendCode": "Resend Code",
@@ -31,4 +32,6 @@
   "slider2-h": "Pickup Products",
   "slider3-h": "Doorstep Delivery",
   "slider4-h": "Get Your Order"
+
+
 }
