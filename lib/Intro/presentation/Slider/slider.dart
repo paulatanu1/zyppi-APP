@@ -24,16 +24,16 @@ class _SliderState extends State<Slider> {
     'assets/images/Splash-4.png',
   ];
   final List<String> text2 = [
-    'slider1-t'.tr(),
-    'slider2-t'.tr(),
-    'slider3-t'.tr(),
-    'slider4-t'.tr(),
+    'perfectPickDescription'.tr(),
+    'pickupProductsDescription'.tr(),
+    'doorstepDeliveryDescription'.tr(),
+    'getYourOrderDescription'.tr(),
   ];
   final List<String> text1 = [
-    'slider1-h'.tr(),
-    'slider2-h'.tr(),
-    'slider3-h'.tr(),
-    'slider4-h'.tr(),
+    'perfectPick'.tr(),
+    'pickupProducts'.tr(),
+    'doorstepDelivery'.tr(),
+    'getYourOrder'.tr(),
   ];
 
   // Navigate to the next step
@@ -59,7 +59,8 @@ class _SliderState extends State<Slider> {
     return Scaffold(
       backgroundColor: AppColors.white,
       body: Padding(
-        padding: EdgeInsets.only(left: 20.0, right: 20, top: 30, bottom: 30),
+        padding:
+            EdgeInsets.only(left: 20.0.w, right: 20.w, top: 30.h, bottom: 30.h),
         child: SafeArea(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -90,7 +91,7 @@ class _SliderState extends State<Slider> {
               ),
 
               SizedBox(
-                height: 220.h,
+                height: 200.h,
                 width: double.infinity,
                 child: Image.asset(
                   images[currentStep],
