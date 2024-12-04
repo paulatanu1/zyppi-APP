@@ -9,14 +9,13 @@ void main() async {
   await EasyLocalization.ensureInitialized();
 
   runApp(EasyLocalization(
-
-      supportedLocales: const [
-        Locale('en', 'UK'),
-        Locale('bn', 'BN'),
-        Locale('hi', 'IN'),
-        Locale('pa', 'Guru')
-      ],
-      path: Constants.translationPath,
+    supportedLocales: const [
+      Locale('en', 'UK'),
+      Locale('bn', 'BN'),
+      Locale('hi', 'IN'),
+      Locale('pa', 'Guru')
+    ],
+    path: Constants.translationPath,
     child: Zyppi(),
   ));
 }
@@ -42,8 +41,6 @@ void main() async {
 //     );
 //   }
 // }
-
-
 
 class Zyppi extends StatelessWidget {
   @override

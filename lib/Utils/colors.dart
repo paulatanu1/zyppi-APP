@@ -17,4 +17,24 @@ class AppColors {
   static const Color grey1 = Color(0xFF575757);
   static const Color deepBlue1 = Color(0xFF1541E6);
   static const Color lightBlue = Color(0xFF597AF1);
+
+  //Category Card Colors
+  static const List<Map<String, dynamic>> categoryColors = [
+    {
+      'categoryCard': Color.fromRGBO(83, 177, 117, 0.1),
+      'categoryCardBorder': Color.fromRGBO(83, 177, 117, 1)
+    },
+    {
+      'categoryCard': Color.fromRGBO(255, 236, 247, 1),
+      'categoryCardBorder': Color.fromRGBO(251, 84, 182, 1)
+    },
+    {
+      'categoryCard': Color.fromRGBO(248, 164, 76, 0.1),
+      'categoryCardBorder': Color.fromRGBO(250, 189, 124, 1)
+    },
+    {
+      'categoryCard': Color.fromRGBO(237, 247, 253, 1),
+      'categoryCardBorder': Color.fromRGBO(82, 186, 244, 1)
+    }
+  ];
 }
