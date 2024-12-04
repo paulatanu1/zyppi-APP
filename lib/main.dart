@@ -9,29 +9,50 @@ void main() async {
   await EasyLocalization.ensureInitialized();
 
   runApp(EasyLocalization(
-      child: Zyppi(),
+
       supportedLocales: const [
         Locale('en', 'UK'),
         Locale('bn', 'BN'),
         Locale('hi', 'IN'),
         Locale('pa', 'Guru')
       ],
-      path: Constants.translationPath));
+      path: Constants.translationPath,
+    child: Zyppi(),
+  ));
 }
 
-class Zyppi extends StatefulWidget {
-  ZyppiApp createState() => ZyppiApp();
-}
+// class Zyppi extends StatefulWidget {
+//   ZyppiApp createState() => ZyppiApp();
+// }
+//
+// class ZyppiApp extends State<Zyppi> {
+//   @override
+//   Widget build(BuildContext context) {
+//     // TODO: implement build
+//     return ScreenUtilInit(
+//       designSize: Size(MediaQuery.of(context).size.height,
+//           MediaQuery.of(context).size.width),
+//       builder: (context, child) => MaterialApp.router(
+//         routerConfig: AppRoutes().router,
+//         localizationsDelegates: context.localizationDelegates,
+//         supportedLocales: context.supportedLocales,
+//         locale: context.locale,
+//         debugShowCheckedModeBanner: false,
+//       ),
+//     );
+//   }
+// }
 
-class ZyppiApp extends State<Zyppi> {
+
+
+class Zyppi extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return ScreenUtilInit(
       designSize: Size(MediaQuery.of(context).size.height,
           MediaQuery.of(context).size.width),
       builder: (context, child) => MaterialApp.router(
-        routerConfig: AppRoutes().router,
+        routerConfig: router,
         localizationsDelegates: context.localizationDelegates,
         supportedLocales: context.supportedLocales,
         locale: context.locale,

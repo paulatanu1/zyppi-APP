@@ -15,7 +15,7 @@ class TextformField extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(left: 30.sp, right: 30.sp),
       decoration: BoxDecoration(
-          color: AppColors.textFormFieldColor,
+          color: AppColors.hintTextColor1,
           borderRadius: BorderRadius.circular(30.sp)),
       child: TextField(
         controller: textFormFieldController,
@@ -23,7 +23,7 @@ class TextformField extends StatelessWidget {
           hintText: labelText,
           hintStyle: TextStyle(color: AppColors.hintTextColor),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 25.w, vertical: 9.h),
+          contentPadding: EdgeInsets.symmetric(horizontal: 50.w, vertical: 9.h),
         ),
       ),
     );

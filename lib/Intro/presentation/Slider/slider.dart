@@ -18,10 +18,10 @@ class _SliderState extends State<Slider> {
   // Define data for each step
   final List<String> stepIndicators = ['1/4', '2/4', '3/4', '4/4'];
   final List<String> images = [
-    'assets/icons/Splash-1.png',
-    'assets/icons/Splash-2.png',
-    'assets/icons/Splash-3.png',
-    'assets/icons/Splash-4.png',
+    'assets/images/Splash-1.png',
+    'assets/images/Splash-2.png',
+    'assets/images/Splash-3.png',
+    'assets/images/Splash-4.png',
   ];
   final List<String> text2 = [
     'slider1-t'.tr(),
@@ -74,7 +74,7 @@ class _SliderState extends State<Slider> {
                       style: TextStyle(
                         fontSize: 40.sp,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black, // Default color for the number
+                        color: AppColors.black, // Default color for the number
                       ),
                     ),
                     TextSpan(
@@ -82,7 +82,7 @@ class _SliderState extends State<Slider> {
                       style: TextStyle(
                           fontSize: 40.sp,
                           fontWeight: FontWeight.bold,
-                          color: Colors.grey,
+                          color: AppColors.grey,
                           fontFamily: "Montserrat"),
                     ),
                   ],
@@ -90,7 +90,7 @@ class _SliderState extends State<Slider> {
               ),
 
               SizedBox(
-                height: 200.h,
+                height: 220.h,
                 width: double.infinity,
                 child: Image.asset(
                   images[currentStep],
@@ -100,7 +100,7 @@ class _SliderState extends State<Slider> {
               Text(
                 text1[currentStep],
                 style: TextStyle(
-                    fontSize: 55.sp,
+                    fontSize: 50.sp,
                     color: AppColors.black,
                     fontWeight: FontWeight.bold),
               ),
@@ -112,7 +112,7 @@ class _SliderState extends State<Slider> {
                 text2[currentStep],
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    fontSize: 35.sp,
+                    fontSize: 30.sp,
                     color: AppColors.grey,
                     fontWeight: FontWeight.w600,
                     fontFamily: "Montserrat"),
@@ -158,7 +158,7 @@ class _SliderState extends State<Slider> {
                   currentStep == 3
                       ? Bounce(
                           onPressed: () {
-                            context.go('/signupScreen');
+                            context.go('/loginScreen');
                           },
                           duration: Duration(milliseconds: 200),
                           child: Text(

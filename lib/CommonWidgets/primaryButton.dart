@@ -16,7 +16,7 @@ class PrimaryButton extends StatelessWidget {
       child: Container(
         height: 30.h,
         width: double.infinity,
-        margin: EdgeInsets.only(left: 30.sp, right: 30.sp),
+        margin: EdgeInsets.only(left: 00.sp, right: 00.sp),
         decoration: BoxDecoration(
             color: AppColors.primaryButtonColor,
             borderRadius: BorderRadius.circular(45.sp)),
