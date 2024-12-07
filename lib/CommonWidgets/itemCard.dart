@@ -14,63 +14,68 @@ class ItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // TODO: implement build
     return Container(
-      height: 120.h,
+      //height: 120.h,
       width: 360.w,
-      margin: EdgeInsets.only(left: 10.w, top: 10.h, right: 10.w),
-      padding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 25.w),
+      //margin: EdgeInsets.only(left: 10.w, top: 10.h, right: 10.w),
+      //padding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 25.w),
       decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(50.sp),
           border: Border.all(color: AppColors.grey)),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Flexible(
-            flex: 3,
-            fit: FlexFit.loose,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Image.asset('assets/images/item.png'),
-                Text(productName ?? '',
-                    // textAlign: TextAlign.start,
-                    style: TextStyle(
-                        fontSize: 30.sp,
-                        color: AppColors.black,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Poppins')),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Text(quantity ?? '',
-                        style: TextStyle(
-                            fontSize: 30.sp,
-                            color: AppColors.grey,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Poppins')),
-                  ],
-                )
-              ],
+      child: Padding(
+        padding:  EdgeInsets.all(5.h),
+        child: Column(
+         // mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Flexible(
+              flex: 3,
+              fit: FlexFit.loose,
+              child: Column(
+                //mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(child: Image.asset('assets/images/item.png')),
+                   SizedBox(height: 5.h,),
+                  Text(productName ?? '',
+                      // textAlign: TextAlign.start,
+                      style: TextStyle(
+                          fontSize: 30.sp,
+                          color: AppColors.black,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Poppins')),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text(quantity ?? '',
+                          style: TextStyle(
+                              fontSize: 30.sp,
+                              color: AppColors.grey,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Poppins')),
+                    ],
+                  )
+                ],
+              ),
             ),
-          ),
-          Flexible(
-            flex: 1,
-            fit: FlexFit.tight,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('₹${price ?? ''}',
-                    style: TextStyle(
-                        fontSize: 40.sp,
-                        color: AppColors.black,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Poppins')),
-                AddButton()
-              ],
-            ),
-          )
-        ],
+            Flexible(
+              flex: 1,
+              fit: FlexFit.tight,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('₹${price ?? ''}',
+                      softWrap: true,
+                      style: TextStyle(
+                          fontSize: 40.sp,
+                          color: AppColors.black,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Poppins')),
+                  AddButton()
+                ],
+              ),
+            )
+          ],
+        ),
       ),
     );
   }

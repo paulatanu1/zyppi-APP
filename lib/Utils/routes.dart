@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:zippy/Auth/Login/presentation/loginScreen.dart';
 import 'package:zippy/Auth/OTPVerification/presentation/otpVerificationScreen.dart';
+import 'package:zippy/Explore/presentation/exploreScreen.dart';
 import 'package:zippy/HomeScreen/presentation/homeScreen.dart';
 import 'package:zippy/Intro/presentation/Slider/slider.dart';
 
@@ -32,5 +33,10 @@ import 'package:zippy/Intro/presentation/Slider/slider.dart';
       name: 'HomeScreen',
       builder: (context, state) => HomeScreen(),
     ),
+        GoRoute(
+          path: '/exploreScreen',
+          name: 'ExploreScreen',
+          builder: (context, state) => ExploreScreen(),
+        ),
   ]);
 //}

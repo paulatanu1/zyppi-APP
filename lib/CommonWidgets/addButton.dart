@@ -7,15 +7,15 @@ class AddButton extends StatelessWidget {
   Widget build(BuildContext context) {
     // TODO: implement build
     return Container(
-      height: double.infinity,
+      //height: 50.h,
       width: 110.w,
       margin: EdgeInsets.only(top: 2.h, bottom: 2.h),
       decoration: BoxDecoration(
         color: AppColors.primaryButtonColor,
-        borderRadius: BorderRadius.circular(40.sp),
+        borderRadius: BorderRadius.circular(35.sp),
       ),
       child: Center(
-        child: Icon(Icons.add, color: AppColors.white)
+        child: Icon(Icons.add, color: AppColors.white,)
       ),
     );
   }

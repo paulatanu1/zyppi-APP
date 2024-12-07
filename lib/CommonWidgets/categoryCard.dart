@@ -54,13 +54,16 @@ class CategoryCard extends StatelessWidget {
         children: [
           Image.asset('assets/images/category.png'),
           SizedBox(height: 10.h),
-          Text(categoryText,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  fontSize: 30.sp,
-                  color: AppColors.black,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Poppins'))
+          Padding(
+            padding:  EdgeInsets.all(5.h),
+            child: Text(categoryText,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 30.sp,
+                    color: AppColors.black,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Poppins')),
+          )
         ],
       ),
     );

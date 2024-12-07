@@ -36,6 +36,7 @@ dependencies:
   otp_text_field: ^1.1.3
   flutter_bounce: ^1.1.0
   flutter_otp_text_field: ^1.2.0
+  carousel_slider: ^5.0.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -126,7 +127,13 @@ flutter:
       - asset: assets/fonts/Poppins/Poppins-SemiBold.ttf
         weight: 600
       - asset: assets/fonts/Poppins/Poppins-Thin.ttf
-        weight: 100  
+        weight: 100
+  - family: Righteous
+    fonts:
+      - asset: assets/fonts/Righteous/Righteous-Regular.ttf
+  - family: Aclonica
+    fonts:
+      - asset: assets/fonts/Aclonica/Aclonica-Regular.ttf
 
   #   - family: Trajan Pro
   #     fonts:

@@ -24,7 +24,18 @@
 
   "previous": "Prev",
   "next": "Next",
-  "getStart": "Get Started"
+  "getStart": "Get Started",
+
+  "category": "Categories",
+  "seeAll": "See all",
+  "lowestIn": "Lowest in ",
+  "deliveryTo": "Delivery to ",
+  "home": "Home",
+
+  "findProducts": "Find Products",
+  "searchStore": "Search Store"
+
+
 
 
 }
