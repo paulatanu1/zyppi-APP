@@ -89,35 +89,82 @@ class _SliderState extends State<Slider> {
                   ],
                 ),
               ),
-
-              SizedBox(
-                height: 200.h,
-                width: double.infinity,
+              AnimatedSwitcher(
+                duration: Duration(milliseconds: 500),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: ScaleTransition(
+                      scale: animation,
+                      child: child,
+                    ),
+                  );
+                },
                 child: Image.asset(
                   images[currentStep],
+                  key: ValueKey<int>(currentStep),
+                  height: 200.h,
+                  width: double.infinity,
+                  fit: BoxFit.contain,
                 ),
               ),
 
-              Text(
-                text1[currentStep],
-                style: TextStyle(
-                    fontSize: 50.sp,
-                    color: AppColors.black,
-                    fontWeight: FontWeight.bold),
+              // For the main text (text1[currentStep])
+              AnimatedSwitcher(
+                duration: Duration(milliseconds: 500),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: Offset(0.0, 0.5), // Start from below
+                        end: Offset(0.0, 0.0),   // End at the original position
+                      ).animate(animation),
+                      child: child,
+                    ),
+                  );
+                },
+                child: Text(
+                  text1[currentStep],
+                  key: ValueKey<int>(currentStep), // Unique key for each step
+                  style: TextStyle(
+                      fontSize: 50.sp,
+                      color: AppColors.black,
+                      fontWeight: FontWeight.bold),
+                ),
               ),
 
               SizedBox(
                 height: 5.h,
               ),
-              Text(
-                text2[currentStep],
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontSize: 30.sp,
-                    color: AppColors.grey,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: "Montserrat"),
+
+
+              AnimatedSwitcher(
+                duration: Duration(milliseconds: 500),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: Offset(0.0, 0.5), // Start from below
+                        end: Offset(0.0, 0.0),   // End at the original position
+                      ).animate(animation),
+                      child: child,
+                    ),
+                  );
+                },
+                child: Text(
+                  text2[currentStep],
+                  key: ValueKey<int>(currentStep), // Unique key for each step
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 30.sp,
+                      color: AppColors.grey,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: "Montserrat"),
+                ),
               ),
+
               Spacer(),
 
               // Navigation Buttons

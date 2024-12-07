@@ -5,6 +5,7 @@ class AppColors {
   static const Color googleSignInButtonColor = Color(0xFFF6F5F5);
   static const Color googleSignInShadowColor = Colors.grey;
   static const Color textFormFieldColor = Color.fromARGB(255, 207, 207, 207);
+  static const Color blue = Color(0xFF05416F);
   static const Color hintTextColor = Color(0xFF676767);
   static const Color hintTextColor1 = Color(0xFFF3F3F3);
   static const Color unselectedOTP = Color.fromRGBO(248, 55, 88, 0.33);
@@ -17,6 +18,15 @@ class AppColors {
   static const Color grey1 = Color(0xFF575757);
   static const Color deepBlue1 = Color(0xFF1541E6);
   static const Color lightBlue = Color(0xFF597AF1);
+  static const Color green = Color(0xFF53B175);
+  static  LinearGradient gradientHomeBackGround = LinearGradient(
+    begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+    Colors.blueAccent.withOpacity(0.6),
+    Colors.white,
+    Colors.white
+  ]);
 
   //Category Card Colors
   static const List<Map<String, dynamic>> categoryColors = [

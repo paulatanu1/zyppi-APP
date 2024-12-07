@@ -38,7 +38,7 @@ class _TextformFieldState extends State<TextformField> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(left: 30.sp, right: 30.sp),
+      //margin: EdgeInsets.only(left: 30.sp, right: 30.sp),
       decoration: BoxDecoration(
           color: AppColors.hintTextColor1,
           borderRadius: BorderRadius.circular(30.sp)),
