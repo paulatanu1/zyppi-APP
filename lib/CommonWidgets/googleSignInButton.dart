@@ -14,8 +14,8 @@ class GoogleSignInButton extends StatelessWidget {
     return GestureDetector(
       onTap: action,
       child: Container(
-        height: 22.h,
-        width: 400.w,
+        height: 20.h,
+        width: 350.w,
         padding: EdgeInsets.only(left: 15.sp, right: 15.sp),
         decoration: BoxDecoration(
           color: AppColors.googleSignInButtonColor,
@@ -26,7 +26,7 @@ class GoogleSignInButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             Image.asset('assets/icons/googleIcon.png'),
-            Text('signInWithGoogle'.tr(), style: TextStyle(fontSize: 30.sp, fontWeight: FontWeight.bold))
+            Text('signInWithGoogle'.tr(), style: TextStyle(fontSize: 25.sp, fontWeight: FontWeight.bold))
           ],
         ),
       ),

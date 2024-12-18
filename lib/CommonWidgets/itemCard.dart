@@ -14,28 +14,35 @@ class ItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // TODO: implement build
     return Container(
-      //height: 120.h,
-      width: 360.w,
+      // height: 120.h,
+      // width: 360.w,
       //margin: EdgeInsets.only(left: 10.w, top: 10.h, right: 10.w),
       //padding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 25.w),
       decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(50.sp),
           border: Border.all(color: AppColors.grey)),
       child: Padding(
-        padding:  EdgeInsets.all(5.h),
+        padding:
+            EdgeInsets.only(left: 18.w, top: 10.h, right: 18.w, bottom: 2.h),
         child: Column(
-         // mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          // mainAxisAlignment: MainAxisAlignment.center,
+          // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+
+          // crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Flexible(
-              flex: 3,
+              flex: 4,
               fit: FlexFit.loose,
               child: Column(
-                //mainAxisAlignment: MainAxisAlignment.center,
+                // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Center(child: Image.asset('assets/images/item.png')),
-                   SizedBox(height: 5.h,),
+                  Center(
+                      child: Image.asset('assets/images/item.png',
+                          height: 180.w, width: 180.w)),
+                  SizedBox(
+                    height: 4.h,
+                  ),
                   Text(productName ?? '',
                       // textAlign: TextAlign.start,
                       style: TextStyle(

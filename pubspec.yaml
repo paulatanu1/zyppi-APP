@@ -134,6 +134,9 @@ flutter:
   - family: Aclonica
     fonts:
       - asset: assets/fonts/Aclonica/Aclonica-Regular.ttf
+  - family: AirbnbCereal
+    fonts:
+      - asset: assets/fonts/AirbnbCereal/AirbnbCereal-Regular.otf    
 
   #   - family: Trajan Pro
   #     fonts:
