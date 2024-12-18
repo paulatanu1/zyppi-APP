@@ -23,8 +23,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.only(
-                top: 40.0, left: 20, right: 20, bottom: 20),
+            padding: EdgeInsets.only(
+                top: 20.h, left: 40.w, right: 40.w, bottom: 20.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -33,7 +33,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   style: TextStyle(
                       fontFamily: "Montserrat",
                       fontSize: 70.sp,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w700,
                       color: AppColors.black),
                 ),
                 SizedBox(
@@ -44,7 +44,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   style: TextStyle(
                       fontFamily: "Montserrat",
                       fontSize: 50.sp,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w700,
                       color: AppColors.black),
                 ),
                 SizedBox(
@@ -59,14 +59,17 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       color: AppColors.grey1),
                 ),
                 SizedBox(
-                  height: 15.h,
+                  height: 20.h,
                 ),
                 OtpTextField(
-                  numberOfFields: 6,
-                  fieldWidth: 110.sp,
+                  numberOfFields: 4,
+                  fieldWidth: 110.w,
+                  // fieldWidth: 95.w,
+                  // fieldHeight: 180.w,
+                  margin: EdgeInsets.all(10.sp),
                   focusedBorderColor: AppColors.selectedOTP,
                   enabledBorderColor: AppColors.selectedOTP1,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(18.sp),
                   borderWidth: 1,
                   showFieldAsBox: true,
                   onCodeChanged: (String code) {},
@@ -93,7 +96,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       color: AppColors.lightBlue),
                 ),
                 SizedBox(
-                  height: 70.h,
+                  height: 50.h,
                 ),
                 PrimaryButton(
                     buttonTitle: 'submit'.tr(),

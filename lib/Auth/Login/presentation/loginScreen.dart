@@ -17,7 +17,6 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
-
     final TextEditingController phoneController = TextEditingController();
 
     return Scaffold(
@@ -26,7 +25,8 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SingleChildScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Padding(
-            padding: const EdgeInsets.only(top: 40.0, left: 20, right: 20, bottom: 20),
+            padding: EdgeInsets.only(
+                top: 20.h, left: 40.w, right: 40.w, bottom: 20.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -46,60 +46,37 @@ class _LoginScreenState extends State<LoginScreen> {
                       fontWeight: FontWeight.w700,
                       color: AppColors.selectedOTP),
                 ),
-                SizedBox(height: 40.h,),
+                SizedBox(height: 25.h),
                 Center(
                   child: GoogleSignInButton(
                     action: () {},
                   ),
                 ),
-                SizedBox(height: 30.h,),
+                SizedBox(
+                  height: 30.h,
+                ),
                 Center(
                   child: Text('continueWith'.tr(),
                       style: TextStyle(
                         fontFamily: "Montserrat",
-                        fontSize: 30.sp,
+                        fontSize: 25.sp,
                         fontWeight: FontWeight.w500,
                         color: AppColors.grey1,
                       )),
                 ),
-
-                SizedBox(height: 30.h,),
-
+                SizedBox(height: 35.h),
                 TextformField(
                   labelText: 'phoneNumber'.tr(),
                   textFormFieldController: phoneController,
                 ),
-                SizedBox(height: 50.h,),
-
+                SizedBox(
+                  height: 40.h,
+                ),
                 PrimaryButton(
                     buttonTitle: 'login'.tr(),
-                    action: (){
+                    action: () {
                       context.go('/otpVerificationScreen');
-                    }
-                ),
-                SizedBox(height: 25.h,),
-
-                Center(
-                  child: RichText(
-                    text: TextSpan(
-                      text: 'createAnAccount'.tr(),
-                      style: TextStyle(
-                          fontWeight: FontWeight.w400,
-                          fontSize: 30.sp,
-                          color: AppColors.grey1,
-                          fontFamily: "Montserrat"
-                      ),
-                      children: <TextSpan>[
-                        TextSpan(text: 'signUp'.tr(), style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontFamily: "Montserrat",
-                            color: AppColors.deepBlue1,
-                            fontSize: 30.sp
-                        )),
-                      ],
-                    ),
-                  ),
-                )
+                    }),
               ],
             ),
           ),

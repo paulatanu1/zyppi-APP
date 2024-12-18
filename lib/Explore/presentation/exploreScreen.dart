@@ -16,39 +16,39 @@ class ExploreScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.white,
-      body: SafeArea(
-        child: Padding(
-          padding:  EdgeInsets.all(8.h),
-          child: Column(
-            children: [
-              CommonHeader(),
-              SizedBox(height: 13.h),
-              TextformField(
-                prefixIcon: true,
-                textFormFieldController: searchController,
-                labelText: 'searchStore'.tr(),),
-              SizedBox(height: 10.h),
-              Expanded(
-                child: GridView.builder(
-                  physics: BouncingScrollPhysics(),
-                  shrinkWrap: true,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 5.h,
-                    mainAxisSpacing: 5.h,
-                  ),
-                  itemCount: 10,
-                  itemBuilder: (context, index) {
-                    return CategoryCard(
-                        categoryText: "Frash Fruits & Vegetable", index: index);
-                  },
-                ),
-              ),
+      // body: SafeArea(
+      //   child: Padding(
+      //     padding:  EdgeInsets.all(8.h),
+      //     child: Column(
+      //       children: [
+      //         CommonHeader(),
+      //         SizedBox(height: 13.h),
+      //         TextformField(
+      //           prefixIcon: true,
+      //           textFormFieldController: searchController,
+      //           labelText: 'searchStore'.tr(),),
+      //         SizedBox(height: 10.h),
+      //         Expanded(
+      //           child: GridView.builder(
+      //             physics: BouncingScrollPhysics(),
+      //             shrinkWrap: true,
+      //             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+      //               crossAxisCount: 2,
+      //               crossAxisSpacing: 5.h,
+      //               mainAxisSpacing: 5.h,
+      //             ),
+      //             itemCount: 10,
+      //             itemBuilder: (context, index) {
+      //               return CategoryCard(
+      //                   categoryText: "Frash Fruits & Vegetable", index: index);
+      //             },
+      //           ),
+      //         ),
 
-            ],
-          ),
-        ),
-      ),
+      //       ],
+      //     ),
+      //   ),
+      // ),
     );
   }
 }

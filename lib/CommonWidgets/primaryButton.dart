@@ -14,18 +14,17 @@ class PrimaryButton extends StatelessWidget {
     return GestureDetector(
       onTap: action,
       child: Container(
-        height: 30.h,
+        height: 25.h,
         width: double.infinity,
-        margin: EdgeInsets.only(left: 00.sp, right: 00.sp),
         decoration: BoxDecoration(
             color: AppColors.primaryButtonColor,
-            borderRadius: BorderRadius.circular(45.sp)),
+            borderRadius: BorderRadius.circular(30.sp)),
         child: Center(
           child: Text(buttonTitle,
               style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w500,
-                  fontSize: 45.sp)),
+                  fontSize: 37.sp)),
         ),
       ),
     );

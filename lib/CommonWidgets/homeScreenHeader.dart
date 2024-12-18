@@ -11,7 +11,6 @@ class HomeScreenHeader extends StatefulWidget {
 }
 
 class _HomeScreenHeaderState extends State<HomeScreenHeader> {
-  bool _isExpanded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -29,74 +28,62 @@ class _HomeScreenHeaderState extends State<HomeScreenHeader> {
               padding: EdgeInsets.all(3.h),
               child: Image.asset(
                 "assets/images/Zyppi_logo_white.png",
-                height: 20.h,
-                width: 60.h,
+                height: 18.h,
+                width: 45.h,
               ),
             ),
           ),
-          SizedBox(width: 10.w),
+          SizedBox(width: 15.w),
           Expanded(
-            child:Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                        text: 'deliveryTo'.tr(),
-                        style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 30.sp,
-                          color: AppColors.black,
-                          fontFamily: "Poppins",
-                        ),
-                        children: <TextSpan>[
-                          TextSpan(
-                            text: 'home'.tr(),
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontFamily: 'Poppins',
-                              color: AppColors.black,
-                              fontSize: 35.sp,
-                            ),
+              child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  RichText(
+                    text: TextSpan(
+                      text: 'deliveryTo'.tr(),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 30.sp,
+                        color: AppColors.black,
+                        fontFamily: "Poppins",
+                      ),
+                      children: <TextSpan>[
+                        TextSpan(
+                          text: 'home'.tr(),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontFamily: 'Poppins',
+                            color: AppColors.black,
+                            fontSize: 30.sp,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    IconButton(
-                      icon: Icon(
-                        _isExpanded
-                            ? Icons.keyboard_arrow_up
-                            : Icons.keyboard_arrow_down,
-                        size: 10.h,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _isExpanded = !_isExpanded;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-                _isExpanded
-                    ? Text(
-                  "AF 305, Hanpara, kestopur, Hanpara, 7001....",
-                  style: TextStyle(
-                    fontSize: 25.sp,
-                    color: AppColors.black,
-                    fontWeight: FontWeight.w500,
-                    fontFamily: 'Poppins',
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                )
-                    : SizedBox.shrink(),
-              ],
-            )
-
-          ),
+                  Icon(
+                    Icons.keyboard_arrow_down,
+                    size: 10.h,
+                  )
+                ],
+              ),
+              SizedBox(height: 3.h),
+              Text(
+                "AF 305, Hanpara, kestopur, Hanpara, 7001....",
+                style: TextStyle(
+                  fontSize: 25.sp,
+                  color: AppColors.black,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'Poppins',
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          )),
         ],
       ),
     );

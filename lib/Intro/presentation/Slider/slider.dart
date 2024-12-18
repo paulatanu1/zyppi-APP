@@ -60,7 +60,7 @@ class _SliderState extends State<Slider> {
       backgroundColor: AppColors.white,
       body: Padding(
         padding:
-            EdgeInsets.only(left: 20.0.w, right: 20.w, top: 30.h, bottom: 30.h),
+            EdgeInsets.only(left: 30.0.w, right: 30.w, top: 10.h, bottom: 10.h),
         child: SafeArea(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -128,9 +128,10 @@ class _SliderState extends State<Slider> {
                   text1[currentStep],
                   key: ValueKey<int>(currentStep), // Unique key for each step
                   style: TextStyle(
-                      fontSize: 50.sp,
+                      fontSize: 45.sp,
                       color: AppColors.black,
-                      fontWeight: FontWeight.bold),
+                      fontFamily: "Montserrat",
+                      fontWeight: FontWeight.w800),
                 ),
               ),
 
@@ -179,7 +180,7 @@ class _SliderState extends State<Slider> {
                       child: Text(
                         'previous'.tr(),
                         style: TextStyle(
-                            fontSize: 40.sp,
+                            fontSize: 35.sp,
                             fontWeight: FontWeight.w600,
                             color: AppColors.grey,
                             fontFamily: "Montserrat"),
@@ -193,7 +194,7 @@ class _SliderState extends State<Slider> {
                       return AnimatedContainer(
                         duration: Duration(milliseconds: 300),
                         margin: EdgeInsets.symmetric(horizontal: 8.w),
-                        width: isSelected ? 70.w : 15.w,
+                        width: isSelected ? 60.w : 15.w,
                         height: isSelected ? 5.h : 3.h,
                         decoration: BoxDecoration(
                             color: isSelected ? Colors.black : Colors.grey,
@@ -212,7 +213,7 @@ class _SliderState extends State<Slider> {
                           child: Text(
                             'getStart'.tr(),
                             style: TextStyle(
-                                fontSize: 40.sp,
+                                fontSize: 35.sp,
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.deepBlue),
                           ),
@@ -223,7 +224,7 @@ class _SliderState extends State<Slider> {
                           child: Text(
                             'next'.tr(),
                             style: TextStyle(
-                                fontSize: 40.sp,
+                                fontSize: 35.sp,
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.deepBlue,
                                 fontFamily: "Montserrat"),

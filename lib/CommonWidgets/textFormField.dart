@@ -8,12 +8,14 @@ class TextformField extends StatefulWidget {
   final TextEditingController textFormFieldController;
   final String labelText;
   final bool? prefixIcon;
+  final double? borderRadius;
 
   const TextformField({
     Key? key,
     required this.textFormFieldController,
     required this.labelText,
     this.prefixIcon,
+    this.borderRadius
   }) : super(key: key);
 
   @override
@@ -41,7 +43,7 @@ class _TextformFieldState extends State<TextformField> {
       //margin: EdgeInsets.only(left: 30.sp, right: 30.sp),
       decoration: BoxDecoration(
           color: AppColors.hintTextColor1,
-          borderRadius: BorderRadius.circular(30.sp)),
+          borderRadius: BorderRadius.circular(widget.borderRadius ?? 15.sp)),
       child: TextField(
         controller: widget.textFormFieldController,
         decoration: InputDecoration(
@@ -52,7 +54,7 @@ class _TextformFieldState extends State<TextformField> {
               ? null
               : const Icon(Icons.search),
           contentPadding:
-              EdgeInsets.symmetric(horizontal: 50.w, vertical: 9.h),
+              EdgeInsets.symmetric(horizontal: 50.w, vertical: 8.h),
           suffixIcon: widget.textFormFieldController.text.isEmpty
               ? null
               : IconButton(
@@ -64,47 +66,3 @@ class _TextformFieldState extends State<TextformField> {
     );
   }
 }
-
-// class TextformField extends StatelessWidget {
-//   final TextEditingController textFormFieldController;
-//   final String labelText;
-//   final bool? prefixIcon;
-
-//   TextformField(
-//       {required this.textFormFieldController,
-//       required this.labelText,
-//       this.prefixIcon}) {
-//     textFormFieldController.addListener(() {
-//       // Trigger a rebuild whenever the text changes
-//       WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
-//     });
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     // TODO: implement build
-//     return Container(
-//       margin: EdgeInsets.only(left: 30.sp, right: 30.sp),
-//       decoration: BoxDecoration(
-//           color: AppColors.hintTextColor1,
-//           borderRadius: BorderRadius.circular(30.sp)),
-//       child: TextField(
-//         controller: textFormFieldController,
-//         decoration: InputDecoration(
-//             hintText: labelText,
-//             hintStyle: TextStyle(color: AppColors.hintTextColor),
-//             border: InputBorder.none,
-//             prefixIcon: prefixIcon == null || prefixIcon == false
-//                 ? null
-//                 : Icon(Icons.search),
-//             contentPadding:
-//                 EdgeInsets.symmetric(horizontal: 50.w, vertical: 9.h),
-//             suffixIcon: textFormFieldController.text.isEmpty
-//                 ? null
-//                 : IconButton(
-//                     onPressed: () => textFormFieldController.clear(),
-//                     icon: Icon(Icons.cancel))),
-//       ),
-//     );
-//   }
-// }
