@@ -108,27 +108,25 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 20.h),
-                    RichText(
-                      text: TextSpan(
-                        text: 'lowestIn'.tr(),
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 40.sp,
-                            color: AppColors.black,
-                            fontFamily: "Montserrat"),
-                        children: <TextSpan>[
-                          TextSpan(
-                              text: 'Zyppi'.tr(),
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w400,
-                                  fontFamily: 'Righteous',
-                                  color: AppColors.deepBlue1,
-                                  fontSize: 50.sp)),
-                        ],
-                      ),
+                    SizedBox(height: 10.h),
+                    Stack(
+                      children: [
+                        SizedBox(
+                          height: 35.h,
+                          width: 95.h,
+                          child: Image.asset(
+                            "assets/images/zyppi_underline.png",
+                            height: 10.h,
+                            width: 80.h,
+                          ),
+                        ),
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: Image.asset('assets/images/underline.png'))
+                      ],
                     ),
-                    SizedBox(height: 20.h),
+                    SizedBox(height: 10.h),
                     HomePageProducts()
                   ],
                 ),

@@ -14,8 +14,8 @@ class ItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // TODO: implement build
     return Container(
-      // height: 120.h,
-      // width: 360.w,
+      // height: 115.h,
+      // width: 320.w,
       //margin: EdgeInsets.only(left: 10.w, top: 10.h, right: 10.w),
       //padding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 25.w),
       decoration: BoxDecoration(
@@ -23,7 +23,7 @@ class ItemCard extends StatelessWidget {
           border: Border.all(color: AppColors.grey)),
       child: Padding(
         padding:
-            EdgeInsets.only(left: 18.w, top: 10.h, right: 18.w, bottom: 2.h),
+            EdgeInsets.only(left: 18.w, top: 15.h, right: 18.w),
         child: Column(
           // mainAxisAlignment: MainAxisAlignment.center,
           // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -65,7 +65,7 @@ class ItemCard extends StatelessWidget {
               ),
             ),
             Flexible(
-              flex: 1,
+              flex: 2,
               fit: FlexFit.tight,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

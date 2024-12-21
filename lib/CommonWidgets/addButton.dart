@@ -7,8 +7,8 @@ class AddButton extends StatelessWidget {
   Widget build(BuildContext context) {
     // TODO: implement build
     return Container(
-      height: 70.w,
-      width: 70.w,
+      height: 80.w,
+      width: 75.w,
       margin: EdgeInsets.only(top: 2.h, bottom: 2.h),
       decoration: BoxDecoration(
         color: AppColors.primaryButtonColor,
