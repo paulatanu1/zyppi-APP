@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zippy/Utils/routes.dart';
+import 'package:zippy/Utils/routes/routes.dart';
 
 class SplashScreen extends StatefulWidget {
   @override

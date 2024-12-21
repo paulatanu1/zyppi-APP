@@ -6,8 +6,9 @@ import 'package:zippy/HomeScreen/presentation/homeScreen.dart';
 import 'package:zippy/Intro/presentation/Slider/slider.dart';
 
 //class AppRoutes {
-  final GoRouter router =
-      GoRouter(initialLocation: '/Slider', routes: <RouteBase>[
+final GoRouter router = GoRouter(
+  initialLocation: '/Slider',
+  routes: <RouteBase>[
     // GoRoute(
     //   path: '/',
     //   name: 'splash',
@@ -33,10 +34,11 @@ import 'package:zippy/Intro/presentation/Slider/slider.dart';
       name: 'HomeScreen',
       builder: (context, state) => HomeScreen(),
     ),
-        GoRoute(
-          path: '/exploreScreen',
-          name: 'ExploreScreen',
-          builder: (context, state) => ExploreScreen(),
-        ),
-  ]);
+    GoRoute(
+      path: '/exploreScreen',
+      name: 'ExploreScreen',
+      builder: (context, state) => ExploreScreen(),
+    ),
+  ],
+);
 //}
