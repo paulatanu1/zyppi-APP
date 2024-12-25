@@ -3,6 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:zippy/CommonWidgets/itemCard.dart';
 
 class HomePageProducts extends StatelessWidget {
+  final Function()? onClicked;
+  HomePageProducts({super.key,this.onClicked});
+
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
@@ -17,6 +20,7 @@ class HomePageProducts extends StatelessWidget {
       itemCount: 9,
       itemBuilder: (context, index) {
         return ItemCard(
+          onClicked: onClicked,
             productName: 'Fresh Apple Juice', quantity: '2L', price: '80');
       },
     );
