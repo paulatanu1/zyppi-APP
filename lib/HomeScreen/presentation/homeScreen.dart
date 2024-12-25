@@ -129,7 +129,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     SizedBox(height: 20.h),
-                    HomePageProducts()
+                    HomePageProducts(
+                      onClicked: (){
+                        //context.go('/productDetailsScreen');
+                        //context.go('/categoryDetailsScreen');
+                        //context.go('/favouriteScreen');
+                        context.go('/myCartScreen');
+                      },
+                    ),
                   ],
                 ),
               ),
