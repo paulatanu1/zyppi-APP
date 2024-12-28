@@ -12,10 +12,10 @@ class OtpVerificationScreen extends StatefulWidget {
   const OtpVerificationScreen({super.key});
 
   @override
-  State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
+  State<OtpVerificationScreen> createState() => OtpVerificationScreenState();
 }
 
-class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
+class OtpVerificationScreenState extends State<OtpVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -79,7 +79,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                         builder: (context) {
                           return AlertDialog(
                             title: Text("Verification Code"),
-                            content: Text('Code entered is $verificationCode'),
+                            content:
+                                Text('Code entered is $verificationCode'),
                           );
                         });
                   }, // end onSubmit
@@ -101,7 +102,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 PrimaryButton(
                     buttonTitle: 'submit'.tr(),
                     action: () {
-                      context.go('/homeScreen');
+                      context.push('/navBar');
                     }),
               ],
             ),

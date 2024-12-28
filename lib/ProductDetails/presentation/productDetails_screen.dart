@@ -1,18 +1,18 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/CommonWidgets/primaryButton.dart';
 import 'package:zippy/ProductDetails/widgets/dropdown_expentiantile.dart';
 import 'package:zippy/ProductDetails/widgets/product_slider.dart';
 import 'package:zippy/Utils/colors.dart';
 
-class ProductDetailsScreen extends StatelessWidget {
-  const ProductDetailsScreen({super.key});
-
+class ProductDetailsScreen extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
-    double height = MediaQuery.of(context).size.height;
-    double width = MediaQuery.of(context).size.width;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final height = MediaQuery.of(context).size.height;
+    final width = MediaQuery.of(context).size.width;
 
+    // TODO: implement build
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SingleChildScrollView(
@@ -21,7 +21,8 @@ class ProductDetailsScreen extends StatelessWidget {
           children: [
             ProductSlider(),
             Padding(
-              padding: EdgeInsets.only(left:height*0.02, right:height*0.02),
+              padding:
+                  EdgeInsets.only(left: height * 0.02, right: height * 0.02),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -45,7 +46,9 @@ class ProductDetailsScreen extends StatelessWidget {
                       )
                     ],
                   ),
-                  SizedBox(height: height*0.015,),
+                  SizedBox(
+                    height: height * 0.015,
+                  ),
                   Text(
                     "1kg, Price",
                     style: TextStyle(
@@ -54,7 +57,9 @@ class ProductDetailsScreen extends StatelessWidget {
                         color: AppColors.grey3,
                         fontSize: 16),
                   ),
-                  SizedBox(height: height*0.025,),
+                  SizedBox(
+                    height: height * 0.025,
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -66,7 +71,9 @@ class ProductDetailsScreen extends StatelessWidget {
                             weight: 4,
                             color: AppColors.grey4,
                           ),
-                           SizedBox(width: width*0.03,),
+                          SizedBox(
+                            width: width * 0.03,
+                          ),
                           Container(
                             height: height * 0.05,
                             width: width * 0.1,
@@ -82,7 +89,9 @@ class ProductDetailsScreen extends StatelessWidget {
                                       fontSize: 18)),
                             ),
                           ),
-                          SizedBox(width: width*0.03,),
+                          SizedBox(
+                            width: width * 0.03,
+                          ),
                           Icon(
                             Icons.add,
                             size: 30,
@@ -101,30 +110,38 @@ class ProductDetailsScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(height: height*0.03,),
+                  SizedBox(
+                    height: height * 0.03,
+                  ),
                   Divider(
                     height: 1,
                     color: AppColors.grey5,
                   ),
                   DropdownExpansionTile(
                     dropDownTitle: 'Product Detail',
-                    dropDownContent: 'Apples are nutritious. Apples may be good for weight loss. apples may be good for your heart. As part of a healtful and varied diet.',),
+                    dropDownContent:
+                        'Apples are nutritious. Apples may be good for weight loss. apples may be good for your heart. As part of a healtful and varied diet.',
+                  ),
                   Divider(
                     height: 1,
                     color: AppColors.grey5,
                   ),
                   DropdownExpansionTile(
                     dropDownTitle: 'Nutritions',
-                    dropDownContent: 'Apples are nutritious. Apples may be good for weight loss. apples may be good for your heart. As part of a healtful and varied diet.',
+                    dropDownContent:
+                        'Apples are nutritious. Apples may be good for weight loss. apples may be good for your heart. As part of a healtful and varied diet.',
                     dynamicWidget: Container(
                       // height: height*0.028,
                       // width: width*0.15,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(5),
-                        color: AppColors.grey6
-                      ),
+                          borderRadius: BorderRadius.circular(5),
+                          color: AppColors.grey6),
                       child: Padding(
-                        padding:  EdgeInsets.only(left: width*0.02,right: width*0.02, top: width*0.02, bottom: width*0.02),
+                        padding: EdgeInsets.only(
+                            left: width * 0.02,
+                            right: width * 0.02,
+                            top: width * 0.02,
+                            bottom: width * 0.02),
                         child: Text(
                           "100 gm",
                           style: TextStyle(
@@ -136,32 +153,36 @@ class ProductDetailsScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-        
                   Divider(
                     height: 1,
                     color: AppColors.grey5,
                   ),
-        
                   DropdownExpansionTile(
                     dropDownTitle: 'Review',
-                    dropDownContent: 'Apples are nutritious. Apples may be good for weight loss. apples may be good for your heart. As part of a healtful and varied diet.',
+                    dropDownContent:
+                        'Apples are nutritious. Apples may be good for weight loss. apples may be good for your heart. As part of a healtful and varied diet.',
                     dynamicWidget: Padding(
-                      padding:  EdgeInsets.only(left: width*0.02,right: width*0.02, top: width*0.02, bottom: width*0.02),
-                      child: Row(
-                      children: List.generate(5, (index) {
-                        return const Icon(Icons.star, color: AppColors.darkBlue,size: 20,);
-        
-                        }))
-                    ),
+                        padding: EdgeInsets.only(
+                            left: width * 0.02,
+                            right: width * 0.02,
+                            top: width * 0.02,
+                            bottom: width * 0.02),
+                        child: Row(
+                            children: List.generate(5, (index) {
+                          return const Icon(
+                            Icons.star,
+                            color: AppColors.darkBlue,
+                            size: 20,
+                          );
+                        }))),
                   ),
-                  SizedBox(height: height*0.015,),
-                  PrimaryButton(
-                      buttonTitle: 'addToBasket'.tr(), action: (){}),
-
-                  SizedBox(height: height*0.025,),
-        
-        
-        
+                  SizedBox(
+                    height: height * 0.015,
+                  ),
+                  PrimaryButton(buttonTitle: 'addToBasket'.tr(), action: () {}),
+                  SizedBox(
+                    height: height * 0.025,
+                  ),
                 ],
               ),
             )

@@ -65,7 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       )),
                 ),
                 SizedBox(height: 35.h),
-                TextformField(
+                TextformField(      //Here
                   labelText: 'phoneNumber'.tr(),
                   textFormFieldController: phoneController,
                 ),
@@ -75,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 PrimaryButton(
                     buttonTitle: 'login'.tr(),
                     action: () {
-                      context.go('/otpVerificationScreen');
+                      context.push('/otpVerificationScreen');
                     }),
               ],
             ),

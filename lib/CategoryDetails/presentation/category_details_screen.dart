@@ -12,8 +12,6 @@ class CategoryDetailsScreen extends StatefulWidget {
 }
 
 class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
-
-
   @override
   Widget build(BuildContext context) {
     double height = MediaQuery.of(context).size.height;
@@ -22,34 +20,39 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
       backgroundColor: AppColors.white,
       body: SafeArea(
         child: Padding(
-          padding:  EdgeInsets.only(left: height*0.025, right: height*0.025, bottom: height*0.025),
+          padding: EdgeInsets.only(
+              left: height * 0.025,
+              right: height * 0.025,
+              bottom: height * 0.025),
           child: Column(
             children: [
               CategoryDetailsHeader(
-                onFilterIconClicked: (){
+                onFilterIconClicked: () {
                   context.go('/filterScreen');
-
                 },
               ),
-          SizedBox(height: height*0.025,),
-
-          Expanded(
-            child: GridView.builder(
-              physics: BouncingScrollPhysics(),
-              shrinkWrap: true,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: height*0.015,
-                  mainAxisSpacing: height*0.015,
-                  childAspectRatio: 0.8),
-              itemCount: 9,
-              itemBuilder: (context, index) {
-                return ItemCard(
-                    onClicked: (){},
-                    productName: 'Fresh Apple Juice', quantity: '2L', price: '80');
-              },
-            ),
-          )
+              SizedBox(
+                height: height * 0.025,
+              ),
+              Expanded(
+                child: GridView.builder(
+                  physics: BouncingScrollPhysics(),
+                  shrinkWrap: true,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: height * 0.015,
+                      mainAxisSpacing: height * 0.015,
+                      childAspectRatio: 0.8),
+                  itemCount: 9,
+                  itemBuilder: (context, index) {
+                    return ItemCard(
+                        onClicked: () {},
+                        productName: 'Fresh Apple Juice',
+                        quantity: '2L',
+                        price: '80');
+                  },
+                ),
+              )
             ],
           ),
         ),

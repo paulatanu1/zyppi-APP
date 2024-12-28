@@ -19,12 +19,11 @@ class CategoryCarouselState extends State<CategoryCarousel> {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-    return CarouselSlider(
-      items: _sliderItems.map((item) {
-        return Stack(
-          children: [
-            // Slider container
-            Container(
+    return Column(
+      children: [
+        CarouselSlider(
+          items: _sliderItems.map((item) {
+            return Container(
               width: double.infinity, // Full width of the screen
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10.h),
@@ -71,47 +70,41 @@ class CategoryCarouselState extends State<CategoryCarousel> {
                   ],
                 ),
               ),
-            ),
-            // Positioned indicator
-            Positioned(
-              bottom: 10, // Position slightly above the bottom of the container
-              left: 0,
-              right: 0, // Center-align using left and right
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: _sliderItems.asMap().entries.map((entry) {
-                  return GestureDetector(
-                    onTap: () => setState(() => _currentIndex = entry.key),
-                    child: AnimatedContainer(
-                      duration: Duration(milliseconds: 300),
-                      margin: EdgeInsets.symmetric(horizontal: 8.w),
-                      width: _currentIndex == entry.key ? 40.w : 15.w,
-                      height: _currentIndex == entry.key ? 4.h : 3.h,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: _currentIndex == entry.key
-                            ? AppColors.green
-                            : AppColors.grey,
-                      ),
-                    ),
-                  );
-                }).toList(),
+            );
+          }).toList(),
+          options: CarouselOptions(
+            height: 70.h,
+            enlargeCenterPage: false,
+            autoPlay: false,
+            viewportFraction: 1.0, // Ensures full width is taken
+            onPageChanged: (index, reason) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: _sliderItems.asMap().entries.map((entry) {
+            return GestureDetector(
+              onTap: () => setState(() => _currentIndex = entry.key),
+              child: AnimatedContainer(
+                duration: Duration(milliseconds: 300),
+                margin: EdgeInsets.symmetric(horizontal: 8.w),
+                width: _currentIndex == entry.key ? 40.w : 15.w,
+                height: _currentIndex == entry.key ? 4.h : 3.h,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: _currentIndex == entry.key
+                      ? AppColors.green
+                      : AppColors.grey,
+                ),
               ),
-            ),
-          ],
-        );
-      }).toList(),
-      options: CarouselOptions(
-        height: 70.h,
-        enlargeCenterPage: false,
-        autoPlay: false,
-        viewportFraction: 1.0, // Ensures full width is taken
-        onPageChanged: (index, reason) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-      ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 }

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/Utils/colors.dart';
 
-class CommonSearchBar extends StatelessWidget {
+class CommonSearchBar extends ConsumerWidget {
   const CommonSearchBar({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       height: 50, // Adjust the height as needed
       width: MediaQuery.of(context).size.width, // Adjust width for padding

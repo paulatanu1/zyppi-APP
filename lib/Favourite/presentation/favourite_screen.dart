@@ -9,10 +9,8 @@ class FavouriteScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
-     double height = MediaQuery.of(context).size.height;
-     double width = MediaQuery.of(context).size.width;
-
+    double height = MediaQuery.of(context).size.height;
+    double width = MediaQuery.of(context).size.width;
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -20,43 +18,37 @@ class FavouriteScreen extends StatelessWidget {
         child: Column(
           children: [
             Center(
-              child: Text('favourite'.tr(),style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'Poppins',
-                  color: AppColors.darkBlue,
-                  fontStyle: FontStyle.italic,
-                  fontSize: 20),
+              child: Text(
+                'favourite'.tr(),
+                style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Poppins',
+                    color: AppColors.darkBlue,
+                    fontStyle: FontStyle.italic,
+                    fontSize: 20),
               ),
             ),
-
-            SizedBox(height: height*0.025,),
-
+            SizedBox(
+              height: height * 0.025,
+            ),
             Divider(
               height: 1,
               color: AppColors.grey5,
             ),
             Expanded(
               child: ListView.builder(
-                physics: BouncingScrollPhysics(),
+                  physics: BouncingScrollPhysics(),
                   itemCount: 5,
-                  itemBuilder: (BuildContext context, int index){
-                    
+                  itemBuilder: (BuildContext context, int index) {
                     return FavouriteItem();
-                    
                   }),
             ),
-
             Padding(
-              padding:  EdgeInsets.all(height*0.025),
+              padding: EdgeInsets.all(height * 0.025),
               child: PrimaryButton(
-                  buttonTitle: 'addAllToCart'.tr(), action: (){}),
+                  buttonTitle: 'addAllToCart'.tr(), action: () {}),
             ),
-
-            SizedBox(height: height*0.025,)
-
-            
-        
-        
+            SizedBox(height: height * 0.08)
           ],
         ),
       ),

@@ -1,32 +1,23 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bounce/flutter_bounce.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:zippy/ProductDetails/provider/productDetailProvider.dart';
 import 'package:zippy/Utils/colors.dart';
 
-class ProductSlider extends StatefulWidget {
-  const ProductSlider({super.key});
-
+class ProductSlider extends ConsumerWidget {
   @override
-  State<ProductSlider> createState() => _ProductSliderState();
-}
-
-class _ProductSliderState extends State<ProductSlider> {
-  int _currentIndex = 0;
-  final List<Map<String, String>> _sliderItems = [
-    {'image': 'assets/images/apple.png',},
-    {'image': 'assets/images/apple.png',},
-    {'image': 'assets/images/apple.png',},
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-
+  Widget build(BuildContext context, WidgetRef ref) {
     double height = MediaQuery.of(context).size.height;
     double width = MediaQuery.of(context).size.width;
 
+    final productDetail = ref.watch(productDetailProvider);
+    final productDetailNotifier = ref.read(productDetailProvider.notifier);
+
     // TODO: implement build
     return CarouselSlider(
-      items: _sliderItems.map((item) {
+      items: productDetail.product?.map((item) {
         return Column(
           children: [
             Container(
@@ -34,9 +25,8 @@ class _ProductSliderState extends State<ProductSlider> {
               decoration: BoxDecoration(
                 color: AppColors.grey2,
                 borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(height*0.025),
-                    bottomRight: Radius.circular(height*0.025)
-                ),
+                    bottomLeft: Radius.circular(height * 0.025),
+                    bottomRight: Radius.circular(height * 0.025)),
               ),
               child: SafeArea(
                 child: Column(
@@ -45,33 +35,45 @@ class _ProductSliderState extends State<ProductSlider> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Padding(
-                          padding:  EdgeInsets.only(top:height*0.01, left: height*0.03),
+                          padding: EdgeInsets.only(
+                              top: height * 0.01, left: height * 0.03),
                           child: Bounce(
                               duration: Duration(milliseconds: 300),
-                              onPressed: () {  },
-                              child: Icon(Icons.arrow_back_ios,size: 30,weight: 2,)),
+                              onPressed: () => context.pop(),
+                              child: Icon(
+                                Icons.arrow_back_ios,
+                                size: 30,
+                                weight: 2,
+                              )),
                         )
                       ],
                     ),
                     Image.asset(
-                      item['image']!,
-                      height: height*0.25,
-                      width: width*0.6,
+                      item.image ?? 'assets/images/apple.png',
+                      height: height * 0.25,
+                      width: width * 0.6,
                       fit: BoxFit.contain,
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: _sliderItems.asMap().entries.map((entry) {
+                      children:
+                          productDetail.product!.asMap().entries.map((entry) {
                         return GestureDetector(
-                          onTap: () => setState(() => _currentIndex = entry.key),
+                          onTap: () =>
+                              productDetailNotifier.currentIndex(entry.key),
                           child: AnimatedContainer(
                             duration: Duration(milliseconds: 300),
-                            margin:  EdgeInsets.symmetric(horizontal: width*0.01),
-                            width: _currentIndex == entry.key ? width*0.06 : width*0.01,
-                            height: _currentIndex == entry.key ? height*0.005 : width*0.01,
+                            margin:
+                                EdgeInsets.symmetric(horizontal: width * 0.01),
+                            width: productDetail.currentIndex == entry.key
+                                ? width * 0.06
+                                : width * 0.01,
+                            height: productDetail.currentIndex == entry.key
+                                ? height * 0.005
+                                : width * 0.01,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10),
-                              color: _currentIndex == entry.key
+                              color: productDetail.currentIndex == entry.key
                                   ? AppColors.green
                                   : AppColors.grey,
                             ),
@@ -79,26 +81,23 @@ class _ProductSliderState extends State<ProductSlider> {
                         );
                       }).toList(),
                     ),
-                    SizedBox(height: height*0.025,)
+                    SizedBox(
+                      height: height * 0.025,
+                    )
                   ],
                 ),
               ),
             ),
-
           ],
         );
       }).toList(),
       options: CarouselOptions(
-        height: height*0.4,
-        enlargeCenterPage: false,
-        autoPlay: false,
-        viewportFraction: 1.0, // Ensures full width is taken
-        onPageChanged: (index, reason) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-      ),
+          height: height * 0.4,
+          enlargeCenterPage: false,
+          autoPlay: false,
+          viewportFraction: 1.0, // Ensures full width is taken
+          onPageChanged: (index, reason) =>
+              productDetailNotifier.currentIndex(index)),
     );
   }
 }
