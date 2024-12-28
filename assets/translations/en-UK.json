@@ -33,7 +33,17 @@
   "home": "Home",
 
   "findProducts": "Find Products",
-  "searchStore": "Search Store"
+  "searchStore": "Search Store",
+  "addToBasket": "Add To Basket",
+  "filters": "Filters",
+  "categories": "Categories",
+  "brand": "Brand",
+  "applyFilter": "Apply Filter",
+  "myCart": "My Cart",
+  "favourite": "Favourite",
+  "addAllToCart": "Add All To Cart",
+  "goToCheckout": "Go to Checkout"
+
 
 
 

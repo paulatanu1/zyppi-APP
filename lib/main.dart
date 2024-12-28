@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:zippy/Utils/constants.dart';
 import 'package:zippy/Utils/routes/routes.dart';
@@ -21,7 +22,7 @@ void main() async {
       Locale('pa', 'Guru')
     ],
     path: Constants.translationPath,
-    child: Zyppi(),
+    child: ProviderScope(child: Zyppi()),
   ));
 }
 

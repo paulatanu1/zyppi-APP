@@ -6,7 +6,6 @@ import 'package:zippy/CommonWidgets/googleSignInButton.dart';
 import 'package:zippy/CommonWidgets/primaryButton.dart';
 import 'package:zippy/CommonWidgets/textFormField.dart';
 import 'package:zippy/Utils/colors.dart';
-import 'package:zippy/Utils/routes/backButton.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -66,7 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       )),
                 ),
                 SizedBox(height: 35.h),
-                TextformField(
+                TextformField(      //Here
                   labelText: 'phoneNumber'.tr(),
                   textFormFieldController: phoneController,
                 ),
@@ -76,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 PrimaryButton(
                     buttonTitle: 'login'.tr(),
                     action: () {
-                      context.go('/otpVerificationScreen');
+                      context.push('/otpVerificationScreen');
                     }),
               ],
             ),

@@ -207,7 +207,7 @@ class _SliderState extends State<Slider> {
                   currentStep == 3
                       ? Bounce(
                           onPressed: () {
-                            context.go('/loginScreen');
+                            context.push('/loginScreen');
                           },
                           duration: Duration(milliseconds: 200),
                           child: Text(

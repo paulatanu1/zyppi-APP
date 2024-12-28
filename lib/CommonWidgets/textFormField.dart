@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:zippy/Utils/colors.dart';
 
-import 'package:flutter/material.dart';
-
 class TextformField extends StatefulWidget {
   final TextEditingController textFormFieldController;
   final String labelText;
