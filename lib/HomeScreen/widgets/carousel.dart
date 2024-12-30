@@ -1,28 +1,22 @@
 import 'package:carousel_slider/carousel_options.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:zippy/HomeScreen/provider/carouselProvider.dart';
 import 'package:zippy/Utils/colors.dart';
 
-class CategoryCarousel extends StatefulWidget {
-  CategoryCarouselState createState() => CategoryCarouselState();
-}
-
-class CategoryCarouselState extends State<CategoryCarousel> {
-  int _currentIndex = 0;
-  final List<Map<String, String>> _sliderItems = [
-    {'image': 'assets/images/veg.png', 'text': 'Slide 1'},
-    {'image': 'assets/images/veg.png', 'text': 'Slide 2'},
-    {'image': 'assets/images/veg.png', 'text': 'Slide 3'},
-  ];
-
+class CategoryCarousel extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final carousel = ref.watch(carouselProvider);
+    final carouselFunction = ref.read(carouselProvider.notifier);
+
     // TODO: implement build
     return Column(
       children: [
         CarouselSlider(
-          items: _sliderItems.map((item) {
+          items: carousel.carouselList.map((item) {
             return Container(
               width: double.infinity, // Full width of the screen
               decoration: BoxDecoration(
@@ -36,7 +30,7 @@ class CategoryCarouselState extends State<CategoryCarousel> {
                     // Image
                     ClipRRect(
                       child: Image.asset(
-                        item['image']!,
+                        item.image ?? 'assets/images/veg.png',
                         height: 60.h,
                         width: 60.h,
                         fit: BoxFit.contain,
@@ -77,26 +71,23 @@ class CategoryCarouselState extends State<CategoryCarousel> {
             enlargeCenterPage: false,
             autoPlay: false,
             viewportFraction: 1.0, // Ensures full width is taken
-            onPageChanged: (index, reason) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
+            onPageChanged: (index, reason) =>
+                carouselFunction.changeIndex(index),
           ),
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: _sliderItems.asMap().entries.map((entry) {
+          children: carousel.carouselList.asMap().entries.map((entry) {
             return GestureDetector(
-              onTap: () => setState(() => _currentIndex = entry.key),
+              onTap: () => carouselFunction.changeIndex(entry.key),
               child: AnimatedContainer(
                 duration: Duration(milliseconds: 300),
                 margin: EdgeInsets.symmetric(horizontal: 8.w),
-                width: _currentIndex == entry.key ? 40.w : 15.w,
-                height: _currentIndex == entry.key ? 4.h : 3.h,
+                width: carousel.index == entry.key ? 40.w : 15.w,
+                height: carousel.index == entry.key ? 4.h : 3.h,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
-                  color: _currentIndex == entry.key
+                  color: carousel.index == entry.key
                       ? AppColors.green
                       : AppColors.grey,
                 ),

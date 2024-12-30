@@ -59,6 +59,11 @@ class NavBar extends ConsumerWidget {
       AccountScreen()
     ];
 
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      systemNavigationBarColor: AppColors.blue, // Color of the system navigation bar
+      systemNavigationBarIconBrightness: Brightness.light, // Icon brightness for light text/icons
+    ));
+
     // TODO: implement build
     return WillPopScope(
       onWillPop: () async {
