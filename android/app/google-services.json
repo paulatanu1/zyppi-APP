@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "182229138750",
+    "project_id": "zippy-app-2024",
+    "storage_bucket": "zippy-app-2024.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:182229138750:android:c662c671681db6c69a806f",
+        "android_client_info": {
+          "package_name": "com.betastechnologies.zippy"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "182229138750-jsqveio0qv07atjhmn58f2kqfnbre7l9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.betastechnologies.zippy",
+            "certificate_hash": "e248b969069e728961399060242e88195180c357"
+          }
+        },
+        {
+          "client_id": "182229138750-d37945j2e0j25iuaotv2biu1p497br95.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtCIZ3-QYywv4Dk1FNzILo6b8gNb1cld8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "182229138750-d37945j2e0j25iuaotv2biu1p497br95.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "182229138750-r1krjq23t1mkqni52v15qm0tu2cch2mn.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.betastechnologies.zippy"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -52,5 +52,9 @@
 		<true />
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true />
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>Required by the application to detect device location and place orders at that location</string>
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription </key>
+		<string>So that the application recognizes real time location updates without the user having to restart the application for a location update</string>
 	</dict>
 </plist>
