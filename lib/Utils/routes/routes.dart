@@ -9,8 +9,10 @@ import 'package:zippy/core/features/Favourite/presentation/favourite_screen.dart
 import 'package:zippy/core/features/Filter/presentation/filter_screen.dart';
 import 'package:zippy/core/features/HomeScreen/presentation/homeScreen.dart';
 import 'package:zippy/core/features/Intro/presentation/Slider/slider.dart';
+import 'package:zippy/core/features/MyAddress/presentation/myAddressScreen.dart';
 import 'package:zippy/core/features/MyCart/presentation/my_cart_screen.dart';
 import 'package:zippy/core/features/ProductDetails/presentation/productDetails_screen.dart';
+import 'package:zippy/core/features/YourOrder/presentation/yourOrderScreen.dart';
 
 //class AppRoutes {
 final GoRouter router =
@@ -77,6 +79,16 @@ final GoRouter router =
     path: '/accountScreen',
     name: 'AccountScreen',
     builder: (context, state) => AccountScreen(),
+  ),
+      GoRoute(
+    path: '/myAddressScreen',
+    name: 'MyAddressScreen',
+    builder: (context, state) => MyAddressScreen(),
+  ),
+      GoRoute(
+    path: '/yourOrderScreen',
+    name: 'YourOrderScreen',
+    builder: (context, state) => YourOrderScreen(),
   )
 ]);
 //}

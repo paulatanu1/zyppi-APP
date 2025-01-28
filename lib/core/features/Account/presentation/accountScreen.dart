@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:zippy/core/features/Account/widgets/profileContainer.dart';
 
 import '../../../../Utils/colors.dart';
@@ -94,7 +95,24 @@ class AccountScreen extends StatelessWidget {
                           fontSize: 13),
                     ),
                     SizedBox(height: height*0.03,),
-                    ProfileContainer(ContainerName: 'yourInfo'.tr(), containerList: yourInfoList,),
+                    ProfileContainer(
+                      ContainerName: 'yourInfo'.tr(),
+                      containerList: yourInfoList,
+                    onClicked: (){
+                        if(yourInfoList[0]=='yourOrder'.tr()){
+                          context.push('/yourOrderScreen');
+                        }
+                        if(yourInfoList[1]=='addressBook'.tr()){
+                          context.push('/myAddressScreen');
+                        }
+
+                          // yourInfoList[0]=='yourOrder'.tr()? context.push('/yourOrderScreen'):
+                          // yourInfoList[1]=='addressBook'.tr()? context.push('/myAddressScreen')
+                          //     :
+                          // context.push('/myAddressScreen');
+
+                    },
+                    ),
                     SizedBox(height: height*0.025,),
                     ProfileContainer(ContainerName: 'otherInfo'.tr(), containerList: otherInfoList,),
                   ],
