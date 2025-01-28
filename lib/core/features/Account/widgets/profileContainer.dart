@@ -5,7 +5,8 @@ import 'package:zippy/core/features/Account/widgets/profileContainerItem.dart';
 class ProfileContainer extends StatelessWidget {
   final String ContainerName;
   final List containerList;
-  const ProfileContainer({super.key, required this.ContainerName, required this.containerList});
+  final Function()? onClicked;
+  const ProfileContainer({super.key, required this.ContainerName, required this.containerList,  this.onClicked});
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +31,9 @@ class ProfileContainer extends StatelessWidget {
               child: ListView.builder(
                   itemCount: containerList.length,
                   itemBuilder: (BuildContext context, int index) {
-                    return ProfileContainerItem(itemName: containerList[index].toString(),);
+                    return ProfileContainerItem(
+                      onClicked: onClicked,
+                      itemName: containerList[index].toString(),);
                   }),
             )),
         // Positioned text on the border

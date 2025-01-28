@@ -58,7 +58,12 @@
   "aboutUs": "About Us",
   "accountPrivacy": "Account Privacy",
   "notificationPref": "Notification Preferences",
-  "logOut": "Log out"
+  "logOut": "Log out",
+
+
+  "myAddress": "My Address",
+  "addNewAddress": "Add new address",
+  "yourSavedAddress": "Your saved address"
 
 
 
