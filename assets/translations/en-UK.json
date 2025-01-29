@@ -47,7 +47,6 @@
   "yourInfo": "Your Information",
   "otherInfo": "Other Information",
 
-
   "yourOrder": "Your Orders",
   "addressBook": "Address Book",
   "myDetails": "My Details",
@@ -58,10 +57,8 @@
   "aboutUs": "About Us",
   "accountPrivacy": "Account Privacy",
   "notificationPref": "Notification Preferences",
-  "logOut": "Log out"
-
-
-
-
-
+  "logOut": "Log out",
+  "locationPermissionRequired": "Please Ensure Location Permission Is Enabled",
+  "enable": "Enable",
+  "enabled": "Enabled"
 }
