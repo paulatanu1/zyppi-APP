@@ -63,7 +63,13 @@
 
   "myAddress": "My Address",
   "addNewAddress": "Add new address",
-  "yourSavedAddress": "Your saved address"
+  "yourSavedAddress": "Your saved address",
+  "reOrder": "Reorder",
+  "rateOrder": "Rate order",
+  "orderInfo": "Order info",
+  "deleteOrder": "Delete Order",
+  "shareItems": "Share order items",
+  "editProfile": "Edit Profile"
 
 
 

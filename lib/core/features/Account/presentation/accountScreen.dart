@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/features/Account/widgets/profileContainer.dart';
+import 'package:zippy/core/features/Account/widgets/profileContainerItem.dart';
 
 import '../../../../Utils/colors.dart';
 
@@ -94,24 +95,82 @@ class AccountScreen extends StatelessWidget {
                           color: AppColors.black,
                           fontSize: 13),
                     ),
+
+                    Row(
+                      children: [
+                        InkWell(
+                          onTap: ()
+                          {
+                            context.push('/editProfileScreen');
+                          },
+                          child: Text('editProfile'.tr(),
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'Poppins',
+                                color: AppColors.deepBlue1,
+                                fontSize: 12),
+                          ),
+                        ),
+                        Icon(Icons.arrow_forward_ios, color:AppColors.deepBlue1,size: 12,)
+                      ],
+                    ),
                     SizedBox(height: height*0.03,),
-                    ProfileContainer(
-                      ContainerName: 'yourInfo'.tr(),
-                      containerList: yourInfoList,
-                    onClicked: (){
-                        if(yourInfoList[0]=='yourOrder'.tr()){
-                          context.push('/yourOrderScreen');
-                        }
-                        if(yourInfoList[1]=='addressBook'.tr()){
-                          context.push('/myAddressScreen');
-                        }
 
-                          // yourInfoList[0]=='yourOrder'.tr()? context.push('/yourOrderScreen'):
-                          // yourInfoList[1]=='addressBook'.tr()? context.push('/myAddressScreen')
-                          //     :
-                          // context.push('/myAddressScreen');
-
-                    },
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                            height: height * 0.32,
+                            width: width,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: AppColors.lightBlue1,
+                                width: 1.0,
+                              ),
+                              borderRadius: BorderRadius.circular(18.0),
+                            ),
+                            child: Padding(
+                              padding:  EdgeInsets.only(top: height*0.02),
+                              child: ListView.builder(
+                                  itemCount: yourInfoList.length,
+                                  itemBuilder: (BuildContext context, int index) {
+                                    return ProfileContainerItem(
+                                      onClicked: (){
+                                        index == 0?context.push('/yourOrderScreen'):
+                                         index == 1? context.push('/myAddressScreen'):
+                                         context.push('/myAddressScreen');
+                                      },
+                                      itemName: yourInfoList[index].toString(),);
+                                  }),
+                            )),
+                        // Positioned text on the border
+                        Positioned(
+                          top: -10,
+                          left: width * 0.1,
+                          child: Container(
+                            padding: EdgeInsets.only(
+                                left: height * 0.025,
+                                right: height * 0.025,
+                                top: height * 0.003,
+                                bottom: height * 0.003),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: AppColors.lightBlue1,
+                                width: 1.0,
+                              ),
+                              color: AppColors.white,
+                              borderRadius: BorderRadius.circular(15.0),
+                            ),
+                            child: Text(
+                              'yourInfo'.tr(),
+                              style: TextStyle(
+                                color: AppColors.lightBlack,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     SizedBox(height: height*0.025,),
                     ProfileContainer(ContainerName: 'otherInfo'.tr(), containerList: otherInfoList,),

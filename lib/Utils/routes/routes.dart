@@ -14,6 +14,8 @@ import 'package:zippy/core/features/MyCart/presentation/my_cart_screen.dart';
 import 'package:zippy/core/features/ProductDetails/presentation/productDetails_screen.dart';
 import 'package:zippy/core/features/YourOrder/presentation/yourOrderScreen.dart';
 
+import '../../core/features/EditProfile/presentation/editProfileScreen.dart';
+
 //class AppRoutes {
 final GoRouter router =
     GoRouter(initialLocation: '/navBar', routes: <RouteBase>[
@@ -89,6 +91,11 @@ final GoRouter router =
     path: '/yourOrderScreen',
     name: 'YourOrderScreen',
     builder: (context, state) => YourOrderScreen(),
+  ),
+      GoRoute(
+    path: '/editProfileScreen',
+    name: 'EditProfileScreen',
+    builder: (context, state) => EditProfileScreen(),
   )
 ]);
 //}
