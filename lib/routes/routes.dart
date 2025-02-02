@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/data/provider/sharedPreferenceProvider.dart';
+import 'package:zippy/features/EditProfile/presentation/editProfileScreen.dart';
+import 'package:zippy/features/MyAddress/presentation/myAddressScreen.dart';
+import 'package:zippy/features/YourOrder/presentation/yourOrderScreen.dart';
 import 'package:zippy/features/Account/presentation/accountScreen.dart';
 import 'package:zippy/features/Auth/Login/presentation/loginScreen.dart';
 import 'package:zippy/features/Auth/OTPVerification/presentation/otpVerificationScreen.dart';
@@ -109,82 +112,23 @@ class Routes {
             builder: (context, state) {
               final bool addLocation = state.extra as bool;
               return SearchAddressScreen(addLocation: addLocation);
-            })
+            }),
+        GoRoute(
+          path: '/myAddressScreen',
+          name: 'MyAddressScreen',
+          builder: (context, state) => MyAddressScreen(),
+        ),
+        GoRoute(
+          path: '/yourOrderScreen',
+          name: 'YourOrderScreen',
+          builder: (context, state) => YourOrderScreen(),
+        ),
+        GoRoute(
+          path: '/editProfileScreen',
+          name: 'EditProfileScreen',
+          builder: (context, state) => EditProfileScreen(),
+        )
       ],
     );
   }
-
-  // final GoRouter router = GoRouter(
-  //   initialLocation: '/slider',
-  //   routes: <RouteBase>[
-  //     GoRoute(
-  //       path: '/slider',
-  //       name: 'Slider',
-  //       builder: (context, state) => SliderScreen(),
-  //     ),
-  //     GoRoute(
-  //       path: '/loginScreen',
-  //       name: 'LoginScreen',
-  //       builder: (context, state) => LoginScreen(),
-  //     ),
-  //     GoRoute(
-  //       path: '/otpVerificationScreen',
-  //       name: 'OtpVerificationScreen',
-  //       builder: (context, state) {
-  //         final phoneNumber = state.uri.queryParameters['phoneNumber'];
-  //         return OtpVerificationScreen(phoneNumber: phoneNumber);
-  //       },
-  //     ),
-  //     GoRoute(
-  //       path: '/navBar',
-  //       name: 'NavigationBar',
-  //       builder: (context, state) {
-  //         final index = state.uri.queryParameters['index'] != null
-  //             ? int.parse(state.uri.queryParameters['index']!)
-  //             : 0;
-  //         return NavBar(initialIndex: index);
-  //       },
-  //     ),
-  //     GoRoute(
-  //       path: '/homeScreen',
-  //       name: 'HomeScreen',
-  //       builder: (context, state) => HomeScreen(),
-  //     ),
-  //     GoRoute(
-  //       path: '/exploreScreen',
-  //       name: 'ExploreScreen',
-  //       builder: (context, state) => ExploreScreen(),
-  //     ),
-  //     GoRoute(
-  //       path: '/productDetailsScreen',
-  //       name: 'ProductDetailsScreen',
-  //       builder: (context, state) => ProductDetailsScreen(),
-  //     ),
-  //     GoRoute(
-  //       path: '/categoryDetailsScreen',
-  //       name: 'CategoryDetailsScreen',
-  //       builder: (context, state) => CategoryDetailsScreen(),
-  //     ),
-  //     GoRoute(
-  //       path: '/filterScreen',
-  //       name: 'FilterScreen',
-  //       builder: (context, state) => FilterScreen(),
-  //     ),
-  //     GoRoute(
-  //       path: '/favouriteScreen',
-  //       name: 'FavouriteScreen',
-  //       builder: (context, state) => FavouriteScreen(),
-  //     ),
-  //     GoRoute(
-  //       path: '/myCartScreen',
-  //       name: 'MyCartScreen',
-  //       builder: (context, state) => MyCartScreen(),
-  //     ),
-  //     GoRoute(
-  //       path: '/accountScreen',
-  //       name: 'AccountScreen',
-  //       builder: (context, state) => AccountScreen(),
-  //     )
-  //   ],
-  // );
 }

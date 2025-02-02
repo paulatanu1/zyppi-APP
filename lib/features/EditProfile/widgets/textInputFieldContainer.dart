@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:zippy/Utils/colors.dart';
+import 'package:zippy/core/constants/colors.dart';
 
 class TextInputFieldContainer extends StatelessWidget {
   final String inputFieldName;

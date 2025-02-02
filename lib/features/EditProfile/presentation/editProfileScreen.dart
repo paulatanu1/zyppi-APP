@@ -1,7 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:zippy/Utils/colors.dart';
-import 'package:zippy/core/features/EditProfile/widgets/textInputFieldContainer.dart';
+import 'package:zippy/core/constants/colors.dart';
+import 'package:zippy/features/EditProfile/widgets/textInputFieldContainer.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
