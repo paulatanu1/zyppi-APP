@@ -1,7 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-
-import '../../../../Utils/colors.dart';
+import 'package:zippy/core/constants/colors.dart';
 import '../widgets/yourOrderWidget.dart';
 
 class YourOrderScreen extends StatefulWidget {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:zippy/Utils/colors.dart';
-import 'package:zippy/core/features/Account/widgets/profileContainerItem.dart';
+import 'package:zippy/core/constants/colors.dart';
+import 'package:zippy/features/Account/widgets/profileContainerItem.dart';
 
 class ProfileContainer extends StatelessWidget {
   final String ContainerName;
