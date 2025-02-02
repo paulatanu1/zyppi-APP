@@ -15,6 +15,15 @@ class CheckLocationPermissionProvider
         state.copyWith(isEnabled: await Geolocator.isLocationServiceEnabled());
     log('Permission Status: ${state.isEnabled}');
   }
+
+  Future<void> enableLocationService() async {
+    state =
+        state.copyWith(isEnabled: await Geolocator.isLocationServiceEnabled());
+
+    if (state.isEnabled == false) {
+      await Geolocator.openLocationSettings();
+    }
+  }
 }
 
 final checkLocationPermission = StateNotifierProvider.autoDispose<

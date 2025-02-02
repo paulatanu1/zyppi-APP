@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:zippy/core/data/provider/sharedPreferenceProvider.dart';
 import 'package:zippy/core/infrastructure/baseApiServices.dart';
 import 'package:zippy/core/infrastructure/dioExceptions.dart';
 import 'package:zippy/core/infrastructure/header.dart';
@@ -43,6 +44,25 @@ class NetworkApiServices implements BaseApiServices {
     try {
       dio.options.headers.addAll(header.header());
       AppLog.showLog(tag: 'Get URL', message: url);
+
+      final response = await dio.post(url, data: payload);
+
+      return (response, null);
+    } on DioException catch (e) {
+      return (null, e);
+    } catch (error) {
+      return (null, null);
+    }
+  }
+
+  @override
+  Future<(dynamic, DioException?)> postAuthenticatedApiRequest(
+      {required String url, required Map<String, dynamic> payload}) async {
+    // TODO: implement postApiRequest
+    try {
+      dio.options.headers
+          .addAll(header.authenticatedHeader());
+      AppLog.showLog(tag: 'POST URL', message: url);
 
       final response = await dio.post(url, data: payload);
 

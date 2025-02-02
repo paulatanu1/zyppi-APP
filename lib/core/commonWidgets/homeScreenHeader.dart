@@ -72,10 +72,8 @@ class HomeScreenHeader extends ConsumerWidget {
                   ],
                 ),
                 SizedBox(height: 3.h),
-                Text(
-                  getCurrentLocation.isDetecting == true
-                      ? ''
-                      : getCurrentLocation.address ?? '',
+                getCurrentLocation.isDetecting == true ? CircularProgressIndicator() : Text(
+                  getCurrentLocation.address ?? '',
                   style: TextStyle(
                     fontSize: 25.sp,
                     color: AppColors.black,

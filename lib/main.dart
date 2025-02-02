@@ -26,7 +26,7 @@ void main() async {
   await container.read(checkAndRequestLocation.notifier).checkAndRequestLocationPermission();
 
   final routes = Routes(container);
-  final router = await routes.getRouter();
+  final router = await routes.getRouter();  
 
   runApp(EasyLocalization(
     supportedLocales: const [

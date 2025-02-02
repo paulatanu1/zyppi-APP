@@ -1,8 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:zippy/core/data/dataSource/keyNames.dart';
 import 'package:zippy/core/data/provider/sharedPreferenceProvider.dart';
 import 'package:zippy/features/Account/presentation/accountScreen.dart';
 import 'package:zippy/features/Auth/Login/presentation/loginScreen.dart';
@@ -32,8 +29,8 @@ class Routes {
   }
 
   Future<GoRouter> getRouter() async {
-    // final initialRoute = await _getInitialRoute();
-    final initialRoute = '/navBar';
+    final initialRoute = await _getInitialRoute();
+    // final initialRoute = '/navBar';
 
     return GoRouter(
       initialLocation: initialRoute,
@@ -107,10 +104,12 @@ class Routes {
           builder: (context, state) => AccountScreen(),
         ),
         GoRoute(
-          path: '/searchAddressScreen',
-          name: 'SearchAddressScreen',
-          builder: (context, state) => SearchAddressScreen(),
-        )
+            path: '/searchAddressScreen',
+            name: 'SearchAddressScreen',
+            builder: (context, state) {
+              final bool addLocation = state.extra as bool;
+              return SearchAddressScreen(addLocation: addLocation);
+            })
       ],
     );
   }

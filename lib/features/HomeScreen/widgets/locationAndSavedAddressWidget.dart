@@ -1,11 +1,10 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:zippy/core/commonWidgets/primaryButton.dart';
 import 'package:zippy/core/constants/colors.dart';
 import 'package:zippy/core/sharedProviders/Location/provider/checkLocationPermissionProvider.dart';
-import 'package:zippy/core/sharedProviders/Location/provider/requestLocationProvider.dart';
+import 'package:zippy/core/sharedProviders/Location/provider/getCurrentLocationProvider.dart';
 
 class LocationAndSavedAddressWidget extends ConsumerWidget {
   final bool? isLocationEnabled;
@@ -17,7 +16,6 @@ class LocationAndSavedAddressWidget extends ConsumerWidget {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
     final checkLocation = ref.watch(checkLocationPermission);
-    
 
     // TODO: implement build
     return Container(
@@ -62,7 +60,7 @@ class LocationAndSavedAddressWidget extends ConsumerWidget {
                       padding: EdgeInsets.only(
                           top: height * 0.005, bottom: height * 0.005),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           FittedBox(
@@ -71,16 +69,34 @@ class LocationAndSavedAddressWidget extends ConsumerWidget {
                               constraints: BoxConstraints(maxWidth: 500),
                               child: Text(
                                   isLocationEnabled == true
-                                      ? checkLocation.isEnabled == true 
+                                      ? checkLocation.isEnabled == true
                                           ? 'Device location enabled'
                                           : 'Device location not enabled'
                                       : 'Home',
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'Poppins',
-                                      fontSize: 25)),
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'Poppins',
+                                  )),
                             ),
                           ),
+                          SizedBox(height: height * 0.005),
+                          isLocationEnabled == false
+                              ? Flexible(
+                                  flex: 1,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Padding(
+                                      padding:
+                                          EdgeInsets.only(right: width * 0.1),
+                                      child: Text(
+                                          'Enable for a better delivery experience',
+                                          style: TextStyle(
+                                              fontFamily: 'Poppins',
+                                              fontSize: 20)),
+                                    ),
+                                  ),
+                                )
+                              : SizedBox.shrink(),
                           SizedBox(height: height * 0.005),
                           Flexible(
                             flex: 1,
@@ -89,21 +105,9 @@ class LocationAndSavedAddressWidget extends ConsumerWidget {
                               child: Padding(
                                 padding: EdgeInsets.only(right: width * 0.1),
                                 child: Text(
-                                    'Enable for a better delivery experience',
-                                    style: TextStyle(
-                                        fontFamily: 'Poppins', fontSize: 20)),
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: height * 0.005),
-                          Flexible(
-                            flex: 1,
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Padding(
-                                padding: EdgeInsets.only(right: width * 0.1),
-                                child: Text(
-                                    'Enable for a better delivery experience',
+                                    isLocationEnabled == false
+                                        ? 'Phone: 1234567890'
+                                        : 'Enable for a better delivery experience',
                                     style: TextStyle(
                                         fontWeight: FontWeight.w500,
                                         fontFamily: 'Poppins',
@@ -125,8 +129,9 @@ class LocationAndSavedAddressWidget extends ConsumerWidget {
                                 right: width * 0.02,
                                 bottom: height * 0.018),
                             child: PrimaryButton(
-                              buttonTitle:
-                                  checkLocation.isEnabled == true ? 'Enabled' : 'Enable',
+                              buttonTitle: checkLocation.isEnabled == true
+                                  ? 'Enabled'
+                                  : 'Enable',
                               buttonColor: checkLocation == true
                                   ? AppColors.borderColor
                                   : AppColors.blue,
@@ -134,9 +139,19 @@ class LocationAndSavedAddressWidget extends ConsumerWidget {
                               borderRadius: width * 0.03,
                               action: checkLocation.isEnabled == true
                                   ? () {}
-                                  : () => ref
-                                      .read(checkAndRequestLocation.notifier)
-                                      .checkAndRequestLocationPermission(),
+                                  : () {
+                                      ref
+                                          .read(
+                                              checkLocationPermission.notifier)
+                                          .enableLocationService()
+                                          .then((_) => ref
+                                              .read(currentLocation.notifier)
+                                              .getCurrentLocation());
+                                      context.pop();
+                                    },
+                              // ref
+                              //     .read(checkAndRequestLocation.notifier)
+                              //     .checkAndRequestLocationPermission(),
                             ),
                           )
                         : Row(

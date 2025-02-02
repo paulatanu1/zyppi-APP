@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:zippy/core/sharedProviders/Location/provider/requestLocationProvider.dart';
-import 'package:zippy/features/HomeScreen/provider/addressProvider.dart';
 import 'package:zippy/features/HomeScreen/widgets/addAndCurrentWidget.dart';
 import 'package:zippy/features/HomeScreen/widgets/locationAndSavedAddressWidget.dart';
 import 'package:zippy/core/constants/colors.dart';

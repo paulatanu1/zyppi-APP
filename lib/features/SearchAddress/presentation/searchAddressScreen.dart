@@ -7,6 +7,10 @@ import 'package:zippy/features/HomeScreen/widgets/searchPlacesWidget.dart';
 import 'package:zippy/features/SearchAddress/provider/placePredictionProvider.dart';
 
 class SearchAddressScreen extends ConsumerWidget {
+  final bool? addLocation;
+
+  SearchAddressScreen({required this.addLocation});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final height = MediaQuery.of(context).size.height;
@@ -54,7 +58,17 @@ class SearchAddressScreen extends ConsumerWidget {
                                   .then((_) => ref
                                       .read(addressProvider.notifier)
                                       .searchBoxClick(false))
-                                  .then((_) => context.pop()),
+                                  .then((_) => addLocation == false
+                                      ? context.pop()
+                                      : ref
+                                          .read(
+                                              placePredictionProvider.notifier)
+                                          .addAddress(
+                                              placeDetails:
+                                                  placePrediction.placeDetails,
+                                              selectedAddress: placePrediction
+                                                  .selectedAddress)
+                                          .then((_) => context.pop())),
                               child: Padding(
                                 padding: EdgeInsets.all(width * 0.01),
                                 child: Row(

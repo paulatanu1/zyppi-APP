@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
@@ -20,6 +21,8 @@ class GetCurrentLocationProvider
   }
 
   Future<void> getCurrentLocation() async {
+    state = state.copyWith(isDetecting: true);
+
     final currentPosition = await Geolocator.getCurrentPosition();
 
     state = state.copyWith(
@@ -44,8 +47,11 @@ class GetCurrentLocationProvider
       state = state.copyWith(isDetecting: false);
 
       if (response == null && dioException == null) {
+        state = state.copyWith(isDetecting: false);
         showConnectionInterrupted();
       } else if (dioException != null) {
+        state = state.copyWith(isDetecting: false);
+
         AppLog.showLog(error: dioException.toString());
         showDioError(dioException);
       } else {
@@ -56,9 +62,13 @@ class GetCurrentLocationProvider
 
         state = state.copyWith(
             address: currentLocation.results
-                .where((result) => result.types.contains('premise'))
-                .map((result) => result.formattedAddress)
-                .firstOrNull ?? currentLocation.results.first.formattedAddress ?? 'Address Not Found');
+                    .where((result) => result.types.contains('premise'))
+                    .map((result) => result.formattedAddress)
+                    .firstOrNull ??
+                currentLocation.results.first.formattedAddress ??
+                'Address Not Found');
+        state = state.copyWith(isDetecting: false);
+
       }
     } catch (error, stackTrace) {
       state = state.copyWith(isDetecting: false);

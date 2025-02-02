@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/constants/googleApiKey.dart';
 import 'package:zippy/core/infrastructure/networkApiServices.dart';
 import 'package:zippy/core/infrastructure/url.dart';
+import 'package:zippy/core/sharedProviders/Location/provider/getCurrentLocationProvider.dart';
 import 'package:zippy/core/sharedProviders/networkProvider.dart';
 import 'package:zippy/core/utils/log.dart';
 import 'package:zippy/core/utils/snackBar.dart';
@@ -13,8 +14,10 @@ import '../application/placePredictionState.dart';
 
 class PlacePredictionProvider extends StateNotifier<PlacePredictionState> {
   final NetworkApiServices networkApiServices;
+  final GetCurrentLocationProvider getCurrentLocationProvider;
 
-  PlacePredictionProvider(this.networkApiServices)
+  PlacePredictionProvider(
+      this.networkApiServices, this.getCurrentLocationProvider)
       : super(PlacePredictionState());
 
   Future<void> placePrediction({required String? input}) async {
@@ -50,7 +53,8 @@ class PlacePredictionProvider extends StateNotifier<PlacePredictionState> {
     }
   }
 
-  Future<void> placeDetails({required String? placeId, required String? selectedAddress}) async {
+  Future<void> placeDetails(
+      {required String? placeId, required String? selectedAddress}) async {
     try {
       var (response, dioException) = await networkApiServices.getApiRequest(
           url: '${Url.googleApi}/place/details/json?',
@@ -70,10 +74,56 @@ class PlacePredictionProvider extends StateNotifier<PlacePredictionState> {
       } else {
         final placeDetails = PlaceDetails.fromJson(response.data);
 
-        state = state.copyWith(placeDetails: placeDetails, selectedAddress: selectedAddress);
+        state = state.copyWith(
+            placeDetails: placeDetails, selectedAddress: selectedAddress);
+
+        getCurrentLocationProvider.state = getCurrentLocationProvider.state
+            .copyWith(
+                latitude: placeDetails.result?.geometry?.location?.lat ?? 0.0,
+                longitude: placeDetails.result?.geometry?.location?.lng ?? 0.0,
+                address: selectedAddress);
 
         AppLog.showLog(
             tag: 'Place Detail', message: json.encode(state.placeDetails));
+      }
+    } catch (error, stackTrace) {
+      AppLog.showLog(error: error, stackTrace: stackTrace);
+
+      showDioError(error);
+    }
+  }
+
+  Future<void> addAddress(
+      {required PlaceDetails? placeDetails,
+      required String? selectedAddress}) async {
+    try {
+      var (response, dioException) = await networkApiServices
+          .postAuthenticatedApiRequest(url: Url.addAddress, payload: {
+        'street': selectedAddress,
+        'city': 'Kolkata',
+        'state': 'West Bengal',
+        'country': 'India',
+        'postalCode': '123456',
+        'area': 'Prince Anwar Shah Road',
+        'landmark': 'South City',
+        'otherAddressType': 'string',
+        'addressType': 'others',
+        'lat': placeDetails?.result?.geometry?.location?.lat.toString(),
+        'lng': placeDetails?.result?.geometry?.location?.lng.toString(),
+        'isDefault': true
+      });
+
+      if (response == null && dioException == null) {
+        showConnectionInterrupted();
+      } else if (dioException != null) {
+        AppLog.showLog(error: dioException.toString());
+        showDioError(dioException);
+      } else {
+        final addAddressSuccess = json.encode(response.data);
+
+        AppLog.showLog(tag: 'Add Address', message: addAddressSuccess);
+
+        showSuccessToast(message: 'Address Added Successfully');
       }
     } catch (error, stackTrace) {
       AppLog.showLog(error: error, stackTrace: stackTrace);
@@ -85,4 +135,5 @@ class PlacePredictionProvider extends StateNotifier<PlacePredictionState> {
 
 final placePredictionProvider =
     StateNotifierProvider<PlacePredictionProvider, PlacePredictionState>(
-        (ref) => PlacePredictionProvider(ref.read(networkProvider)));
+        (ref) => PlacePredictionProvider(
+            ref.read(networkProvider), ref.read(currentLocation.notifier)));

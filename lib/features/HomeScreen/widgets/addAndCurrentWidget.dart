@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/constants/colors.dart';
+import 'package:zippy/core/sharedProviders/Location/provider/getCurrentLocationProvider.dart';
 
 class AddAndCurrentWidget extends ConsumerWidget {
   bool isAddAddress;
@@ -16,8 +17,8 @@ class AddAndCurrentWidget extends ConsumerWidget {
     // TODO: implement build
     return GestureDetector(
         onTap: () => isAddAddress == false
-            ? () {}
-            : context.pushNamed('SearchAddressScreen'),
+            ? ref.read(currentLocation.notifier).getCurrentLocation()
+            : context.pushNamed('SearchAddressScreen', extra: isAddAddress),
         child: Container(
           height: height * 0.065,
           width: double.infinity,
