@@ -25,11 +25,17 @@ class AppColors {
   static const Color grey5 = Color(0xFFE2E2E2);
   static const Color grey6 = Color(0xFFE5E5E5);
   static const Color grey7 = Color(0xFF909090);
+  static const Color grey8 = Color(0xFFEBEBEB);
   static const Color deepBlue1 = Color(0xFF1541E6);
+  static const Color deepBlue2 = Color(0xFF1C5FA1);
+  static const Color deepBlue3 = Color(0xFF054F61F);
   static const Color lightBlue = Color(0xFF597AF1);
   static const Color lightBlue1 = Color(0xFFCFDEF5);
   static const Color lightBlue2 = Color(0xFF8EB8FB);
+  static const Color lightBlue3 = Color(0xFFF9F9F9);
+  static const Color lightBlue4 = Color(0xFFD1E5F6);
   static const Color green = Color(0xFF53B175);
+  static const Color green1 = Color(0xFFCAEEC9);
   static  LinearGradient gradientHomeBackGround = LinearGradient(
     begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
