@@ -47,7 +47,6 @@
   "yourInfo": "Your Information",
   "otherInfo": "Other Information",
 
-
   "yourOrder": "Your Orders",
   "addressBook": "Address Book",
   "myDetails": "My Details",
@@ -59,7 +58,9 @@
   "accountPrivacy": "Account Privacy",
   "notificationPref": "Notification Preferences",
   "logOut": "Log out",
-
+  "locationPermissionRequired": "Please Ensure Location Permission Is Enabled",
+  "enable": "Enable",
+  "enabled": "Enabled",
 
   "myAddress": "My Address",
   "addNewAddress": "Add new address",
@@ -70,9 +71,4 @@
   "deleteOrder": "Delete Order",
   "shareItems": "Share order items",
   "editProfile": "Edit Profile"
-
-
-
-
-
 }
