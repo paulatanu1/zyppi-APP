@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Zyppi Search</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0E7C47}a:hover{color:#0A5A34}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.h{font-family:'Bricolage Grotesque',sans-serif;letter-spacing:-0.01em}
+.muted{color:#5B655F}
+.lbl{font-size:12px;font-weight:700;letter-spacing:0.06em;color:#5B655F}
+.chip{height:36px;padding:0 14px;border:1px solid #E4E6E1;border-radius:18px;background:#fff;font:600 13px 'Figtree',sans-serif;color:#17201B;display:flex;align-items:center;gap:6px;text-decoration:none}
+.row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #EEF0EA;text-decoration:none;color:#17201B}
+.row .t{width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none}
+.add{display:flex;align-items:center;justify-content:center;height:36px;padding:0 16px;border:1.5px solid #0E7C47;border-radius:9px;background:#fff;color:#0E7C47;font:700 13px 'Figtree',sans-serif}
+</style>
+</helmet>
+<div style="width:390px;height:844px;position:relative;overflow:hidden;background:#fff;font-family:'Figtree',sans-serif;color:#17201B;box-sizing:border-box;display:flex;flex-direction:column">
+  <header style="padding:12px 16px 12px 6px;display:flex;align-items:center;gap:4px">
+    <a href="Main.dc.html" aria-label="Back" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#17201B"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg></a>
+    <div style="flex:1;display:flex;align-items:center;gap:8px;height:48px;padding:0 12px;border:1.5px solid #0E7C47;border-radius:12px">
+      <label for="q" style="position:absolute;width:1px;height:1px;overflow:hidden">Search products</label>
+      <input id="q" value="tom" style="flex:1;border:0;outline:none;font:600 15px 'Figtree',sans-serif;background:transparent;color:#17201B">
+      <button aria-label="Clear search" style="width:32px;height:32px;border:0;background:#EEF0EA;border-radius:16px;color:#5B655F;display:flex;align-items:center;justify-content:center"><svg class="ic" style="width:14px;height:14px" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+  </header>
+  <div style="padding:4px 16px 0;display:flex;flex-direction:column;gap:18px">
+    <section style="display:flex;flex-direction:column;gap:10px">
+      <div class="lbl">RECENT SEARCHES</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <a href="#" class="chip"><svg class="ic" style="width:15px;height:15px;color:#5B655F" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>milk</a>
+        <a href="#" class="chip"><svg class="ic" style="width:15px;height:15px;color:#5B655F" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>brown bread</a>
+        <a href="#" class="chip"><svg class="ic" style="width:15px;height:15px;color:#5B655F" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>eggs</a>
+      </div>
+    </section>
+    <section style="display:flex;flex-direction:column">
+      <div class="lbl" style="padding-bottom:4px">PRODUCTS MATCHING "TOM"</div>
+      <a href="Product.dc.html" class="row"><span class="t" style="background:#FDECE7;color:#C2410C"><svg class="ic" style="width:26px;height:26px" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 5V2"/></svg></span><div style="flex:1"><div style="font-size:14px;font-weight:600"><strong>Tom</strong>atoes (Hybrid)</div><div class="muted" style="font-size:12px">500 g · ₹32</div></div><span class="add">ADD</span></a>
+      <a href="Product.dc.html" class="row"><span class="t" style="background:#FDECE7;color:#C2410C"><svg class="ic" style="width:26px;height:26px" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 5V2"/></svg></span><div style="flex:1"><div style="font-size:14px;font-weight:600">Cherry <strong>Tom</strong>atoes</div><div class="muted" style="font-size:12px">200 g · ₹49</div></div><span class="add">ADD</span></a>
+      <a href="Product.dc.html" class="row"><span class="t" style="background:#FBF1E2;color:#A16207"><svg class="ic" style="width:26px;height:26px" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2h8"/><path d="M9 2v3l-2 4v11a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9l-2-4V2"/></svg></span><div style="flex:1"><div style="font-size:14px;font-weight:600"><strong>Tom</strong>ato Ketchup</div><div class="muted" style="font-size:12px">500 g · ₹115</div></div><span class="add">ADD</span></a>
+      <a href="Product.dc.html" class="row"><span class="t" style="background:#FFF5D6;color:#A16207"><svg class="ic" style="width:26px;height:26px" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/></svg></span><div style="flex:1"><div style="font-size:14px;font-weight:600"><strong>Tom</strong>ato Soup Mix</div><div class="muted" style="font-size:12px">4 servings · ₹55</div></div><span class="add">ADD</span></a>
+    </section>
+    <section style="display:flex;flex-direction:column;gap:10px">
+      <div class="lbl">TRENDING NEAR YOU</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <a href="#" class="chip">mangoes</a><a href="#" class="chip">paneer</a><a href="#" class="chip">atta 5 kg</a><a href="#" class="chip">curd</a><a href="#" class="chip">bananas</a>
+      </div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

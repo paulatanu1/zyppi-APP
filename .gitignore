@@ -66,3 +66,8 @@ doc/api/
 
 .flutter-plugins
 .flutter-plugins-dependencies
+
+# Zyppi
+.fvm/
+env/*.json
+!env/*.example.json

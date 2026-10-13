@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Zyppi Checkout</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0E7C47}a:hover{color:#0A5A34}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.h{font-family:'Bricolage Grotesque',sans-serif;letter-spacing:-0.01em}
+.box{background:#fff;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.muted{color:#5B655F}
+.ttl{font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center}
+.slot{flex:1;border:1.5px solid #E4E6E1;border-radius:12px;padding:10px 12px;background:#fff;text-align:left;font:500 12px 'Figtree',sans-serif;color:#5B655F;display:flex;flex-direction:column;gap:2px}
+.slot.on{border-color:#0E7C47;background:#F3FAF6}
+.slot strong{font-size:14px;color:#17201B}
+.pay{display:flex;align-items:center;gap:12px;padding:12px;border:1.5px solid #E4E6E1;border-radius:12px;background:#fff;font:600 14px 'Figtree',sans-serif;color:#17201B;text-align:left;width:100%}
+.pay.on{border-color:#0E7C47;background:#F3FAF6}
+.radio{width:20px;height:20px;border-radius:10px;border:2px solid #9AA39D;box-sizing:border-box;flex:none}
+.pay.on .radio{border:6px solid #0E7C47}
+.pay .lg{width:36px;height:36px;border-radius:8px;background:#EEF0EA;display:flex;align-items:center;justify-content:center;color:#17201B}
+.btn{display:flex;align-items:center;justify-content:center;height:56px;border-radius:12px;background:#0E7C47;color:#fff;font:700 16px 'Figtree',sans-serif;text-decoration:none}
+.btn:hover{color:#fff;background:#0A5A34}
+</style>
+</helmet>
+<div style="width:390px;height:844px;position:relative;overflow:hidden;background:#F2F3EE;font-family:'Figtree',sans-serif;color:#17201B;box-sizing:border-box">
+  <header style="background:#fff;padding:12px 16px 12px 6px;display:flex;align-items:center;gap:4px">
+    <a href="Cart.dc.html" aria-label="Back" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#17201B"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg></a>
+    <h1 class="h" style="margin:0;font-size:19px;font-weight:700">Checkout</h1>
+  </header>
+  <div style="padding:12px 12px 110px;display:flex;flex-direction:column;gap:12px">
+    <section class="box">
+      <div class="ttl">Deliver to <a href="Location.dc.html" style="font-size:13px;text-decoration:none">Change</a></div>
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <span style="width:40px;height:40px;border-radius:10px;background:#E7F4EC;color:#0E7C47;display:flex;align-items:center;justify-content:center;flex:none"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg></span>
+        <div><div style="font-weight:700;font-size:14px">Home</div><div class="muted" style="font-size:13px;line-height:1.4">Flat 4B, Green Residency, [street, locality, PIN]</div><div class="muted" style="font-size:12px;margin-top:2px">Atanu · +91 98765 43210</div></div>
+      </div>
+    </section>
+    <section class="box">
+      <div class="ttl">Delivery time</div>
+      <div style="display:flex;gap:8px">
+        <button class="slot on" aria-pressed="true"><strong>Express</strong>In 12 minutes</button>
+        <button class="slot"><strong>Schedule</strong>Pick a slot</button>
+      </div>
+      <label for="note" class="muted" style="font-size:12px;font-weight:600">Delivery instructions (optional)</label>
+      <input id="note" placeholder="e.g. Leave at the door, don't ring the bell" style="height:44px;border:1px solid #E4E6E1;border-radius:10px;padding:0 12px;font:500 13px 'Figtree',sans-serif;margin-top:-6px">
+    </section>
+    <section class="box">
+      <div class="ttl">Payment method</div>
+      <button class="pay on" aria-pressed="true"><span class="radio"></span><span class="lg"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></span><span style="flex:1">UPI<span class="muted" style="display:block;font-size:12px;font-weight:500">Pay with any UPI app</span></span></button>
+      <button class="pay"><span class="radio"></span><span class="lg"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span><span style="flex:1">Credit or debit card</span></button>
+      <button class="pay"><span class="radio"></span><span class="lg"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg></span><span style="flex:1">Cash on delivery</span></button>
+    </section>
+    <div class="muted" style="font-size:12px;text-align:center">Payments are processed securely by Razorpay.</div>
+  </div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;padding:12px 16px 20px;border-top:1px solid #E4E6E1;display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;justify-content:space-between;font-size:13px"><span class="muted">3 items · saving ₹31</span><strong>To pay ₹253</strong></div>
+    <a href="Placed.dc.html" class="btn">Pay ₹253 with UPI</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
