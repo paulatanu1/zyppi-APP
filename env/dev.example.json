@@ -2,7 +2,7 @@
   "FLAVOR": "dev",
   "DATA_SOURCE": "mock",
   "SUPABASE_URL": "https://dcgjsspymailbciqkhvq.supabase.co",
-  "SUPABASE_ANON_KEY": "sb_publishable_wEaTb1M2ui7xZWmcL9LhBA_Xha0jzGk",
-  "RAZORPAY_KEY_ID": "rzp_test_xxxxxxxx",
-  "GOOGLE_MAPS_API_KEY": ""
+  "SUPABASE_ANON_KEY": "paste-your-publishable-key-here",
+  "GOOGLE_MAPS_API_KEY": "paste-restricted-maps-key-here",
+  "RAZORPAY_KEY_ID": "rzp_test_xxxxxxxx"
 }

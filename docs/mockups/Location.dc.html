@@ -8,20 +8,20 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&amp;family=Figtree:wght@400;500;600;700&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&amp;family=Poppins:wght@400;500;600;700&amp;display=swap">
 <style>
 body{margin:0}
-a{color:#0E7C47}a:hover{color:#0A5A34}
+a{color:#D81B87}a:hover{color:#A8106A}
 .ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
-.h{font-family:'Bricolage Grotesque',sans-serif;letter-spacing:-0.01em}
-.btn{display:flex;align-items:center;justify-content:center;gap:8px;height:52px;border:0;border-radius:12px;background:#0E7C47;color:#fff;font:700 16px 'Figtree',sans-serif;text-decoration:none}
-.btn:hover{color:#fff;background:#0A5A34}
+.h{font-family:'Montserrat',sans-serif;letter-spacing:-0.01em}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;height:52px;border:0;border-radius:12px;background:#D81B87;color:#fff;font:700 16px 'Poppins',sans-serif;text-decoration:none}
+.btn:hover{color:#fff;background:#A8106A}
 .muted{color:#5B655F}
 .road{position:absolute;background:#fff}
 .saved{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #E4E6E1;text-decoration:none;color:#17201B}
 </style>
 </helmet>
-<div style="width:390px;height:844px;position:relative;overflow:hidden;background:#E9ECE4;font-family:'Figtree',sans-serif;color:#17201B;box-sizing:border-box">
+<div style="width:390px;height:844px;position:relative;overflow:hidden;background:#E9ECE4;font-family:'Poppins',sans-serif;color:#17201B;box-sizing:border-box">
   <div aria-hidden="true">
     <div class="road" style="left:0;right:0;top:150px;height:14px"></div>
     <div class="road" style="left:0;right:0;top:330px;height:10px"></div>
@@ -33,23 +33,23 @@ a{color:#0E7C47}a:hover{color:#0A5A34}
   <div style="position:absolute;left:16px;right:16px;top:16px;display:flex;align-items:center;gap:10px;height:48px;padding:0 14px;background:#fff;border-radius:12px;box-shadow:0 2px 10px rgba(23,32,27,0.10)">
     <svg class="ic" style="color:#5B655F" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
     <label for="area" style="position:absolute;width:1px;height:1px;overflow:hidden">Search area</label>
-    <input id="area" placeholder="Search area, street or landmark" style="flex:1;border:0;outline:none;font:500 14px 'Figtree',sans-serif;background:transparent">
+    <input id="area" placeholder="Search area, street or landmark" style="flex:1;border:0;outline:none;font:500 14px 'Poppins',sans-serif;background:transparent">
   </div>
-  <div style="position:absolute;left:171px;top:198px;display:flex;flex-direction:column;align-items:center;color:#0E7C47" aria-hidden="true">
+  <div style="position:absolute;left:171px;top:198px;display:flex;flex-direction:column;align-items:center;color:#D81B87" aria-hidden="true">
     <div style="background:#17201B;color:#fff;font-size:11px;font-weight:600;padding:6px 10px;border-radius:8px;margin-bottom:6px;white-space:nowrap;margin-left:-40px;margin-right:-40px">Order will be delivered here</div>
-    <svg class="ic" style="width:44px;height:44px;stroke-width:1.6;fill:#E7F4EC" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3" style="fill:#0E7C47"/></svg>
+    <svg class="ic" style="width:44px;height:44px;stroke-width:1.6;fill:#FFECF7" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3" style="fill:#D81B87"/></svg>
   </div>
-  <button aria-label="Use current location" style="position:absolute;right:16px;top:400px;width:48px;height:48px;border-radius:24px;border:0;background:#fff;color:#0E7C47;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(23,32,27,0.14)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg></button>
+  <button aria-label="Use current location" style="position:absolute;right:16px;top:400px;width:48px;height:48px;border-radius:24px;border:0;background:#fff;color:#D81B87;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(23,32,27,0.14)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg></button>
 
   <section style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:22px 22px 0 0;padding:20px 20px 28px;display:flex;flex-direction:column;gap:14px;box-shadow:0 -4px 20px rgba(23,32,27,0.08)">
     <div style="display:flex;gap:12px;align-items:flex-start">
-      <div style="width:40px;height:40px;border-radius:12px;background:#E7F4EC;color:#0E7C47;display:flex;align-items:center;justify-content:center"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
+      <div style="width:40px;height:40px;border-radius:12px;background:#FFECF7;color:#D81B87;display:flex;align-items:center;justify-content:center"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
       <div style="display:flex;flex-direction:column;gap:2px;flex:1">
         <div class="h" style="font-size:19px;font-weight:700">Green Residency</div>
         <div class="muted" style="font-size:13px;line-height:1.4">[Detected street, locality, city, PIN]</div>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:8px;background:#E7F4EC;color:#0A5A34;border-radius:10px;padding:10px 12px;font-size:13px;font-weight:600"><svg class="ic" style="width:16px;height:16px" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>We deliver here · about 12 min</div>
+    <div style="display:flex;align-items:center;gap:8px;background:#FFECF7;color:#A8106A;border-radius:10px;padding:10px 12px;font-size:13px;font-weight:600"><svg class="ic" style="width:16px;height:16px" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>We deliver here · about 12 min</div>
     <a href="Main.dc.html" class="btn">Confirm location</a>
     <div style="display:flex;flex-direction:column">
       <div class="muted" style="font-size:12px;font-weight:700;letter-spacing:0.06em;padding-bottom:6px">SAVED ADDRESSES</div>
