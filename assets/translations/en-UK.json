@@ -21,17 +21,14 @@
   "resendCode": "Resend Code",
   "submit": "Submit",
   "searchBar": "Search, oil, rice",
-
   "previous": "Prev",
   "next": "Next",
   "getStart": "Get Started",
-
   "category": "Categories",
   "seeAll": "See all",
   "lowestIn": "Lowest in ",
   "deliveryTo": "Delivery to ",
   "home": "Home",
-
   "findProducts": "Find Products",
   "searchStore": "Search Store",
   "addToBasket": "Add To Basket",
@@ -46,13 +43,11 @@
   "profile": "Profile",
   "yourInfo": "Your Information",
   "otherInfo": "Other Information",
-
   "yourOrder": "Your Orders",
   "addressBook": "Address Book",
   "myDetails": "My Details",
   "myCoins": "My Coins",
   "paymentSettings": "Payment Settings",
-
   "shareApp": "Share the App",
   "aboutUs": "About Us",
   "accountPrivacy": "Account Privacy",
@@ -61,7 +56,6 @@
   "locationPermissionRequired": "Please Ensure Location Permission Is Enabled",
   "enable": "Enable",
   "enabled": "Enabled",
-
   "myAddress": "My Address",
   "addNewAddress": "Add new address",
   "yourSavedAddress": "Your saved address",
@@ -71,7 +65,21 @@
   "deleteOrder": "Delete Order",
   "shareItems": "Share order items",
   "editProfile": "Edit Profile",
-
   "somethingWentWrong": "Something went wrong",
-  "retry": "Retry"
+  "retry": "Retry",
+  "addedToCart": "Added to cart",
+  "invalidCoupon": "This coupon isn't valid for this order",
+  "billDetails": "Bill details",
+  "itemTotal": "Item total",
+  "deliveryFee": "Delivery fee",
+  "handlingFee": "Handling fee",
+  "tip": "Tip your delivery partner",
+  "discount": "Coupon discount",
+  "total": "TOTAL",
+  "free": "FREE",
+  "emptyCart": "Your cart is empty",
+  "applyCoupon": "Apply coupon",
+  "couponApplied": "Coupon applied",
+  "proceedToCheckout": "Proceed to checkout →",
+  "close": "Close"
 }

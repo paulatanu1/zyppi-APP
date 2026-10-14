@@ -3,8 +3,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zippy/app/app.dart';
+import 'package:zippy/core/cart/data/cart_repository_impl.dart';
 import 'package:zippy/core/config/env.dart';
 import 'package:zippy/core/constants/constants.dart';
 import 'package:zippy/core/shared_providers/location/provider/request_location_provider.dart';
@@ -31,7 +33,12 @@ Future<void> bootstrap() async {
     );
   }
 
-  final container = ProviderContainer();
+  await Hive.initFlutter();
+  final cartBox = await Hive.openBox('cart');
+
+  final container = ProviderContainer(
+    overrides: [cartBoxProvider.overrideWithValue(cartBox)],
+  );
 
   await container
       .read(checkAndRequestLocation.notifier)

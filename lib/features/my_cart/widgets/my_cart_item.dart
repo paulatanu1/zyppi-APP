@@ -1,16 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bounce/flutter_bounce.dart';
-import 'package:zippy/features/my_cart/widgets/item_count_container.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:zippy/core/cart/application/cart_provider.dart';
+import 'package:zippy/core/cart/domain/cart_line.dart';
+import 'package:zippy/core/common_widgets/price_tag.dart';
+import 'package:zippy/core/common_widgets/quantity_stepper.dart';
 import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_typography.dart';
 
-class MyCartItem extends StatelessWidget {
-  final Function() crossIconClicked;
-  const MyCartItem({super.key, required this.crossIconClicked});
+class MyCartItem extends ConsumerWidget {
+  final CartLine line;
+
+  const MyCartItem({super.key, required this.line});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     double height = MediaQuery.of(context).size.height;
     double width = MediaQuery.of(context).size.width;
+
+    void updateQuantity(int quantity) {
+      ref
+          .read(cartProvider.notifier)
+          .setQuantity(
+            productId: line.product.id,
+            variantId: line.variant.id,
+            quantity: quantity,
+          );
+    }
 
     return Padding(
       padding: EdgeInsets.only(left: height * 0.02, right: height * 0.02),
@@ -22,75 +38,40 @@ class MyCartItem extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Image.asset(
-                  'assets/images/milk.png',
+                  line.product.image,
                   height: height * 0.08,
                   width: width * 0.15,
                   fit: BoxFit.contain,
                 ),
-
                 SizedBox(width: height * 0.025),
-
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Text(line.product.name, style: AppTypography.bodyLarge),
                       Text(
-                        "Bell Pepper Red",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: AppColors.darkBlue,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Poppins',
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                      Text(
-                        "1kg, Price",
-                        style: TextStyle(
-                          fontSize: 16,
+                        line.variant.label,
+                        style: AppTypography.bodyMedium.copyWith(
                           color: AppColors.grey3,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Poppins',
-                          fontStyle: FontStyle.italic,
                         ),
                       ),
                       SizedBox(height: height * 0.02),
-                      Row(
-                        children: [
-                          ItemCountContainer(
-                            icon: Icons.remove,
-                            colors: AppColors.grey3,
-                          ),
-                          SizedBox(width: height * 0.02),
-                          Text(
-                            "1",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: AppColors.darkBlue,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: 'Poppins',
-                            ),
-                          ),
-                          SizedBox(width: height * 0.02),
-
-                          ItemCountContainer(
-                            icon: Icons.add,
-                            colors: AppColors.primaryButtonColor,
-                          ),
-                        ],
+                      QuantityStepper(
+                        quantity: line.quantity,
+                        onDecrement: () => updateQuantity(line.quantity - 1),
+                        onIncrement: () => updateQuantity(line.quantity + 1),
                       ),
                     ],
                   ),
                 ),
-
                 Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Bounce(
                       duration: Duration(milliseconds: 300),
-                      onPressed: crossIconClicked,
+                      onPressed: () => updateQuantity(0),
                       child: Icon(
                         Icons.close,
                         size: 30,
@@ -98,14 +79,9 @@ class MyCartItem extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: height * 0.04),
-                    Text(
-                      "\$4.99",
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: AppColors.darkBlue,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Poppins',
-                      ),
+                    PriceTag(
+                      pricePaise: line.lineTotalPaise,
+                      mrpPaise: line.lineMrpPaise,
                     ),
                   ],
                 ),

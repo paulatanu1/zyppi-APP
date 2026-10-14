@@ -1,12 +1,14 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/common_widgets/app_skeleton.dart';
 import 'package:zippy/core/common_widgets/price_tag.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/common_widgets/quantity_stepper.dart';
 import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/utils/snack_bar.dart';
 import 'package:zippy/features/product_details/application/product_detail_provider.dart';
 import 'package:zippy/features/product_details/widgets/dropdown_expentiantile.dart';
 import 'package:zippy/features/product_details/widgets/product_slider.dart';
@@ -117,7 +119,18 @@ class ProductDetailsScreen extends ConsumerWidget {
                     SizedBox(height: height * 0.015),
                     PrimaryButton(
                       buttonTitle: 'addToBasket'.tr(),
-                      action: () {},
+                      action: variant == null
+                          ? () {}
+                          : () {
+                              ref
+                                  .read(cartProvider.notifier)
+                                  .addItem(
+                                    productId: product!.id,
+                                    variantId: variant.id,
+                                    quantity: state.quantity,
+                                  );
+                              showSuccessToast(message: 'addedToCart'.tr());
+                            },
                     ),
                     SizedBox(height: height * 0.025),
                   ],
