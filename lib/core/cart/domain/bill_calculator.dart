@@ -8,8 +8,7 @@ class BillCalculator {
   BillCalculator._();
 
   static const freeDeliveryPaise = 0;
-  static const handlingFeePaise =
-      2000; // ₹20, matches docs/mockups/Cart.dc.html
+  static const handlingFeePaise = 500; // ₹5, matches docs/mockups/Cart.dc.html
 
   static BillBreakdown calculate({
     required List<CartLine> lines,

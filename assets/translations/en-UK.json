@@ -112,5 +112,8 @@
   "add": "ADD",
   "selectPackSize": "Select pack size",
   "aboutThisItem": "About this item",
-  "aboutThisItemPlaceholder": "Freshly sourced and delivered from our local partner stores — matched for quality on every order."
+  "aboutThisItemPlaceholder": "Freshly sourced and delivered from our local partner stores — matched for quality on every order.",
+  "custom": "Custom",
+  "tipGoesFullyToPartner": "The full amount goes to them.",
+  "savingsBanner": "You're saving {} on this order, and delivery is free"
 }

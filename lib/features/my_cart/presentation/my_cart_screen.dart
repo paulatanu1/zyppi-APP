@@ -4,12 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/common_widgets/app_skeleton.dart';
+import 'package:zippy/core/common_widgets/price_tag.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/common_widgets/text_form_field.dart';
 import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/my_cart/widgets/bill_details.dart';
 import 'package:zippy/features/my_cart/widgets/my_cart_item.dart';
+import 'package:zippy/features/my_cart/widgets/tip_selector.dart';
 
 class MyCartScreen extends ConsumerWidget {
   const MyCartScreen({super.key});
@@ -72,11 +75,39 @@ class MyCartScreen extends ConsumerWidget {
       child: SingleChildScrollView(
         child: Column(
           children: [
+            if (cart.bill.savingsPaise > 0)
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xl,
+                    vertical: AppSpacing.base,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryTint,
+                    borderRadius: BorderRadius.circular(AppRadius.input),
+                  ),
+                  child: Text(
+                    'savingsBanner'.tr(
+                      args: [PriceTag.format(cart.bill.savingsPaise)],
+                    ),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.primaryDark,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
             ...cart.lines.map((line) => MyCartItem(line: line)),
             BillDetails(bill: cart.bill),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: _CouponField(appliedCoupon: cart.appliedCoupon),
+            ),
+            TipSelector(
+              tipPaise: cart.tipPaise,
+              onChanged: (tip) => ref.read(cartProvider.notifier).setTip(tip),
             ),
             SizedBox(height: height * 0.02),
             Padding(

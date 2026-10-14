@@ -77,5 +77,8 @@
   "add": "ਸ਼ਾਮਲ ਕਰੋ",
   "selectPackSize": "ਪੈਕ ਸਾਈਜ਼ ਚੁਣੋ",
   "aboutThisItem": "ਇਸ ਉਤਪਾਦ ਬਾਰੇ",
-  "aboutThisItemPlaceholder": "ਸਾਡੇ ਲੋਕਲ ਪਾਰਟਨਰ ਸਟੋਰਾਂ ਤੋਂ ਤਾਜ਼ਾ ਮੰਗਵਾਇਆ ਅਤੇ ਭੇਜਿਆ ਗਿਆ।"
+  "aboutThisItemPlaceholder": "ਸਾਡੇ ਲੋਕਲ ਪਾਰਟਨਰ ਸਟੋਰਾਂ ਤੋਂ ਤਾਜ਼ਾ ਮੰਗਵਾਇਆ ਅਤੇ ਭੇਜਿਆ ਗਿਆ।",
+  "custom": "ਕਸਟਮ",
+  "tipGoesFullyToPartner": "ਪੂਰੀ ਰਕਮ ਉਹਨਾਂ ਨੂੰ ਹੀ ਜਾਂਦੀ ਹੈ।",
+  "savingsBanner": "ਤੁਸੀਂ ਇਸ ਆਰਡਰ 'ਤੇ {} ਬਚਾ ਰਹੇ ਹੋ, ਅਤੇ ਡਿਲਿਵਰੀ ਮੁਫ਼ਤ ਹੈ"
 }

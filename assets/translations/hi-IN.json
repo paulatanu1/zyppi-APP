@@ -78,5 +78,8 @@
   "add": "जोड़ें",
   "selectPackSize": "पैक साइज़ चुनें",
   "aboutThisItem": "इस उत्पाद के बारे में",
-  "aboutThisItemPlaceholder": "हमारे स्थानीय पार्टनर स्टोर से ताज़ा मंगवाया और भेजा गया।"
+  "aboutThisItemPlaceholder": "हमारे स्थानीय पार्टनर स्टोर से ताज़ा मंगवाया और भेजा गया।",
+  "custom": "कस्टम",
+  "tipGoesFullyToPartner": "पूरी राशि उन्हें ही मिलती है।",
+  "savingsBanner": "आप इस ऑर्डर पर {} बचा रहे हैं, और डिलिवरी मुफ़्त है"
 }
