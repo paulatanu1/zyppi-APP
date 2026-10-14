@@ -36,6 +36,10 @@ class CategoryDetailsHeader extends StatelessWidget {
           ),
         ),
         IconButton(
+          onPressed: () => context.push('/filterScreen'),
+          icon: const Icon(Icons.filter_list),
+        ),
+        IconButton(
           onPressed: () => context.push('/searchScreen'),
           icon: const Icon(Icons.search),
         ),

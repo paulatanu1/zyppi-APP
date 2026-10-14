@@ -1,32 +1,22 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_typography.dart';
 
 class FilterHeader extends StatelessWidget {
-  final Function()? onCrossIconClicked;
+  final VoidCallback? onCrossIconClicked;
+
   const FilterHeader({super.key, this.onCrossIconClicked});
 
   @override
   Widget build(BuildContext context) {
-    double width = MediaQuery.of(context).size.width;
-
     return Row(
-      //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        InkWell(
-          onTap: onCrossIconClicked,
-          child: Icon(Icons.close, weight: 4, size: 30),
-        ),
-        SizedBox(width: width * 0.3),
-        Text(
-          'filters'.tr(),
-          style: TextStyle(
-            fontSize: 20,
-            color: AppColors.darkBlue,
-            fontWeight: FontWeight.w600,
-            fontFamily: 'Poppins',
-            fontStyle: FontStyle.italic,
-          ),
+        Text('filters'.tr(), style: AppTypography.titleMedium),
+        IconButton(
+          onPressed: onCrossIconClicked,
+          icon: const Icon(Icons.close, color: AppColors.ink),
         ),
       ],
     );

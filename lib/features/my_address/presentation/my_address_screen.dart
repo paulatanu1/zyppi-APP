@@ -1,199 +1,78 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_spacing.dart';
+import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/home_screen/widgets/add_and_current_widget.dart';
-import 'package:zippy/features/home_screen/widgets/location_and_saved_address_widget.dart';
+import 'package:zippy/features/my_address/application/addresses_provider.dart';
+import 'package:zippy/features/my_address/widgets/saved_address_row.dart';
 
-class MyAddressScreen extends StatefulWidget {
+/// docs/mockups/Location.dc.html's "SAVED ADDRESSES" section — the
+/// map-pin picker above it needs google_maps_flutter (Phase 4), so
+/// this screen stays list-only for now.
+class MyAddressScreen extends ConsumerWidget {
   const MyAddressScreen({super.key});
 
   @override
-  State<MyAddressScreen> createState() => _MyAddressScreenState();
-}
-
-class _MyAddressScreenState extends State<MyAddressScreen> {
-  @override
-  Widget build(BuildContext context) {
-    double height = MediaQuery.of(context).size.height;
-    double width = MediaQuery.of(context).size.width;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final addressesAsync = ref.watch(addressesProvider);
 
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                InkWell(
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                  child: Icon(Icons.arrow_back_ios_new, size: 20),
-                ),
-                SizedBox(width: width * 0.02),
-                Text(
-                  'myAddress'.tr(),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Poppins',
-                    color: AppColors.darkBlue,
-                    fontStyle: FontStyle.italic,
-                    fontSize: 18,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: height * 0.025),
-            Divider(height: 1, color: AppColors.grey5),
-            SizedBox(height: height * 0.025),
             Padding(
-              padding: EdgeInsets.only(
-                left: height * 0.02,
-                right: height * 0.02,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Row(
                 children: [
-                  AddAndCurrentWidget(isAddAddress: true),
-
-                  // Container(
-                  //   width: width,
-                  //   decoration: BoxDecoration(
-                  //     color: AppColors.grey8,
-                  //     borderRadius: BorderRadius.circular(height * 0.02),
-                  //   ),
-                  //   child: Padding(
-                  //     padding: EdgeInsets.only(
-                  //         left: height * 0.02,
-                  //         right: height * 0.02,
-                  //         top: height * 0.01,
-                  //         bottom: height * 0.01),
-                  //     child: Row(
-                  //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  //       children: [
-                  //         Row(
-                  //           children: [
-                  //             Icon(
-                  //               Icons.add,
-                  //               color: AppColors.deepBlue2,
-                  //               size: 20,
-                  //             ),
-                  //             SizedBox(
-                  //               width: width * 0.02,
-                  //             ),
-                  //             Text(
-                  //               'addNewAddress'.tr(),
-                  //               style: TextStyle(
-                  //                   fontWeight: FontWeight.w600,
-                  //                   fontFamily: 'Poppins',
-                  //                   color: AppColors.deepBlue2,
-                  //                   fontSize: 16),
-                  //             ),
-                  //           ],
-                  //         ),
-                  //         Icon(
-                  //           Icons.arrow_forward_ios,
-                  //           size: 20,
-                  //           color: AppColors.deepBlue2,
-                  //         )
-                  //       ],
-                  //     ),
-                  //   ),
-                  // ),
-                  SizedBox(height: height * 0.015),
-                  Text(
-                    'yourSavedAddress'.tr(),
-                    style: TextStyle(
-                      fontWeight: FontWeight.w400,
-                      fontFamily: 'Poppins',
-                      color: AppColors.black,
-                      fontSize: 14,
-                    ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.arrow_back_ios_new, size: 20),
                   ),
-                  SizedBox(height: height * 0.015),
-                  LocationAndSavedAddressWidget(isLocationEnabled: false),
-
-                  // Container(
-                  //   width: width,
-                  //   decoration: BoxDecoration(
-                  //       color: AppColors.grey8,
-                  //       borderRadius: BorderRadius.circular(height * 0.015)),
-                  //   child: Padding(
-                  //     padding: EdgeInsets.only(
-                  //         left: height * 0.02,
-                  //         right: height * 0.02,
-                  //         top: height * 0.01,
-                  //         bottom: height * 0.01),
-                  //     child: Row(
-                  //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  //       children: [
-                  //         Row(
-                  //           children: [
-                  //             Container(
-                  //               height: height * 0.035,
-                  //               width: height * 0.03,
-                  //               color: AppColors.lightBlue1,
-                  //             ),
-                  //             SizedBox(
-                  //               width: width * 0.02,
-                  //             ),
-                  //             Column(
-                  //               crossAxisAlignment: CrossAxisAlignment.start,
-                  //               children: [
-                  //                 Text(
-                  //                   'Home',
-                  //                   style: TextStyle(
-                  //                       fontWeight: FontWeight.w600,
-                  //                       fontFamily: 'Poppins',
-                  //                       color: AppColors.black,
-                  //                       fontSize: 15),
-                  //                 ),
-                  //                 Text(
-                  //                   'Chelyama, Raghunathpur, Purulia, 723146',
-                  //                   style: TextStyle(
-                  //                       fontWeight: FontWeight.w300,
-                  //                       fontFamily: 'Poppins',
-                  //                       color: AppColors.black,
-                  //                       fontSize: 12),
-                  //                 ),
-                  //                 Text(
-                  //                   'Phone: 8637003404',
-                  //                   style: TextStyle(
-                  //                       fontWeight: FontWeight.w500,
-                  //                       fontFamily: 'Poppins',
-                  //                       color: AppColors.black,
-                  //                       fontSize: 12),
-                  //                 ),
-                  //               ],
-                  //             ),
-                  //           ],
-                  //         ),
-                  //         Icon(Icons.more_vert),
-                  //       ],
-                  //     ),
-                  //   ),
-                  // )
+                  Text('myAddress'.tr(), style: AppTypography.titleMedium),
                 ],
               ),
             ),
-            Spacer(),
-            Column(
-              children: [
-                Image.asset(
-                  'assets/images/prof_logo.png',
-                  height: height * 0.05,
-                  width: width * 0.3,
+            const Divider(height: 1, color: AppColors.divider),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xxl),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const AddAndCurrentWidget(isAddAddress: true),
+                    const SizedBox(height: AppSpacing.xxl),
+                    Text(
+                      'yourSavedAddress'.tr(),
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.muted,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.base),
+                    Expanded(
+                      child: addressesAsync.when(
+                        loading: () => const SizedBox.shrink(),
+                        error: (error, stackTrace) => Text(
+                          'somethingWentWrong'.tr(),
+                          style: AppTypography.bodyMedium,
+                        ),
+                        data: (addresses) => ListView.separated(
+                          itemCount: addresses.length,
+                          separatorBuilder: (context, index) => const Divider(
+                            height: 1,
+                            color: AppColors.divider,
+                          ),
+                          itemBuilder: (context, index) =>
+                              SavedAddressRow(address: addresses[index]),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  'v1.0.0'.tr(),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Poppins',
-                    color: AppColors.grey7,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
+              ),
             ),
           ],
         ),
