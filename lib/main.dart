@@ -6,8 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/constants/constants.dart';
-import 'package:zippy/core/data/application/shared_preference_state.dart';
-import 'package:zippy/core/data/provider/shared_preference_provider.dart';
 import 'package:zippy/core/shared_providers/location/provider/request_location_provider.dart';
 import 'package:zippy/core/theme/app_theme.dart';
 import 'package:zippy/routes/routes.dart';
@@ -50,26 +48,13 @@ void main() async {
   );
 }
 
-class Zyppi extends ConsumerWidget {
+class Zyppi extends StatelessWidget {
   final GoRouter router;
 
   const Zyppi({super.key, required this.router});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(sharedPreferenceProvider);
-
-    ref.listen<SharedPreferenceState>(sharedPreferenceProvider, (_, next) {
-      final token = next.authToken;
-      if (token == null || token.isEmpty) {
-        // Navigate to Login Screen
-        context.goNamed('LoginScreen');
-      } else {
-        // Navigate to Home Screen
-        context.goNamed('NavigationBar');
-      }
-    });
-
+  Widget build(BuildContext context) {
     return ScreenUtilInit(
       designSize: const Size(390, 844),
       builder: (context, child) => MaterialApp.router(

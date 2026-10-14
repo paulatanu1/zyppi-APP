@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
+import 'package:zippy/routes/router_refresh_listenable.dart';
 import 'package:zippy/features/edit_profile/presentation/edit_profile_screen.dart';
 import 'package:zippy/features/my_address/presentation/my_address_screen.dart';
 import 'package:zippy/features/your_order/presentation/your_order_screen.dart';
@@ -18,25 +19,40 @@ import 'package:zippy/features/my_cart/presentation/my_cart_screen.dart';
 import 'package:zippy/features/product_details/presentation/product_details_screen.dart';
 import 'package:zippy/features/search_address/presentation/search_address_screen.dart';
 
+const _unauthenticatedRoutes = {
+  '/slider',
+  '/loginScreen',
+  '/otpVerificationScreen',
+};
+
 class Routes {
   final ProviderContainer container;
 
   Routes(this.container);
 
-  Future<String> _getInitialRoute() async {
-    final sharedPrefState = container.read(sharedPreferenceProvider);
-    await container.read(sharedPreferenceProvider.notifier).getLocalStorage();
+  late final GoRouterRefreshListenable _refreshListenable =
+      GoRouterRefreshListenable(container);
 
-    final token = sharedPrefState.authToken;
-    return (token == null || token.isEmpty) ? '/slider' : '/navBar';
+  String? _redirect(GoRouterState state) {
+    final token = container.read(sharedPreferenceProvider).authToken;
+    final isLoggedIn = token != null && token.isNotEmpty;
+    final isUnauthenticatedRoute = _unauthenticatedRoutes.contains(
+      state.matchedLocation,
+    );
+
+    if (!isLoggedIn && !isUnauthenticatedRoute) return '/slider';
+    if (isLoggedIn && isUnauthenticatedRoute) return '/navBar';
+
+    return null;
   }
 
   Future<GoRouter> getRouter() async {
-    final initialRoute = await _getInitialRoute();
-    // final initialRoute = '/navBar';
+    await container.read(sharedPreferenceProvider.notifier).getLocalStorage();
 
     return GoRouter(
-      initialLocation: initialRoute,
+      initialLocation: '/slider',
+      refreshListenable: _refreshListenable,
+      redirect: (context, state) => _redirect(state),
       routes: <RouteBase>[
         GoRoute(
           path: '/slider',
