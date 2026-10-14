@@ -7,7 +7,6 @@ import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
-import 'package:zippy/features/auth/otp_verification/application/login_provider.dart';
 import 'package:zippy/features/auth/otp_verification/application/otp_provider.dart';
 
 /// docs/mockups/Otp.dc.html.
@@ -19,7 +18,6 @@ class OtpVerificationScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final otpVerification = ref.watch(otpProvider);
-    final login = ref.watch(loginProvider);
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -75,16 +73,16 @@ class OtpVerificationScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.giant),
-                login.loading == true
+                otpVerification.otpLoading
                     ? const Center(child: CircularProgressIndicator())
                     : PrimaryButton(
                         buttonTitle: 'submit'.tr(),
                         action: () => ref
-                            .read(loginProvider.notifier)
-                            .login(
-                              phoneNumber: phoneNumber,
-                              otp: otpVerification.otp,
-                              context: context,
+                            .read(otpProvider.notifier)
+                            .verifyOtp(
+                              phoneNumber ?? '',
+                              otpVerification.otp ?? '',
+                              context,
                             ),
                       ),
               ],

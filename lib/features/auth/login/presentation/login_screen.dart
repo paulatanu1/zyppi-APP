@@ -1,13 +1,13 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/google_sign_in_button.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/auth/google_sign_in/application/google_provider.dart';
+import 'package:zippy/features/auth/otp_verification/application/otp_provider.dart';
 
 /// docs/mockups/Login.dc.html.
 class LoginScreen extends ConsumerWidget {
@@ -17,6 +17,7 @@ class LoginScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final TextEditingController phoneController = TextEditingController();
     final googleToken = ref.watch(googleProvider);
+    final otpState = ref.watch(otpProvider);
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -97,15 +98,17 @@ class LoginScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: AppSpacing.xxl),
                     PrimaryButton(
-                      buttonTitle: 'continueLabel'.tr(),
-                      action: () {
-                        context.goNamed(
-                          'OtpVerificationScreen',
-                          queryParameters: {
-                            'phoneNumber': phoneController.text,
-                          },
-                        );
-                      },
+                      buttonTitle: otpState.loading
+                          ? '…'
+                          : 'continueLabel'.tr(),
+                      action: otpState.loading
+                          ? () {}
+                          : () => ref
+                                .read(otpProvider.notifier)
+                                .generateOtp(
+                                  '+91${phoneController.text}',
+                                  context,
+                                ),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
                     Center(

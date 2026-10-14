@@ -28,12 +28,13 @@ Future<void> bootstrap() async {
 
   await Firebase.initializeApp();
 
-  if (!Env.isMockDataSource) {
-    await Supabase.initialize(
-      url: Env.supabaseUrl,
-      publishableKey: Env.supabaseAnonKey,
-    );
-  }
+  // Auth always goes through Supabase (Phase 3), independent of
+  // Env.dataSource — that flag only picks mock-JSON vs live Supabase
+  // tables for the *catalog* repositories.
+  await Supabase.initialize(
+    url: Env.supabaseUrl,
+    publishableKey: Env.supabaseAnonKey,
+  );
 
   await Hive.initFlutter();
   final cartBox = await Hive.openBox('cart');

@@ -1,9 +1,9 @@
-import 'dart:developer';
-
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/data/provider/shared_preference_provider.dart';
+import 'package:zippy/core/utils/snack_bar.dart';
 import 'package:zippy/features/auth/otp_verification/data/otp_auth_repository_impl.dart';
 import 'package:zippy/features/auth/otp_verification/domain/otp_auth_repository.dart';
 
@@ -11,37 +11,26 @@ import 'otp_state.dart';
 
 class OtpLogin extends StateNotifier<OtpState> {
   final OtpAuthRepository repository;
+  final Ref ref;
 
-  OtpLogin(this.repository) : super(OtpState());
+  OtpLogin(this.repository, this.ref) : super(OtpState());
 
   Future<void> generateOtp(String phoneNumber, BuildContext context) async {
-    state = state.copyWith(loading: true);
+    state = state.copyWith(loading: true, error: null);
 
     try {
-      await repository.verifyPhoneNumber(
-        phoneNumber: '+91$phoneNumber',
-        verificationCompleted: (PhoneAuthCredential credential) async {
-          await repository.signInWithCredential(credential);
-        },
-        verificationFailed: (FirebaseAuthException e) {
-          log('Verification Failed: ${e.toString()}');
-        },
-        codeSent: (String verificationId, int? resendToken) {
-          state = state.copyWith(
-            loading: false,
-            verificationId: verificationId,
-          );
+      await repository.sendOtp(phoneNumber);
 
-          context.push('/otpVerificationScreen');
-        },
-        codeAutoRetrievalTimeout: (String verificationId) {
-          log('Auto Retrieval Timeout: $verificationId');
-        },
-      );
-    } catch (e) {
       state = state.copyWith(loading: false);
 
-      log('Error Generate: ${e.toString()}');
+      if (!context.mounted) return;
+      context.push(
+        '/otpVerificationScreen?phoneNumber=${Uri.encodeComponent(phoneNumber)}',
+      );
+    } catch (error) {
+      state = state.copyWith(loading: false, error: error.toString());
+
+      showError(error);
     }
   }
 
@@ -49,29 +38,40 @@ class OtpLogin extends StateNotifier<OtpState> {
     state = state.copyWith(otp: otp);
   }
 
-  Future<void> verifyOtp(String otp, BuildContext context) async {
-    state = state.copyWith(otpLoading: true);
+  Future<void> verifyOtp(
+    String phoneNumber,
+    String otp,
+    BuildContext context,
+  ) async {
+    state = state.copyWith(otpLoading: true, error: null);
 
     try {
-      final cred = repository.credentialFromSmsCode(
-        verificationId: state.verificationId ?? '',
-        smsCode: otp,
+      final accessToken = await repository.verifyOtp(
+        phoneNumber: phoneNumber,
+        otp: otp,
       );
 
-      await repository.signInWithCredential(cred);
+      state = state.copyWith(otpLoading: false);
+
+      if (accessToken == null) {
+        showConnectionInterrupted();
+        return;
+      }
+
+      await ref
+          .read(sharedPreferenceProvider.notifier)
+          .setLocalStorage(authToken: accessToken);
 
       if (!context.mounted) return;
-      context.go('/navBar');
+      context.goNamed('NavigationBar');
+    } catch (error) {
+      state = state.copyWith(otpLoading: false, error: error.toString());
 
-      state = state.copyWith(otpLoading: false);
-    } catch (e) {
-      state = state.copyWith(otpLoading: false);
-
-      log('Error Verify: ${e.toString()}');
+      showError(error);
     }
   }
 }
 
 final otpProvider = StateNotifierProvider.autoDispose<OtpLogin, OtpState>(
-  (ref) => OtpLogin(ref.read(otpAuthRepositoryProvider)),
+  (ref) => OtpLogin(ref.read(otpAuthRepositoryProvider), ref),
 );

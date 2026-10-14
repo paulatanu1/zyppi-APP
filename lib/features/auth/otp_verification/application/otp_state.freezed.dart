@@ -12,38 +12,35 @@ part of 'otp_state.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
-
 /// @nodoc
 mixin _$OtpState {
 
- bool get loading; bool get otpLoading; String? get otp; String? get verificationId; LoginResponse? get loginResponse;
+ bool get loading; bool get otpLoading; String? get otp; String? get error;
 /// Create a copy of OtpState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $OtpStateCopyWith<OtpState> get copyWith => _$OtpStateCopyWithImpl<OtpState>(this as OtpState, _$identity);
 
-  /// Serializes this OtpState to a JSON map.
-  Map<String, dynamic> toJson();
 
 
 @override
 bool operator ==(Object other) {
   final _this = this as OtpState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OtpState&&(identical(other.loading, _this.loading) || other.loading == _this.loading)&&(identical(other.otpLoading, _this.otpLoading) || other.otpLoading == _this.otpLoading)&&(identical(other.otp, _this.otp) || other.otp == _this.otp)&&(identical(other.verificationId, _this.verificationId) || other.verificationId == _this.verificationId)&&(identical(other.loginResponse, _this.loginResponse) || other.loginResponse == _this.loginResponse));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OtpState&&(identical(other.loading, _this.loading) || other.loading == _this.loading)&&(identical(other.otpLoading, _this.otpLoading) || other.otpLoading == _this.otpLoading)&&(identical(other.otp, _this.otp) || other.otp == _this.otp)&&(identical(other.error, _this.error) || other.error == _this.error));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode {
   final _this = this as OtpState;
-  return Object.hash(runtimeType,_this.loading,_this.otpLoading,_this.otp,_this.verificationId,_this.loginResponse);
+  return Object.hash(runtimeType,_this.loading,_this.otpLoading,_this.otp,_this.error);
 }
 
 @override
 String toString() {
   final _this = this as OtpState;
-  return 'OtpState(loading: ${_this.loading}, otpLoading: ${_this.otpLoading}, otp: ${_this.otp}, verificationId: ${_this.verificationId}, loginResponse: ${_this.loginResponse})';
+  return 'OtpState(loading: ${_this.loading}, otpLoading: ${_this.otpLoading}, otp: ${_this.otp}, error: ${_this.error})';
 }
 
 
@@ -54,11 +51,11 @@ abstract mixin class $OtpStateCopyWith<$Res>  {
   factory $OtpStateCopyWith(OtpState value, $Res Function(OtpState) _then) = _$OtpStateCopyWithImpl;
 @useResult
 $Res call({
- bool loading, bool otpLoading, String? otp, String? verificationId, LoginResponse? loginResponse
+ bool loading, bool otpLoading, String? otp, String? error
 });
 
 
-$LoginResponseCopyWith<$Res>? get loginResponse;
+
 
 }
 /// @nodoc
@@ -71,29 +68,16 @@ class _$OtpStateCopyWithImpl<$Res>
 
 /// Create a copy of OtpState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? loading = null,Object? otpLoading = null,Object? otp = freezed,Object? verificationId = freezed,Object? loginResponse = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? loading = null,Object? otpLoading = null,Object? otp = freezed,Object? error = freezed,}) {
   return _then(OtpState(
 loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
 as bool,otpLoading: null == otpLoading ? _self.otpLoading : otpLoading // ignore: cast_nullable_to_non_nullable
 as bool,otp: freezed == otp ? _self.otp : otp // ignore: cast_nullable_to_non_nullable
-as String?,verificationId: freezed == verificationId ? _self.verificationId : verificationId // ignore: cast_nullable_to_non_nullable
-as String?,loginResponse: freezed == loginResponse ? _self.loginResponse : loginResponse // ignore: cast_nullable_to_non_nullable
-as LoginResponse?,
+as String?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
-/// Create a copy of OtpState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$LoginResponseCopyWith<$Res>? get loginResponse {
-    if (_self.loginResponse == null) {
-    return null;
-  }
 
-  return $LoginResponseCopyWith<$Res>(_self.loginResponse!, (value) {
-    return _then(_self.copyWith(loginResponse: value));
-  });
-}
 }
 
 
@@ -175,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool loading,  bool otpLoading,  String? otp,  String? verificationId,  LoginResponse? loginResponse)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool loading,  bool otpLoading,  String? otp,  String? error)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _OtpState() when $default != null:
-return $default(_that.loading,_that.otpLoading,_that.otp,_that.verificationId,_that.loginResponse);case _:
+return $default(_that.loading,_that.otpLoading,_that.otp,_that.error);case _:
   return orElse();
 
 }
@@ -196,10 +180,10 @@ return $default(_that.loading,_that.otpLoading,_that.otp,_that.verificationId,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool loading,  bool otpLoading,  String? otp,  String? verificationId,  LoginResponse? loginResponse)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool loading,  bool otpLoading,  String? otp,  String? error)  $default,) {final _that = this;
 switch (_that) {
 case _OtpState():
-return $default(_that.loading,_that.otpLoading,_that.otp,_that.verificationId,_that.loginResponse);case _:
+return $default(_that.loading,_that.otpLoading,_that.otp,_that.error);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -216,10 +200,10 @@ return $default(_that.loading,_that.otpLoading,_that.otp,_that.verificationId,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool loading,  bool otpLoading,  String? otp,  String? verificationId,  LoginResponse? loginResponse)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool loading,  bool otpLoading,  String? otp,  String? error)?  $default,) {final _that = this;
 switch (_that) {
 case _OtpState() when $default != null:
-return $default(_that.loading,_that.otpLoading,_that.otp,_that.verificationId,_that.loginResponse);case _:
+return $default(_that.loading,_that.otpLoading,_that.otp,_that.error);case _:
   return null;
 
 }
@@ -228,17 +212,16 @@ return $default(_that.loading,_that.otpLoading,_that.otp,_that.verificationId,_t
 }
 
 /// @nodoc
-@JsonSerializable()
+
 
 class _OtpState implements OtpState {
-   _OtpState({this.loading = false, this.otpLoading = false, this.otp, this.verificationId, this.loginResponse});
-  factory _OtpState.fromJson(Map<String, dynamic> json) => _$OtpStateFromJson(json);
+   _OtpState({this.loading = false, this.otpLoading = false, this.otp, this.error});
+  
 
 @override@JsonKey() final  bool loading;
 @override@JsonKey() final  bool otpLoading;
 @override final  String? otp;
-@override final  String? verificationId;
-@override final  LoginResponse? loginResponse;
+@override final  String? error;
 
 /// Create a copy of OtpState
 /// with the given fields replaced by the non-null parameter values.
@@ -246,25 +229,22 @@ class _OtpState implements OtpState {
 @pragma('vm:prefer-inline')
 _$OtpStateCopyWith<_OtpState> get copyWith => __$OtpStateCopyWithImpl<_OtpState>(this, _$identity);
 
-@override
-Map<String, dynamic> toJson() {
-  return _$OtpStateToJson(this, );
-}
+
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _OtpState&&(identical(other.loading, loading) || other.loading == loading)&&(identical(other.otpLoading, otpLoading) || other.otpLoading == otpLoading)&&(identical(other.otp, otp) || other.otp == otp)&&(identical(other.verificationId, verificationId) || other.verificationId == verificationId)&&(identical(other.loginResponse, loginResponse) || other.loginResponse == loginResponse));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _OtpState&&(identical(other.loading, loading) || other.loading == loading)&&(identical(other.otpLoading, otpLoading) || other.otpLoading == otpLoading)&&(identical(other.otp, otp) || other.otp == otp)&&(identical(other.error, error) || other.error == error));
 }
 
-@JsonKey(includeFromJson: false, includeToJson: false)
+
 @override
 int get hashCode {
-    return Object.hash(runtimeType,loading,otpLoading,otp,verificationId,loginResponse);
+    return Object.hash(runtimeType,loading,otpLoading,otp,error);
 }
 
 @override
 String toString() {
-    return 'OtpState(loading: $loading, otpLoading: $otpLoading, otp: $otp, verificationId: $verificationId, loginResponse: $loginResponse)';
+    return 'OtpState(loading: $loading, otpLoading: $otpLoading, otp: $otp, error: $error)';
 }
 
 
@@ -275,11 +255,11 @@ abstract mixin class _$OtpStateCopyWith<$Res> implements $OtpStateCopyWith<$Res>
   factory _$OtpStateCopyWith(_OtpState value, $Res Function(_OtpState) _then) = __$OtpStateCopyWithImpl;
 @override @useResult
 $Res call({
- bool loading, bool otpLoading, String? otp, String? verificationId, LoginResponse? loginResponse
+ bool loading, bool otpLoading, String? otp, String? error
 });
 
 
-@override $LoginResponseCopyWith<$Res>? get loginResponse;
+
 
 }
 /// @nodoc
@@ -292,30 +272,17 @@ class __$OtpStateCopyWithImpl<$Res>
 
 /// Create a copy of OtpState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? loading = null,Object? otpLoading = null,Object? otp = freezed,Object? verificationId = freezed,Object? loginResponse = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? loading = null,Object? otpLoading = null,Object? otp = freezed,Object? error = freezed,}) {
   return _then(_OtpState(
 loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
 as bool,otpLoading: null == otpLoading ? _self.otpLoading : otpLoading // ignore: cast_nullable_to_non_nullable
 as bool,otp: freezed == otp ? _self.otp : otp // ignore: cast_nullable_to_non_nullable
-as String?,verificationId: freezed == verificationId ? _self.verificationId : verificationId // ignore: cast_nullable_to_non_nullable
-as String?,loginResponse: freezed == loginResponse ? _self.loginResponse : loginResponse // ignore: cast_nullable_to_non_nullable
-as LoginResponse?,
+as String?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
-/// Create a copy of OtpState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$LoginResponseCopyWith<$Res>? get loginResponse {
-    if (_self.loginResponse == null) {
-    return null;
-  }
 
-  return $LoginResponseCopyWith<$Res>(_self.loginResponse!, (value) {
-    return _then(_self.copyWith(loginResponse: value));
-  });
-}
 }
 
 // dart format on

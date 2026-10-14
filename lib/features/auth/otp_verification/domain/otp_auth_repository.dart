@@ -1,19 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
-
 abstract class OtpAuthRepository {
-  Future<void> verifyPhoneNumber({
-    required String phoneNumber,
-    required void Function(PhoneAuthCredential credential)
-    verificationCompleted,
-    required void Function(FirebaseAuthException exception) verificationFailed,
-    required void Function(String verificationId, int? resendToken) codeSent,
-    required void Function(String verificationId) codeAutoRetrievalTimeout,
-  });
+  /// Triggers an SMS OTP to [phoneNumber] (E.164, e.g. "+9198765...").
+  Future<void> sendOtp(String phoneNumber);
 
-  Future<void> signInWithCredential(AuthCredential credential);
-
-  AuthCredential credentialFromSmsCode({
-    required String verificationId,
-    required String smsCode,
-  });
+  /// Verifies the OTP and signs in. Returns the session's access token
+  /// on success.
+  Future<String?> verifyOtp({required String phoneNumber, required String otp});
 }

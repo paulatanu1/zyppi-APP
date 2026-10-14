@@ -1,45 +1,34 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zippy/features/auth/otp_verification/domain/otp_auth_repository.dart';
 
-// Phase 1 keeps the existing Firebase phone-auth calls behind this
-// interface; Phase 3 swaps the implementation to Supabase Auth OTP.
-class OtpAuthRepositoryImpl implements OtpAuthRepository {
+/// Phase 3: Supabase Auth phone OTP (dev flavor uses Supabase's test
+/// phone numbers, configured in the dashboard, instead of real SMS).
+class SupabaseOtpAuthRepository implements OtpAuthRepository {
+  final SupabaseClient client;
+
+  SupabaseOtpAuthRepository(this.client);
+
   @override
-  Future<void> verifyPhoneNumber({
+  Future<void> sendOtp(String phoneNumber) {
+    return client.auth.signInWithOtp(phone: phoneNumber);
+  }
+
+  @override
+  Future<String?> verifyOtp({
     required String phoneNumber,
-    required void Function(PhoneAuthCredential credential)
-    verificationCompleted,
-    required void Function(FirebaseAuthException exception) verificationFailed,
-    required void Function(String verificationId, int? resendToken) codeSent,
-    required void Function(String verificationId) codeAutoRetrievalTimeout,
-  }) {
-    return FirebaseAuth.instance.verifyPhoneNumber(
-      phoneNumber: phoneNumber,
-      verificationCompleted: verificationCompleted,
-      verificationFailed: verificationFailed,
-      codeSent: codeSent,
-      codeAutoRetrievalTimeout: codeAutoRetrievalTimeout,
+    required String otp,
+  }) async {
+    final response = await client.auth.verifyOTP(
+      type: OtpType.sms,
+      phone: phoneNumber,
+      token: otp,
     );
-  }
 
-  @override
-  Future<void> signInWithCredential(AuthCredential credential) async {
-    await FirebaseAuth.instance.signInWithCredential(credential);
-  }
-
-  @override
-  AuthCredential credentialFromSmsCode({
-    required String verificationId,
-    required String smsCode,
-  }) {
-    return PhoneAuthProvider.credential(
-      verificationId: verificationId,
-      smsCode: smsCode,
-    );
+    return response.session?.accessToken;
   }
 }
 
 final otpAuthRepositoryProvider = Provider<OtpAuthRepository>(
-  (ref) => OtpAuthRepositoryImpl(),
+  (ref) => SupabaseOtpAuthRepository(Supabase.instance.client),
 );

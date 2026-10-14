@@ -26,6 +26,11 @@ void showDioError(dynamic e) {
   _showSnackBar(errorResponse.toString());
 }
 
+/// For errors that aren't DioExceptions (e.g. Supabase AuthException).
+void showError(dynamic error) {
+  _showSnackBar(error.toString());
+}
+
 void showConnectionInterrupted() {
   _showSnackBar('Connection Was Interrupted');
 }

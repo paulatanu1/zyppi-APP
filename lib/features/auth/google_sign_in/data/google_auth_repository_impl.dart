@@ -1,11 +1,11 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zippy/features/auth/google_sign_in/domain/google_auth_repository.dart';
 
-// Phase 1 keeps the existing google_sign_in + Firebase calls behind this
-// interface; Phase 3 swaps the implementation to Supabase Auth's
-// signInWithIdToken.
+// Phase 3: google_sign_in only obtains the Google ID token; Supabase
+// Auth's signInWithIdToken exchanges it for a Supabase session
+// (replacing the Firebase credential exchange used through Phase 2).
 class GoogleAuthRepositoryImpl implements GoogleAuthRepository {
   bool _initialized = false;
 
@@ -21,13 +21,15 @@ class GoogleAuthRepositoryImpl implements GoogleAuthRepository {
     final GoogleSignInAccount googleUser = await googleSignIn.authenticate();
     final GoogleSignInAuthentication googleAuth = googleUser.authentication;
 
-    final credential = GoogleAuthProvider.credential(
-      idToken: googleAuth.idToken,
+    final idToken = googleAuth.idToken;
+    if (idToken == null) return null;
+
+    final response = await Supabase.instance.client.auth.signInWithIdToken(
+      provider: OAuthProvider.google,
+      idToken: idToken,
     );
 
-    await FirebaseAuth.instance.signInWithCredential(credential);
-
-    return googleAuth.idToken;
+    return response.session?.accessToken;
   }
 }
 
