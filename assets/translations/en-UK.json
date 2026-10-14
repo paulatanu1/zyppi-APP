@@ -82,7 +82,6 @@
   "couponApplied": "Coupon applied",
   "proceedToCheckout": "Proceed to checkout →",
   "close": "Close",
-
   "checkout": "Checkout",
   "deliverTo": "Deliver to",
   "deliveryTime": "Delivery time",
@@ -100,5 +99,15 @@
   "orderStatusDelivered": "Delivered",
   "orderStatusCancelled": "Cancelled",
   "noProductsFound": "No products found",
-  "searchStoreHint": "Search for oil, rice, atta..."
+  "searchStoreHint": "Search for oil, rice, atta...",
+  "explore": "Explore",
+  "deliveryEta": "Delivery in 12 min",
+  "homeSearchHint": "Search for atta, milk, eggs…",
+  "shopByCategory": "Shop by category",
+  "dealsForYou": "Deals for you",
+  "promoTitle": "Fresh fruits,\nflat 20% off",
+  "shopNow": "Shop now →",
+  "viewCart": "View cart",
+  "youSave": "You save {}",
+  "add": "ADD"
 }

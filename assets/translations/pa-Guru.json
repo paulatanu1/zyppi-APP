@@ -64,5 +64,15 @@
   "orderStatusDelivered": "ਡਿਲਿਵਰ ਕੀਤਾ ਗਿਆ",
   "orderStatusCancelled": "ਰੱਦ ਕੀਤਾ ਗਿਆ",
   "noProductsFound": "ਕੋਈ ਉਤਪਾਦ ਨਹੀਂ ਮਿਲਿਆ",
-  "searchStoreHint": "ਤੇਲ, ਚੌਲ, ਆਟਾ ਖੋਜੋ..."
+  "searchStoreHint": "ਤੇਲ, ਚੌਲ, ਆਟਾ ਖੋਜੋ...",
+  "explore": "ਐਕਸਪਲੋਰ",
+  "deliveryEta": "12 ਮਿੰਟਾਂ ਵਿੱਚ ਡਿਲਿਵਰੀ",
+  "homeSearchHint": "ਆਟਾ, ਦੁੱਧ, ਆਂਡੇ ਖੋਜੋ…",
+  "shopByCategory": "ਸ਼੍ਰੇਣੀ ਅਨੁਸਾਰ ਖਰੀਦੋ",
+  "dealsForYou": "ਤੁਹਾਡੇ ਲਈ ਡੀਲਾਂ",
+  "promoTitle": "ਤਾਜ਼ੇ ਫਲ,\nਫਲੈਟ 20% ਛੂਟ",
+  "shopNow": "ਹੁਣੇ ਖਰੀਦੋ →",
+  "viewCart": "ਕਾਰਟ ਵੇਖੋ",
+  "youSave": "ਤੁਸੀਂ {} ਬਚਾਏ",
+  "add": "ਸ਼ਾਮਲ ਕਰੋ"
 }

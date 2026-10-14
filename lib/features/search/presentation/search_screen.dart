@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/common_header.dart';
 import 'package:zippy/core/common_widgets/item_card.dart';
-import 'package:zippy/core/common_widgets/price_tag.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/common_widgets/text_form_field.dart';
 import 'package:zippy/core/theme/app_colors.dart';
@@ -88,10 +87,9 @@ class SearchScreen extends ConsumerWidget {
                       return ItemCard(
                         productName: product.name,
                         quantity: variant?.label ?? '',
-                        price: variant != null
-                            ? PriceTag.format(variant.pricePaise)
-                                  .replaceFirst('₹', '')
-                            : '',
+                        pricePaise: variant?.pricePaise,
+                        mrpPaise: variant?.mrpPaise,
+                        imagePath: product.image,
                         onClicked: () => context.push(
                           '/productDetailsScreen?productId=${product.id}',
                         ),

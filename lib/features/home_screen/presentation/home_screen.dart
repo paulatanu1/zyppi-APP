@@ -1,158 +1,91 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bounce/flutter_bounce.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/cart/presentation/floating_cart_bar.dart';
 import 'package:zippy/core/common_widgets/home_screen_header.dart';
-import 'package:zippy/core/common_widgets/nav_bar/provider/nav_bar_provider.dart';
-import 'package:zippy/core/common_widgets/text_form_field.dart';
-import 'package:zippy/features/home_screen/widgets/carousel.dart';
+import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_spacing.dart';
+import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/home_screen/widgets/categories.dart';
 import 'package:zippy/features/home_screen/widgets/home_page_products.dart';
-import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/features/home_screen/widgets/promo_banner.dart';
 
-class HomeScreen extends ConsumerWidget {
-  HomeScreen({super.key});
-
-  final TextEditingController searchController = TextEditingController();
+/// docs/mockups/Main.dc.html.
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final height = MediaQuery.of(context).size.height;
-    final width = MediaQuery.of(context).size.width;
-
+  Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(gradient: AppColors.gradientHomeBackGround),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            physics: BouncingScrollPhysics(),
-            child: Padding(
-              padding: EdgeInsets.all(
-                height * 0.02,
-                // 7.h
-              ),
+      backgroundColor: AppColors.background,
+      body: Stack(
+        children: [
+          SafeArea(
+            bottom: false,
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  HomeScreenHeader(),
-                  SizedBox(height: height * 0.015),
-                  TextformField(
-                    textFormFieldController: searchController,
-                    labelText: 'searchBar'.tr(),
-                    prefixIcon: true,
-                    borderRadius: width * 0.03,
-
-                    // borderRadius: 10.0.sp,
-                  ),
-                  SizedBox(
-                    height: height * 0.02,
-
-                    // height: 5.h
-                  ),
-                  CategoryCarousel(),
-                  SizedBox(height: height * 0.015),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'category'.tr(),
-                        style: TextStyle(
-                          fontSize: 50.sp,
-                          color: AppColors.black,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Poppins',
-                        ),
-                      ),
-                      Bounce(
-                        duration: Duration(milliseconds: 200),
-                        onPressed: () {
-                          ref.read(navBarProvider.notifier).updateIndex(1);
-                        },
-                        child: Text(
-                          'seeAll'.tr(),
-                          style: TextStyle(
-                            fontSize: 30.sp,
-                            color: AppColors.primaryButtonColor,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: height * 0.025),
-                  Categories(),
-                  SizedBox(height: height * 0.025),
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: AppColors.blue,
-                      borderRadius: BorderRadius.circular(width * 0.05),
+                  const HomeScreenHeader(),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.xxl,
+                      AppSpacing.xl,
+                      AppSpacing.xxl,
+                      0,
                     ),
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        left: height * 0.04,
-                        right: height * 0.04,
-                        top: height * 0.018,
-                        bottom: height * 0.018,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Image.asset(
-                            "assets/images/Zyppi_logo_white.png",
-                            height: height * 0.05,
-                            width: width * 0.3,
-                          ),
-                          Column(
-                            children: [
-                              Text(
-                                "Free delivery \norder above ₹ 199",
-                                style: TextStyle(
-                                  fontSize: 30.sp,
-                                  color: AppColors.white,
-                                  fontWeight: FontWeight.w500,
-                                  fontFamily: 'Poppins',
-                                  fontStyle: FontStyle.italic,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const PromoBanner(),
+                        const SizedBox(height: AppSpacing.xxl),
+                        Text(
+                          'shopByCategory'.tr(),
+                          style: AppTypography.titleMedium,
+                        ),
+                        const SizedBox(height: AppSpacing.base),
+                        const Categories(),
+                        const SizedBox(height: AppSpacing.xxl),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'dealsForYou'.tr(),
+                              style: AppTypography.titleMedium,
+                            ),
+                            GestureDetector(
+                              onTap: () => context.push('/exploreScreen'),
+                              child: Text(
+                                'seeAll'.tr(),
+                                style: AppTypography.bodyMedium.copyWith(
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
-                            ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.base),
+                        HomePageProducts(
+                          onClicked: (productId) => context.push(
+                            '/productDetailsScreen?productId=$productId',
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 120),
+                      ],
                     ),
                   ),
-                  SizedBox(height: height * 0.02),
-                  Stack(
-                    children: [
-                      Image.asset(
-                        "assets/images/zyppi_underline.png",
-                        height: height * 0.08,
-                        width: width * 0.5,
-                      ),
-                      Positioned(
-                        right: 0,
-                        bottom: height * 0.008,
-                        child: Image.asset('assets/images/underline.png'),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: height * 0.02),
-                  HomePageProducts(
-                    onClicked: (productId) {
-                      context.push(
-                        '/productDetailsScreen?productId=$productId',
-                      );
-                    },
-                  ),
-                  SizedBox(height: height * 0.08),
                 ],
               ),
             ),
           ),
-        ),
+          Positioned(
+            left: AppSpacing.xxl,
+            right: AppSpacing.xxl,
+            bottom: AppSpacing.giant,
+            child: const FloatingCartBar(),
+          ),
+        ],
       ),
     );
   }

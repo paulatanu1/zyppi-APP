@@ -1,15 +1,36 @@
-import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:zippy/features/account/presentation/account_screen.dart';
 import 'package:zippy/core/common_widgets/nav_bar/provider/nav_bar_provider.dart';
+import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_spacing.dart';
+import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/features/account/presentation/account_screen.dart';
 import 'package:zippy/features/explore/presentation/explore_screen.dart';
 import 'package:zippy/features/favourite/presentation/favourite_screen.dart';
 import 'package:zippy/features/home_screen/presentation/home_screen.dart';
 import 'package:zippy/features/my_cart/presentation/my_cart_screen.dart';
-import 'package:zippy/core/theme/app_colors.dart';
+
+const _tabs = [
+  (icon: Icons.home_outlined, activeIcon: Icons.home, labelKey: 'home'),
+  (
+    icon: Icons.explore_outlined,
+    activeIcon: Icons.explore,
+    labelKey: 'explore',
+  ),
+  (
+    icon: Icons.shopping_bag_outlined,
+    activeIcon: Icons.shopping_bag,
+    labelKey: 'myCart',
+  ),
+  (
+    icon: Icons.favorite_border,
+    activeIcon: Icons.favorite,
+    labelKey: 'favourite',
+  ),
+  (icon: Icons.person_outline, activeIcon: Icons.person, labelKey: 'profile'),
+];
 
 class NavBar extends ConsumerWidget {
   final int initialIndex;
@@ -18,86 +39,66 @@ class NavBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    double height = MediaQuery.of(context).size.height;
     final currentIndex = ref.watch(navBarProvider);
     final changeIndex = ref.read(navBarProvider.notifier);
 
-    final items = List.generate(
-      5,
-      (i) => Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Image.asset(
-            'assets/icons/${['homeIcon', 'exploreIcon', 'cartIcon', 'favouriteIcon', 'profileIcon'][i]}.png',
-            height: height * 0.045,
-          ),
-          if (currentIndex != i) SizedBox(height: 0.05),
-          if (currentIndex != i)
-            Text(
-              ['Home', 'Explore', 'Cart', 'Favourite', 'Account'][i],
-              style: TextStyle(
-                fontSize: 20.sp,
-                color: AppColors.white,
-                fontWeight: FontWeight.w600,
-                fontFamily: 'Poppins',
-              ),
-            ),
-        ],
-      ),
-    );
-
     final screens = [
       HomeScreen(),
-      ExploreScreen(), //This is the page in question
-      MyCartScreen(),
-      FavouriteScreen(),
-      AccountScreen(),
+      ExploreScreen(),
+      const MyCartScreen(),
+      const FavouriteScreen(),
+      const AccountScreen(),
     ];
 
     SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-        systemNavigationBarColor:
-            AppColors.blue, // Color of the system navigation bar
-        systemNavigationBarIconBrightness:
-            Brightness.light, // Icon brightness for light text/icons
+      const SystemUiOverlayStyle(
+        systemNavigationBarColor: AppColors.surface,
+        systemNavigationBarIconBrightness: Brightness.dark,
       ),
     );
 
-    // TODO: implement build
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) {
-          SystemNavigator.pop(); // This will exit the app on Android
-        }
+        if (!didPop) SystemNavigator.pop();
       },
       child: Scaffold(
-        extendBody: false,
-        body: Stack(
-          children: [
-            screens[currentIndex],
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Container(
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(80),
-                    topRight: Radius.circular(200),
+        body: screens[currentIndex],
+        bottomNavigationBar: Container(
+          height: AppSizes.navBar,
+          decoration: const BoxDecoration(
+            color: AppColors.surface,
+            border: Border(top: BorderSide(color: AppColors.line)),
+          ),
+          child: Row(
+            children: List.generate(_tabs.length, (index) {
+              final tab = _tabs[index];
+              final selected = currentIndex == index;
+
+              return Expanded(
+                child: InkWell(
+                  onTap: () => changeIndex.updateIndex(index),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        selected ? tab.activeIcon : tab.icon,
+                        color: selected ? AppColors.primary : AppColors.muted,
+                        size: 22,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        tab.labelKey.tr(),
+                        style: AppTypography.labelSmall.copyWith(
+                          color: selected ? AppColors.primary : AppColors.muted,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: CurvedNavigationBar(
-                  items: items,
-                  index: currentIndex,
-                  height: height * 0.07,
-                  color: AppColors.blue,
-                  backgroundColor: Colors.transparent,
-                  onTap: (index) => changeIndex.updateIndex(index),
-                ),
-              ),
-            ),
-          ],
+              );
+            }),
+          ),
         ),
       ),
     );

@@ -65,5 +65,15 @@
   "orderStatusDelivered": "ডেলিভার হয়েছে",
   "orderStatusCancelled": "বাতিল হয়েছে",
   "noProductsFound": "কোনো পণ্য পাওয়া যায়নি",
-  "searchStoreHint": "তেল, চাল, আটা খুঁজুন..."
+  "searchStoreHint": "তেল, চাল, আটা খুঁজুন...",
+  "explore": "এক্সপ্লোর",
+  "deliveryEta": "১২ মিনিটে ডেলিভারি",
+  "homeSearchHint": "আটা, দুধ, ডিম খুঁজুন…",
+  "shopByCategory": "ক্যাটাগরি অনুযায়ী কিনুন",
+  "dealsForYou": "আপনার জন্য অফার",
+  "promoTitle": "তাজা ফল,\nফ্ল্যাট ২০% ছাড়",
+  "shopNow": "এখনই কিনুন →",
+  "viewCart": "কার্ট দেখুন",
+  "youSave": "আপনি বাঁচালেন {}",
+  "add": "যুক্ত করুন"
 }

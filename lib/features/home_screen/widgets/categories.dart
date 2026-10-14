@@ -1,7 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/app_skeleton.dart';
 import 'package:zippy/core/common_widgets/category_card.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
@@ -10,26 +10,24 @@ import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/home_screen/application/categories_provider.dart';
 
+/// docs/mockups/Main.dc.html's "Shop by category" 4-column grid.
 class Categories extends ConsumerWidget {
-  Categories({super.key});
-
-  final PageController _pageController = PageController();
+  const Categories({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final height = MediaQuery.of(context).size.height;
-    final width = MediaQuery.of(context).size.width;
     final categoryState = ref.watch(categoryProvider);
+    final categories = categoryState.chunks.expand((c) => c).toList();
 
     if (categoryState.error != null) {
       return Padding(
-        padding: EdgeInsets.symmetric(vertical: height * 0.04),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         child: Column(
           children: [
             Text('somethingWentWrong'.tr(), style: AppTypography.bodyMedium),
-            SizedBox(height: height * 0.01),
+            const SizedBox(height: 8),
             SizedBox(
-              width: width * 0.4,
+              width: 140,
               child: PrimaryButton(
                 buttonTitle: 'retry'.tr(),
                 action: () => ref.read(categoryProvider.notifier).retry(),
@@ -40,69 +38,45 @@ class Categories extends ConsumerWidget {
       );
     }
 
-    final chunks = categoryState.loading
-        ? [
-            List.generate(
-              4,
-              (_) => Category(
-                id: '',
-                name: 'Category name',
-                image: 'assets/images/category.png',
-                colorHex: 'FFEDF7FD',
-                borderColorHex: 'FF52BAF4',
-              ),
+    final items = categoryState.loading
+        ? List.generate(
+            8,
+            (_) => Category(
+              id: '',
+              name: 'Category',
+              image: 'assets/images/category.png',
+              colorHex: 'FFEDF7FD',
+              borderColorHex: 'FF52BAF4',
             ),
-          ]
-        : categoryState.chunks;
+          )
+        : categories;
 
     return AppSkeleton(
       enabled: categoryState.loading,
-      child: Column(
-        children: [
-          SizedBox(
-            height: height * 0.45,
-            child: PageView.builder(
-              itemCount: chunks.length,
-              controller: _pageController,
-              itemBuilder: (context, index) {
-                final chunk = chunks[index];
-                return Padding(
-                  padding: EdgeInsets.only(left: index == 0 ? 0 : width * 0.04),
-                  child: GridView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: width * 0.04,
-                      mainAxisSpacing: height * 0.02,
-                    ),
-                    itemCount: chunk.length,
-                    itemBuilder: (context, subIndex) {
-                      final item = chunk[subIndex];
-                      return CategoryCard(
-                        categoryText: item.name,
-                        imageUrl: item.image,
-                        backgroundColor: AppColors.fromHex(item.colorHex),
-                        borderColor: AppColors.fromHex(item.borderColorHex),
-                      );
-                    },
+      child: GridView.builder(
+        physics: const NeverScrollableScrollPhysics(),
+        shrinkWrap: true,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 12,
+          childAspectRatio: 0.78,
+        ),
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final category = items[index];
+
+          return CategoryCard(
+            categoryText: category.name,
+            imageUrl: category.image,
+            backgroundColor: AppColors.fromHex(category.colorHex),
+            onTap: categoryState.loading
+                ? null
+                : () => context.push(
+                    '/categoryDetailsScreen?categoryId=${category.id}',
                   ),
-                );
-              },
-            ),
-          ),
-          SizedBox(height: height * 0.015),
-          SmoothPageIndicator(
-            controller: _pageController,
-            count: chunks.length,
-            effect: ExpandingDotsEffect(
-              dotHeight: height * 0.01,
-              dotWidth: width * 0.02,
-              activeDotColor: AppColors.green,
-              dotColor: AppColors.grey,
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }

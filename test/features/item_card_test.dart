@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:zippy/core/common_widgets/add_button.dart';
 import 'package:zippy/core/common_widgets/item_card.dart';
 
 Widget _wrap(Widget child) {
-  return ScreenUtilInit(
-    designSize: const Size(390, 844),
-    builder: (context, _) => MaterialApp(
-      home: Scaffold(body: SizedBox(width: 200, height: 280, child: child)),
-    ),
+  return MaterialApp(
+    home: Scaffold(body: SizedBox(width: 200, height: 280, child: child)),
   );
 }
 
@@ -21,7 +18,7 @@ void main() {
         const ItemCard(
           productName: 'Fresh Tomatoes',
           quantity: '500 g',
-          price: '25',
+          pricePaise: 2500,
         ),
       ),
     );
@@ -29,6 +26,23 @@ void main() {
     expect(find.text('Fresh Tomatoes'), findsOneWidget);
     expect(find.text('500 g'), findsOneWidget);
     expect(find.textContaining('25'), findsOneWidget);
+  });
+
+  testWidgets('ItemCard shows a discount badge when MRP > price', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        const ItemCard(
+          productName: 'Fresh Tomatoes',
+          quantity: '500 g',
+          pricePaise: 2500,
+          mrpPaise: 3000,
+        ),
+      ),
+    );
+
+    expect(find.textContaining('OFF'), findsOneWidget);
   });
 
   testWidgets('ItemCard calls onClicked when tapped', (tester) async {
@@ -39,7 +53,7 @@ void main() {
         ItemCard(
           productName: 'Fresh Tomatoes',
           quantity: '500 g',
-          price: '25',
+          pricePaise: 2500,
           onClicked: () => tapped = true,
         ),
       ),
@@ -48,5 +62,29 @@ void main() {
     await tester.tap(find.byType(ItemCard));
 
     expect(tapped, isTrue);
+  });
+
+  testWidgets('ItemCard calls onAddClicked when the ADD button is tapped', (
+    tester,
+  ) async {
+    var addTapped = false;
+    var cardTapped = false;
+
+    await tester.pumpWidget(
+      _wrap(
+        ItemCard(
+          productName: 'Fresh Tomatoes',
+          quantity: '500 g',
+          pricePaise: 2500,
+          onClicked: () => cardTapped = true,
+          onAddClicked: () => addTapped = true,
+        ),
+      ),
+    );
+
+    await tester.tap(find.byType(AddButton));
+
+    expect(addTapped, isTrue);
+    expect(cardTapped, isFalse);
   });
 }

@@ -1,49 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_typography.dart';
 
+/// docs/mockups/Category.dc.html's header: back, title + item count,
+/// search.
 class CategoryDetailsHeader extends StatelessWidget {
-  final Function()? onBackIconClicked;
-  final Function()? onFilterIconClicked;
+  final String title;
+  final int itemCount;
+
   const CategoryDetailsHeader({
     super.key,
-    this.onBackIconClicked,
-    this.onFilterIconClicked,
+    required this.title,
+    required this.itemCount,
   });
 
   @override
   Widget build(BuildContext context) {
-    double height = MediaQuery.of(context).size.height;
-
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        InkWell(
-          onTap: onBackIconClicked,
-          child: Icon(
-            Icons.arrow_back_ios,
-            size: 20,
-            weight: 4,
-            color: AppColors.black,
+        IconButton(
+          onPressed: () => context.pop(),
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+        ),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: AppTypography.titleLarge),
+              Text(
+                '$itemCount items',
+                style: AppTypography.bodySmall.copyWith(color: AppColors.muted),
+              ),
+            ],
           ),
         ),
-        Text(
-          "Beverages",
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontFamily: 'Poppins',
-            color: AppColors.darkBlue,
-            fontStyle: FontStyle.italic,
-            fontSize: 20,
-          ),
-        ),
-        InkWell(
-          onTap: onFilterIconClicked,
-          child: Image.asset(
-            "assets/icons/filter.png",
-            height: height * 0.025,
-            width: height * 0.025,
-            fit: BoxFit.cover,
-          ),
+        IconButton(
+          onPressed: () => context.push('/searchScreen'),
+          icon: const Icon(Icons.search),
         ),
       ],
     );

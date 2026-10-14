@@ -1,7 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/app_skeleton.dart';
 import 'package:zippy/core/common_widgets/category_card.dart';
@@ -10,6 +9,7 @@ import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/common_widgets/text_form_field.dart';
 import 'package:zippy/core/domain/category.dart';
 import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/explore/application/explore_provider.dart';
 
@@ -20,19 +20,18 @@ class ExploreScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final height = MediaQuery.of(context).size.height;
-
     final exploreState = ref.watch(exploreNotifier);
 
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.all(8.h),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CommonHeader(),
-              SizedBox(height: 13.h),
+              const SizedBox(height: AppSpacing.lg),
               GestureDetector(
                 onTap: () => context.push('/searchScreen'),
                 child: AbsorbPointer(
@@ -43,7 +42,7 @@ class ExploreScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 10.h),
+              const SizedBox(height: AppSpacing.lg),
               if (exploreState.error != null)
                 Expanded(
                   child: Center(
@@ -54,9 +53,9 @@ class ExploreScreen extends ConsumerWidget {
                           'somethingWentWrong'.tr(),
                           style: AppTypography.bodyMedium,
                         ),
-                        SizedBox(height: 10.h),
+                        const SizedBox(height: AppSpacing.lg),
                         SizedBox(
-                          width: 160.w,
+                          width: 160,
                           child: PrimaryButton(
                             buttonTitle: 'retry'.tr(),
                             action: () =>
@@ -72,21 +71,22 @@ class ExploreScreen extends ConsumerWidget {
                   child: AppSkeleton(
                     enabled: exploreState.loading,
                     child: GridView.builder(
-                      physics: BouncingScrollPhysics(),
-                      shrinkWrap: true,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 5.h,
-                        mainAxisSpacing: 5.h,
-                      ),
+                      physics: const BouncingScrollPhysics(),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 4,
+                            crossAxisSpacing: AppSpacing.md,
+                            mainAxisSpacing: AppSpacing.lg,
+                            childAspectRatio: 0.78,
+                          ),
                       itemCount: exploreState.loading
-                          ? 6
+                          ? 8
                           : exploreState.categories.length,
                       itemBuilder: (context, index) {
                         final category = exploreState.loading
                             ? Category(
                                 id: '',
-                                name: 'Category name',
+                                name: 'Category',
                                 image: 'assets/images/category.png',
                                 colorHex: 'FFEDF7FD',
                                 borderColorHex: 'FF52BAF4',
@@ -97,15 +97,16 @@ class ExploreScreen extends ConsumerWidget {
                           categoryText: category.name,
                           imageUrl: category.image,
                           backgroundColor: AppColors.fromHex(category.colorHex),
-                          borderColor: AppColors.fromHex(
-                            category.borderColorHex,
-                          ),
+                          onTap: exploreState.loading
+                              ? null
+                              : () => context.push(
+                                  '/categoryDetailsScreen?categoryId=${category.id}',
+                                ),
                         );
                       },
                     ),
                   ),
                 ),
-              SizedBox(height: height * 0.08),
             ],
           ),
         ),

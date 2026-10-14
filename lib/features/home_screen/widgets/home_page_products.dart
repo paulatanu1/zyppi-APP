@@ -1,9 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/common_widgets/app_skeleton.dart';
 import 'package:zippy/core/common_widgets/item_card.dart';
-import 'package:zippy/core/common_widgets/price_tag.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/domain/product.dart';
 import 'package:zippy/core/theme/app_typography.dart';
@@ -65,7 +65,7 @@ class HomePageProducts extends ConsumerWidget {
   }
 }
 
-class _ProductGrid extends StatelessWidget {
+class _ProductGrid extends ConsumerWidget {
   final double height;
   final double width;
   final List<Product> products;
@@ -79,7 +79,7 @@ class _ProductGrid extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return GridView.builder(
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
@@ -100,9 +100,14 @@ class _ProductGrid extends StatelessWidget {
           onClicked: onClicked == null ? null : () => onClicked!(product.id),
           productName: product.name,
           quantity: variant?.label ?? '',
-          price: variant != null
-              ? PriceTag.format(variant.pricePaise).replaceFirst('₹', '')
-              : '',
+          pricePaise: variant?.pricePaise,
+          mrpPaise: variant?.mrpPaise,
+          imagePath: product.image,
+          onAddClicked: variant == null
+              ? null
+              : () => ref
+                    .read(cartProvider.notifier)
+                    .addItem(productId: product.id, variantId: variant.id),
         );
       },
     );

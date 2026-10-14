@@ -1,59 +1,54 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_typography.dart';
 
+/// docs/mockups/Main.dc.html's `.cat` chip: a circular colored icon
+/// with the category label below.
 class CategoryCard extends StatelessWidget {
   final String categoryText;
   final String imageUrl;
   final Color backgroundColor;
-  final Color borderColor;
+  final VoidCallback? onTap;
 
   const CategoryCard({
     super.key,
     required this.categoryText,
     required this.imageUrl,
     required this.backgroundColor,
-    required this.borderColor,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
-    return Container(
-      // height: 180.h,
-      width: 350.w,
-      decoration: BoxDecoration(
-        border: Border.all(color: borderColor),
-        borderRadius: BorderRadius.circular(50.sp),
-        // color: color, borderRadius: BorderRadius.circular(20.sp)
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            backgroundColor,
-            backgroundColor.withValues(alpha: 0.1),
-            backgroundColor.withValues(alpha: 0.1),
-          ],
-        ),
-      ),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(36),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Image.asset(imageUrl, height: 180.w, width: 180.w),
-          // SizedBox(height: 10.h),
-          Padding(
-            padding: EdgeInsets.all(5.h),
-            child: Text(
-              categoryText,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 30.sp,
-                color: AppColors.black,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Poppins',
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              shape: BoxShape.circle,
+            ),
+            child: ClipOval(
+              child: Image.asset(
+                imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    const SizedBox.shrink(),
               ),
             ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            categoryText,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.labelSmall.copyWith(color: AppColors.ink),
           ),
         ],
       ),

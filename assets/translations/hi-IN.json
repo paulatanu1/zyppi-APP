@@ -65,5 +65,15 @@
   "orderStatusDelivered": "डिलिवर हो गया",
   "orderStatusCancelled": "रद्द हो गया",
   "noProductsFound": "कोई उत्पाद नहीं मिला",
-  "searchStoreHint": "तेल, चावल, आटा खोजें..."
+  "searchStoreHint": "तेल, चावल, आटा खोजें...",
+  "explore": "एक्सप्लोर",
+  "deliveryEta": "12 मिनट में डिलिवरी",
+  "homeSearchHint": "आटा, दूध, अंडे खोजें…",
+  "shopByCategory": "श्रेणी के अनुसार खरीदें",
+  "dealsForYou": "आपके लिए डील्स",
+  "promoTitle": "ताज़े फल,\nफ्लैट 20% छूट",
+  "shopNow": "अभी खरीदें →",
+  "viewCart": "कार्ट देखें",
+  "youSave": "आपने बचाया {}",
+  "add": "जोड़ें"
 }
