@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/theme/app_theme.dart';
+import 'package:zippy/core/utils/snack_bar.dart';
 
 class Zyppi extends StatelessWidget {
   final GoRouter router;
@@ -15,6 +16,7 @@ class Zyppi extends StatelessWidget {
       designSize: const Size(390, 844),
       builder: (context, child) => MaterialApp.router(
         routerConfig: router,
+        scaffoldMessengerKey: rootScaffoldMessengerKey,
         theme: AppTheme.light,
         localizationsDelegates: context.localizationDelegates,
         supportedLocales: context.supportedLocales,
