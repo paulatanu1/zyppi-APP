@@ -114,14 +114,15 @@ Conventions: money as `int` paise · theme tokens only · every async screen has
 Gates: plan + mockup approved → Phase 0. After Phase 2: prototype reviewed on a phone + Supabase schema agreed. After Phase 5: internal testing tracks.
 
 ### Phase 0 — Upgrade the existing app (1–2 days) · `chore/upgrade-flutter-3.47`
-- [ ] Branch from `Development`
-- [ ] Restrict/rotate the Google Maps key in git history (Android package + SHA-1, iOS bundle id); move it to `env/*.json`, read via `String.fromEnvironment`; delete `lib/core/constants/googleApiKey.dart`
-- [ ] FVM: `fvm use 3.47.7` (or newest 3.47.x); commit `.fvmrc`; update README Flutter version
-- [ ] `environment.sdk: ^3.13.0`; move `freezed_annotation` to dependencies; fix `flutter_lints` placement under dev_dependencies
-- [ ] `fvm flutter pub upgrade --major-versions`; fix breaking changes: Riverpod 3, freezed 3 (`abstract class`/`sealed class`), google_sign_in, go_router, firebase_*, carousel_slider; `fvm dart run build_runner build -d`
-- [ ] Android: AGP, Kotlin and Gradle wrapper to the versions the Flutter 3.47 template uses; `compileSdk = flutter.compileSdkVersion`; `minSdk = 24`; keep `applicationId com.betastechnologies.zippy`
-- [ ] iOS: deployment target 15.0 in Podfile + project; `pod install`
-- [ ] `ScreenUtilInit(designSize: Size(390, 844))`
+- [x] Branch from `Development`
+- [x] Restrict/rotate the Google Maps key in git history (Android package + SHA-1, iOS bundle id); move it to `env/*.json`, read via `String.fromEnvironment`; delete `lib/core/constants/googleApiKey.dart`
+- [x] FVM: `fvm use 3.47.7` (or newest 3.47.x); commit `.fvmrc`; update README Flutter version
+- [x] `environment.sdk: ^3.13.0`; move `freezed_annotation` to dependencies; fix `flutter_lints` placement under dev_dependencies
+- [x] `fvm flutter pub upgrade --major-versions`; fix breaking changes: Riverpod 3, freezed 3 (`abstract class`/`sealed class`), google_sign_in, go_router, firebase_*, carousel_slider; `fvm dart run build_runner build -d`
+- [x] Android: AGP, Kotlin and Gradle wrapper to the versions the Flutter 3.47 template uses; `compileSdk = flutter.compileSdkVersion`; `minSdk = 24`; keep `applicationId com.betastechnologies.zippy`
+- [x] iOS: deployment target 15.0 in Podfile + project; `pod install`
+- [x] `ScreenUtilInit(designSize: Size(390, 844))`
+- [x] File-level snake_case rename pass (pulled forward from Phase 1) so `flutter_lints`' `file_names` rule is clean; folder casing (PascalCase dirs) stays for Phase 1's full rename
 
 Done when: `fvm flutter analyze` 0 issues, every existing screen still opens, app runs on Android emulator + iOS simulator, `fvm flutter build apk --debug` succeeds.
 
