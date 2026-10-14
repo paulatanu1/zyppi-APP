@@ -8,7 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:zippy/core/constants/constants.dart';
 import 'package:zippy/core/data/application/shared_preference_state.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
-import 'package:zippy/core/sharedProviders/Location/provider/request_location_provider.dart';
+import 'package:zippy/core/shared_providers/location/provider/request_location_provider.dart';
 import 'package:zippy/routes/routes.dart';
 
 void main() async {

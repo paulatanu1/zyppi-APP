@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:zippy/core/data/dataSource/key_names.dart';
+import 'package:zippy/core/data/data_source/key_names.dart';
 import 'package:zippy/core/utils/log.dart';
 
 import '../application/shared_preference_state.dart';
