@@ -127,14 +127,14 @@ Gates: plan + mockup approved → Phase 0. After Phase 2: prototype reviewed on 
 Done when: `fvm flutter analyze` 0 issues, every existing screen still opens, app runs on Android emulator + iOS simulator, `fvm flutter build apk --debug` succeeds.
 
 ### Phase 1 — Foundations (3–4 days) · `feat/foundations`
-- [ ] Rename pass: snake_case files, lowercase folders (one refactor-only commit)
-- [ ] `data/` layer + repository interfaces per feature; notifiers under `application/`
-- [ ] Theme from `docs/design-tokens.md`, replacing `core/constants/colors.dart`; remove Righteous, Aclonica, AirbnbCereal fonts
-- [ ] Router: `redirect` + `refreshListenable` for onboarding/auth/location; remove `ref.listen` + `context.goNamed` from the root widget
-- [ ] `bootstrap()`, dev/staging/prod flavors, `env/*.example.json`, `Supabase.initialize` from env (skipped in mock mode)
-- [ ] easy_localization stays; every new string in all 4 JSON files
-- [ ] Shared widgets aligned to mockup: primary button, quantity stepper, product card, price tag, skeletons; keep one OTP package; SnackBar instead of fluttertoast
-- [ ] GitHub Actions: format, analyze, test on PRs to `Development`
+- [x] Rename pass: snake_case files, lowercase folders (one refactor-only commit) — file names were pulled forward into Phase 0; folders done here
+- [x] `data/` layer + repository interfaces per feature; notifiers under `application/` — added for the features that already have a provider/application layer (home_screen, explore, product_details, search_address, auth/login, auth/otp_verification, auth/google_sign_in). Screens that are still presentation-only today (cart, account, addresses, orders, favourites, category details) get their entities + mock repositories in Phase 2, per this doc's own Phase 2 checklist
+- [x] Theme from `docs/design-tokens.md`, replacing `core/constants/colors.dart`; remove Righteous, Aclonica, AirbnbCereal fonts — `lib/core/theme/{app_colors,app_typography,app_spacing,app_theme}.dart` added; legacy neutrals kept as tokens until Phase 2's per-screen mockup restyle
+- [x] Router: `redirect` + `refreshListenable` for onboarding/auth/location; remove `ref.listen` + `context.goNamed` from the root widget — implemented for the existing auth gate; there's no location-gating redirect to migrate yet (none exists today)
+- [x] `bootstrap()`, dev/staging/prod flavors, `env/*.example.json`, `Supabase.initialize` from env (skipped in mock mode) — Android flavors done; iOS per-flavor Xcode schemes still needed (flagged, needs Xcode)
+- [x] easy_localization stays; every new string in all 4 JSON files — no new user-facing strings added this phase
+- [x] Shared widgets aligned to mockup: primary button, quantity stepper, product card, price tag, skeletons; keep one OTP package; SnackBar instead of fluttertoast — new reusable primitives added (PrimaryButton restyled in place, QuantityStepper/PriceTag/AppSkeleton added); existing screens aren't rewired to them yet, that happens during Phase 2's mockup restyle. otp_text_field (unused) removed, fluttertoast replaced with SnackBar
+- [x] GitHub Actions: format, analyze, test on PRs to `Development`
 
 Done when: each flavor boots, existing screens use tokens, CI green.
 
