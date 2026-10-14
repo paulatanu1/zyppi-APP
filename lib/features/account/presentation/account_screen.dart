@@ -1,215 +1,241 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/data/provider/shared_preference_provider.dart';
 import 'package:zippy/core/theme/app_colors.dart';
-import 'package:zippy/features/account/widgets/profile_container.dart';
-import 'package:zippy/features/account/widgets/profile_container_item.dart';
+import 'package:zippy/core/theme/app_spacing.dart';
+import 'package:zippy/core/theme/app_typography.dart';
 
-class AccountScreen extends StatelessWidget {
+/// docs/mockups/Profile.dc.html.
+class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    double height = MediaQuery.of(context).size.height;
-    double width = MediaQuery.of(context).size.width;
-
-    final List yourInfoList = [
-      'yourOrder'.tr(),
-      'addressBook'.tr(),
-      'myDetails'.tr(),
-      'myCoins'.tr(),
-      'paymentSettings'.tr(),
-    ];
-
-    final List otherInfoList = [
-      'shareApp'.tr(),
-      'aboutUs'.tr(),
-      'accountPrivacy'.tr(),
-      'notificationPref'.tr(),
-      'logOut'.tr(),
-    ];
-
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: AppColors.white,
+      backgroundColor: AppColors.backgroundAlt,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Text(
-                  'profile'.tr(),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Poppins',
-                    color: AppColors.darkBlue,
-                    fontStyle: FontStyle.italic,
-                    fontSize: 20,
-                  ),
-                ),
-              ),
-              SizedBox(height: height * 0.025),
-              Divider(height: 1, color: AppColors.grey5),
-              Padding(
-                padding: EdgeInsets.all(height * 0.025),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              Container(
+                width: double.infinity,
+                color: AppColors.white,
+                padding: const EdgeInsets.all(AppSpacing.xxl),
+                child: Row(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Supriya Singh",
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'Poppins',
-                            color: AppColors.darkBlue,
-                            fontSize: 22,
-                          ),
+                    const CircleAvatar(
+                      radius: 28,
+                      backgroundColor: AppColors.primary,
+                      child: Text(
+                        'A',
+                        style: TextStyle(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 22,
                         ),
-                        Row(
-                          children: [
-                            Image.asset(
-                              "assets/icons/coin.png",
-                              height: height * 0.025,
-                              width: height * 0.025,
-                              fit: BoxFit.cover,
-                            ),
-                            SizedBox(width: width * 0.01),
-                            Text(
-                              "300",
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontFamily: 'Poppins',
-                                color: AppColors.brownBlue,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: height * 0.01),
-                    Text(
-                      "9800072183",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w400,
-                        fontFamily: 'Poppins',
-                        color: AppColors.black,
-                        fontSize: 13,
                       ),
                     ),
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            context.pushNamed('EditProfileScreen');
-                          },
-                          child: Text(
-                            'editProfile'.tr(),
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontFamily: 'Poppins',
-                              color: AppColors.deepBlue1,
-                              fontSize: 12,
+                    const SizedBox(width: AppSpacing.lg),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Atanu', style: AppTypography.titleLarge),
+                          Text(
+                            '+91 98765 43210',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.muted,
                             ),
                           ),
-                        ),
-                        Icon(
-                          Icons.arrow_forward_ios,
-                          color: AppColors.deepBlue1,
-                          size: 12,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    SizedBox(height: height * 0.03),
-                    Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Container(
-                          height: height * 0.32,
-                          width: width,
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: AppColors.lightBlue1,
-                              width: 1.0,
-                            ),
-                            borderRadius: BorderRadius.circular(18.0),
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.only(top: height * 0.02),
-                            child: ListView.builder(
-                              itemCount: yourInfoList.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                return ProfileContainerItem(
-                                  onClicked: () {
-                                    index == 0
-                                        ? context.pushNamed('YourOrderScreen')
-                                        : index == 1
-                                        ? context.pushNamed('MyAddressScreen')
-                                        : context.pushNamed('MyAddressScreen');
-                                  },
-                                  itemName: yourInfoList[index].toString(),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                        // Positioned text on the border
-                        Positioned(
-                          top: -10,
-                          left: width * 0.1,
-                          child: Container(
-                            padding: EdgeInsets.only(
-                              left: height * 0.025,
-                              right: height * 0.025,
-                              top: height * 0.003,
-                              bottom: height * 0.003,
-                            ),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: AppColors.lightBlue1,
-                                width: 1.0,
-                              ),
-                              color: AppColors.white,
-                              borderRadius: BorderRadius.circular(15.0),
-                            ),
-                            child: Text(
-                              'yourInfo'.tr(),
-                              style: TextStyle(
-                                color: AppColors.lightBlack,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: height * 0.025),
-                    ProfileContainer(
-                      containerName: 'otherInfo'.tr(),
-                      containerList: otherInfoList,
+                    TextButton(
+                      onPressed: () => context.pushNamed('EditProfileScreen'),
+                      child: Text('editProfile'.tr()),
                     ),
                   ],
                 ),
               ),
-              Image.asset(
-                'assets/images/prof_logo.png',
-                height: height * 0.05,
-                width: width * 0.3,
-              ),
-              Text(
-                'v1.0.0'.tr(),
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'Poppins',
-                  color: AppColors.grey7,
-                  fontSize: 12,
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _QuickAction(
+                            icon: Icons.receipt_long_outlined,
+                            label: 'yourOrder'.tr(),
+                            onTap: () => context.pushNamed('YourOrderScreen'),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: _QuickAction(
+                            icon: Icons.favorite_border,
+                            label: 'favourite'.tr(),
+                            onTap: () => context.go('/navBar?index=3'),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: _QuickAction(
+                            icon: Icons.help_outline,
+                            label: 'help'.tr(),
+                            onTap: () {},
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    _Group(
+                      items: [
+                        _GroupItem(
+                          icon: Icons.location_on_outlined,
+                          label: 'addressBook'.tr(),
+                          onTap: () => context.pushNamed('MyAddressScreen'),
+                        ),
+                        _GroupItem(
+                          icon: Icons.credit_card_outlined,
+                          label: 'paymentSettings'.tr(),
+                          onTap: () {},
+                        ),
+                        _GroupItem(
+                          icon: Icons.notifications_none,
+                          label: 'notificationPref'.tr(),
+                          onTap: () {},
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    _Group(
+                      items: [
+                        _GroupItem(
+                          icon: Icons.description_outlined,
+                          label: 'accountPrivacy'.tr(),
+                          onTap: () {},
+                        ),
+                        _GroupItem(
+                          icon: Icons.logout,
+                          label: 'logOut'.tr(),
+                          color: AppColors.danger,
+                          onTap: () async {
+                            await ref
+                                .read(sharedPreferenceProvider.notifier)
+                                .logOut();
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    Center(
+                      child: Text(
+                        'v1.0.0'.tr(),
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.muted,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              SizedBox(height: height * 0.05),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _QuickAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _QuickAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.card),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: AppColors.primary),
+            const SizedBox(height: AppSpacing.xs),
+            Text(label, style: AppTypography.bodySmall),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GroupItem {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final Color? color;
+
+  _GroupItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.color,
+  });
+}
+
+class _Group extends StatelessWidget {
+  final List<_GroupItem> items;
+
+  const _Group({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+      ),
+      child: Column(
+        children: List.generate(items.length, (index) {
+          final item = items[index];
+
+          return Column(
+            children: [
+              ListTile(
+                onTap: item.onTap,
+                leading: Icon(item.icon, color: item.color ?? AppColors.ink),
+                title: Text(
+                  item.label,
+                  style: AppTypography.bodyMedium.copyWith(color: item.color),
+                ),
+                trailing: const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: AppColors.muted,
+                ),
+              ),
+              if (index != items.length - 1)
+                const Divider(height: 1, color: AppColors.divider),
+            ],
+          );
+        }),
       ),
     );
   }

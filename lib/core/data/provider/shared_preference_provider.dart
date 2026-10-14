@@ -24,6 +24,12 @@ class SharedPreferenceProvider extends StateNotifier<SharedPreferenceState> {
 
     AppLog.showLog(tag: 'Saved Token', message: state.authToken);
   }
+
+  Future<void> logOut() async {
+    await state.sharedPreference?.remove(KeyNames.token);
+
+    state = state.copyWith(authToken: null);
+  }
 }
 
 final sharedPreferenceProvider =
