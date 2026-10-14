@@ -1,17 +1,17 @@
-import 'package:carousel_slider/carousel_options.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:zippy/features/HomeScreen/provider/carouselProvider.dart';
+import 'package:zippy/features/HomeScreen/provider/carousel_provider.dart';
 import 'package:zippy/core/constants/colors.dart';
 
 class CategoryCarousel extends ConsumerWidget {
+  const CategoryCarousel({super.key});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final height = MediaQuery.of(context).size.height;
     final width = MediaQuery.of(context).size.width;
-
 
     final carousel = ref.watch(carouselProvider);
     final carouselFunction = ref.read(carouselProvider.notifier);
@@ -28,9 +28,9 @@ class CategoryCarousel extends ConsumerWidget {
               ),
               child: Padding(
                 padding: EdgeInsets.all(
-                  width * 0.03
+                  width * 0.03,
                   // 5.h
-                  ),
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -92,15 +92,19 @@ class CategoryCarousel extends ConsumerWidget {
               child: AnimatedContainer(
                 duration: Duration(milliseconds: 300),
                 margin: EdgeInsets.symmetric(horizontal: 8.w),
-                width: carousel.index == entry.key ? width * 0.06 : width * 0.02,
+                width: carousel.index == entry.key
+                    ? width * 0.06
+                    : width * 0.02,
                 // 40.w : 15.w,
-                height: carousel.index == entry.key ? height * 0.01 : height * 0.0095,
+                height: carousel.index == entry.key
+                    ? height * 0.01
+                    : height * 0.0095,
                 // 4.h : 3.h,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(
-                    width * 0.01
+                    width * 0.01,
                     // 10
-                    ),
+                  ),
                   color: carousel.index == entry.key
                       ? AppColors.green
                       : AppColors.grey,

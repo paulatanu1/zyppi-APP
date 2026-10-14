@@ -1,6 +1,6 @@
-// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// ignore_for_file: type=lint
+// coverage:ignore-file
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'carousel.dart';
@@ -9,173 +9,280 @@ part of 'carousel.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format off
 T _$identity<T>(T value) => value;
-
-final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
-
-Carousel _$CarouselFromJson(Map<String, dynamic> json) {
-  return _Carousel.fromJson(json);
-}
 
 /// @nodoc
 mixin _$Carousel {
-  String? get image => throw _privateConstructorUsedError;
-  String? get text => throw _privateConstructorUsedError;
+
+ String? get image; String? get text;
+/// Create a copy of Carousel
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CarouselCopyWith<Carousel> get copyWith => _$CarouselCopyWithImpl<Carousel>(this as Carousel, _$identity);
 
   /// Serializes this Carousel to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  Map<String, dynamic> toJson();
 
-  /// Create a copy of Carousel
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $CarouselCopyWith<Carousel> get copyWith =>
-      throw _privateConstructorUsedError;
+
+@override
+bool operator ==(Object other) {
+  final _this = this as Carousel;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Carousel&&(identical(other.image, _this.image) || other.image == _this.image)&&(identical(other.text, _this.text) || other.text == _this.text));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as Carousel;
+  return Object.hash(runtimeType,_this.image,_this.text);
+}
+
+@override
+String toString() {
+  final _this = this as Carousel;
+  return 'Carousel(image: ${_this.image}, text: ${_this.text})';
+}
+
+
 }
 
 /// @nodoc
-abstract class $CarouselCopyWith<$Res> {
-  factory $CarouselCopyWith(Carousel value, $Res Function(Carousel) then) =
-      _$CarouselCopyWithImpl<$Res, Carousel>;
-  @useResult
-  $Res call({String? image, String? text});
-}
+abstract mixin class $CarouselCopyWith<$Res>  {
+  factory $CarouselCopyWith(Carousel value, $Res Function(Carousel) _then) = _$CarouselCopyWithImpl;
+@useResult
+$Res call({
+ String? image, String? text
+});
 
+
+
+
+}
 /// @nodoc
-class _$CarouselCopyWithImpl<$Res, $Val extends Carousel>
+class _$CarouselCopyWithImpl<$Res>
     implements $CarouselCopyWith<$Res> {
-  _$CarouselCopyWithImpl(this._value, this._then);
+  _$CarouselCopyWithImpl(this._self, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
+  final Carousel _self;
+  final $Res Function(Carousel) _then;
 
-  /// Create a copy of Carousel
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? image = freezed,
-    Object? text = freezed,
-  }) {
-    return _then(_value.copyWith(
-      image: freezed == image
-          ? _value.image
-          : image // ignore: cast_nullable_to_non_nullable
-              as String?,
-      text: freezed == text
-          ? _value.text
-          : text // ignore: cast_nullable_to_non_nullable
-              as String?,
-    ) as $Val);
-  }
+/// Create a copy of Carousel
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? image = freezed,Object? text = freezed,}) {
+  return _then(Carousel(
+image: freezed == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
+as String?,text: freezed == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
 }
 
-/// @nodoc
-abstract class _$$CarouselImplCopyWith<$Res>
-    implements $CarouselCopyWith<$Res> {
-  factory _$$CarouselImplCopyWith(
-          _$CarouselImpl value, $Res Function(_$CarouselImpl) then) =
-      __$$CarouselImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({String? image, String? text});
 }
 
-/// @nodoc
-class __$$CarouselImplCopyWithImpl<$Res>
-    extends _$CarouselCopyWithImpl<$Res, _$CarouselImpl>
-    implements _$$CarouselImplCopyWith<$Res> {
-  __$$CarouselImplCopyWithImpl(
-      _$CarouselImpl _value, $Res Function(_$CarouselImpl) _then)
-      : super(_value, _then);
 
-  /// Create a copy of Carousel
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? image = freezed,
-    Object? text = freezed,
-  }) {
-    return _then(_$CarouselImpl(
-      image: freezed == image
-          ? _value.image
-          : image // ignore: cast_nullable_to_non_nullable
-              as String?,
-      text: freezed == text
-          ? _value.text
-          : text // ignore: cast_nullable_to_non_nullable
-              as String?,
-    ));
-  }
+/// Adds pattern-matching-related methods to [Carousel].
+extension CarouselPatterns on Carousel {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _Carousel value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _Carousel() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _Carousel value)  $default,){
+final _that = this;
+switch (_that) {
+case _Carousel():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _Carousel value)?  $default,){
+final _that = this;
+switch (_that) {
+case _Carousel() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? image,  String? text)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _Carousel() when $default != null:
+return $default(_that.image,_that.text);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? image,  String? text)  $default,) {final _that = this;
+switch (_that) {
+case _Carousel():
+return $default(_that.image,_that.text);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? image,  String? text)?  $default,) {final _that = this;
+switch (_that) {
+case _Carousel() when $default != null:
+return $default(_that.image,_that.text);case _:
+  return null;
+
+}
+}
+
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$CarouselImpl implements _Carousel {
-  _$CarouselImpl({required this.image, required this.text});
 
-  factory _$CarouselImpl.fromJson(Map<String, dynamic> json) =>
-      _$$CarouselImplFromJson(json);
+class _Carousel implements Carousel {
+   _Carousel({required this.image, required this.text});
+  factory _Carousel.fromJson(Map<String, dynamic> json) => _$CarouselFromJson(json);
 
-  @override
-  final String? image;
-  @override
-  final String? text;
+@override final  String? image;
+@override final  String? text;
 
-  @override
-  String toString() {
+/// Create a copy of Carousel
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$CarouselCopyWith<_Carousel> get copyWith => __$CarouselCopyWithImpl<_Carousel>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$CarouselToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Carousel&&(identical(other.image, image) || other.image == image)&&(identical(other.text, text) || other.text == text));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,image,text);
+}
+
+@override
+String toString() {
     return 'Carousel(image: $image, text: $text)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$CarouselImpl &&
-            (identical(other.image, image) || other.image == image) &&
-            (identical(other.text, text) || other.text == text));
-  }
-
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  int get hashCode => Object.hash(runtimeType, image, text);
-
-  /// Create a copy of Carousel
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$CarouselImplCopyWith<_$CarouselImpl> get copyWith =>
-      __$$CarouselImplCopyWithImpl<_$CarouselImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$CarouselImplToJson(
-      this,
-    );
-  }
 }
 
-abstract class _Carousel implements Carousel {
-  factory _Carousel(
-      {required final String? image,
-      required final String? text}) = _$CarouselImpl;
 
-  factory _Carousel.fromJson(Map<String, dynamic> json) =
-      _$CarouselImpl.fromJson;
-
-  @override
-  String? get image;
-  @override
-  String? get text;
-
-  /// Create a copy of Carousel
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$CarouselImplCopyWith<_$CarouselImpl> get copyWith =>
-      throw _privateConstructorUsedError;
 }
+
+/// @nodoc
+abstract mixin class _$CarouselCopyWith<$Res> implements $CarouselCopyWith<$Res> {
+  factory _$CarouselCopyWith(_Carousel value, $Res Function(_Carousel) _then) = __$CarouselCopyWithImpl;
+@override @useResult
+$Res call({
+ String? image, String? text
+});
+
+
+
+
+}
+/// @nodoc
+class __$CarouselCopyWithImpl<$Res>
+    implements _$CarouselCopyWith<$Res> {
+  __$CarouselCopyWithImpl(this._self, this._then);
+
+  final _Carousel _self;
+  final $Res Function(_Carousel) _then;
+
+/// Create a copy of Carousel
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? image = freezed,Object? text = freezed,}) {
+  return _then(_Carousel(
+image: freezed == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
+as String?,text: freezed == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+// dart format on

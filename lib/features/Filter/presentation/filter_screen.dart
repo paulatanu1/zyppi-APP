@@ -1,6 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:zippy/core/commonWidgets/primaryButton.dart';
+import 'package:zippy/core/commonWidgets/primary_button.dart';
 import 'package:zippy/features/Filter/widgets/filter_header.dart';
 import 'package:zippy/features/Filter/widgets/filter_item.dart';
 import 'package:zippy/core/constants/colors.dart';
@@ -24,23 +24,25 @@ class _FilterScreenState extends State<FilterScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding:
-                  EdgeInsets.only(left: height * 0.025, right: height * 0.025),
+              padding: EdgeInsets.only(
+                left: height * 0.025,
+                right: height * 0.025,
+              ),
               child: FilterHeader(),
             ),
-            SizedBox(
-              height: height * 0.05,
-            ),
+            SizedBox(height: height * 0.05),
             Expanded(
               child: Container(
                 width: width,
                 decoration: BoxDecoration(
-                    color: AppColors.grey2,
-                    borderRadius: BorderRadius.only(
-                        topRight: Radius.circular(height * 0.03),
-                        topLeft: Radius.circular(height * 0.03))),
+                  color: AppColors.grey2,
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(height * 0.03),
+                    topLeft: Radius.circular(height * 0.03),
+                  ),
+                ),
                 child: Padding(
-                  padding:  EdgeInsets.all(height*0.025),
+                  padding: EdgeInsets.all(height * 0.025),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -53,16 +55,15 @@ class _FilterScreenState extends State<FilterScreen> {
                           fontFamily: 'Poppins',
                         ),
                       ),
-                      SizedBox(height: height*0.025,),
+                      SizedBox(height: height * 0.025),
                       Expanded(
                         child: ListView.builder(
-                            itemCount: 5,
-                            physics: NeverScrollableScrollPhysics(),
-                            itemBuilder: (BuildContext context, int index) {
-                              return FilterItem(
-                                value: false,
-                              );
-                            }),
+                          itemCount: 5,
+                          physics: NeverScrollableScrollPhysics(),
+                          itemBuilder: (BuildContext context, int index) {
+                            return FilterItem(value: false);
+                          },
+                        ),
                       ),
                       Text(
                         'brand'.tr(),
@@ -73,28 +74,27 @@ class _FilterScreenState extends State<FilterScreen> {
                           fontFamily: 'Poppins',
                         ),
                       ),
-                      SizedBox(height: height*0.025,),
+                      SizedBox(height: height * 0.025),
 
                       Expanded(
                         child: ListView.builder(
-                            itemCount: 5,
-                            physics: NeverScrollableScrollPhysics(),
-                            itemBuilder: (BuildContext context, int index) {
-                              return FilterItem(
-                                value: false,
-                              );
-                            }),
+                          itemCount: 5,
+                          physics: NeverScrollableScrollPhysics(),
+                          itemBuilder: (BuildContext context, int index) {
+                            return FilterItem(value: false);
+                          },
+                        ),
                       ),
                       PrimaryButton(
-                          buttonTitle: 'applyFilter'.tr(), action: () {}),
-                      SizedBox(
-                        height: height * 0.025,
-                      )
+                        buttonTitle: 'applyFilter'.tr(),
+                        action: () {},
+                      ),
+                      SizedBox(height: height * 0.025),
                     ],
                   ),
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),

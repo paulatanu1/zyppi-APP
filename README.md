@@ -2,4 +2,4 @@
 Quick Commerce android-app and IOS-app
 
 
-Flutter - 3.24.3
+Flutter - 3.47.x (pinned via FVM; run `fvm flutter ...`, see `.fvmrc`)

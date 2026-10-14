@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bounce/flutter_bounce.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zippy/features/ProductDetails/provider/productDetailProvider.dart';
+import 'package:zippy/features/ProductDetails/provider/product_detail_provider.dart';
 import 'package:zippy/core/constants/colors.dart';
 
 class ProductSlider extends ConsumerWidget {
+  const ProductSlider({super.key});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     double height = MediaQuery.of(context).size.height;
@@ -39,11 +41,7 @@ class ProductSlider extends ConsumerWidget {
                   child: Bounce(
                     duration: Duration(milliseconds: 300),
                     onPressed: () => context.pop(),
-                    child: Icon(
-                      Icons.arrow_back_ios,
-                      size: 30,
-                      weight: 2,
-                    ),
+                    child: Icon(Icons.arrow_back_ios, size: 30, weight: 2),
                   ),
                 ),
               ],

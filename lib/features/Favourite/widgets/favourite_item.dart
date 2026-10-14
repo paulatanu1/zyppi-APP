@@ -10,12 +10,11 @@ class FavouriteItem extends StatelessWidget {
     double width = MediaQuery.of(context).size.width;
 
     return Padding(
-      padding:  EdgeInsets.only(left:height*0.02, right: height*0.02,),
+      padding: EdgeInsets.only(left: height * 0.02, right: height * 0.02),
       child: Column(
         children: [
-
           Padding(
-            padding:  EdgeInsets.only(top:height*0.02, bottom: height*0.02),
+            padding: EdgeInsets.only(top: height * 0.02, bottom: height * 0.02),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -27,7 +26,7 @@ class FavouriteItem extends StatelessWidget {
                       width: width * 0.15,
                       fit: BoxFit.contain,
                     ),
-                    SizedBox(width: height*0.025,),
+                    SizedBox(width: height * 0.025),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -35,21 +34,23 @@ class FavouriteItem extends StatelessWidget {
                         Text(
                           "Sprite Can",
                           style: TextStyle(
-                              fontSize: 16,
-                              color: AppColors.darkBlue,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: 'Poppins',
-                              fontStyle: FontStyle.italic),
+                            fontSize: 16,
+                            color: AppColors.darkBlue,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Poppins',
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                         Text(
                           "325ml, Price",
                           style: TextStyle(
-                              fontSize: 14,
-                              color: AppColors.grey3,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: 'Poppins',
-                              fontStyle: FontStyle.italic),
-                        )
+                            fontSize: 14,
+                            color: AppColors.grey3,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Poppins',
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -59,28 +60,22 @@ class FavouriteItem extends StatelessWidget {
                     Text(
                       "\$1.50",
                       style: TextStyle(
-                          fontSize: 16,
-                          color: AppColors.darkBlue,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Poppins',
-
+                        fontSize: 16,
+                        color: AppColors.darkBlue,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Poppins',
                       ),
                     ),
 
-                    SizedBox(width: height*0.015,),
+                    SizedBox(width: height * 0.015),
 
-                    Icon(Icons.arrow_forward_ios, size: 20,),
+                    Icon(Icons.arrow_forward_ios, size: 20),
                   ],
-                )
-
-
+                ),
               ],
             ),
           ),
-          Divider(
-            height: 1,
-            color: AppColors.grey5,
-          ),
+          Divider(height: 1, color: AppColors.grey5),
         ],
       ),
     );

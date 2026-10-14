@@ -6,14 +6,10 @@ part of 'carousel.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$CarouselImpl _$$CarouselImplFromJson(Map<String, dynamic> json) =>
-    _$CarouselImpl(
-      image: json['image'] as String?,
-      text: json['text'] as String?,
-    );
+_Carousel _$CarouselFromJson(Map<String, dynamic> json) =>
+    _Carousel(image: json['image'] as String?, text: json['text'] as String?);
 
-Map<String, dynamic> _$$CarouselImplToJson(_$CarouselImpl instance) =>
-    <String, dynamic>{
-      'image': instance.image,
-      'text': instance.text,
-    };
+Map<String, dynamic> _$CarouselToJson(_Carousel instance) => <String, dynamic>{
+  'image': instance.image,
+  'text': instance.text,
+};

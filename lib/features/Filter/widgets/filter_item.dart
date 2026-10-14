@@ -13,13 +13,11 @@ class FilterItem extends StatelessWidget {
         Transform.scale(
           scale: 1.5,
           child: Checkbox(
-              value: value,
-              onChanged: onCheckBoxChanged,
+            value: value,
+            onChanged: onCheckBoxChanged,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(6),
-              side: BorderSide(
-                color: AppColors.grey3,
-              ),
+              side: BorderSide(color: AppColors.grey3),
             ),
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
@@ -32,9 +30,9 @@ class FilterItem extends StatelessWidget {
             color: AppColors.darkBlue,
             fontWeight: FontWeight.w600,
             fontFamily: 'Poppins',
-            fontStyle: FontStyle.italic
+            fontStyle: FontStyle.italic,
           ),
-        )
+        ),
       ],
     );
   }

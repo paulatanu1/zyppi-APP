@@ -9,16 +9,15 @@ class MyCartItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     double height = MediaQuery.of(context).size.height;
     double width = MediaQuery.of(context).size.width;
 
     return Padding(
-      padding:  EdgeInsets.only(left:height*0.02, right: height*0.02),
+      padding: EdgeInsets.only(left: height * 0.02, right: height * 0.02),
       child: Column(
         children: [
           Padding(
-            padding:  EdgeInsets.only(top:height*0.02, bottom: height*0.02),
+            padding: EdgeInsets.only(top: height * 0.02, bottom: height * 0.02),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -29,7 +28,7 @@ class MyCartItem extends StatelessWidget {
                   fit: BoxFit.contain,
                 ),
 
-                SizedBox(width: height*0.025,),
+                SizedBox(width: height * 0.025),
 
                 Expanded(
                   child: Column(
@@ -39,41 +38,46 @@ class MyCartItem extends StatelessWidget {
                       Text(
                         "Bell Pepper Red",
                         style: TextStyle(
-                            fontSize: 16,
-                            color: AppColors.darkBlue,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'Poppins',
-                            fontStyle: FontStyle.italic),
+                          fontSize: 16,
+                          color: AppColors.darkBlue,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Poppins',
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
                       Text(
                         "1kg, Price",
                         style: TextStyle(
-                            fontSize: 16,
-                            color: AppColors.grey3,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'Poppins',
-                            fontStyle: FontStyle.italic),
+                          fontSize: 16,
+                          color: AppColors.grey3,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Poppins',
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
-                      SizedBox(height: height*0.02,),
+                      SizedBox(height: height * 0.02),
                       Row(
                         children: [
-                          ItemCountContainer(icon: Icons.remove, colors: AppColors.grey3,),
-                          SizedBox(width: height*0.02,),
+                          ItemCountContainer(
+                            icon: Icons.remove,
+                            colors: AppColors.grey3,
+                          ),
+                          SizedBox(width: height * 0.02),
                           Text(
                             "1",
                             style: TextStyle(
-                                fontSize: 16,
-                                color: AppColors.darkBlue,
-                                fontWeight: FontWeight.w600,
-                                fontFamily: 'Poppins',
+                              fontSize: 16,
+                              color: AppColors.darkBlue,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Poppins',
                             ),
                           ),
-                          SizedBox(width: height*0.02,),
+                          SizedBox(width: height * 0.02),
 
-
-                          ItemCountContainer(icon: Icons.add, colors: AppColors.primaryButtonColor,),
-
-
+                          ItemCountContainer(
+                            icon: Icons.add,
+                            colors: AppColors.primaryButtonColor,
+                          ),
                         ],
                       ),
                     ],
@@ -85,31 +89,32 @@ class MyCartItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Bounce(
-
-                        duration: Duration(milliseconds: 300),
-                        onPressed: crossIconClicked,
-                        child: Icon(Icons.close, size: 30,color: AppColors.grey3,)),
-                    SizedBox(height: height*0.04,),
+                      duration: Duration(milliseconds: 300),
+                      onPressed: crossIconClicked,
+                      child: Icon(
+                        Icons.close,
+                        size: 30,
+                        color: AppColors.grey3,
+                      ),
+                    ),
+                    SizedBox(height: height * 0.04),
                     Text(
                       "\$4.99",
                       style: TextStyle(
-                          fontSize: 18,
-                          color: AppColors.darkBlue,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Poppins',
-                          ),
+                        fontSize: 18,
+                        color: AppColors.darkBlue,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Poppins',
+                      ),
                     ),
                   ],
-                )
+                ),
               ],
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Divider(
-              height: 1,
-              color: AppColors.grey5,
-            ),
+            child: Divider(height: 1, color: AppColors.grey5),
           ),
         ],
       ),

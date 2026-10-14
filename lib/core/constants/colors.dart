@@ -28,7 +28,7 @@ class AppColors {
   static const Color grey8 = Color(0xFFEBEBEB);
   static const Color deepBlue1 = Color(0xFF1541E6);
   static const Color deepBlue2 = Color(0xFF1C5FA1);
-  static const Color deepBlue3 = Color(0xFF054F61F);
+  static const Color deepBlue3 = Color(0xFF054F61);
   static const Color lightBlue = Color(0xFF597AF1);
   static const Color lightBlue1 = Color(0xFFCFDEF5);
   static const Color lightBlue2 = Color(0xFF8EB8FB);
@@ -36,14 +36,15 @@ class AppColors {
   static const Color lightBlue4 = Color(0xFFD1E5F6);
   static const Color green = Color(0xFF53B175);
   static const Color green1 = Color(0xFFCAEEC9);
-  static  LinearGradient gradientHomeBackGround = LinearGradient(
+  static LinearGradient gradientHomeBackGround = LinearGradient(
     begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [
-    Colors.blueAccent.withOpacity(0.6),
-    Colors.white,
-    Colors.white
-  ]);
+    end: Alignment.bottomCenter,
+    colors: [
+      Colors.blueAccent.withValues(alpha: 0.6),
+      Colors.white,
+      Colors.white,
+    ],
+  );
 
   static const bottomSheet = Color(0xFFDDE7F6);
   static const borderColor = Color(0xFFCFDEF5);
@@ -52,19 +53,19 @@ class AppColors {
   static const List<Map<String, dynamic>> categoryColors = [
     {
       'categoryCard': Color.fromRGBO(83, 177, 117, 0.1),
-      'categoryCardBorder': Color.fromRGBO(83, 177, 117, 1)
+      'categoryCardBorder': Color.fromRGBO(83, 177, 117, 1),
     },
     {
       'categoryCard': Color.fromRGBO(255, 236, 247, 1),
-      'categoryCardBorder': Color.fromRGBO(251, 84, 182, 1)
+      'categoryCardBorder': Color.fromRGBO(251, 84, 182, 1),
     },
     {
       'categoryCard': Color.fromRGBO(248, 164, 76, 0.1),
-      'categoryCardBorder': Color.fromRGBO(250, 189, 124, 1)
+      'categoryCardBorder': Color.fromRGBO(250, 189, 124, 1),
     },
     {
       'categoryCard': Color.fromRGBO(237, 247, 253, 1),
-      'categoryCardBorder': Color.fromRGBO(82, 186, 244, 1)
-    }
+      'categoryCardBorder': Color.fromRGBO(82, 186, 244, 1),
+    },
   ];
 }

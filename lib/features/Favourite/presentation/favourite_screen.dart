@@ -1,6 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:zippy/core/commonWidgets/primaryButton.dart';
+import 'package:zippy/core/commonWidgets/primary_button.dart';
 import 'package:zippy/features/Favourite/widgets/favourite_item.dart';
 import 'package:zippy/core/constants/colors.dart';
 
@@ -10,7 +10,6 @@ class FavouriteScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     double height = MediaQuery.of(context).size.height;
-    double width = MediaQuery.of(context).size.width;
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -21,34 +20,33 @@ class FavouriteScreen extends StatelessWidget {
               child: Text(
                 'favourite'.tr(),
                 style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Poppins',
-                    color: AppColors.darkBlue,
-                    fontStyle: FontStyle.italic,
-                    fontSize: 20),
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Poppins',
+                  color: AppColors.darkBlue,
+                  fontStyle: FontStyle.italic,
+                  fontSize: 20,
+                ),
               ),
             ),
-            SizedBox(
-              height: height * 0.025,
-            ),
-            Divider(
-              height: 1,
-              color: AppColors.grey5,
-            ),
+            SizedBox(height: height * 0.025),
+            Divider(height: 1, color: AppColors.grey5),
             Expanded(
               child: ListView.builder(
-                  physics: BouncingScrollPhysics(),
-                  itemCount: 5,
-                  itemBuilder: (BuildContext context, int index) {
-                    return FavouriteItem();
-                  }),
+                physics: BouncingScrollPhysics(),
+                itemCount: 5,
+                itemBuilder: (BuildContext context, int index) {
+                  return FavouriteItem();
+                },
+              ),
             ),
             Padding(
               padding: EdgeInsets.all(height * 0.025),
               child: PrimaryButton(
-                  buttonTitle: 'addAllToCart'.tr(), action: () {}),
+                buttonTitle: 'addAllToCart'.tr(),
+                action: () {},
+              ),
             ),
-            SizedBox(height: height * 0.08)
+            SizedBox(height: height * 0.08),
           ],
         ),
       ),

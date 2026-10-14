@@ -59,8 +59,12 @@ class _SliderScreenState extends State<SliderScreen> {
     return Scaffold(
       backgroundColor: AppColors.white,
       body: Padding(
-        padding:
-            EdgeInsets.only(left: 30.0.w, right: 30.w, top: 10.h, bottom: 10.h),
+        padding: EdgeInsets.only(
+          left: 30.0.w,
+          right: 30.w,
+          top: 10.h,
+          bottom: 10.h,
+        ),
         child: SafeArea(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -70,8 +74,9 @@ class _SliderScreenState extends State<SliderScreen> {
                 text: TextSpan(
                   children: [
                     TextSpan(
-                      text: stepIndicators[currentStep]
-                          .split('/')[0], // The step number (e.g., "1")
+                      text: stepIndicators[currentStep].split(
+                        '/',
+                      )[0], // The step number (e.g., "1")
                       style: TextStyle(
                         fontSize: 40.sp,
                         fontWeight: FontWeight.bold,
@@ -81,10 +86,11 @@ class _SliderScreenState extends State<SliderScreen> {
                     TextSpan(
                       text: '/4', // The "/4" part
                       style: TextStyle(
-                          fontSize: 40.sp,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.grey,
-                          fontFamily: "Montserrat"),
+                        fontSize: 40.sp,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.grey,
+                        fontFamily: "Montserrat",
+                      ),
                     ),
                   ],
                 ),
@@ -94,10 +100,7 @@ class _SliderScreenState extends State<SliderScreen> {
                 transitionBuilder: (Widget child, Animation<double> animation) {
                   return FadeTransition(
                     opacity: animation,
-                    child: ScaleTransition(
-                      scale: animation,
-                      child: child,
-                    ),
+                    child: ScaleTransition(scale: animation, child: child),
                   );
                 },
                 child: Image.asset(
@@ -118,7 +121,7 @@ class _SliderScreenState extends State<SliderScreen> {
                     child: SlideTransition(
                       position: Tween<Offset>(
                         begin: Offset(0.0, 0.5), // Start from below
-                        end: Offset(0.0, 0.0),   // End at the original position
+                        end: Offset(0.0, 0.0), // End at the original position
                       ).animate(animation),
                       child: child,
                     ),
@@ -128,17 +131,15 @@ class _SliderScreenState extends State<SliderScreen> {
                   text1[currentStep],
                   key: ValueKey<int>(currentStep), // Unique key for each step
                   style: TextStyle(
-                      fontSize: 45.sp,
-                      color: AppColors.black,
-                      fontFamily: "Montserrat",
-                      fontWeight: FontWeight.w800),
+                    fontSize: 45.sp,
+                    color: AppColors.black,
+                    fontFamily: "Montserrat",
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
 
-              SizedBox(
-                height: 5.h,
-              ),
-
+              SizedBox(height: 5.h),
 
               AnimatedSwitcher(
                 duration: Duration(milliseconds: 500),
@@ -148,7 +149,7 @@ class _SliderScreenState extends State<SliderScreen> {
                     child: SlideTransition(
                       position: Tween<Offset>(
                         begin: Offset(0.0, 0.5), // Start from below
-                        end: Offset(0.0, 0.0),   // End at the original position
+                        end: Offset(0.0, 0.0), // End at the original position
                       ).animate(animation),
                       child: child,
                     ),
@@ -159,10 +160,11 @@ class _SliderScreenState extends State<SliderScreen> {
                   key: ValueKey<int>(currentStep), // Unique key for each step
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                      fontSize: 30.sp,
-                      color: AppColors.grey,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: "Montserrat"),
+                    fontSize: 30.sp,
+                    color: AppColors.grey,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: "Montserrat",
+                  ),
                 ),
               ),
 
@@ -180,10 +182,11 @@ class _SliderScreenState extends State<SliderScreen> {
                       child: Text(
                         'previous'.tr(),
                         style: TextStyle(
-                            fontSize: 35.sp,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.grey,
-                            fontFamily: "Montserrat"),
+                          fontSize: 35.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.grey,
+                          fontFamily: "Montserrat",
+                        ),
                       ),
                     ),
                   ),
@@ -197,10 +200,10 @@ class _SliderScreenState extends State<SliderScreen> {
                         width: isSelected ? 60.w : 15.w,
                         height: isSelected ? 5.h : 3.h,
                         decoration: BoxDecoration(
-                            color: isSelected ? Colors.black : Colors.grey,
-                            borderRadius: BorderRadius.circular(5)
-                            //shape: BoxShape.circle,
-                            ),
+                          color: isSelected ? Colors.black : Colors.grey,
+                          borderRadius: BorderRadius.circular(5),
+                          //shape: BoxShape.circle,
+                        ),
                       );
                     }),
                   ),
@@ -213,9 +216,10 @@ class _SliderScreenState extends State<SliderScreen> {
                           child: Text(
                             'getStart'.tr(),
                             style: TextStyle(
-                                fontSize: 35.sp,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.deepBlue),
+                              fontSize: 35.sp,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.deepBlue,
+                            ),
                           ),
                         )
                       : Bounce(
@@ -224,10 +228,11 @@ class _SliderScreenState extends State<SliderScreen> {
                           child: Text(
                             'next'.tr(),
                             style: TextStyle(
-                                fontSize: 35.sp,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.deepBlue,
-                                fontFamily: "Montserrat"),
+                              fontSize: 35.sp,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.deepBlue,
+                              fontFamily: "Montserrat",
+                            ),
                           ),
                         ),
                 ],

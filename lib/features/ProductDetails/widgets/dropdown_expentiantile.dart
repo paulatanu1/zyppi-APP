@@ -2,21 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:zippy/core/constants/colors.dart';
 
 class DropdownExpansionTile extends StatefulWidget {
-
-   String dropDownTitle;
-   String dropDownContent;
-    final Widget? dynamicWidget;
-   DropdownExpansionTile({Key? key, required this.dropDownTitle, required this.dropDownContent, this.dynamicWidget}) : super(key: key);
+  final String dropDownTitle;
+  final String dropDownContent;
+  final Widget? dynamicWidget;
+  const DropdownExpansionTile({
+    super.key,
+    required this.dropDownTitle,
+    required this.dropDownContent,
+    this.dynamicWidget,
+  });
 
   @override
-  _DropdownExpansionTileState createState() => _DropdownExpansionTileState();
+  State<DropdownExpansionTile> createState() => _DropdownExpansionTileState();
 }
 
-class _DropdownExpansionTileState extends State<DropdownExpansionTile> with SingleTickerProviderStateMixin {
+class _DropdownExpansionTileState extends State<DropdownExpansionTile>
+    with SingleTickerProviderStateMixin {
   bool _isExpanded = false;
   late AnimationController _controller;
   late Animation<double> _heightFactor;
-
 
   @override
   void initState() {
@@ -47,12 +51,10 @@ class _DropdownExpansionTileState extends State<DropdownExpansionTile> with Sing
 
   @override
   Widget build(BuildContext context) {
-
     double height = MediaQuery.of(context).size.height;
-    double width = MediaQuery.of(context).size.width;
 
     return Padding(
-      padding:  EdgeInsets.only(top: height*0.015, bottom: height*0.015),
+      padding: EdgeInsets.only(top: height * 0.015, bottom: height * 0.015),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -61,20 +63,25 @@ class _DropdownExpansionTileState extends State<DropdownExpansionTile> with Sing
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                 Text(
+                Text(
                   widget.dropDownTitle,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                      fontFamily: 'Poppins',
-                      color: AppColors.darkBlue,
-                      fontSize: 16),
+                    fontFamily: 'Poppins',
+                    color: AppColors.darkBlue,
+                    fontSize: 16,
+                  ),
                 ),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (widget.dynamicWidget != null) widget.dynamicWidget!,                    Icon(
-                      _isExpanded ? Icons.keyboard_arrow_up_outlined: Icons.arrow_forward_ios,
-                      size: 20,weight: 4,
+                    if (widget.dynamicWidget != null) widget.dynamicWidget!,
+                    Icon(
+                      _isExpanded
+                          ? Icons.keyboard_arrow_up_outlined
+                          : Icons.arrow_forward_ios,
+                      size: 20,
+                      weight: 4,
                     ),
                   ],
                 ),
@@ -85,16 +92,13 @@ class _DropdownExpansionTileState extends State<DropdownExpansionTile> with Sing
             animation: _controller,
             builder: (context, child) {
               return ClipRect(
-                child: Align(
-                  heightFactor: _heightFactor.value,
-                  child: child,
-                ),
+                child: Align(heightFactor: _heightFactor.value, child: child),
               );
             },
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: height*0.015),
+                SizedBox(height: height * 0.015),
                 Text(
                   widget.dropDownContent,
                   style: TextStyle(
@@ -102,7 +106,7 @@ class _DropdownExpansionTileState extends State<DropdownExpansionTile> with Sing
                     fontFamily: 'Poppins',
                     color: AppColors.grey3,
                     fontSize: 13,
-                    fontStyle: FontStyle.italic
+                    fontStyle: FontStyle.italic,
                   ),
                 ),
               ],

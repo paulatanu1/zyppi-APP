@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:zippy/core/commonWidgets/categoryCard.dart';
-import 'package:zippy/features/HomeScreen/provider/categoriesProvider.dart';
+import 'package:zippy/core/commonWidgets/category_card.dart';
+import 'package:zippy/features/HomeScreen/provider/categories_provider.dart';
 import 'package:zippy/core/constants/colors.dart';
 
 class Categories extends ConsumerWidget {
+  Categories({super.key});
+
   final PageController _pageController = PageController();
 
   @override
@@ -18,7 +19,7 @@ class Categories extends ConsumerWidget {
     // TODO: implement build
     return Column(
       children: [
-        Container(
+        SizedBox(
           height: height * 0.45,
           child: PageView.builder(
             itemCount: categoryItem.chunks.length,
@@ -39,10 +40,11 @@ class Categories extends ConsumerWidget {
                   itemBuilder: (context, subIndex) {
                     final item = chunk[subIndex];
                     return CategoryCard(
-                        categoryText: item.name ?? '',
-                        imageUrl: item.image ?? '',
-                        backgroundColor: item.color ?? AppColors.grey,
-                        borderColor: item.borderColor ?? AppColors.grey);
+                      categoryText: item.name ?? '',
+                      imageUrl: item.image ?? '',
+                      backgroundColor: item.color ?? AppColors.grey,
+                      borderColor: item.borderColor ?? AppColors.grey,
+                    );
                   },
                 ),
               );

@@ -1,22 +1,22 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zippy/core/data/provider/sharedPreferenceProvider.dart';
-import 'package:zippy/features/EditProfile/presentation/editProfileScreen.dart';
-import 'package:zippy/features/MyAddress/presentation/myAddressScreen.dart';
-import 'package:zippy/features/YourOrder/presentation/yourOrderScreen.dart';
-import 'package:zippy/features/Account/presentation/accountScreen.dart';
-import 'package:zippy/features/Auth/Login/presentation/loginScreen.dart';
-import 'package:zippy/features/Auth/OTPVerification/presentation/otpVerificationScreen.dart';
+import 'package:zippy/core/data/provider/shared_preference_provider.dart';
+import 'package:zippy/features/EditProfile/presentation/edit_profile_screen.dart';
+import 'package:zippy/features/MyAddress/presentation/my_address_screen.dart';
+import 'package:zippy/features/YourOrder/presentation/your_order_screen.dart';
+import 'package:zippy/features/Account/presentation/account_screen.dart';
+import 'package:zippy/features/Auth/Login/presentation/login_screen.dart';
+import 'package:zippy/features/Auth/OTPVerification/presentation/otp_verification_screen.dart';
 import 'package:zippy/features/CategoryDetails/presentation/category_details_screen.dart';
-import 'package:zippy/core/commonWidgets/navBar/presentation/navBar.dart';
-import 'package:zippy/features/Explore/presentation/exploreScreen.dart';
+import 'package:zippy/core/commonWidgets/navBar/presentation/nav_bar.dart';
+import 'package:zippy/features/Explore/presentation/explore_screen.dart';
 import 'package:zippy/features/Favourite/presentation/favourite_screen.dart';
 import 'package:zippy/features/Filter/presentation/filter_screen.dart';
-import 'package:zippy/features/HomeScreen/presentation/homeScreen.dart';
+import 'package:zippy/features/HomeScreen/presentation/home_screen.dart';
 import 'package:zippy/features/Intro/presentation/Slider/slider.dart';
 import 'package:zippy/features/MyCart/presentation/my_cart_screen.dart';
-import 'package:zippy/features/ProductDetails/presentation/productDetails_screen.dart';
-import 'package:zippy/features/SearchAddress/presentation/searchAddressScreen.dart';
+import 'package:zippy/features/ProductDetails/presentation/product_details_screen.dart';
+import 'package:zippy/features/SearchAddress/presentation/search_address_screen.dart';
 
 class Routes {
   final ProviderContainer container;
@@ -107,12 +107,13 @@ class Routes {
           builder: (context, state) => AccountScreen(),
         ),
         GoRoute(
-            path: '/searchAddressScreen',
-            name: 'SearchAddressScreen',
-            builder: (context, state) {
-              final bool addLocation = state.extra as bool;
-              return SearchAddressScreen(addLocation: addLocation);
-            }),
+          path: '/searchAddressScreen',
+          name: 'SearchAddressScreen',
+          builder: (context, state) {
+            final bool addLocation = state.extra as bool;
+            return SearchAddressScreen(addLocation: addLocation);
+          },
+        ),
         GoRoute(
           path: '/myAddressScreen',
           name: 'MyAddressScreen',
@@ -127,7 +128,7 @@ class Routes {
           path: '/editProfileScreen',
           name: 'EditProfileScreen',
           builder: (context, state) => EditProfileScreen(),
-        )
+        ),
       ],
     );
   }
