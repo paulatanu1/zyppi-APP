@@ -1,21 +1,20 @@
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:zippy/features/home_screen/domain/carousel.dart';
+import 'package:zippy/features/home_screen/data/home_repository_impl.dart';
+import 'package:zippy/features/home_screen/domain/home_repository.dart';
 
 import 'carousel_state.dart';
 
 class CarouselProvider extends StateNotifier<CarouselState> {
-  CarouselProvider() : super(CarouselState.initial()) {
+  final HomeRepository repository;
+
+  CarouselProvider(this.repository) : super(CarouselState.initial()) {
     carouselItems();
   }
 
-  void carouselItems() {
-    state = state.copyWith(
-      carouselList: [
-        Carousel(image: 'assets/images/veg.png', text: 'Slide 1'),
-        Carousel(image: 'assets/images/veg.png', text: 'Slide 2'),
-        Carousel(image: 'assets/images/veg.png', text: 'Slide 3'),
-      ],
-    );
+  Future<void> carouselItems() async {
+    final carouselList = await repository.fetchCarousel();
+
+    state = state.copyWith(carouselList: carouselList);
   }
 
   void changeIndex(int index) {
@@ -25,5 +24,5 @@ class CarouselProvider extends StateNotifier<CarouselState> {
 
 final carouselProvider =
     StateNotifierProvider.autoDispose<CarouselProvider, CarouselState>(
-      (ref) => CarouselProvider(),
+      (ref) => CarouselProvider(ref.read(homeRepositoryProvider)),
     );

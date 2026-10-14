@@ -1,33 +1,27 @@
 import 'dart:convert';
 
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:zippy/core/config/env.dart';
-import 'package:zippy/core/infrastructure/network_api_services.dart';
-import 'package:zippy/core/infrastructure/url.dart';
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
-import 'package:zippy/core/shared_providers/network_provider.dart';
 import 'package:zippy/core/utils/log.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
+import 'package:zippy/features/search_address/data/place_repository_impl.dart';
 import 'package:zippy/features/search_address/domain/place_details.dart';
 import 'package:zippy/features/search_address/domain/place_prediction.dart';
+import 'package:zippy/features/search_address/domain/place_repository.dart';
 
 import 'place_prediction_state.dart';
 
 class PlacePredictionProvider extends StateNotifier<PlacePredictionState> {
-  final NetworkApiServices networkApiServices;
+  final PlaceRepository repository;
   final GetCurrentLocationProvider getCurrentLocationProvider;
 
-  PlacePredictionProvider(
-    this.networkApiServices,
-    this.getCurrentLocationProvider,
-  ) : super(PlacePredictionState());
+  PlacePredictionProvider(this.repository, this.getCurrentLocationProvider)
+    : super(PlacePredictionState());
 
   Future<void> placePrediction({required String? input}) async {
     try {
-      var (response, dioException) = await networkApiServices.getApiRequest(
-        url: '${Url.googleApi}/place/autocomplete/json?',
-        parameters:
-            'input=$input&language=en&types=geocode&key=${Env.googleMapsApiKey}',
+      var (response, dioException) = await repository.fetchPlacePredictions(
+        input,
       );
 
       if (response == null && dioException == null) {
@@ -64,9 +58,8 @@ class PlacePredictionProvider extends StateNotifier<PlacePredictionState> {
     required String? selectedAddress,
   }) async {
     try {
-      var (response, dioException) = await networkApiServices.getApiRequest(
-        url: '${Url.googleApi}/place/details/json?',
-        parameters: 'placeid=$placeId&key=${Env.googleMapsApiKey}',
+      var (response, dioException) = await repository.fetchPlaceDetails(
+        placeId,
       );
 
       if (response == null && dioException == null) {
@@ -113,24 +106,10 @@ class PlacePredictionProvider extends StateNotifier<PlacePredictionState> {
     required String? selectedAddress,
   }) async {
     try {
-      var (response, dioException) = await networkApiServices
-          .postAuthenticatedApiRequest(
-            url: Url.addAddress,
-            payload: {
-              'street': selectedAddress,
-              'city': 'Kolkata',
-              'state': 'West Bengal',
-              'country': 'India',
-              'postalCode': '123456',
-              'area': 'Prince Anwar Shah Road',
-              'landmark': 'South City',
-              'otherAddressType': 'string',
-              'addressType': 'others',
-              'lat': placeDetails?.result?.geometry?.location?.lat.toString(),
-              'lng': placeDetails?.result?.geometry?.location?.lng.toString(),
-              'isDefault': true,
-            },
-          );
+      var (response, dioException) = await repository.addAddress(
+        placeDetails: placeDetails,
+        selectedAddress: selectedAddress,
+      );
 
       if (response == null && dioException == null) {
         showConnectionInterrupted();
@@ -155,7 +134,7 @@ class PlacePredictionProvider extends StateNotifier<PlacePredictionState> {
 final placePredictionProvider =
     StateNotifierProvider<PlacePredictionProvider, PlacePredictionState>(
       (ref) => PlacePredictionProvider(
-        ref.read(networkProvider),
+        ref.read(placeRepositoryProvider),
         ref.read(currentLocation.notifier),
       ),
     );

@@ -5,20 +5,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
-import 'package:zippy/core/infrastructure/network_api_services.dart';
-import 'package:zippy/core/infrastructure/url.dart';
-import 'package:zippy/core/shared_providers/network_provider.dart';
 import 'package:zippy/core/utils/log.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
+import 'package:zippy/features/auth/otp_verification/data/login_repository_impl.dart';
 import 'package:zippy/features/auth/otp_verification/domain/login_model.dart';
+import 'package:zippy/features/auth/otp_verification/domain/login_repository.dart';
 
 import 'login_state.dart';
 
 class LoginProvider extends StateNotifier<LoginState> {
-  final NetworkApiServices networkApiServices;
+  final LoginRepository repository;
   final Ref ref;
 
-  LoginProvider(this.networkApiServices, this.ref) : super(LoginState());
+  LoginProvider(this.repository, this.ref) : super(LoginState());
 
   Future<void> login({
     String? phoneNumber,
@@ -28,9 +27,9 @@ class LoginProvider extends StateNotifier<LoginState> {
     state = state.copyWith(loading: true);
 
     try {
-      var (response, dioException) = await networkApiServices.postApiRequest(
-        url: Url.login,
-        payload: {'phone': phoneNumber, 'otp': otp},
+      var (response, dioException) = await repository.login(
+        phoneNumber: phoneNumber,
+        otp: otp,
       );
 
       state = state.copyWith(loading: false);
@@ -80,5 +79,5 @@ class LoginProvider extends StateNotifier<LoginState> {
 
 final loginProvider =
     StateNotifierProvider.autoDispose<LoginProvider, LoginState>(
-      (ref) => LoginProvider(ref.read(networkProvider), ref),
+      (ref) => LoginProvider(ref.read(loginRepositoryProvider), ref),
     );

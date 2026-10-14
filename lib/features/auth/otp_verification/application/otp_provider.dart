@@ -4,20 +4,24 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/features/auth/otp_verification/data/otp_auth_repository_impl.dart';
+import 'package:zippy/features/auth/otp_verification/domain/otp_auth_repository.dart';
 
 import 'otp_state.dart';
 
 class OtpLogin extends StateNotifier<OtpState> {
-  OtpLogin() : super(OtpState());
+  final OtpAuthRepository repository;
+
+  OtpLogin(this.repository) : super(OtpState());
 
   Future<void> generateOtp(String phoneNumber, BuildContext context) async {
     state = state.copyWith(loading: true);
 
     try {
-      await FirebaseAuth.instance.verifyPhoneNumber(
+      await repository.verifyPhoneNumber(
         phoneNumber: '+91$phoneNumber',
         verificationCompleted: (PhoneAuthCredential credential) async {
-          await FirebaseAuth.instance.signInWithCredential(credential);
+          await repository.signInWithCredential(credential);
         },
         verificationFailed: (FirebaseAuthException e) {
           log('Verification Failed: ${e.toString()}');
@@ -49,12 +53,12 @@ class OtpLogin extends StateNotifier<OtpState> {
     state = state.copyWith(otpLoading: true);
 
     try {
-      final cred = PhoneAuthProvider.credential(
+      final cred = repository.credentialFromSmsCode(
         verificationId: state.verificationId ?? '',
         smsCode: otp,
       );
 
-      await FirebaseAuth.instance.signInWithCredential(cred);
+      await repository.signInWithCredential(cred);
 
       if (!context.mounted) return;
       context.go('/navBar');
@@ -69,5 +73,5 @@ class OtpLogin extends StateNotifier<OtpState> {
 }
 
 final otpProvider = StateNotifierProvider.autoDispose<OtpLogin, OtpState>(
-  (ref) => OtpLogin(),
+  (ref) => OtpLogin(ref.read(otpAuthRepositoryProvider)),
 );

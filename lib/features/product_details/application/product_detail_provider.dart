@@ -1,20 +1,19 @@
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:zippy/features/product_details/application/product_detail_state.dart';
-import 'package:zippy/features/product_details/domain/product_detail.dart';
+import 'package:zippy/features/product_details/data/product_detail_repository_impl.dart';
+import 'package:zippy/features/product_details/domain/product_detail_repository.dart';
 
 class ProductDetailProvider extends StateNotifier<ProductDetailState> {
-  ProductDetailProvider() : super(ProductDetailState.initial()) {
+  final ProductDetailRepository repository;
+
+  ProductDetailProvider(this.repository) : super(ProductDetailState.initial()) {
     initializeImage();
   }
 
-  void initializeImage() {
-    state = state.copyWith(
-      product: [
-        Product(image: 'assets/images/apple.png'),
-        Product(image: 'assets/images/apple.png'),
-        Product(image: 'assets/images/apple.png'),
-      ],
-    );
+  Future<void> initializeImage() async {
+    final product = await repository.fetchProductImages();
+
+    state = state.copyWith(product: product);
   }
 
   void currentIndex(int index) {
@@ -26,4 +25,6 @@ final productDetailProvider =
     StateNotifierProvider.autoDispose<
       ProductDetailProvider,
       ProductDetailState
-    >((ref) => ProductDetailProvider());
+    >(
+      (ref) => ProductDetailProvider(ref.read(productDetailRepositoryProvider)),
+    );
