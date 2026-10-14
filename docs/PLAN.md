@@ -139,14 +139,15 @@ Done when: `fvm flutter analyze` 0 issues, every existing screen still opens, ap
 Done when: each flavor boots, existing screens use tokens, CI green.
 
 ### Phase 2 — Clickable prototype on mock data (1.5–2 weeks) · `feat/prototype`
-- [ ] freezed entities: Category, Product, ProductVariant, CartItem, Address, DeliverySlot, Coupon, Order, OrderItem, OrderStatus, ServiceArea
-- [ ] `assets/mock/*.json` (move hard-coded screen lists there; service areas Purulia, Raghunathpur, Chelyama) + mock repositories (300–800 ms delay, error toggle)
-- [ ] Restyle existing screens to the mockup; build missing screens 8, 10, 11, 12
-- [ ] Cart in `hive_ce`: steppers, item total, savings, delivery fee, handling fee, tip, coupon
-- [ ] Fake order lifecycle timer: placed → packed → out for delivery → delivered
-- [ ] Unit tests for bill math; widget tests for cart and product card
+- [x] freezed entities: Category, Product, ProductVariant, CartItem, Address, DeliverySlot, Coupon, Order, OrderItem, OrderStatus, ServiceArea — all under `lib/core/domain/` (not a single feature's domain) since they're used by multiple features and CLAUDE.md restricts features to importing only `core/` and themselves
+- [x] `assets/mock/*.json` (categories, products, addresses, slots, orders, service_areas, coupons) + mock repositories via `MockDataSource` (300–800 ms delay, a `simulateErrors` toggle)
+- [x] Build missing screens 8 (search), 10 (checkout), 11 (order placed), 12 (order tracking)
+- [ ] **Restyle existing screens to the mockup** — NOT done. Screens are now data-driven (real categories/products/cart/orders instead of hard-coded placeholders) and new widgets/screens use `core/theme` tokens, but the 12 pre-existing screens have not been visually matched pixel-for-pixel against their `docs/mockups/*.dc.html` (layout, spacing, exact colors per screen). This is the main remaining Phase 2 work.
+- [x] Cart in `hive_ce`: steppers, item total, savings, delivery fee, handling fee, tip, coupon — `core/cart/`
+- [x] Fake order lifecycle timer: placed → packed → out for delivery → delivered — `OrderTrackingProvider`, 5s/step
+- [x] Unit tests for bill math; widget tests for cart and product card — surfaced and fixed a real ItemCard layout overflow bug in the process
 
-Done when: release APK runs splash → tracking fully offline and matches the mockup.
+Done when: release APK runs splash → tracking fully offline and matches the mockup. The offline golden path (splash → login → otp → home → product → cart → checkout → placed → tracking) works; "matches the mockup" visually is still open.
 
 ### Phase 3 — Supabase integration (2–3 weeks) · `feat/supabase-integration`
 - [ ] `npx skills add supabase/agent-skills`
