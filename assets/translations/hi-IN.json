@@ -86,5 +86,6 @@
   "orderId": "ऑर्डर आईडी",
   "paidVia": "भुगतान माध्यम",
   "help": "सहायता",
-  "riderNamePlaceholder": "डिलिवरी पार्टनर"
+  "riderNamePlaceholder": "डिलिवरी पार्टनर",
+  "noOrdersYet": "आपका अभी तक कोई ऑर्डर नहीं है"
 }

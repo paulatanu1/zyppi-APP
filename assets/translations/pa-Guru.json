@@ -85,5 +85,6 @@
   "orderId": "ਆਰਡਰ ਆਈਡੀ",
   "paidVia": "ਭੁਗਤਾਨ ਦਾ ਢੰਗ",
   "help": "ਮਦਦ",
-  "riderNamePlaceholder": "ਡਿਲਿਵਰੀ ਪਾਰਟਨਰ"
+  "riderNamePlaceholder": "ਡਿਲਿਵਰੀ ਪਾਰਟਨਰ",
+  "noOrdersYet": "ਤੁਹਾਡਾ ਹਾਲੇ ਕੋਈ ਆਰਡਰ ਨਹੀਂ ਹੈ"
 }

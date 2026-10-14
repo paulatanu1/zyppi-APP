@@ -120,5 +120,6 @@
   "orderId": "Order ID",
   "paidVia": "Paid via",
   "help": "Help",
-  "riderNamePlaceholder": "Delivery partner"
+  "riderNamePlaceholder": "Delivery partner",
+  "noOrdersYet": "You have no orders yet"
 }
