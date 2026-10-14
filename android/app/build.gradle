@@ -17,6 +17,10 @@ android {
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
+    buildFeatures {
+        resValues = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -35,6 +39,27 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+    }
+
+    // dev/staging/prod flavors share applicationId com.betastechnologies.zippy
+    // (per CLAUDE.md) and the one google-services.json; they only vary the
+    // displayed app name so all three can be installed side by side isn't
+    // supported, but `--flavor <name>` selects which env/<name>.json config
+    // flutter_run pairs with via --dart-define-from-file.
+    flavorDimensions = ["env"]
+    productFlavors {
+        dev {
+            dimension = "env"
+            resValue "string", "app_name", "Zyppi Dev"
+        }
+        staging {
+            dimension = "env"
+            resValue "string", "app_name", "Zyppi Staging"
+        }
+        prod {
+            dimension = "env"
+            resValue "string", "app_name", "Zyppi"
+        }
     }
 
     signingConfigs {
