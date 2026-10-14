@@ -141,11 +141,10 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   SizedBox(height: height * 0.02),
                   HomePageProducts(
-                    onClicked: () {
-                      context.push('/productDetailsScreen');
-                      // context.go('/categoryDetailsScreen');
-                      // context.go('/favouriteScreen');
-                      // context.go('/myCartScreen');
+                    onClicked: (productId) {
+                      context.push(
+                        '/productDetailsScreen?productId=$productId',
+                      );
                     },
                   ),
                   SizedBox(height: height * 0.08),

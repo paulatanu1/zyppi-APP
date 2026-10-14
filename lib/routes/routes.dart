@@ -95,7 +95,10 @@ class Routes {
         GoRoute(
           path: '/productDetailsScreen',
           name: 'ProductDetailsScreen',
-          builder: (context, state) => ProductDetailsScreen(),
+          builder: (context, state) {
+            final productId = state.uri.queryParameters['productId'] ?? '';
+            return ProductDetailsScreen(productId: productId);
+          },
         ),
         GoRoute(
           path: '/categoryDetailsScreen',

@@ -1,21 +1,22 @@
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bounce/flutter_bounce.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zippy/features/product_details/application/product_detail_provider.dart';
+import 'package:zippy/core/common_widgets/app_skeleton.dart';
 import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/features/product_details/application/product_detail_provider.dart';
 
 class ProductSlider extends ConsumerWidget {
-  const ProductSlider({super.key});
+  final String productId;
+
+  const ProductSlider({super.key, required this.productId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     double height = MediaQuery.of(context).size.height;
     double width = MediaQuery.of(context).size.width;
 
-    final productDetail = ref.watch(productDetailProvider);
-    final productDetailNotifier = ref.read(productDetailProvider.notifier);
+    final productDetail = ref.watch(productDetailProvider(productId));
 
     return Container(
       width: width,
@@ -29,7 +30,6 @@ class ProductSlider extends ConsumerWidget {
       child: SafeArea(
         child: Column(
           children: [
-            // Static Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -46,49 +46,14 @@ class ProductSlider extends ConsumerWidget {
                 ),
               ],
             ),
-            // Sliding Images
-            CarouselSlider(
-              items: productDetail.product?.map((item) {
-                return Image.asset(
-                  item.image ?? 'assets/images/apple.png',
-                  height: height * 0.25,
-                  width: width * 0.6,
-                  fit: BoxFit.contain,
-                );
-              }).toList(),
-              options: CarouselOptions(
+            AppSkeleton(
+              enabled: productDetail.loading,
+              child: Image.asset(
+                productDetail.product?.image ?? 'assets/images/item.png',
                 height: height * 0.25,
-                enlargeCenterPage: false,
-                autoPlay: false,
-                viewportFraction: 1.0,
-                onPageChanged: (index, reason) =>
-                    productDetailNotifier.currentIndex(index),
+                width: width * 0.6,
+                fit: BoxFit.contain,
               ),
-            ),
-            // Dots Indicator
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: productDetail.product!.asMap().entries.map((entry) {
-                return GestureDetector(
-                  onTap: () => productDetailNotifier.currentIndex(entry.key),
-                  child: AnimatedContainer(
-                    duration: Duration(milliseconds: 300),
-                    margin: EdgeInsets.symmetric(horizontal: width * 0.01),
-                    width: productDetail.currentIndex == entry.key
-                        ? width * 0.06
-                        : width * 0.01,
-                    height: productDetail.currentIndex == entry.key
-                        ? height * 0.005
-                        : width * 0.01,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: productDetail.currentIndex == entry.key
-                          ? AppColors.green
-                          : AppColors.grey,
-                    ),
-                  ),
-                );
-              }).toList(),
             ),
             SizedBox(height: height * 0.025),
           ],
