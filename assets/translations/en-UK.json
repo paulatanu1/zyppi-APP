@@ -116,5 +116,9 @@
   "tipGoesFullyToPartner": "The full amount goes to them.",
   "savingsBanner": "You're saving {} on this order, and delivery is free",
   "toPay": "To pay",
-  "payWithAmount": "Pay {} with {}"
+  "payWithAmount": "Pay {} with {}",
+  "orderId": "Order ID",
+  "paidVia": "Paid via",
+  "help": "Help",
+  "riderNamePlaceholder": "Delivery partner"
 }

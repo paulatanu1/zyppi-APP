@@ -1,9 +1,11 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/app_skeleton.dart';
 import 'package:zippy/core/domain/order_status.dart';
 import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/order_tracking/application/order_tracking_provider.dart';
 
@@ -29,6 +31,8 @@ String _statusLabel(OrderStatus status) {
   }
 }
 
+/// docs/mockups/Tracking.dc.html, minus the decorative map/rider-route
+/// illustration.
 class OrderTrackingScreen extends ConsumerWidget {
   final String orderId;
 
@@ -40,59 +44,188 @@ class OrderTrackingScreen extends ConsumerWidget {
     final order = state.order;
 
     return Scaffold(
-      backgroundColor: AppColors.white,
-      appBar: AppBar(title: Text('trackOrder'.tr())),
-      body: AppSkeleton(
-        enabled: state.loading,
-        child: order == null
-            ? Center(
-                child: Text(
-                  'somethingWentWrong'.tr(),
-                  style: AppTypography.bodyMedium,
+      backgroundColor: AppColors.primaryTint,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    onPressed: () => context.go('/navBar'),
+                    icon: const Icon(Icons.close),
+                  ),
+                  TextButton(onPressed: () {}, child: Text('help'.tr())),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(AppRadius.sheetTop),
+                    topRight: Radius.circular(AppRadius.sheetTop),
+                  ),
                 ),
-              )
-            : Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'yourDeliveryPartner'.tr(),
-                      style: AppTypography.titleMedium,
-                    ),
-                    const SizedBox(height: 24),
-                    ..._timeline.map((status) {
-                      final currentIndex = _timeline.indexOf(order.status);
-                      final stepIndex = _timeline.indexOf(status);
-                      final isDone = stepIndex <= currentIndex;
-
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Row(
-                          children: [
-                            Icon(
-                              isDone
-                                  ? Icons.check_circle
-                                  : Icons.radio_button_unchecked,
-                              color: isDone ? AppColors.green : AppColors.grey,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              _statusLabel(status),
-                              style: AppTypography.bodyLarge.copyWith(
-                                color: isDone ? AppColors.ink : AppColors.muted,
-                                fontWeight: isDone
-                                    ? FontWeight.w700
-                                    : FontWeight.w400,
+                child: AppSkeleton(
+                  enabled: state.loading,
+                  child: order == null
+                      ? Center(
+                          child: Text(
+                            'somethingWentWrong'.tr(),
+                            style: AppTypography.bodyMedium,
+                          ),
+                        )
+                      : SingleChildScrollView(
+                          padding: const EdgeInsets.all(AppSpacing.xxl),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'arrivingIn'.tr(),
+                                        style: AppTypography.labelSmall
+                                            .copyWith(color: AppColors.muted),
+                                      ),
+                                      Text(
+                                        order.status == OrderStatus.delivered
+                                            ? _statusLabel(order.status)
+                                            : '6 min',
+                                        style: AppTypography.headlineSmall,
+                                      ),
+                                    ],
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: AppSpacing.lg,
+                                      vertical: AppSpacing.sm,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primaryTint,
+                                      borderRadius: BorderRadius.circular(
+                                        AppRadius.chip,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      _statusLabel(order.status),
+                                      style: AppTypography.labelSmall.copyWith(
+                                        color: AppColors.primaryDark,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: AppSpacing.xxl),
+                              Container(
+                                padding: const EdgeInsets.all(AppSpacing.lg),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: AppColors.line),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.card,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const CircleAvatar(
+                                      radius: 22,
+                                      backgroundColor: AppColors.divider,
+                                      child: Icon(
+                                        Icons.person_outline,
+                                        color: AppColors.muted,
+                                      ),
+                                    ),
+                                    const SizedBox(width: AppSpacing.lg),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'riderNamePlaceholder'.tr(),
+                                            style: AppTypography.bodyMedium
+                                                .copyWith(
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                          ),
+                                          Text(
+                                            'yourDeliveryPartner'.tr(),
+                                            style: AppTypography.bodySmall
+                                                .copyWith(
+                                                  color: AppColors.muted,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    CircleAvatar(
+                                      radius: 22,
+                                      backgroundColor: AppColors.primary,
+                                      child: const Icon(
+                                        Icons.call,
+                                        color: AppColors.white,
+                                        size: 18,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.xxl),
+                              ..._timeline.map((status) {
+                                final currentIndex = _timeline.indexOf(
+                                  order.status,
+                                );
+                                final stepIndex = _timeline.indexOf(status);
+                                final isDone = stepIndex <= currentIndex;
+
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: AppSpacing.sm,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        isDone
+                                            ? Icons.check_circle
+                                            : Icons.radio_button_unchecked,
+                                        color: isDone
+                                            ? AppColors.primary
+                                            : AppColors.grey,
+                                      ),
+                                      const SizedBox(width: AppSpacing.lg),
+                                      Text(
+                                        _statusLabel(status),
+                                        style: AppTypography.bodyLarge.copyWith(
+                                          color: isDone
+                                              ? AppColors.ink
+                                              : AppColors.muted,
+                                          fontWeight: isDone
+                                              ? FontWeight.w700
+                                              : FontWeight.w400,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }),
+                            ],
+                          ),
                         ),
-                      );
-                    }),
-                  ],
                 ),
               ),
+            ),
+          ],
+        ),
       ),
     );
   }

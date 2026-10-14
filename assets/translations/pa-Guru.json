@@ -81,5 +81,9 @@
   "tipGoesFullyToPartner": "ਪੂਰੀ ਰਕਮ ਉਹਨਾਂ ਨੂੰ ਹੀ ਜਾਂਦੀ ਹੈ।",
   "savingsBanner": "ਤੁਸੀਂ ਇਸ ਆਰਡਰ 'ਤੇ {} ਬਚਾ ਰਹੇ ਹੋ, ਅਤੇ ਡਿਲਿਵਰੀ ਮੁਫ਼ਤ ਹੈ",
   "toPay": "ਭੁਗਤਾਨ ਕਰਨਾ ਹੈ",
-  "payWithAmount": "{} ਨਾਲ {} ਭੁਗਤਾਨ ਕਰੋ"
+  "payWithAmount": "{} ਨਾਲ {} ਭੁਗਤਾਨ ਕਰੋ",
+  "orderId": "ਆਰਡਰ ਆਈਡੀ",
+  "paidVia": "ਭੁਗਤਾਨ ਦਾ ਢੰਗ",
+  "help": "ਮਦਦ",
+  "riderNamePlaceholder": "ਡਿਲਿਵਰੀ ਪਾਰਟਨਰ"
 }
