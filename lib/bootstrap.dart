@@ -9,6 +9,7 @@ import 'package:zippy/app/app.dart';
 import 'package:zippy/core/cart/data/cart_repository_impl.dart';
 import 'package:zippy/core/config/env.dart';
 import 'package:zippy/core/constants/constants.dart';
+import 'package:zippy/core/favourites/data/favourites_repository_impl.dart';
 import 'package:zippy/core/order/data/order_repository_impl.dart';
 import 'package:zippy/core/shared_providers/location/provider/request_location_provider.dart';
 import 'package:zippy/routes/routes.dart';
@@ -37,11 +38,13 @@ Future<void> bootstrap() async {
   await Hive.initFlutter();
   final cartBox = await Hive.openBox('cart');
   final orderBox = await Hive.openBox('orders');
+  final favouritesBox = await Hive.openBox('favourites');
 
   final container = ProviderContainer(
     overrides: [
       cartBoxProvider.overrideWithValue(cartBox),
       orderBoxProvider.overrideWithValue(orderBox),
+      favouritesBoxProvider.overrideWithValue(favouritesBox),
     ],
   );
 

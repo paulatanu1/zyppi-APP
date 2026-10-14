@@ -86,5 +86,6 @@
   "paidVia": "ਭੁਗਤਾਨ ਦਾ ਢੰਗ",
   "help": "ਮਦਦ",
   "riderNamePlaceholder": "ਡਿਲਿਵਰੀ ਪਾਰਟਨਰ",
-  "noOrdersYet": "ਤੁਹਾਡਾ ਹਾਲੇ ਕੋਈ ਆਰਡਰ ਨਹੀਂ ਹੈ"
+  "noOrdersYet": "ਤੁਹਾਡਾ ਹਾਲੇ ਕੋਈ ਆਰਡਰ ਨਹੀਂ ਹੈ",
+  "noFavouritesYet": "ਹਾਲੇ ਕੋਈ ਪਸੰਦੀਦਾ ਨਹੀਂ"
 }

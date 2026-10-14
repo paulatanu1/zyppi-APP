@@ -121,5 +121,6 @@
   "paidVia": "Paid via",
   "help": "Help",
   "riderNamePlaceholder": "Delivery partner",
-  "noOrdersYet": "You have no orders yet"
+  "noOrdersYet": "You have no orders yet",
+  "noFavouritesYet": "No favourites yet"
 }

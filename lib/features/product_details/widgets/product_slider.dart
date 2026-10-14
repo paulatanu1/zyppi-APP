@@ -3,6 +3,7 @@ import 'package:flutter_bounce/flutter_bounce.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/app_skeleton.dart';
+import 'package:zippy/core/favourites/application/favourites_provider.dart';
 import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/features/product_details/application/product_detail_provider.dart';
 
@@ -17,6 +18,8 @@ class ProductSlider extends ConsumerWidget {
     double width = MediaQuery.of(context).size.width;
 
     final productDetail = ref.watch(productDetailProvider(productId));
+    final favourites = ref.watch(favouritesProvider);
+    final isFavourite = favourites.contains(productId);
 
     return Container(
       width: width,
@@ -42,6 +45,22 @@ class ProductSlider extends ConsumerWidget {
                     duration: Duration(milliseconds: 300),
                     onPressed: () => context.pop(),
                     child: Icon(Icons.arrow_back_ios, size: 30, weight: 2),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: height * 0.01,
+                    right: height * 0.03,
+                  ),
+                  child: Bounce(
+                    duration: const Duration(milliseconds: 300),
+                    onPressed: () =>
+                        ref.read(favouritesProvider.notifier).toggle(productId),
+                    child: Icon(
+                      isFavourite ? Icons.favorite : Icons.favorite_border,
+                      size: 26,
+                      color: isFavourite ? AppColors.primary : AppColors.ink,
+                    ),
                   ),
                 ),
               ],
