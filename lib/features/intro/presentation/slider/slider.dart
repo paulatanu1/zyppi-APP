@@ -1,10 +1,11 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bounce/flutter_bounce.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_spacing.dart';
+import 'package:zippy/core/theme/app_typography.dart';
 
+/// docs/mockups/Onboarding.dc.html.
 class SliderScreen extends StatefulWidget {
   const SliderScreen({super.key});
 
@@ -13,229 +14,159 @@ class SliderScreen extends StatefulWidget {
 }
 
 class _SliderScreenState extends State<SliderScreen> {
-  int currentStep = 0; // Step tracker (0-indexed)
+  int currentStep = 0;
 
-  // Define data for each step
-  final List<String> stepIndicators = ['1/4', '2/4', '3/4', '4/4'];
   final List<String> images = [
     'assets/images/Splash-1.png',
     'assets/images/Splash-2.png',
     'assets/images/Splash-3.png',
     'assets/images/Splash-4.png',
   ];
-  final List<String> text2 = [
-    'perfectPickDescription'.tr(),
-    'pickupProductsDescription'.tr(),
-    'doorstepDeliveryDescription'.tr(),
-    'getYourOrderDescription'.tr(),
-  ];
-  final List<String> text1 = [
+  late final List<String> titles = [
     'perfectPick'.tr(),
     'pickupProducts'.tr(),
     'doorstepDelivery'.tr(),
     'getYourOrder'.tr(),
   ];
+  late final List<String> descriptions = [
+    'perfectPickDescription'.tr(),
+    'pickupProductsDescription'.tr(),
+    'doorstepDeliveryDescription'.tr(),
+    'getYourOrderDescription'.tr(),
+  ];
 
-  // Navigate to the next step
-  void _nextStep() {
-    if (currentStep < stepIndicators.length - 1) {
-      setState(() {
-        currentStep++;
-      });
-    }
-  }
-
-  // Navigate to the previous step
-  void _previousStep() {
-    if (currentStep > 0) {
-      setState(() {
-        currentStep--;
-      });
+  void _next() {
+    if (currentStep < titles.length - 1) {
+      setState(() => currentStep++);
+    } else {
+      context.push('/loginScreen');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isLast = currentStep == titles.length - 1;
+
     return Scaffold(
-      backgroundColor: AppColors.white,
-      body: Padding(
-        padding: EdgeInsets.only(
-          left: 30.0.w,
-          right: 30.w,
-          top: 10.h,
-          bottom: 10.h,
-        ),
-        child: SafeArea(
+      backgroundColor: AppColors.primary,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.huge,
+            AppSpacing.xxl,
+            AppSpacing.huge,
+            AppSpacing.giant,
+          ),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Step Indicator
-              RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: stepIndicators[currentStep].split(
-                        '/',
-                      )[0], // The step number (e.g., "1")
-                      style: TextStyle(
-                        fontSize: 40.sp,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.black, // Default color for the number
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Zyppi',
+                    style: AppTypography.headlineMedium.copyWith(
+                      color: AppColors.white,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => context.push('/loginScreen'),
+                    child: Text(
+                      'skip'.tr(),
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.onPrimaryMuted,
                       ),
                     ),
-                    TextSpan(
-                      text: '/4', // The "/4" part
-                      style: TextStyle(
-                        fontSize: 40.sp,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.grey,
-                        fontFamily: "Montserrat",
+                  ),
+                ],
+              ),
+              Expanded(
+                child: Center(
+                  child: Container(
+                    width: 220,
+                    height: 220,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primaryDark,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 400),
+                        child: Image.asset(
+                          images[currentStep],
+                          key: ValueKey<int>(currentStep),
+                          width: 160,
+                          height: 160,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: Column(
+                  key: ValueKey<int>(currentStep),
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      titles[currentStep],
+                      style: AppTypography.headlineSmall.copyWith(
+                        color: AppColors.white,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      descriptions[currentStep],
+                      style: AppTypography.bodyLarge.copyWith(
+                        color: AppColors.onPrimaryMuted,
                       ),
                     ),
                   ],
                 ),
               ),
-              AnimatedSwitcher(
-                duration: Duration(milliseconds: 500),
-                transitionBuilder: (Widget child, Animation<double> animation) {
-                  return FadeTransition(
-                    opacity: animation,
-                    child: ScaleTransition(scale: animation, child: child),
-                  );
-                },
-                child: Image.asset(
-                  images[currentStep],
-                  key: ValueKey<int>(currentStep),
-                  height: 200.h,
-                  width: double.infinity,
-                  fit: BoxFit.contain,
-                ),
-              ),
-
-              // For the main text (text1[currentStep])
-              AnimatedSwitcher(
-                duration: Duration(milliseconds: 500),
-                transitionBuilder: (Widget child, Animation<double> animation) {
-                  return FadeTransition(
-                    opacity: animation,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: Offset(0.0, 0.5), // Start from below
-                        end: Offset(0.0, 0.0), // End at the original position
-                      ).animate(animation),
-                      child: child,
-                    ),
-                  );
-                },
-                child: Text(
-                  text1[currentStep],
-                  key: ValueKey<int>(currentStep), // Unique key for each step
-                  style: TextStyle(
-                    fontSize: 45.sp,
-                    color: AppColors.black,
-                    fontFamily: "Montserrat",
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 5.h),
-
-              AnimatedSwitcher(
-                duration: Duration(milliseconds: 500),
-                transitionBuilder: (Widget child, Animation<double> animation) {
-                  return FadeTransition(
-                    opacity: animation,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: Offset(0.0, 0.5), // Start from below
-                        end: Offset(0.0, 0.0), // End at the original position
-                      ).animate(animation),
-                      child: child,
-                    ),
-                  );
-                },
-                child: Text(
-                  text2[currentStep],
-                  key: ValueKey<int>(currentStep), // Unique key for each step
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 30.sp,
-                    color: AppColors.grey,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: "Montserrat",
-                  ),
-                ),
-              ),
-
-              Spacer(),
-
-              // Navigation Buttons
+              const SizedBox(height: AppSpacing.huge),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Visibility(
-                    visible: currentStep > 0,
-                    child: Bounce(
-                      onPressed: _previousStep,
-                      duration: Duration(milliseconds: 200),
-                      child: Text(
-                        'previous'.tr(),
-                        style: TextStyle(
-                          fontSize: 35.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.grey,
-                          fontFamily: "Montserrat",
-                        ),
+                children: List.generate(titles.length, (index) {
+                  final selected = index == currentStep;
+
+                  return Padding(
+                    padding: const EdgeInsets.only(right: AppSpacing.sm),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      width: selected ? 24 : 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? AppColors.accent
+                            : const Color(0xFFF07BBE),
+                        borderRadius: BorderRadius.circular(3),
                       ),
                     ),
+                  );
+                }),
+              ),
+              const SizedBox(height: AppSpacing.xxl),
+              SizedBox(
+                width: double.infinity,
+                height: AppSizes.button,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.accent,
+                    foregroundColor: AppColors.ink,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.input),
+                    ),
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(stepIndicators.length, (index) {
-                      bool isSelected = index == currentStep;
-                      return AnimatedContainer(
-                        duration: Duration(milliseconds: 300),
-                        margin: EdgeInsets.symmetric(horizontal: 8.w),
-                        width: isSelected ? 60.w : 15.w,
-                        height: isSelected ? 5.h : 3.h,
-                        decoration: BoxDecoration(
-                          color: isSelected ? Colors.black : Colors.grey,
-                          borderRadius: BorderRadius.circular(5),
-                          //shape: BoxShape.circle,
-                        ),
-                      );
-                    }),
+                  onPressed: _next,
+                  child: Text(
+                    isLast ? 'getStart'.tr() : 'next'.tr(),
+                    style: AppTypography.labelLarge.copyWith(
+                      color: AppColors.ink,
+                    ),
                   ),
-                  currentStep == 3
-                      ? Bounce(
-                          onPressed: () {
-                            context.push('/loginScreen');
-                          },
-                          duration: Duration(milliseconds: 200),
-                          child: Text(
-                            'getStart'.tr(),
-                            style: TextStyle(
-                              fontSize: 35.sp,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.deepBlue,
-                            ),
-                          ),
-                        )
-                      : Bounce(
-                          onPressed: _nextStep,
-                          duration: Duration(milliseconds: 200),
-                          child: Text(
-                            'next'.tr(),
-                            style: TextStyle(
-                              fontSize: 35.sp,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.deepBlue,
-                              fontFamily: "Montserrat",
-                            ),
-                          ),
-                        ),
-                ],
+                ),
               ),
             ],
           ),

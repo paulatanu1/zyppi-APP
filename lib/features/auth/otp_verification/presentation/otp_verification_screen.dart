@@ -1,15 +1,16 @@
-import 'dart:developer';
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:zippy/features/auth/otp_verification/application/login_provider.dart';
-import 'package:zippy/features/auth/otp_verification/application/otp_provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_spacing.dart';
+import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/features/auth/otp_verification/application/login_provider.dart';
+import 'package:zippy/features/auth/otp_verification/application/otp_provider.dart';
 
+/// docs/mockups/Otp.dc.html.
 class OtpVerificationScreen extends ConsumerWidget {
   final String? phoneNumber;
 
@@ -17,8 +18,6 @@ class OtpVerificationScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    log('Phone Numberrrrrrrr $phoneNumber');
-
     final otpVerification = ref.watch(otpProvider);
     final login = ref.watch(loginProvider);
 
@@ -27,85 +26,57 @@ class OtpVerificationScreen extends ConsumerWidget {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: EdgeInsets.only(
-              top: 20.h,
-              left: 40.w,
-              right: 40.w,
-              bottom: 20.h,
-            ),
+            padding: const EdgeInsets.all(AppSpacing.xxl),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'otpVerification'.tr(),
-                  style: TextStyle(
-                    fontFamily: "Montserrat",
-                    fontSize: 70.sp,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.black,
-                  ),
-                ),
-                SizedBox(height: 30.h),
-                Text(
                   'phoneVerification'.tr(),
-                  style: TextStyle(
-                    fontFamily: "Montserrat",
-                    fontSize: 50.sp,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.black,
-                  ),
+                  style: AppTypography.headlineSmall,
                 ),
-                SizedBox(height: 5.h),
-                Text(
-                  'enterOtp'.tr(),
-                  style: TextStyle(
-                    fontFamily: "Montserrat",
-                    fontSize: 30.sp,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.grey1,
-                  ),
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'sentTo'.tr(args: [phoneNumber ?? '']),
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.muted,
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => context.pop(),
+                      child: Text('edit'.tr()),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 20.h),
+                const SizedBox(height: AppSpacing.xxl),
                 OtpTextField(
                   numberOfFields: 6,
-                  fieldWidth: MediaQuery.of(context).size.width * 0.122,
-                  // fieldWidth: 95.w,
-                  // fieldHeight: 180.w,
-                  margin: EdgeInsets.all(10.sp),
-                  focusedBorderColor: AppColors.selectedOTP,
-                  enabledBorderColor: AppColors.selectedOTP1,
-                  borderRadius: BorderRadius.circular(18.sp),
-                  borderWidth: 1,
+                  fieldWidth: MediaQuery.of(context).size.width * 0.11,
+                  margin: const EdgeInsets.all(4),
+                  focusedBorderColor: AppColors.primary,
+                  enabledBorderColor: AppColors.line,
+                  borderRadius: BorderRadius.circular(AppRadius.input),
+                  borderWidth: 1.5,
                   showFieldAsBox: true,
                   onCodeChanged: (String code) {},
                   onSubmit: (String verificationCode) {
                     ref.read(otpProvider.notifier).setOtp(verificationCode);
-                    // showDialog(
-                    //     context: context,
-                    //     builder: (context) {
-                    //       return AlertDialog(
-                    //         title: Text("Verification Code"),
-                    //         content:
-                    //             Text('Code entered is $verificationCode'),
-                    //       );
-                    //     });
-                  }, // end onSubmit
+                  },
                 ),
-                SizedBox(height: 25.h),
+                const SizedBox(height: AppSpacing.xl),
                 Text(
                   'resendCode'.tr(),
-                  style: TextStyle(
-                    fontFamily: "Montserrat",
-                    fontSize: 30.sp,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.lightBlue,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                SizedBox(height: 50.h),
-                // otpVerification == true
-
+                const SizedBox(height: AppSpacing.giant),
                 login.loading == true
-                    ? Center(child: const CircularProgressIndicator())
+                    ? const Center(child: CircularProgressIndicator())
                     : PrimaryButton(
                         buttonTitle: 'submit'.tr(),
                         action: () => ref
@@ -115,7 +86,6 @@ class OtpVerificationScreen extends ConsumerWidget {
                               otp: otpVerification.otp,
                               context: context,
                             ),
-                        // ref.read(otpProvider.notifier).verifyOtp(otpVerification.otp ?? '', context)
                       ),
               ],
             ),

@@ -1,21 +1,21 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zippy/features/auth/google_sign_in/application/google_provider.dart';
 import 'package:zippy/core/common_widgets/google_sign_in_button.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
-import 'package:zippy/core/common_widgets/text_form_field.dart';
 import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_spacing.dart';
+import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/features/auth/google_sign_in/application/google_provider.dart';
 
+/// docs/mockups/Login.dc.html.
 class LoginScreen extends ConsumerWidget {
   const LoginScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final TextEditingController phoneController = TextEditingController();
-
     final googleToken = ref.watch(googleProvider);
 
     return Scaffold(
@@ -23,93 +23,121 @@ class LoginScreen extends ConsumerWidget {
       body: SafeArea(
         child: SingleChildScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          child: Padding(
-            padding: EdgeInsets.only(
-              top: 20.h,
-              left: 40.w,
-              right: 40.w,
-              bottom: 20.h,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'getYour'.tr(),
-                  style: TextStyle(
-                    fontFamily: "Montserrat",
-                    fontSize: 50.sp,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.black,
-                  ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: double.infinity,
+                height: 220,
+                color: AppColors.primaryTint,
+                child: const Icon(
+                  Icons.shopping_bag_outlined,
+                  size: 72,
+                  color: AppColors.primary,
                 ),
-                Text(
-                  'delivery'.tr(),
-                  style: TextStyle(
-                    fontFamily: "Montserrat",
-                    fontSize: 70.sp,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.selectedOTP,
-                  ),
-                ),
-                SizedBox(height: 25.h),
-                Center(
-                  child: googleToken.loading == true
-                      ? const CircularProgressIndicator()
-                      : GoogleSignInButton(
-                          action: () => ref
-                              .read(googleProvider.notifier)
-                              .generateGoogleToken(context),
-                        ),
-                ),
-                SizedBox(height: 30.h),
-                Center(
-                  child: Text(
-                    'continueWith'.tr(),
-                    style: TextStyle(
-                      fontFamily: "Montserrat",
-                      fontSize: 25.sp,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.grey1,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.xxl),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'logInOrSignUp'.tr(),
+                      style: AppTypography.headlineSmall,
                     ),
-                  ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'otpSentDescription'.tr(),
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.muted,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+                    Text(
+                      'mobileNumber'.tr(),
+                      style: AppTypography.bodySmall.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Container(
+                      height: AppSizes.inputMax,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: AppColors.primary,
+                          width: 1.5,
+                        ),
+                        borderRadius: BorderRadius.circular(AppRadius.input),
+                      ),
+                      child: Row(
+                        children: [
+                          Text('+91', style: AppTypography.bodyLarge),
+                          const SizedBox(width: AppSpacing.base),
+                          Container(
+                            width: 1,
+                            height: 24,
+                            color: AppColors.line,
+                          ),
+                          const SizedBox(width: AppSpacing.base),
+                          Expanded(
+                            child: TextField(
+                              controller: phoneController,
+                              keyboardType: TextInputType.phone,
+                              style: AppTypography.bodyLarge,
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+                    PrimaryButton(
+                      buttonTitle: 'continueLabel'.tr(),
+                      action: () {
+                        context.goNamed(
+                          'OtpVerificationScreen',
+                          queryParameters: {
+                            'phoneNumber': phoneController.text,
+                          },
+                        );
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+                    Center(
+                      child: Text(
+                        'continueWith'.tr(),
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.muted,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    Center(
+                      child: googleToken.loading == true
+                          ? const CircularProgressIndicator()
+                          : GoogleSignInButton(
+                              action: () => ref
+                                  .read(googleProvider.notifier)
+                                  .generateGoogleToken(context),
+                            ),
+                    ),
+                    const SizedBox(height: AppSpacing.xxl),
+                    Text(
+                      'termsAndPrivacy'.tr(),
+                      textAlign: TextAlign.center,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.muted,
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 35.h),
-                TextformField(
-                  //Here
-                  isNumber: true,
-                  labelText: 'phoneNumber'.tr(),
-                  textFormFieldController: phoneController,
-                ),
-                SizedBox(height: 40.h),
-                // otpLogin.loading == true
-                //     ? Center(child: const CircularProgressIndicator())
-                //     :
-                PrimaryButton(
-                  buttonTitle: 'login'.tr(),
-                  action: () {
-                    context.goNamed(
-                      'OtpVerificationScreen',
-                      queryParameters: {'phoneNumber': phoneController.text},
-                    );
-                    // if (phoneController.text.isEmpty) {
-                    //   ScaffoldMessenger.of(context).showSnackBar(
-                    //     SnackBar(
-                    //         content: Text('Please Enter Phone Number')),
-                    //   );
-                    // } else if (phoneController.text.length < 10 ||
-                    //     phoneController.text.length > 10) {
-                    //   ScaffoldMessenger.of(context).showSnackBar(
-                    //     SnackBar(content: Text('Invalid Phone Number')),
-                    //   );
-                    // } else {
-                    //   ref
-                    //       .read(otpProvider.notifier)
-                    //       .generateOtp(phoneController.text, context);
-                    // }
-                  },
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

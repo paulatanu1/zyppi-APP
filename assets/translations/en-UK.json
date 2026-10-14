@@ -122,5 +122,13 @@
   "help": "Help",
   "riderNamePlaceholder": "Delivery partner",
   "noOrdersYet": "You have no orders yet",
-  "noFavouritesYet": "No favourites yet"
+  "noFavouritesYet": "No favourites yet",
+  "skip": "Skip",
+  "logInOrSignUp": "Log in or sign up",
+  "otpSentDescription": "We'll send a 6-digit code to verify your number.",
+  "mobileNumber": "Mobile number",
+  "continueLabel": "Continue",
+  "termsAndPrivacy": "By continuing you agree to our Terms of Service and Privacy Policy.",
+  "edit": "Edit",
+  "sentTo": "Sent to {}"
 }
