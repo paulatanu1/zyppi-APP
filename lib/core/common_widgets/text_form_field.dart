@@ -8,6 +8,7 @@ class TextformField extends StatefulWidget {
   final bool? prefixIcon;
   final double? borderRadius;
   final bool? isNumber;
+  final void Function(String)? onChanged;
 
   const TextformField({
     super.key,
@@ -16,6 +17,7 @@ class TextformField extends StatefulWidget {
     this.prefixIcon,
     this.borderRadius,
     this.isNumber,
+    this.onChanged,
   });
 
   @override
@@ -50,6 +52,7 @@ class _TextformFieldState extends State<TextformField> {
       ),
       child: TextField(
         controller: widget.textFormFieldController,
+        onChanged: widget.onChanged,
         keyboardType: widget.isNumber == true
             ? TextInputType.number
             : TextInputType.text,

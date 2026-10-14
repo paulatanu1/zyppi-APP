@@ -10,13 +10,17 @@ import 'package:zippy/features/auth/login/presentation/login_screen.dart';
 import 'package:zippy/features/auth/otp_verification/presentation/otp_verification_screen.dart';
 import 'package:zippy/features/category_details/presentation/category_details_screen.dart';
 import 'package:zippy/core/common_widgets/nav_bar/presentation/nav_bar.dart';
+import 'package:zippy/features/checkout/presentation/checkout_screen.dart';
 import 'package:zippy/features/explore/presentation/explore_screen.dart';
 import 'package:zippy/features/favourite/presentation/favourite_screen.dart';
 import 'package:zippy/features/filter/presentation/filter_screen.dart';
 import 'package:zippy/features/home_screen/presentation/home_screen.dart';
 import 'package:zippy/features/intro/presentation/slider/slider.dart';
 import 'package:zippy/features/my_cart/presentation/my_cart_screen.dart';
+import 'package:zippy/features/order_placed/presentation/order_placed_screen.dart';
+import 'package:zippy/features/order_tracking/presentation/order_tracking_screen.dart';
 import 'package:zippy/features/product_details/presentation/product_details_screen.dart';
+import 'package:zippy/features/search/presentation/search_screen.dart';
 import 'package:zippy/features/search_address/presentation/search_address_screen.dart';
 
 const _unauthenticatedRoutes = {
@@ -147,6 +151,32 @@ class Routes {
           path: '/editProfileScreen',
           name: 'EditProfileScreen',
           builder: (context, state) => EditProfileScreen(),
+        ),
+        GoRoute(
+          path: '/searchScreen',
+          name: 'SearchScreen',
+          builder: (context, state) => SearchScreen(),
+        ),
+        GoRoute(
+          path: '/checkoutScreen',
+          name: 'CheckoutScreen',
+          builder: (context, state) => const CheckoutScreen(),
+        ),
+        GoRoute(
+          path: '/orderPlacedScreen',
+          name: 'OrderPlacedScreen',
+          builder: (context, state) {
+            final orderId = state.uri.queryParameters['orderId'] ?? '';
+            return OrderPlacedScreen(orderId: orderId);
+          },
+        ),
+        GoRoute(
+          path: '/orderTrackingScreen',
+          name: 'OrderTrackingScreen',
+          builder: (context, state) {
+            final orderId = state.uri.queryParameters['orderId'] ?? '';
+            return OrderTrackingScreen(orderId: orderId);
+          },
         ),
       ],
     );

@@ -1,0 +1,303 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
+
+part of 'search_state.dart';
+
+// **************************************************************************
+// FreezedGenerator
+// **************************************************************************
+
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format off
+T _$identity<T>(T value) => value;
+/// @nodoc
+mixin _$SearchState {
+
+ String get query; List<Product> get allProducts; List<Product> get results; bool get loading; String? get error;
+/// Create a copy of SearchState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SearchStateCopyWith<SearchState> get copyWith => _$SearchStateCopyWithImpl<SearchState>(this as SearchState, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as SearchState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchState&&(identical(other.query, _this.query) || other.query == _this.query)&&const DeepCollectionEquality().equals(other.allProducts, _this.allProducts)&&const DeepCollectionEquality().equals(other.results, _this.results)&&(identical(other.loading, _this.loading) || other.loading == _this.loading)&&(identical(other.error, _this.error) || other.error == _this.error));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as SearchState;
+  return Object.hash(runtimeType,_this.query,const DeepCollectionEquality().hash(_this.allProducts),const DeepCollectionEquality().hash(_this.results),_this.loading,_this.error);
+}
+
+@override
+String toString() {
+  final _this = this as SearchState;
+  return 'SearchState(query: ${_this.query}, allProducts: ${_this.allProducts}, results: ${_this.results}, loading: ${_this.loading}, error: ${_this.error})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SearchStateCopyWith<$Res>  {
+  factory $SearchStateCopyWith(SearchState value, $Res Function(SearchState) _then) = _$SearchStateCopyWithImpl;
+@useResult
+$Res call({
+ String query, List<Product> allProducts, List<Product> results, bool loading, String? error
+});
+
+
+
+
+}
+/// @nodoc
+class _$SearchStateCopyWithImpl<$Res>
+    implements $SearchStateCopyWith<$Res> {
+  _$SearchStateCopyWithImpl(this._self, this._then);
+
+  final SearchState _self;
+  final $Res Function(SearchState) _then;
+
+/// Create a copy of SearchState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? query = null,Object? allProducts = null,Object? results = null,Object? loading = null,Object? error = freezed,}) {
+  return _then(SearchState(
+query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
+as String,allProducts: null == allProducts ? _self.allProducts : allProducts // ignore: cast_nullable_to_non_nullable
+as List<Product>,results: null == results ? _self.results : results // ignore: cast_nullable_to_non_nullable
+as List<Product>,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
+as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [SearchState].
+extension SearchStatePatterns on SearchState {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _SearchState value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _SearchState() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _SearchState value)  $default,){
+final _that = this;
+switch (_that) {
+case _SearchState():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _SearchState value)?  $default,){
+final _that = this;
+switch (_that) {
+case _SearchState() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String query,  List<Product> allProducts,  List<Product> results,  bool loading,  String? error)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _SearchState() when $default != null:
+return $default(_that.query,_that.allProducts,_that.results,_that.loading,_that.error);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String query,  List<Product> allProducts,  List<Product> results,  bool loading,  String? error)  $default,) {final _that = this;
+switch (_that) {
+case _SearchState():
+return $default(_that.query,_that.allProducts,_that.results,_that.loading,_that.error);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String query,  List<Product> allProducts,  List<Product> results,  bool loading,  String? error)?  $default,) {final _that = this;
+switch (_that) {
+case _SearchState() when $default != null:
+return $default(_that.query,_that.allProducts,_that.results,_that.loading,_that.error);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _SearchState implements SearchState {
+   _SearchState({this.query = '',  List<Product> allProducts = const [],  List<Product> results = const [], this.loading = true, this.error}): _allProducts = allProducts,_results = results;
+  
+
+@override@JsonKey() final  String query;
+ final  List<Product> _allProducts;
+@override@JsonKey() List<Product> get allProducts {
+  if (_allProducts is EqualUnmodifiableListView) return _allProducts;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_allProducts);
+}
+
+ final  List<Product> _results;
+@override@JsonKey() List<Product> get results {
+  if (_results is EqualUnmodifiableListView) return _results;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_results);
+}
+
+@override@JsonKey() final  bool loading;
+@override final  String? error;
+
+/// Create a copy of SearchState
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$SearchStateCopyWith<_SearchState> get copyWith => __$SearchStateCopyWithImpl<_SearchState>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchState&&(identical(other.query, query) || other.query == query)&&const DeepCollectionEquality().equals(other.allProducts, _allProducts)&&const DeepCollectionEquality().equals(other.results, _results)&&(identical(other.loading, loading) || other.loading == loading)&&(identical(other.error, error) || other.error == error));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,query,const DeepCollectionEquality().hash(_allProducts),const DeepCollectionEquality().hash(_results),loading,error);
+}
+
+@override
+String toString() {
+    return 'SearchState(query: $query, allProducts: $allProducts, results: $results, loading: $loading, error: $error)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$SearchStateCopyWith<$Res> implements $SearchStateCopyWith<$Res> {
+  factory _$SearchStateCopyWith(_SearchState value, $Res Function(_SearchState) _then) = __$SearchStateCopyWithImpl;
+@override @useResult
+$Res call({
+ String query, List<Product> allProducts, List<Product> results, bool loading, String? error
+});
+
+
+
+
+}
+/// @nodoc
+class __$SearchStateCopyWithImpl<$Res>
+    implements _$SearchStateCopyWith<$Res> {
+  __$SearchStateCopyWithImpl(this._self, this._then);
+
+  final _SearchState _self;
+  final $Res Function(_SearchState) _then;
+
+/// Create a copy of SearchState
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? query = null,Object? allProducts = null,Object? results = null,Object? loading = null,Object? error = freezed,}) {
+  return _then(_SearchState(
+query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
+as String,allProducts: null == allProducts ? _self._allProducts : allProducts // ignore: cast_nullable_to_non_nullable
+as List<Product>,results: null == results ? _self._results : results // ignore: cast_nullable_to_non_nullable
+as List<Product>,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
+as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+// dart format on

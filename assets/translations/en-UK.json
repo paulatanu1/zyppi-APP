@@ -81,5 +81,24 @@
   "applyCoupon": "Apply coupon",
   "couponApplied": "Coupon applied",
   "proceedToCheckout": "Proceed to checkout →",
-  "close": "Close"
+  "close": "Close",
+
+  "checkout": "Checkout",
+  "deliverTo": "Deliver to",
+  "deliveryTime": "Delivery time",
+  "paymentMethod": "Payment method",
+  "payWith": "Pay with {}",
+  "orderPlaced": "Order placed!",
+  "orderPlacedDescription": "We've got your order and we're getting it ready.",
+  "trackOrder": "Track order",
+  "backToHome": "Back to home",
+  "yourDeliveryPartner": "Your delivery partner",
+  "arrivingIn": "ARRIVING IN",
+  "orderStatusPlaced": "Order placed",
+  "orderStatusPacked": "Packed",
+  "orderStatusOutForDelivery": "Out for delivery",
+  "orderStatusDelivered": "Delivered",
+  "orderStatusCancelled": "Cancelled",
+  "noProductsFound": "No products found",
+  "searchStoreHint": "Search for oil, rice, atta..."
 }
