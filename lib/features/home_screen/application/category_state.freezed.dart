@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CategoryState {
 
- List<List<Category>> get chunks;
+ List<List<Category>> get chunks; bool get loading; String? get error;
 /// Create a copy of CategoryState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $CategoryStateCopyWith<CategoryState> get copyWith => _$CategoryStateCopyWithImp
 @override
 bool operator ==(Object other) {
   final _this = this as CategoryState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CategoryState&&const DeepCollectionEquality().equals(other.chunks, _this.chunks));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CategoryState&&const DeepCollectionEquality().equals(other.chunks, _this.chunks)&&(identical(other.loading, _this.loading) || other.loading == _this.loading)&&(identical(other.error, _this.error) || other.error == _this.error));
 }
 
 
 @override
 int get hashCode {
   final _this = this as CategoryState;
-  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.chunks));
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.chunks),_this.loading,_this.error);
 }
 
 @override
 String toString() {
   final _this = this as CategoryState;
-  return 'CategoryState(chunks: ${_this.chunks})';
+  return 'CategoryState(chunks: ${_this.chunks}, loading: ${_this.loading}, error: ${_this.error})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $CategoryStateCopyWith<$Res>  {
   factory $CategoryStateCopyWith(CategoryState value, $Res Function(CategoryState) _then) = _$CategoryStateCopyWithImpl;
 @useResult
 $Res call({
- List<List<Category>> chunks
+ List<List<Category>> chunks, bool loading, String? error
 });
 
 
@@ -68,10 +68,12 @@ class _$CategoryStateCopyWithImpl<$Res>
 
 /// Create a copy of CategoryState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? chunks = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? chunks = null,Object? loading = null,Object? error = freezed,}) {
   return _then(CategoryState(
 chunks: null == chunks ? _self.chunks : chunks // ignore: cast_nullable_to_non_nullable
-as List<List<Category>>,
+as List<List<Category>>,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
+as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -156,10 +158,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<List<Category>> chunks)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<List<Category>> chunks,  bool loading,  String? error)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CategoryState() when $default != null:
-return $default(_that.chunks);case _:
+return $default(_that.chunks,_that.loading,_that.error);case _:
   return orElse();
 
 }
@@ -177,10 +179,10 @@ return $default(_that.chunks);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<List<Category>> chunks)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<List<Category>> chunks,  bool loading,  String? error)  $default,) {final _that = this;
 switch (_that) {
 case _CategoryState():
-return $default(_that.chunks);case _:
+return $default(_that.chunks,_that.loading,_that.error);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -197,10 +199,10 @@ return $default(_that.chunks);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<List<Category>> chunks)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<List<Category>> chunks,  bool loading,  String? error)?  $default,) {final _that = this;
 switch (_that) {
 case _CategoryState() when $default != null:
-return $default(_that.chunks);case _:
+return $default(_that.chunks,_that.loading,_that.error);case _:
   return null;
 
 }
@@ -212,7 +214,7 @@ return $default(_that.chunks);case _:
 
 
 class _CategoryState implements CategoryState {
-   _CategoryState({required  List<List<Category>> chunks}): _chunks = chunks;
+   _CategoryState({required  List<List<Category>> chunks, this.loading = true, this.error}): _chunks = chunks;
   
 
  final  List<List<Category>> _chunks;
@@ -222,6 +224,8 @@ class _CategoryState implements CategoryState {
   return EqualUnmodifiableListView(_chunks);
 }
 
+@override@JsonKey() final  bool loading;
+@override final  String? error;
 
 /// Create a copy of CategoryState
 /// with the given fields replaced by the non-null parameter values.
@@ -233,18 +237,18 @@ _$CategoryStateCopyWith<_CategoryState> get copyWith => __$CategoryStateCopyWith
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CategoryState&&const DeepCollectionEquality().equals(other.chunks, _chunks));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CategoryState&&const DeepCollectionEquality().equals(other.chunks, _chunks)&&(identical(other.loading, loading) || other.loading == loading)&&(identical(other.error, error) || other.error == error));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_chunks));
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_chunks),loading,error);
 }
 
 @override
 String toString() {
-    return 'CategoryState(chunks: $chunks)';
+    return 'CategoryState(chunks: $chunks, loading: $loading, error: $error)';
 }
 
 
@@ -255,7 +259,7 @@ abstract mixin class _$CategoryStateCopyWith<$Res> implements $CategoryStateCopy
   factory _$CategoryStateCopyWith(_CategoryState value, $Res Function(_CategoryState) _then) = __$CategoryStateCopyWithImpl;
 @override @useResult
 $Res call({
- List<List<Category>> chunks
+ List<List<Category>> chunks, bool loading, String? error
 });
 
 
@@ -272,10 +276,12 @@ class __$CategoryStateCopyWithImpl<$Res>
 
 /// Create a copy of CategoryState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? chunks = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? chunks = null,Object? loading = null,Object? error = freezed,}) {
   return _then(_CategoryState(
 chunks: null == chunks ? _self._chunks : chunks // ignore: cast_nullable_to_non_nullable
-as List<List<Category>>,
+as List<List<Category>>,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
+as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

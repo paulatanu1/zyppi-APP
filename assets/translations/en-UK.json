@@ -70,5 +70,8 @@
   "orderInfo": "Order info",
   "deleteOrder": "Delete Order",
   "shareItems": "Share order items",
-  "editProfile": "Edit Profile"
+  "editProfile": "Edit Profile",
+
+  "somethingWentWrong": "Something went wrong",
+  "retry": "Retry"
 }

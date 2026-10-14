@@ -1,0 +1,8 @@
+[
+  {
+    "code": "ZYPPI50",
+    "description": "Flat ₹50 off on orders above ₹300",
+    "discountPaise": 5000,
+    "minOrderPaise": 30000
+  }
+]

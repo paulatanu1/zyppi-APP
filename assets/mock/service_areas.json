@@ -1,0 +1,5 @@
+[
+  { "id": "area-purulia", "name": "Purulia", "isActive": true },
+  { "id": "area-raghunathpur", "name": "Raghunathpur", "isActive": true },
+  { "id": "area-chelyama", "name": "Chelyama", "isActive": true }
+]

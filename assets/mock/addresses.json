@@ -1,0 +1,28 @@
+[
+  {
+    "id": "addr-home",
+    "label": "Home",
+    "line1": "12, Hill View Road",
+    "area": "Nutundih",
+    "city": "Purulia",
+    "state": "West Bengal",
+    "postalCode": "723101",
+    "landmark": "Near Purulia Bus Stand",
+    "lat": 23.3324,
+    "lng": 86.3651,
+    "isDefault": true
+  },
+  {
+    "id": "addr-work",
+    "label": "Work",
+    "line1": "4, Station Road",
+    "area": "Raghunathpur Bazar",
+    "city": "Raghunathpur",
+    "state": "West Bengal",
+    "postalCode": "723133",
+    "landmark": "Opposite Raghunathpur Court",
+    "lat": 23.5522,
+    "lng": 86.6628,
+    "isDefault": false
+  }
+]

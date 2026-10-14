@@ -1,0 +1,75 @@
+[
+  {
+    "id": "prod-tomato",
+    "name": "Fresh Tomatoes",
+    "image": "assets/images/veg.png",
+    "categoryId": "cat-fruits-veg",
+    "variants": [
+      { "id": "prod-tomato-500g", "label": "500 g", "pricePaise": 2500, "mrpPaise": 3000 }
+    ]
+  },
+  {
+    "id": "prod-apple",
+    "name": "Apple",
+    "image": "assets/images/apple.png",
+    "categoryId": "cat-fruits-veg",
+    "variants": [
+      { "id": "prod-apple-1kg", "label": "1 kg", "pricePaise": 18000, "mrpPaise": 20000 }
+    ]
+  },
+  {
+    "id": "prod-bread",
+    "name": "Brown Bread",
+    "image": "assets/images/bread.png",
+    "categoryId": "cat-bread-eggs",
+    "variants": [
+      { "id": "prod-bread-400g", "label": "400 g", "pricePaise": 4500, "mrpPaise": 5000 }
+    ]
+  },
+  {
+    "id": "prod-rice",
+    "name": "Basmati Rice",
+    "image": "assets/images/rice.png",
+    "categoryId": "cat-atta-rice-dal",
+    "variants": [
+      { "id": "prod-rice-1kg", "label": "1 kg", "pricePaise": 14500, "mrpPaise": 16000 },
+      { "id": "prod-rice-5kg", "label": "5 kg", "pricePaise": 68000, "mrpPaise": 75000 }
+    ]
+  },
+  {
+    "id": "prod-oil",
+    "name": "Sunflower Oil",
+    "image": "assets/images/oil.png",
+    "categoryId": "cat-oil-ghee",
+    "variants": [
+      { "id": "prod-oil-1l", "label": "1 L", "pricePaise": 15000, "mrpPaise": 17000 }
+    ]
+  },
+  {
+    "id": "prod-chicken",
+    "name": "Chicken Curry Cut",
+    "image": "assets/images/meat.png",
+    "categoryId": "cat-meat-fish",
+    "variants": [
+      { "id": "prod-chicken-500g", "label": "500 g", "pricePaise": 15500, "mrpPaise": 17500 }
+    ]
+  },
+  {
+    "id": "prod-milk",
+    "name": "Toned Milk",
+    "image": "assets/images/milk.png",
+    "categoryId": "cat-beverages",
+    "variants": [
+      { "id": "prod-milk-1l", "label": "1 L", "pricePaise": 6400, "mrpPaise": 6800 }
+    ]
+  },
+  {
+    "id": "prod-cookies",
+    "name": "Butter Cookies",
+    "image": "assets/images/item.png",
+    "categoryId": "cat-bakery-snacks",
+    "variants": [
+      { "id": "prod-cookies-200g", "label": "200 g", "pricePaise": 5600, "mrpPaise": 6000 }
+    ]
+  }
+]

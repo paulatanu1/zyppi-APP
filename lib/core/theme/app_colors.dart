@@ -5,6 +5,10 @@ import 'package:flutter/material.dart';
 /// never hardcode a literal `Color(...)` — Phase 2's mockup restyle pass
 /// maps the remaining screens onto the brand tokens below.
 class AppColors {
+  /// Parses an 8-digit ARGB hex string (as stored in mock JSON, e.g.
+  /// category colorHex/borderColorHex) into a [Color].
+  static Color fromHex(String argbHex) => Color(int.parse(argbHex, radix: 16));
+
   // Brand palette (docs/design-tokens.md)
   static const Color brandPink = Color(0xFFF32AA0);
   static const Color primary = Color(0xFFD81B87);

@@ -1,0 +1,4 @@
+[
+  { "id": "slot-express", "label": "In 12 minutes", "etaMinutes": 12, "isExpress": true },
+  { "id": "slot-schedule", "label": "Schedule for later", "etaMinutes": 60, "isExpress": false }
+]

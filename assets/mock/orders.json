@@ -1,0 +1,95 @@
+[
+  {
+    "id": "order-1",
+    "items": [
+      {
+        "productId": "prod-rice",
+        "variantId": "prod-rice-1kg",
+        "name": "Basmati Rice",
+        "unit": "1 kg",
+        "quantity": 1,
+        "pricePaise": 14500
+      },
+      {
+        "productId": "prod-tomato",
+        "variantId": "prod-tomato-500g",
+        "name": "Fresh Tomatoes",
+        "unit": "500 g",
+        "quantity": 1,
+        "pricePaise": 2500
+      },
+      {
+        "productId": "prod-milk",
+        "variantId": "prod-milk-1l",
+        "name": "Toned Milk",
+        "unit": "1 L",
+        "quantity": 1,
+        "pricePaise": 6400
+      }
+    ],
+    "status": "delivered",
+    "placedAt": "2026-10-10T10:30:00+05:30",
+    "itemTotalPaise": 23400,
+    "deliveryFeePaise": 0,
+    "handlingFeePaise": 2000,
+    "tipPaise": 0,
+    "discountPaise": 0,
+    "totalPaise": 25400,
+    "addressId": "addr-home",
+    "paymentMethod": "UPI"
+  },
+  {
+    "id": "order-2",
+    "items": [
+      {
+        "productId": "prod-chicken",
+        "variantId": "prod-chicken-500g",
+        "name": "Chicken Curry Cut",
+        "unit": "500 g",
+        "quantity": 1,
+        "pricePaise": 15500
+      },
+      {
+        "productId": "prod-oil",
+        "variantId": "prod-oil-1l",
+        "name": "Sunflower Oil",
+        "unit": "1 L",
+        "quantity": 1,
+        "pricePaise": 15000
+      }
+    ],
+    "status": "outForDelivery",
+    "placedAt": "2026-10-14T18:05:00+05:30",
+    "itemTotalPaise": 30500,
+    "deliveryFeePaise": 0,
+    "handlingFeePaise": 2000,
+    "tipPaise": 2000,
+    "discountPaise": 0,
+    "totalPaise": 34500,
+    "addressId": "addr-home",
+    "paymentMethod": "Cash on delivery"
+  },
+  {
+    "id": "order-3",
+    "items": [
+      {
+        "productId": "prod-cookies",
+        "variantId": "prod-cookies-200g",
+        "name": "Butter Cookies",
+        "unit": "200 g",
+        "quantity": 1,
+        "pricePaise": 5600
+      }
+    ],
+    "status": "cancelled",
+    "placedAt": "2026-10-05T09:15:00+05:30",
+    "itemTotalPaise": 5600,
+    "deliveryFeePaise": 0,
+    "handlingFeePaise": 2000,
+    "tipPaise": 0,
+    "discountPaise": 0,
+    "totalPaise": 7600,
+    "addressId": "addr-work",
+    "paymentMethod": "UPI"
+  }
+]

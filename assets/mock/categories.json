@@ -1,0 +1,58 @@
+[
+  {
+    "id": "cat-fruits-veg",
+    "name": "Fresh Fruits & Vegetables",
+    "image": "assets/images/category.png",
+    "colorHex": "1A53B175",
+    "borderColorHex": "FF53B175"
+  },
+  {
+    "id": "cat-bread-eggs",
+    "name": "Bread & Eggs",
+    "image": "assets/images/bread.png",
+    "colorHex": "FFFFECF7",
+    "borderColorHex": "FFFB54B6"
+  },
+  {
+    "id": "cat-atta-rice-dal",
+    "name": "Atta, Rice & Dals",
+    "image": "assets/images/rice.png",
+    "colorHex": "1AF8A44C",
+    "borderColorHex": "FFFABD7C"
+  },
+  {
+    "id": "cat-masala-dry-fruits",
+    "name": "Masala & Dry Fruits",
+    "image": "assets/images/category.png",
+    "colorHex": "FFEDF7FD",
+    "borderColorHex": "FF52BAF4"
+  },
+  {
+    "id": "cat-oil-ghee",
+    "name": "Cooking Oil & Ghee",
+    "image": "assets/images/oil.png",
+    "colorHex": "1AF8A44C",
+    "borderColorHex": "B2F8A44C"
+  },
+  {
+    "id": "cat-meat-fish",
+    "name": "Meat & Fish",
+    "image": "assets/images/meat.png",
+    "colorHex": "3FF7A593",
+    "borderColorHex": "FFF7A593"
+  },
+  {
+    "id": "cat-bakery-snacks",
+    "name": "Bakery & Snacks",
+    "image": "assets/images/bread.png",
+    "colorHex": "3FFDE598",
+    "borderColorHex": "FFFDE598"
+  },
+  {
+    "id": "cat-beverages",
+    "name": "Beverages",
+    "image": "assets/images/beverages.png",
+    "colorHex": "3FB7DFF5",
+    "borderColorHex": "FFB7DFF5"
+  }
+]
