@@ -1,23 +1,31 @@
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:zippy/core/data/catalog_repository.dart';
+import 'package:zippy/core/data/catalog_repository_impl.dart';
 import 'package:zippy/features/explore/application/explore_state.dart';
-import 'package:zippy/features/explore/data/explore_repository_impl.dart';
-import 'package:zippy/features/explore/domain/explore_repository.dart';
 
 class ExploreNotifier extends StateNotifier<ExploreState> {
-  final ExploreRepository repository;
+  final CatalogRepository repository;
 
   ExploreNotifier(this.repository) : super(ExploreState.initial()) {
-    exploreList();
+    _load();
   }
 
-  Future<void> exploreList() async {
-    final categories = await repository.fetchExploreCategories();
+  Future<void> _load() async {
+    state = state.copyWith(loading: true, error: null);
 
-    state = state.copyWith(explore: categories);
+    try {
+      final categories = await repository.fetchCategories();
+
+      state = state.copyWith(categories: categories, loading: false);
+    } catch (error) {
+      state = state.copyWith(loading: false, error: error.toString());
+    }
   }
+
+  Future<void> retry() => _load();
 }
 
 final exploreNotifier =
     StateNotifierProvider.autoDispose<ExploreNotifier, ExploreState>(
-      (ref) => ExploreNotifier(ref.read(exploreRepositoryProvider)),
+      (ref) => ExploreNotifier(ref.read(catalogRepositoryProvider)),
     );

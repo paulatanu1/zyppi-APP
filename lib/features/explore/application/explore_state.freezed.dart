@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ExploreState {
 
- List<Explore> get explore;
+ List<Category> get categories; bool get loading; String? get error;
 /// Create a copy of ExploreState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $ExploreStateCopyWith<ExploreState> get copyWith => _$ExploreStateCopyWithImpl<E
 @override
 bool operator ==(Object other) {
   final _this = this as ExploreState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExploreState&&const DeepCollectionEquality().equals(other.explore, _this.explore));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExploreState&&const DeepCollectionEquality().equals(other.categories, _this.categories)&&(identical(other.loading, _this.loading) || other.loading == _this.loading)&&(identical(other.error, _this.error) || other.error == _this.error));
 }
 
 
 @override
 int get hashCode {
   final _this = this as ExploreState;
-  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.explore));
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.categories),_this.loading,_this.error);
 }
 
 @override
 String toString() {
   final _this = this as ExploreState;
-  return 'ExploreState(explore: ${_this.explore})';
+  return 'ExploreState(categories: ${_this.categories}, loading: ${_this.loading}, error: ${_this.error})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $ExploreStateCopyWith<$Res>  {
   factory $ExploreStateCopyWith(ExploreState value, $Res Function(ExploreState) _then) = _$ExploreStateCopyWithImpl;
 @useResult
 $Res call({
- List<Explore> explore
+ List<Category> categories, bool loading, String? error
 });
 
 
@@ -68,10 +68,12 @@ class _$ExploreStateCopyWithImpl<$Res>
 
 /// Create a copy of ExploreState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? explore = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? categories = null,Object? loading = null,Object? error = freezed,}) {
   return _then(ExploreState(
-explore: null == explore ? _self.explore : explore // ignore: cast_nullable_to_non_nullable
-as List<Explore>,
+categories: null == categories ? _self.categories : categories // ignore: cast_nullable_to_non_nullable
+as List<Category>,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
+as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -156,10 +158,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Explore> explore)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Category> categories,  bool loading,  String? error)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ExploreState() when $default != null:
-return $default(_that.explore);case _:
+return $default(_that.categories,_that.loading,_that.error);case _:
   return orElse();
 
 }
@@ -177,10 +179,10 @@ return $default(_that.explore);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Explore> explore)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Category> categories,  bool loading,  String? error)  $default,) {final _that = this;
 switch (_that) {
 case _ExploreState():
-return $default(_that.explore);case _:
+return $default(_that.categories,_that.loading,_that.error);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -197,10 +199,10 @@ return $default(_that.explore);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Explore> explore)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Category> categories,  bool loading,  String? error)?  $default,) {final _that = this;
 switch (_that) {
 case _ExploreState() when $default != null:
-return $default(_that.explore);case _:
+return $default(_that.categories,_that.loading,_that.error);case _:
   return null;
 
 }
@@ -212,16 +214,18 @@ return $default(_that.explore);case _:
 
 
 class _ExploreState implements ExploreState {
-   _ExploreState({required  List<Explore> explore}): _explore = explore;
+   _ExploreState({required  List<Category> categories, this.loading = true, this.error}): _categories = categories;
   
 
- final  List<Explore> _explore;
-@override List<Explore> get explore {
-  if (_explore is EqualUnmodifiableListView) return _explore;
+ final  List<Category> _categories;
+@override List<Category> get categories {
+  if (_categories is EqualUnmodifiableListView) return _categories;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_explore);
+  return EqualUnmodifiableListView(_categories);
 }
 
+@override@JsonKey() final  bool loading;
+@override final  String? error;
 
 /// Create a copy of ExploreState
 /// with the given fields replaced by the non-null parameter values.
@@ -233,18 +237,18 @@ _$ExploreStateCopyWith<_ExploreState> get copyWith => __$ExploreStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExploreState&&const DeepCollectionEquality().equals(other.explore, _explore));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExploreState&&const DeepCollectionEquality().equals(other.categories, _categories)&&(identical(other.loading, loading) || other.loading == loading)&&(identical(other.error, error) || other.error == error));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_explore));
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_categories),loading,error);
 }
 
 @override
 String toString() {
-    return 'ExploreState(explore: $explore)';
+    return 'ExploreState(categories: $categories, loading: $loading, error: $error)';
 }
 
 
@@ -255,7 +259,7 @@ abstract mixin class _$ExploreStateCopyWith<$Res> implements $ExploreStateCopyWi
   factory _$ExploreStateCopyWith(_ExploreState value, $Res Function(_ExploreState) _then) = __$ExploreStateCopyWithImpl;
 @override @useResult
 $Res call({
- List<Explore> explore
+ List<Category> categories, bool loading, String? error
 });
 
 
@@ -272,10 +276,12 @@ class __$ExploreStateCopyWithImpl<$Res>
 
 /// Create a copy of ExploreState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? explore = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? categories = null,Object? loading = null,Object? error = freezed,}) {
   return _then(_ExploreState(
-explore: null == explore ? _self._explore : explore // ignore: cast_nullable_to_non_nullable
-as List<Explore>,
+categories: null == categories ? _self._categories : categories // ignore: cast_nullable_to_non_nullable
+as List<Category>,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
+as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
