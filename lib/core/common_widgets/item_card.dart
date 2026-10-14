@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:zippy/core/common_widgets/add_button.dart';
 import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_spacing.dart';
+import 'package:zippy/core/theme/app_typography.dart';
 
 class ItemCard extends StatelessWidget {
   final String? productName;
@@ -19,92 +20,63 @@ class ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return InkWell(
       onTap: onClicked,
       child: Container(
-        // height: 120.h,
-        // width: 360.w,
-        //margin: EdgeInsets.only(left: 10.w, top: 10.h, right: 10.w),
-        //padding: EdgeInsets.symmetric(vertical: 2.h, horizontal: 25.w),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(50.sp),
+          borderRadius: BorderRadius.circular(AppRadius.card),
           border: Border.all(color: AppColors.grey),
         ),
         child: Padding(
-          padding: EdgeInsets.only(
-            left: 18.w,
-            top: 10.h,
-            right: 18.w,
-            bottom: 2.h,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.base,
           ),
           child: Column(
-            // mainAxisAlignment: MainAxisAlignment.center,
-            // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-
-            // crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Flexible(
-                flex: 4,
-                fit: FlexFit.loose,
-                child: Column(
-                  // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Image.asset(
-                        'assets/images/item.png',
-                        height: 180.w,
-                        width: 180.w,
-                      ),
+              Expanded(
+                child: Center(
+                  child: AspectRatio(
+                    aspectRatio: 1,
+                    child: Image.asset(
+                      'assets/images/item.png',
+                      fit: BoxFit.contain,
                     ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      productName ?? '',
-                      // textAlign: TextAlign.start,
-                      style: TextStyle(
-                        fontSize: 30.sp,
-                        color: AppColors.black,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Poppins',
-                      ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text(
-                          quantity ?? '',
-                          style: TextStyle(
-                            fontSize: 30.sp,
-                            color: AppColors.grey,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
                 ),
               ),
-              Flexible(
-                flex: 1,
-                fit: FlexFit.tight,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                productName ?? '',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Text(
+                quantity ?? '',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.bodySmall,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
                       '₹${price ?? ''}',
-                      softWrap: true,
-                      style: TextStyle(
-                        fontSize: 40.sp,
-                        color: AppColors.black,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Poppins',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodyLarge.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                    AddButton(),
-                  ],
-                ),
+                  ),
+                  const AddButton(),
+                ],
               ),
             ],
           ),

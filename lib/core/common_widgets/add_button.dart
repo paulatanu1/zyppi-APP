@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_spacing.dart';
 
 class AddButton extends StatelessWidget {
   const AddButton({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
     return Container(
-      height: 80.w,
-      width: 75.w,
-      margin: EdgeInsets.only(top: 2.h, bottom: 2.h),
+      height: AppSizes.stepper,
+      width: AppSizes.stepper,
       decoration: BoxDecoration(
         color: AppColors.primaryButtonColor,
-        borderRadius: BorderRadius.circular(20.sp),
+        borderRadius: BorderRadius.circular(AppRadius.stepper),
       ),
-      child: Center(child: Icon(Icons.add, color: AppColors.white)),
+      child: const Center(
+        child: Icon(Icons.add, color: AppColors.white, size: 20),
+      ),
     );
   }
 }
