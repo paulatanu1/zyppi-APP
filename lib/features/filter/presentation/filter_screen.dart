@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/features/filter/widgets/filter_header.dart';
 import 'package:zippy/features/filter/widgets/filter_item.dart';
-import 'package:zippy/core/constants/colors.dart';
+import 'package:zippy/core/theme/app_colors.dart';
 
 class FilterScreen extends StatefulWidget {
   const FilterScreen({super.key});

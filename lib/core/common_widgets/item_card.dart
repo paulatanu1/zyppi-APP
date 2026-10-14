@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:zippy/core/common_widgets/add_button.dart';
-import 'package:zippy/core/constants/colors.dart';
+import 'package:zippy/core/theme/app_colors.dart';
 
 class ItemCard extends StatelessWidget {
   final String? productName;

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/features/category_details/widgets/category_details_header.dart';
 import 'package:zippy/core/common_widgets/item_card.dart';
-import 'package:zippy/core/constants/colors.dart';
+import 'package:zippy/core/theme/app_colors.dart';
 
 class CategoryDetailsScreen extends StatefulWidget {
   const CategoryDetailsScreen({super.key});

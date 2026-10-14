@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bounce/flutter_bounce.dart';
 import 'package:zippy/features/my_cart/widgets/item_count_container.dart';
-import 'package:zippy/core/constants/colors.dart';
+import 'package:zippy/core/theme/app_colors.dart';
 
 class MyCartItem extends StatelessWidget {
   final Function() crossIconClicked;

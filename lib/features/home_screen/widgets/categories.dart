@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:zippy/core/common_widgets/category_card.dart';
 import 'package:zippy/features/home_screen/application/categories_provider.dart';
-import 'package:zippy/core/constants/colors.dart';
+import 'package:zippy/core/theme/app_colors.dart';
 
 class Categories extends ConsumerWidget {
   Categories({super.key});

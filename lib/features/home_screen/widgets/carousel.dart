@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:zippy/features/home_screen/application/carousel_provider.dart';
-import 'package:zippy/core/constants/colors.dart';
+import 'package:zippy/core/theme/app_colors.dart';
 
 class CategoryCarousel extends ConsumerWidget {
   const CategoryCarousel({super.key});
@@ -54,7 +54,7 @@ class CategoryCarousel extends ConsumerWidget {
                           "Fresh Vegetables",
                           style: TextStyle(
                             color: AppColors.black,
-                            fontFamily: 'Aclonica',
+                            fontFamily: 'Montserrat',
                             fontSize: 40.sp,
                             fontWeight: FontWeight.w400,
                           ),
@@ -63,7 +63,7 @@ class CategoryCarousel extends ConsumerWidget {
                           "Get Up To 40% OFF",
                           style: TextStyle(
                             color: AppColors.green,
-                            fontFamily: "AirbnbCereal",
+                            fontFamily: "Poppins",
                             fontSize: 30.sp,
                             fontWeight: FontWeight.w500,
                           ),

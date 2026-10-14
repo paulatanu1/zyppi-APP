@@ -9,6 +9,7 @@ import 'package:zippy/core/constants/constants.dart';
 import 'package:zippy/core/data/application/shared_preference_state.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
 import 'package:zippy/core/shared_providers/location/provider/request_location_provider.dart';
+import 'package:zippy/core/theme/app_theme.dart';
 import 'package:zippy/routes/routes.dart';
 
 void main() async {
@@ -74,6 +75,7 @@ class Zyppi extends ConsumerWidget {
       builder: (context, child) => MaterialApp.router(
         // routerConfig: createRouter(ref),
         routerConfig: router,
+        theme: AppTheme.light,
         localizationsDelegates: context.localizationDelegates,
         supportedLocales: context.supportedLocales,
         locale: context.locale,

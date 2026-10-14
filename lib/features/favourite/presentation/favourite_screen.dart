@@ -2,7 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/features/favourite/widgets/favourite_item.dart';
-import 'package:zippy/core/constants/colors.dart';
+import 'package:zippy/core/theme/app_colors.dart';
 
 class FavouriteScreen extends StatelessWidget {
   const FavouriteScreen({super.key});

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:zippy/core/constants/colors.dart';
+import 'package:zippy/core/theme/app_colors.dart';
 
 class ItemCountContainer extends StatelessWidget {
   final IconData icon;

@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/features/product_details/widgets/dropdown_expentiantile.dart';
 import 'package:zippy/features/product_details/widgets/product_slider.dart';
-import 'package:zippy/core/constants/colors.dart';
+import 'package:zippy/core/theme/app_colors.dart';
 
 class ProductDetailsScreen extends ConsumerWidget {
   const ProductDetailsScreen({super.key});

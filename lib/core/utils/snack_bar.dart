@@ -1,5 +1,5 @@
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:zippy/core/constants/colors.dart';
+import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/infrastructure/dio_exceptions.dart';
 
 Future<void> showSuccessToast({String? message}) async {

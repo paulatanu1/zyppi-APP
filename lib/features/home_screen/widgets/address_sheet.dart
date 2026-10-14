@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/features/home_screen/widgets/add_and_current_widget.dart';
 import 'package:zippy/features/home_screen/widgets/location_and_saved_address_widget.dart';
-import 'package:zippy/core/constants/colors.dart';
+import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/features/home_screen/widgets/search_places_widget.dart';
 
 void bottomSheet(BuildContext context, WidgetRef ref) {

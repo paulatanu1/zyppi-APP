@@ -10,7 +10,7 @@ import 'package:zippy/core/common_widgets/text_form_field.dart';
 import 'package:zippy/features/home_screen/widgets/carousel.dart';
 import 'package:zippy/features/home_screen/widgets/categories.dart';
 import 'package:zippy/features/home_screen/widgets/home_page_products.dart';
-import 'package:zippy/core/constants/colors.dart';
+import 'package:zippy/core/theme/app_colors.dart';
 
 class HomeScreen extends ConsumerWidget {
   HomeScreen({super.key});

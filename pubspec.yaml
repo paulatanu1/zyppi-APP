@@ -146,15 +146,6 @@ flutter:
         weight: 600
       - asset: assets/fonts/Poppins/Poppins-Thin.ttf
         weight: 100
-  - family: Righteous
-    fonts:
-      - asset: assets/fonts/Righteous/Righteous-Regular.ttf
-  - family: Aclonica
-    fonts:
-      - asset: assets/fonts/Aclonica/Aclonica-Regular.ttf
-  - family: AirbnbCereal
-    fonts:
-      - asset: assets/fonts/AirbnbCereal/AirbnbCereal-Regular.otf    
 
   #   - family: Trajan Pro
   #     fonts:

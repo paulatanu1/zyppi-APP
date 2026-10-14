@@ -7,7 +7,7 @@ import 'package:zippy/features/auth/google_sign_in/application/google_provider.d
 import 'package:zippy/core/common_widgets/google_sign_in_button.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/common_widgets/text_form_field.dart';
-import 'package:zippy/core/constants/colors.dart';
+import 'package:zippy/core/theme/app_colors.dart';
 
 class LoginScreen extends ConsumerWidget {
   const LoginScreen({super.key});

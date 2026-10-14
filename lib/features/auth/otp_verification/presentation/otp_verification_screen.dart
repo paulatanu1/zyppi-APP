@@ -8,7 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:zippy/features/auth/otp_verification/application/login_provider.dart';
 import 'package:zippy/features/auth/otp_verification/application/otp_provider.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
-import 'package:zippy/core/constants/colors.dart';
+import 'package:zippy/core/theme/app_colors.dart';
 
 class OtpVerificationScreen extends ConsumerWidget {
   final String? phoneNumber;

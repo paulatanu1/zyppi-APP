@@ -1,6 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:zippy/core/constants/colors.dart';
+import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/features/edit_profile/widgets/text_input_field_container.dart';
 
 class EditProfileScreen extends StatefulWidget {

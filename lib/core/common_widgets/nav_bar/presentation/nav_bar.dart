@@ -9,7 +9,7 @@ import 'package:zippy/features/explore/presentation/explore_screen.dart';
 import 'package:zippy/features/favourite/presentation/favourite_screen.dart';
 import 'package:zippy/features/home_screen/presentation/home_screen.dart';
 import 'package:zippy/features/my_cart/presentation/my_cart_screen.dart';
-import 'package:zippy/core/constants/colors.dart';
+import 'package:zippy/core/theme/app_colors.dart';
 
 class NavBar extends ConsumerWidget {
   final int initialIndex;
