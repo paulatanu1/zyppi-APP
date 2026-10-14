@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ProductDetailState {
 
- Product? get product; int? get currentIndex; int get quantity; bool get loading; String? get error;
+ Product? get product; int? get currentIndex; int get selectedVariantIndex; int get quantity; bool get loading; String? get error;
 /// Create a copy of ProductDetailState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $ProductDetailStateCopyWith<ProductDetailState> get copyWith => _$ProductDetailS
 @override
 bool operator ==(Object other) {
   final _this = this as ProductDetailState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProductDetailState&&(identical(other.product, _this.product) || other.product == _this.product)&&(identical(other.currentIndex, _this.currentIndex) || other.currentIndex == _this.currentIndex)&&(identical(other.quantity, _this.quantity) || other.quantity == _this.quantity)&&(identical(other.loading, _this.loading) || other.loading == _this.loading)&&(identical(other.error, _this.error) || other.error == _this.error));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProductDetailState&&(identical(other.product, _this.product) || other.product == _this.product)&&(identical(other.currentIndex, _this.currentIndex) || other.currentIndex == _this.currentIndex)&&(identical(other.selectedVariantIndex, _this.selectedVariantIndex) || other.selectedVariantIndex == _this.selectedVariantIndex)&&(identical(other.quantity, _this.quantity) || other.quantity == _this.quantity)&&(identical(other.loading, _this.loading) || other.loading == _this.loading)&&(identical(other.error, _this.error) || other.error == _this.error));
 }
 
 
 @override
 int get hashCode {
   final _this = this as ProductDetailState;
-  return Object.hash(runtimeType,_this.product,_this.currentIndex,_this.quantity,_this.loading,_this.error);
+  return Object.hash(runtimeType,_this.product,_this.currentIndex,_this.selectedVariantIndex,_this.quantity,_this.loading,_this.error);
 }
 
 @override
 String toString() {
   final _this = this as ProductDetailState;
-  return 'ProductDetailState(product: ${_this.product}, currentIndex: ${_this.currentIndex}, quantity: ${_this.quantity}, loading: ${_this.loading}, error: ${_this.error})';
+  return 'ProductDetailState(product: ${_this.product}, currentIndex: ${_this.currentIndex}, selectedVariantIndex: ${_this.selectedVariantIndex}, quantity: ${_this.quantity}, loading: ${_this.loading}, error: ${_this.error})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $ProductDetailStateCopyWith<$Res>  {
   factory $ProductDetailStateCopyWith(ProductDetailState value, $Res Function(ProductDetailState) _then) = _$ProductDetailStateCopyWithImpl;
 @useResult
 $Res call({
- Product? product, int? currentIndex, int quantity, bool loading, String? error
+ Product? product, int? currentIndex, int selectedVariantIndex, int quantity, bool loading, String? error
 });
 
 
@@ -68,11 +68,12 @@ class _$ProductDetailStateCopyWithImpl<$Res>
 
 /// Create a copy of ProductDetailState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? product = freezed,Object? currentIndex = freezed,Object? quantity = null,Object? loading = null,Object? error = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? product = freezed,Object? currentIndex = freezed,Object? selectedVariantIndex = null,Object? quantity = null,Object? loading = null,Object? error = freezed,}) {
   return _then(ProductDetailState(
 product: freezed == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
 as Product?,currentIndex: freezed == currentIndex ? _self.currentIndex : currentIndex // ignore: cast_nullable_to_non_nullable
-as int?,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
+as int?,selectedVariantIndex: null == selectedVariantIndex ? _self.selectedVariantIndex : selectedVariantIndex // ignore: cast_nullable_to_non_nullable
+as int,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
 as int,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
 as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
 as String?,
@@ -172,10 +173,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Product? product,  int? currentIndex,  int quantity,  bool loading,  String? error)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Product? product,  int? currentIndex,  int selectedVariantIndex,  int quantity,  bool loading,  String? error)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ProductDetailState() when $default != null:
-return $default(_that.product,_that.currentIndex,_that.quantity,_that.loading,_that.error);case _:
+return $default(_that.product,_that.currentIndex,_that.selectedVariantIndex,_that.quantity,_that.loading,_that.error);case _:
   return orElse();
 
 }
@@ -193,10 +194,10 @@ return $default(_that.product,_that.currentIndex,_that.quantity,_that.loading,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Product? product,  int? currentIndex,  int quantity,  bool loading,  String? error)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Product? product,  int? currentIndex,  int selectedVariantIndex,  int quantity,  bool loading,  String? error)  $default,) {final _that = this;
 switch (_that) {
 case _ProductDetailState():
-return $default(_that.product,_that.currentIndex,_that.quantity,_that.loading,_that.error);case _:
+return $default(_that.product,_that.currentIndex,_that.selectedVariantIndex,_that.quantity,_that.loading,_that.error);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -213,10 +214,10 @@ return $default(_that.product,_that.currentIndex,_that.quantity,_that.loading,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Product? product,  int? currentIndex,  int quantity,  bool loading,  String? error)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Product? product,  int? currentIndex,  int selectedVariantIndex,  int quantity,  bool loading,  String? error)?  $default,) {final _that = this;
 switch (_that) {
 case _ProductDetailState() when $default != null:
-return $default(_that.product,_that.currentIndex,_that.quantity,_that.loading,_that.error);case _:
+return $default(_that.product,_that.currentIndex,_that.selectedVariantIndex,_that.quantity,_that.loading,_that.error);case _:
   return null;
 
 }
@@ -228,11 +229,12 @@ return $default(_that.product,_that.currentIndex,_that.quantity,_that.loading,_t
 
 
 class _ProductDetailState implements ProductDetailState {
-   _ProductDetailState({this.product, this.currentIndex, this.quantity = 1, this.loading = true, this.error});
+   _ProductDetailState({this.product, this.currentIndex, this.selectedVariantIndex = 0, this.quantity = 1, this.loading = true, this.error});
   
 
 @override final  Product? product;
 @override final  int? currentIndex;
+@override@JsonKey() final  int selectedVariantIndex;
 @override@JsonKey() final  int quantity;
 @override@JsonKey() final  bool loading;
 @override final  String? error;
@@ -247,18 +249,18 @@ _$ProductDetailStateCopyWith<_ProductDetailState> get copyWith => __$ProductDeta
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProductDetailState&&(identical(other.product, product) || other.product == product)&&(identical(other.currentIndex, currentIndex) || other.currentIndex == currentIndex)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.loading, loading) || other.loading == loading)&&(identical(other.error, error) || other.error == error));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProductDetailState&&(identical(other.product, product) || other.product == product)&&(identical(other.currentIndex, currentIndex) || other.currentIndex == currentIndex)&&(identical(other.selectedVariantIndex, selectedVariantIndex) || other.selectedVariantIndex == selectedVariantIndex)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.loading, loading) || other.loading == loading)&&(identical(other.error, error) || other.error == error));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,product,currentIndex,quantity,loading,error);
+    return Object.hash(runtimeType,product,currentIndex,selectedVariantIndex,quantity,loading,error);
 }
 
 @override
 String toString() {
-    return 'ProductDetailState(product: $product, currentIndex: $currentIndex, quantity: $quantity, loading: $loading, error: $error)';
+    return 'ProductDetailState(product: $product, currentIndex: $currentIndex, selectedVariantIndex: $selectedVariantIndex, quantity: $quantity, loading: $loading, error: $error)';
 }
 
 
@@ -269,7 +271,7 @@ abstract mixin class _$ProductDetailStateCopyWith<$Res> implements $ProductDetai
   factory _$ProductDetailStateCopyWith(_ProductDetailState value, $Res Function(_ProductDetailState) _then) = __$ProductDetailStateCopyWithImpl;
 @override @useResult
 $Res call({
- Product? product, int? currentIndex, int quantity, bool loading, String? error
+ Product? product, int? currentIndex, int selectedVariantIndex, int quantity, bool loading, String? error
 });
 
 
@@ -286,11 +288,12 @@ class __$ProductDetailStateCopyWithImpl<$Res>
 
 /// Create a copy of ProductDetailState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? product = freezed,Object? currentIndex = freezed,Object? quantity = null,Object? loading = null,Object? error = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? product = freezed,Object? currentIndex = freezed,Object? selectedVariantIndex = null,Object? quantity = null,Object? loading = null,Object? error = freezed,}) {
   return _then(_ProductDetailState(
 product: freezed == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
 as Product?,currentIndex: freezed == currentIndex ? _self.currentIndex : currentIndex // ignore: cast_nullable_to_non_nullable
-as int?,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
+as int?,selectedVariantIndex: null == selectedVariantIndex ? _self.selectedVariantIndex : selectedVariantIndex // ignore: cast_nullable_to_non_nullable
+as int,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
 as int,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
 as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
 as String?,

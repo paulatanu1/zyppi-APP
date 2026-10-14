@@ -109,5 +109,8 @@
   "shopNow": "Shop now →",
   "viewCart": "View cart",
   "youSave": "You save {}",
-  "add": "ADD"
+  "add": "ADD",
+  "selectPackSize": "Select pack size",
+  "aboutThisItem": "About this item",
+  "aboutThisItemPlaceholder": "Freshly sourced and delivered from our local partner stores — matched for quality on every order."
 }

@@ -8,6 +8,7 @@ abstract class ProductDetailState with _$ProductDetailState {
   factory ProductDetailState({
     Product? product,
     int? currentIndex,
+    @Default(0) int selectedVariantIndex,
     @Default(1) int quantity,
     @Default(true) bool loading,
     String? error,

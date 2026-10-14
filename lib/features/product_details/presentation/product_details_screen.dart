@@ -1,18 +1,22 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/common_widgets/app_skeleton.dart';
 import 'package:zippy/core/common_widgets/price_tag.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/common_widgets/quantity_stepper.dart';
+import 'package:zippy/core/domain/product_variant.dart';
 import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
 import 'package:zippy/features/product_details/application/product_detail_provider.dart';
-import 'package:zippy/features/product_details/widgets/dropdown_expentiantile.dart';
 import 'package:zippy/features/product_details/widgets/product_slider.dart';
 
+/// docs/mockups/Product.dc.html (the "Similar items" row is skipped —
+/// no cross-product recommendation logic yet).
 class ProductDetailsScreen extends ConsumerWidget {
   final String productId;
 
@@ -20,8 +24,6 @@ class ProductDetailsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final height = MediaQuery.of(context).size.height;
-
     final state = ref.watch(productDetailProvider(productId));
     final notifier = ref.read(productDetailProvider(productId).notifier);
     final product = state.product;
@@ -34,7 +36,7 @@ class ProductDetailsScreen extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text('somethingWentWrong'.tr(), style: AppTypography.bodyMedium),
-              SizedBox(height: height * 0.015),
+              const SizedBox(height: AppSpacing.lg),
               SizedBox(
                 width: 160,
                 child: PrimaryButton(
@@ -48,76 +50,129 @@ class ProductDetailsScreen extends ConsumerWidget {
       );
     }
 
-    final variant = product?.variants.first;
+    final variants = product?.variants ?? const <ProductVariant>[];
+    final variant = variants.isEmpty
+        ? null
+        : variants[state.selectedVariantIndex.clamp(0, variants.length - 1)];
 
     return Scaffold(
       backgroundColor: AppColors.white,
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ProductSlider(productId: productId),
-            Padding(
-              padding: EdgeInsets.only(
-                left: height * 0.02,
-                right: height * 0.02,
-              ),
-              child: AppSkeleton(
-                enabled: state.loading,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: 100),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ProductSlider(productId: productId),
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.xxl),
+                  child: AppSkeleton(
+                    enabled: state.loading,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           product?.name ?? 'Product name',
-                          style: AppTypography.titleMedium,
+                          style: AppTypography.titleLarge,
                         ),
-                        Icon(
-                          product?.isFavourite == true
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          size: 30,
-                          color: AppColors.grey,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: height * 0.015),
-                    Text(
-                      variant?.label ?? '',
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.grey3,
-                      ),
-                    ),
-                    SizedBox(height: height * 0.025),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        QuantityStepper(
-                          quantity: state.quantity,
-                          onDecrement: notifier.decrementQuantity,
-                          onIncrement: notifier.incrementQuantity,
-                        ),
+                        const SizedBox(height: AppSpacing.sm),
                         if (variant != null)
                           PriceTag(
-                            pricePaise: variant.pricePaise * state.quantity,
-                            mrpPaise: variant.mrpPaise != null
-                                ? variant.mrpPaise! * state.quantity
-                                : null,
+                            pricePaise: variant.pricePaise,
+                            mrpPaise: variant.mrpPaise,
                             priceStyle: AppTypography.titleMedium,
                           ),
+                        const SizedBox(height: AppSpacing.xxl),
+                        Text(
+                          'selectPackSize'.tr(),
+                          style: AppTypography.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.base),
+                        Wrap(
+                          spacing: AppSpacing.md,
+                          runSpacing: AppSpacing.md,
+                          children: List.generate(variants.length, (index) {
+                            final v = variants[index];
+                            final selected =
+                                index == state.selectedVariantIndex;
+
+                            return ChoiceChip(
+                              label: Column(
+                                children: [
+                                  Text(
+                                    v.label,
+                                    style: AppTypography.bodySmall.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: selected
+                                          ? AppColors.white
+                                          : AppColors.ink,
+                                    ),
+                                  ),
+                                  Text(
+                                    PriceTag.format(v.pricePaise),
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: selected
+                                          ? AppColors.white
+                                          : AppColors.muted,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              selected: selected,
+                              onSelected: (_) => notifier.selectVariant(index),
+                              selectedColor: AppColors.primary,
+                              backgroundColor: AppColors.surface,
+                              side: BorderSide(color: AppColors.line),
+                            );
+                          }),
+                        ),
+                        const SizedBox(height: AppSpacing.xxl),
+                        Text(
+                          'aboutThisItem'.tr(),
+                          style: AppTypography.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          'aboutThisItemPlaceholder'.tr(),
+                          style: AppTypography.bodySmall,
+                        ),
                       ],
                     ),
-                    SizedBox(height: height * 0.03),
-                    Divider(height: 1, color: AppColors.grey5),
-                    DropdownExpansionTile(
-                      dropDownTitle: 'Product Detail',
-                      dropDownContent: 'Freshly sourced and delivered from our local partner stores — matched for quality on every order.',
-                    ),
-                    Divider(height: 1, color: AppColors.grey5),
-                    SizedBox(height: height * 0.015),
-                    PrimaryButton(
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.xxl,
+                AppSpacing.lg,
+                AppSpacing.xxl,
+                AppSpacing.xxxl,
+              ),
+              decoration: const BoxDecoration(
+                color: AppColors.white,
+                border: Border(top: BorderSide(color: AppColors.line)),
+              ),
+              child: Row(
+                children: [
+                  QuantityStepper(
+                    quantity: state.quantity,
+                    onDecrement: notifier.decrementQuantity,
+                    onIncrement: notifier.incrementQuantity,
+                  ),
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(
+                    child: PrimaryButton(
                       buttonTitle: 'addToBasket'.tr(),
                       action: variant == null
                           ? () {}
@@ -132,13 +187,29 @@ class ProductDetailsScreen extends ConsumerWidget {
                               showSuccessToast(message: 'addedToCart'.tr());
                             },
                     ),
-                    SizedBox(height: height * 0.025),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: AppSpacing.lg),
+                  InkWell(
+                    onTap: () => context.push('/myCartScreen'),
+                    borderRadius: BorderRadius.circular(AppRadius.input),
+                    child: Container(
+                      width: AppSizes.inputMax,
+                      height: AppSizes.inputMax,
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryTint,
+                        borderRadius: BorderRadius.circular(AppRadius.input),
+                      ),
+                      child: const Icon(
+                        Icons.shopping_bag_outlined,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
