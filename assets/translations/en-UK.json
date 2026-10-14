@@ -86,7 +86,6 @@
   "deliverTo": "Deliver to",
   "deliveryTime": "Delivery time",
   "paymentMethod": "Payment method",
-  "payWith": "Pay with {}",
   "orderPlaced": "Order placed!",
   "orderPlacedDescription": "We've got your order and we're getting it ready.",
   "trackOrder": "Track order",
@@ -115,5 +114,7 @@
   "aboutThisItemPlaceholder": "Freshly sourced and delivered from our local partner stores — matched for quality on every order.",
   "custom": "Custom",
   "tipGoesFullyToPartner": "The full amount goes to them.",
-  "savingsBanner": "You're saving {} on this order, and delivery is free"
+  "savingsBanner": "You're saving {} on this order, and delivery is free",
+  "toPay": "To pay",
+  "payWithAmount": "Pay {} with {}"
 }
