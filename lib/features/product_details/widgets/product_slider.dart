@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bounce/flutter_bounce.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zippy/features/product_details/provider/product_detail_provider.dart';
+import 'package:zippy/features/product_details/application/product_detail_provider.dart';
 import 'package:zippy/core/constants/colors.dart';
 
 class ProductSlider extends ConsumerWidget {

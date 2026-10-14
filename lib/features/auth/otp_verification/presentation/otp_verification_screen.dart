@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:zippy/features/auth/otp_verification/provider/login_provider.dart';
-import 'package:zippy/features/auth/otp_verification/provider/otp_provider.dart';
+import 'package:zippy/features/auth/otp_verification/application/login_provider.dart';
+import 'package:zippy/features/auth/otp_verification/application/otp_provider.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/constants/colors.dart';
 

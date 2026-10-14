@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/constants/colors.dart';
-import 'package:zippy/features/home_screen/provider/address_provider.dart';
+import 'package:zippy/features/home_screen/application/address_provider.dart';
 import 'package:zippy/features/home_screen/widgets/search_places_widget.dart';
-import 'package:zippy/features/search_address/provider/place_prediction_provider.dart';
+import 'package:zippy/features/search_address/application/place_prediction_provider.dart';
 
 class SearchAddressScreen extends ConsumerWidget {
   final bool? addLocation;

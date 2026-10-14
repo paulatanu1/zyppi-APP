@@ -5,7 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:zippy/core/common_widgets/category_card.dart';
 import 'package:zippy/core/common_widgets/common_header.dart';
 import 'package:zippy/core/common_widgets/text_form_field.dart';
-import 'package:zippy/features/explore/provider/explore_provider.dart';
+import 'package:zippy/features/explore/application/explore_provider.dart';
 import 'package:zippy/core/constants/colors.dart';
 
 class ExploreScreen extends ConsumerWidget {

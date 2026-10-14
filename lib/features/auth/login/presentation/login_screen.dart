@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zippy/features/auth/google_sign_in/provider/google_provider.dart';
+import 'package:zippy/features/auth/google_sign_in/application/google_provider.dart';
 import 'package:zippy/core/common_widgets/google_sign_in_button.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/common_widgets/text_form_field.dart';

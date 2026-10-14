@@ -2,7 +2,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:zippy/features/home_screen/provider/carousel_provider.dart';
+import 'package:zippy/features/home_screen/application/carousel_provider.dart';
 import 'package:zippy/core/constants/colors.dart';
 
 class CategoryCarousel extends ConsumerWidget {

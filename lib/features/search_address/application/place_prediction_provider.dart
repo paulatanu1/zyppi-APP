@@ -11,7 +11,7 @@ import 'package:zippy/core/utils/snack_bar.dart';
 import 'package:zippy/features/search_address/domain/place_details.dart';
 import 'package:zippy/features/search_address/domain/place_prediction.dart';
 
-import '../application/place_prediction_state.dart';
+import 'place_prediction_state.dart';
 
 class PlacePredictionProvider extends StateNotifier<PlacePredictionState> {
   final NetworkApiServices networkApiServices;

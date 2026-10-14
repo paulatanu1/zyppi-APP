@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-import '../application/google_state.dart';
+import 'google_state.dart';
 
 class GoogleLogin extends StateNotifier<GoogleState> {
   GoogleLogin() : super(GoogleState.initial());

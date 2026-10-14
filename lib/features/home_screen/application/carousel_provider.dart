@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:zippy/features/home_screen/domain/carousel.dart';
 
-import '../application/carousel_state.dart';
+import 'carousel_state.dart';
 
 class CarouselProvider extends StateNotifier<CarouselState> {
   CarouselProvider() : super(CarouselState.initial()) {

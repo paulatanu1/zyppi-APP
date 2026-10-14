@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/legacy.dart';
 
-import '../application/address_state.dart';
+import 'address_state.dart';
 
 class AddressProvider extends StateNotifier<AddressState> {
   AddressProvider() : super(AddressState());

@@ -12,7 +12,7 @@ import 'package:zippy/core/utils/log.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
 import 'package:zippy/features/auth/otp_verification/domain/login_model.dart';
 
-import '../application/login_state.dart';
+import 'login_state.dart';
 
 class LoginProvider extends StateNotifier<LoginState> {
   final NetworkApiServices networkApiServices;
