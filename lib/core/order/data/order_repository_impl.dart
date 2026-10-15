@@ -1,7 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:zippy/core/config/env.dart';
 import 'package:zippy/core/domain/order.dart';
 import 'package:zippy/core/domain/order_status.dart';
+import 'package:zippy/core/order/data/supabase_order_repository_impl.dart';
 import 'package:zippy/core/order/domain/order_repository.dart';
 
 /// Opened once in bootstrap() and provided via [orderBoxProvider]'s
@@ -20,7 +23,7 @@ class HiveOrderRepository implements OrderRepository {
   HiveOrderRepository(this.box);
 
   @override
-  List<Order> getOrders() {
+  Future<List<Order>> getOrders() async {
     final raw = box.get(_ordersKey) as List<dynamic>? ?? const [];
 
     final orders = raw
@@ -33,15 +36,21 @@ class HiveOrderRepository implements OrderRepository {
   }
 
   @override
-  Future<void> saveOrder(Order order) async {
-    final orders = getOrders()..insert(0, order);
+  Future<String> placeOrder(
+    Order order, {
+    required String deliverySlotId,
+  }) async {
+    final orders = await getOrders();
+    orders.insert(0, order);
 
     await box.put(_ordersKey, orders.map((o) => o.toJson()).toList());
+
+    return order.id;
   }
 
   @override
   Future<void> updateStatus(String orderId, OrderStatus status) async {
-    final orders = getOrders();
+    final orders = await getOrders();
     final index = orders.indexWhere((o) => o.id == orderId);
     if (index == -1) return;
 
@@ -55,5 +64,7 @@ class HiveOrderRepository implements OrderRepository {
 }
 
 final orderRepositoryProvider = Provider<OrderRepository>(
-  (ref) => HiveOrderRepository(ref.read(orderBoxProvider)),
+  (ref) => Env.isMockDataSource
+      ? HiveOrderRepository(ref.read(orderBoxProvider))
+      : SupabaseOrderRepository(Supabase.instance.client),
 );

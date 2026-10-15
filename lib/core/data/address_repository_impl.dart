@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:zippy/core/config/env.dart';
 import 'package:zippy/core/data/address_repository.dart';
 import 'package:zippy/core/data/mock/mock_data_source.dart';
+import 'package:zippy/core/data/supabase_address_repository_impl.dart';
 import 'package:zippy/core/domain/address.dart';
 
 class MockAddressRepository implements AddressRepository {
@@ -19,5 +22,7 @@ class MockAddressRepository implements AddressRepository {
 }
 
 final addressRepositoryProvider = Provider<AddressRepository>(
-  (ref) => MockAddressRepository(),
+  (ref) => Env.isMockDataSource
+      ? MockAddressRepository()
+      : SupabaseAddressRepository(Supabase.instance.client),
 );

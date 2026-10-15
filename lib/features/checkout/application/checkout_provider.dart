@@ -65,7 +65,11 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
 
   Future<void> placeOrder() async {
     final cart = ref.read(cartProvider);
-    if (cart.lines.isEmpty || state.selectedAddress == null) return;
+    if (cart.lines.isEmpty ||
+        state.selectedAddress == null ||
+        state.selectedSlot == null) {
+      return;
+    }
 
     state = state.copyWith(placingOrder: true);
 
@@ -95,10 +99,12 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
       paymentMethod: state.paymentMethod,
     );
 
-    await ref.read(orderRepositoryProvider).saveOrder(order);
+    final orderId = await ref
+        .read(orderRepositoryProvider)
+        .placeOrder(order, deliverySlotId: state.selectedSlot!.id);
     await ref.read(cartProvider.notifier).clear();
 
-    state = state.copyWith(placingOrder: false, placedOrderId: order.id);
+    state = state.copyWith(placingOrder: false, placedOrderId: orderId);
   }
 }
 

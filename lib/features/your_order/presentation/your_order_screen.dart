@@ -13,7 +13,7 @@ class YourOrderScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final orders = ref.watch(ordersProvider);
+    final ordersAsync = ref.watch(ordersProvider);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundAlt,
@@ -33,21 +33,30 @@ class YourOrderScreen extends ConsumerWidget {
               child: Text('yourOrder'.tr(), style: AppTypography.headlineSmall),
             ),
             Expanded(
-              child: orders.isEmpty
-                  ? Center(
-                      child: Text(
-                        'noOrdersYet'.tr(),
-                        style: AppTypography.bodyMedium,
+              child: ordersAsync.when(
+                loading: () => const SizedBox.shrink(),
+                error: (error, stackTrace) => Center(
+                  child: Text(
+                    'somethingWentWrong'.tr(),
+                    style: AppTypography.bodyMedium,
+                  ),
+                ),
+                data: (orders) => orders.isEmpty
+                    ? Center(
+                        child: Text(
+                          'noOrdersYet'.tr(),
+                          style: AppTypography.bodyMedium,
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.base,
+                        ),
+                        itemCount: orders.length,
+                        itemBuilder: (context, index) =>
+                            YourOrderWidget(order: orders[index]),
                       ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: AppSpacing.base,
-                      ),
-                      itemCount: orders.length,
-                      itemBuilder: (context, index) =>
-                          YourOrderWidget(order: orders[index]),
-                    ),
+              ),
             ),
           ],
         ),

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:zippy/core/config/env.dart';
 import 'package:zippy/core/domain/order_status.dart';
 import 'package:zippy/core/order/data/order_repository_impl.dart';
 import 'package:zippy/core/order/domain/order_repository.dart';
@@ -27,8 +28,8 @@ class OrderTrackingProvider extends StateNotifier<OrderTrackingState> {
     _load();
   }
 
-  void _load() {
-    final orders = repository.getOrders();
+  Future<void> _load() async {
+    final orders = await repository.getOrders();
     final match = orders.where((o) => o.id == orderId);
 
     state = state.copyWith(
@@ -40,6 +41,11 @@ class OrderTrackingProvider extends StateNotifier<OrderTrackingState> {
   }
 
   void _scheduleNextStep() {
+    // The fake lifecycle timer only applies to the offline mock flavor —
+    // under Supabase, status is server-controlled (Phase 4 wires it up
+    // via Realtime).
+    if (!Env.isMockDataSource) return;
+
     final order = state.order;
     if (order == null) return;
 

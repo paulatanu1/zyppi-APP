@@ -16,7 +16,7 @@ class OrderPlacedScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final order = ref.watch(orderByIdProvider(orderId));
+    final order = ref.watch(orderByIdProvider(orderId)).value;
 
     return Scaffold(
       backgroundColor: AppColors.primary,
