@@ -1,0 +1,4 @@
+storePassword=paste-keystore-password-here
+keyPassword=paste-key-password-here
+keyAlias=upload
+storeFile=/absolute/path/to/upload-keystore.jks

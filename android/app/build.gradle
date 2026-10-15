@@ -88,10 +88,13 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
-            // signingConfig = signingConfigs.release
+            // Falls back to the debug keystore when key.properties doesn't
+            // exist yet (so `flutter run --release` still works locally);
+            // real release/Play builds need a real keystore supplied via
+            // key.properties (gitignored - see key.properties.example).
+            signingConfig = keystorePropertiesFile.exists()
+                ? signingConfigs.release
+                : signingConfigs.debug
         }
     }
 }
