@@ -142,5 +142,6 @@
   "express": "Express",
   "scheduleLabel": "Schedule",
   "pickASlot": "Pick a slot",
-  "back": "Back"
+  "back": "Back",
+  "search": "Search"
 }

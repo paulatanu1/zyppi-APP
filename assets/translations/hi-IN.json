@@ -108,5 +108,6 @@
   "express": "एक्सप्रेस",
   "scheduleLabel": "शेड्यूल",
   "pickASlot": "एक स्लॉट चुनें",
-  "back": "वापस"
+  "back": "वापस",
+  "search": "खोजें"
 }

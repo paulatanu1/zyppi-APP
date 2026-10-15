@@ -37,6 +37,7 @@ class SearchScreen extends ConsumerWidget {
                   IconButton(
                     onPressed: () => context.pop(),
                     icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                    tooltip: 'back'.tr(),
                   ),
                   Expanded(
                     child: TextformField(

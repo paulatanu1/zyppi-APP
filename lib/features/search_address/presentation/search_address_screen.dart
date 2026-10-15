@@ -197,6 +197,7 @@ class _SearchBar extends StatelessWidget {
           IconButton(
             onPressed: onBack,
             icon: const Icon(Icons.arrow_back, color: AppColors.muted),
+            tooltip: 'back'.tr(),
           ),
           Expanded(
             child: TextField(
@@ -275,6 +276,7 @@ class _CurrentLocationButton extends StatelessWidget {
       child: IconButton(
         onPressed: onPressed,
         icon: const Icon(Icons.my_location, color: AppColors.primary),
+        tooltip: 'useCurrentLocation'.tr(),
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/theme/app_colors.dart';
@@ -22,6 +23,7 @@ class CategoryDetailsHeader extends StatelessWidget {
         IconButton(
           onPressed: () => context.pop(),
           icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+          tooltip: 'back'.tr(),
         ),
         Expanded(
           child: Column(
@@ -38,10 +40,12 @@ class CategoryDetailsHeader extends StatelessWidget {
         IconButton(
           onPressed: () => context.push('/filterScreen'),
           icon: const Icon(Icons.filter_list),
+          tooltip: 'filters'.tr(),
         ),
         IconButton(
           onPressed: () => context.push('/searchScreen'),
           icon: const Icon(Icons.search),
+          tooltip: 'search'.tr(),
         ),
       ],
     );

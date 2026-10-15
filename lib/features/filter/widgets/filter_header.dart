@@ -17,6 +17,7 @@ class FilterHeader extends StatelessWidget {
         IconButton(
           onPressed: onCrossIconClicked,
           icon: const Icon(Icons.close, color: AppColors.ink),
+          tooltip: 'close'.tr(),
         ),
       ],
     );

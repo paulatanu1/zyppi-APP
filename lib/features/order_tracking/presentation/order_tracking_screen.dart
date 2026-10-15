@@ -56,6 +56,7 @@ class OrderTrackingScreen extends ConsumerWidget {
                   IconButton(
                     onPressed: () => context.go('/navBar'),
                     icon: const Icon(Icons.close),
+                    tooltip: 'close'.tr(),
                   ),
                   TextButton(onPressed: () {}, child: Text('help'.tr())),
                 ],

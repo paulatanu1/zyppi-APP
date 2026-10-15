@@ -30,6 +30,7 @@ class MyAddressScreen extends ConsumerWidget {
                   IconButton(
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                    tooltip: 'back'.tr(),
                   ),
                   Text('myAddress'.tr(), style: AppTypography.titleMedium),
                 ],
