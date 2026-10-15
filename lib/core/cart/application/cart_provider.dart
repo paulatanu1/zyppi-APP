@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:zippy/core/analytics/analytics_service.dart';
 import 'package:zippy/core/cart/application/cart_state.dart';
 import 'package:zippy/core/cart/data/cart_repository_impl.dart';
 import 'package:zippy/core/cart/domain/bill_calculator.dart';
@@ -102,6 +103,18 @@ class CartNotifier extends StateNotifier<CartState> {
       variantId: variantId,
       quantity: currentQuantity + quantity,
     );
+
+    final line = state.lines.where(
+      (l) => l.product.id == productId && l.variant.id == variantId,
+    );
+    if (line.isNotEmpty) {
+      AnalyticsService.logAddToCart(
+        itemId: variantId,
+        itemName: line.first.product.name,
+        pricePaise: line.first.variant.pricePaise,
+        quantity: quantity,
+      );
+    }
   }
 
   void setTip(int tipPaise) {

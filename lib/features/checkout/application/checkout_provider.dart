@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:zippy/core/analytics/analytics_service.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/config/env.dart';
 import 'package:zippy/core/data/address_repository_impl.dart';
@@ -44,6 +45,10 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
         slots: slots,
         selectedSlot: slots.isNotEmpty ? slots.first : null,
         loading: false,
+      );
+
+      AnalyticsService.logBeginCheckout(
+        totalPaise: ref.read(cartProvider).bill.totalPaise,
       );
     } catch (error) {
       state = state.copyWith(loading: false, error: error.toString());
@@ -205,6 +210,11 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
           razorpayOrderId: razorpayOrderId,
           razorpayPaymentId: razorpayPaymentId,
         );
+    AnalyticsService.logPurchase(
+      orderId: orderId,
+      totalPaise: order.totalPaise,
+    );
+
     await ref.read(cartProvider.notifier).clear();
 
     state = state.copyWith(placingOrder: false, placedOrderId: orderId);
