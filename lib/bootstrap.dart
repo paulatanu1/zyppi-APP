@@ -7,11 +7,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zippy/app/app.dart';
 import 'package:zippy/core/cart/data/cart_repository_impl.dart';
 import 'package:zippy/core/config/env.dart';
 import 'package:zippy/core/constants/constants.dart';
+import 'package:zippy/core/data/provider/shared_preference_provider.dart';
 import 'package:zippy/core/favourites/data/favourites_repository_impl.dart';
 import 'package:zippy/core/order/data/order_repository_impl.dart';
 import 'package:zippy/core/push/push_notification_service.dart';
@@ -50,12 +52,14 @@ Future<void> bootstrap() async {
   final cartBox = await Hive.openBox('cart');
   final orderBox = await Hive.openBox('orders');
   final favouritesBox = await Hive.openBox('favourites');
+  final sharedPreferences = await SharedPreferences.getInstance();
 
   final container = ProviderContainer(
     overrides: [
       cartBoxProvider.overrideWithValue(cartBox),
       orderBoxProvider.overrideWithValue(orderBox),
       favouritesBoxProvider.overrideWithValue(favouritesBox),
+      sharedPreferencesProvider.overrideWithValue(sharedPreferences),
     ],
   );
 

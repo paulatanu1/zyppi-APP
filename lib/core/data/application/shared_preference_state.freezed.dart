@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SharedPreferenceState {
 
- String? get authToken; SharedPreferences? get sharedPreference;
+ String? get authToken;
 /// Create a copy of SharedPreferenceState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $SharedPreferenceStateCopyWith<SharedPreferenceState> get copyWith => _$SharedPr
 @override
 bool operator ==(Object other) {
   final _this = this as SharedPreferenceState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SharedPreferenceState&&(identical(other.authToken, _this.authToken) || other.authToken == _this.authToken)&&(identical(other.sharedPreference, _this.sharedPreference) || other.sharedPreference == _this.sharedPreference));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SharedPreferenceState&&(identical(other.authToken, _this.authToken) || other.authToken == _this.authToken));
 }
 
 
 @override
 int get hashCode {
   final _this = this as SharedPreferenceState;
-  return Object.hash(runtimeType,_this.authToken,_this.sharedPreference);
+  return Object.hash(runtimeType,_this.authToken);
 }
 
 @override
 String toString() {
   final _this = this as SharedPreferenceState;
-  return 'SharedPreferenceState(authToken: ${_this.authToken}, sharedPreference: ${_this.sharedPreference})';
+  return 'SharedPreferenceState(authToken: ${_this.authToken})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $SharedPreferenceStateCopyWith<$Res>  {
   factory $SharedPreferenceStateCopyWith(SharedPreferenceState value, $Res Function(SharedPreferenceState) _then) = _$SharedPreferenceStateCopyWithImpl;
 @useResult
 $Res call({
- String? authToken, SharedPreferences? sharedPreference
+ String? authToken
 });
 
 
@@ -68,11 +68,10 @@ class _$SharedPreferenceStateCopyWithImpl<$Res>
 
 /// Create a copy of SharedPreferenceState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? authToken = freezed,Object? sharedPreference = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? authToken = freezed,}) {
   return _then(SharedPreferenceState(
 authToken: freezed == authToken ? _self.authToken : authToken // ignore: cast_nullable_to_non_nullable
-as String?,sharedPreference: freezed == sharedPreference ? _self.sharedPreference : sharedPreference // ignore: cast_nullable_to_non_nullable
-as SharedPreferences?,
+as String?,
   ));
 }
 
@@ -157,10 +156,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? authToken,  SharedPreferences? sharedPreference)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? authToken)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SharedPreferenceState() when $default != null:
-return $default(_that.authToken,_that.sharedPreference);case _:
+return $default(_that.authToken);case _:
   return orElse();
 
 }
@@ -178,10 +177,10 @@ return $default(_that.authToken,_that.sharedPreference);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? authToken,  SharedPreferences? sharedPreference)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? authToken)  $default,) {final _that = this;
 switch (_that) {
 case _SharedPreferenceState():
-return $default(_that.authToken,_that.sharedPreference);case _:
+return $default(_that.authToken);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +197,10 @@ return $default(_that.authToken,_that.sharedPreference);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? authToken,  SharedPreferences? sharedPreference)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? authToken)?  $default,) {final _that = this;
 switch (_that) {
 case _SharedPreferenceState() when $default != null:
-return $default(_that.authToken,_that.sharedPreference);case _:
+return $default(_that.authToken);case _:
   return null;
 
 }
@@ -213,11 +212,10 @@ return $default(_that.authToken,_that.sharedPreference);case _:
 
 
 class _SharedPreferenceState implements SharedPreferenceState {
-   _SharedPreferenceState({this.authToken, this.sharedPreference});
+   _SharedPreferenceState({this.authToken});
   
 
 @override final  String? authToken;
-@override final  SharedPreferences? sharedPreference;
 
 /// Create a copy of SharedPreferenceState
 /// with the given fields replaced by the non-null parameter values.
@@ -229,18 +227,18 @@ _$SharedPreferenceStateCopyWith<_SharedPreferenceState> get copyWith => __$Share
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SharedPreferenceState&&(identical(other.authToken, authToken) || other.authToken == authToken)&&(identical(other.sharedPreference, sharedPreference) || other.sharedPreference == sharedPreference));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SharedPreferenceState&&(identical(other.authToken, authToken) || other.authToken == authToken));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,authToken,sharedPreference);
+    return Object.hash(runtimeType,authToken);
 }
 
 @override
 String toString() {
-    return 'SharedPreferenceState(authToken: $authToken, sharedPreference: $sharedPreference)';
+    return 'SharedPreferenceState(authToken: $authToken)';
 }
 
 
@@ -251,7 +249,7 @@ abstract mixin class _$SharedPreferenceStateCopyWith<$Res> implements $SharedPre
   factory _$SharedPreferenceStateCopyWith(_SharedPreferenceState value, $Res Function(_SharedPreferenceState) _then) = __$SharedPreferenceStateCopyWithImpl;
 @override @useResult
 $Res call({
- String? authToken, SharedPreferences? sharedPreference
+ String? authToken
 });
 
 
@@ -268,11 +266,10 @@ class __$SharedPreferenceStateCopyWithImpl<$Res>
 
 /// Create a copy of SharedPreferenceState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? authToken = freezed,Object? sharedPreference = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? authToken = freezed,}) {
   return _then(_SharedPreferenceState(
 authToken: freezed == authToken ? _self.authToken : authToken // ignore: cast_nullable_to_non_nullable
-as String?,sharedPreference: freezed == sharedPreference ? _self.sharedPreference : sharedPreference // ignore: cast_nullable_to_non_nullable
-as SharedPreferences?,
+as String?,
   ));
 }
 
