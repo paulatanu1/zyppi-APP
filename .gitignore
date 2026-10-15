@@ -76,5 +76,6 @@ env/*.json
 ios/Flutter/Secrets.xcconfig
 android/.kotlin/
 android/key.properties
+supabase/.temp/
 *.jks
 *.keystore
