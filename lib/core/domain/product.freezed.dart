@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Product {
 
- String get id; String get name; String get image; String get categoryId; List<ProductVariant> get variants; bool get isFavourite;
+ String get id; String get name; String? get image; String get categoryId; List<ProductVariant> get variants; bool get isFavourite;
 /// Create a copy of Product
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -54,7 +54,7 @@ abstract mixin class $ProductCopyWith<$Res>  {
   factory $ProductCopyWith(Product value, $Res Function(Product) _then) = _$ProductCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String image, String categoryId, List<ProductVariant> variants, bool isFavourite
+ String id, String name, String? image, String categoryId, List<ProductVariant> variants, bool isFavourite
 });
 
 
@@ -71,12 +71,12 @@ class _$ProductCopyWithImpl<$Res>
 
 /// Create a copy of Product
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? image = null,Object? categoryId = null,Object? variants = null,Object? isFavourite = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? image = freezed,Object? categoryId = null,Object? variants = null,Object? isFavourite = null,}) {
   return _then(Product(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,image: null == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
-as String,categoryId: null == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
+as String,image: freezed == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
+as String?,categoryId: null == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
 as String,variants: null == variants ? _self.variants : variants // ignore: cast_nullable_to_non_nullable
 as List<ProductVariant>,isFavourite: null == isFavourite ? _self.isFavourite : isFavourite // ignore: cast_nullable_to_non_nullable
 as bool,
@@ -164,7 +164,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String image,  String categoryId,  List<ProductVariant> variants,  bool isFavourite)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? image,  String categoryId,  List<ProductVariant> variants,  bool isFavourite)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Product() when $default != null:
 return $default(_that.id,_that.name,_that.image,_that.categoryId,_that.variants,_that.isFavourite);case _:
@@ -185,7 +185,7 @@ return $default(_that.id,_that.name,_that.image,_that.categoryId,_that.variants,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String image,  String categoryId,  List<ProductVariant> variants,  bool isFavourite)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? image,  String categoryId,  List<ProductVariant> variants,  bool isFavourite)  $default,) {final _that = this;
 switch (_that) {
 case _Product():
 return $default(_that.id,_that.name,_that.image,_that.categoryId,_that.variants,_that.isFavourite);case _:
@@ -205,7 +205,7 @@ return $default(_that.id,_that.name,_that.image,_that.categoryId,_that.variants,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String image,  String categoryId,  List<ProductVariant> variants,  bool isFavourite)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? image,  String categoryId,  List<ProductVariant> variants,  bool isFavourite)?  $default,) {final _that = this;
 switch (_that) {
 case _Product() when $default != null:
 return $default(_that.id,_that.name,_that.image,_that.categoryId,_that.variants,_that.isFavourite);case _:
@@ -220,12 +220,12 @@ return $default(_that.id,_that.name,_that.image,_that.categoryId,_that.variants,
 @JsonSerializable()
 
 class _Product implements Product {
-   _Product({required this.id, required this.name, required this.image, required this.categoryId, required  List<ProductVariant> variants, this.isFavourite = false}): _variants = variants;
+   _Product({required this.id, required this.name, this.image, required this.categoryId, required  List<ProductVariant> variants, this.isFavourite = false}): _variants = variants;
   factory _Product.fromJson(Map<String, dynamic> json) => _$ProductFromJson(json);
 
 @override final  String id;
 @override final  String name;
-@override final  String image;
+@override final  String? image;
 @override final  String categoryId;
  final  List<ProductVariant> _variants;
 @override List<ProductVariant> get variants {
@@ -271,7 +271,7 @@ abstract mixin class _$ProductCopyWith<$Res> implements $ProductCopyWith<$Res> {
   factory _$ProductCopyWith(_Product value, $Res Function(_Product) _then) = __$ProductCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String image, String categoryId, List<ProductVariant> variants, bool isFavourite
+ String id, String name, String? image, String categoryId, List<ProductVariant> variants, bool isFavourite
 });
 
 
@@ -288,12 +288,12 @@ class __$ProductCopyWithImpl<$Res>
 
 /// Create a copy of Product
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? image = null,Object? categoryId = null,Object? variants = null,Object? isFavourite = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? image = freezed,Object? categoryId = null,Object? variants = null,Object? isFavourite = null,}) {
   return _then(_Product(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,image: null == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
-as String,categoryId: null == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
+as String,image: freezed == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
+as String?,categoryId: null == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
 as String,variants: null == variants ? _self._variants : variants // ignore: cast_nullable_to_non_nullable
 as List<ProductVariant>,isFavourite: null == isFavourite ? _self.isFavourite : isFavourite // ignore: cast_nullable_to_non_nullable
 as bool,

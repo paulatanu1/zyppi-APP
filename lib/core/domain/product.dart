@@ -9,7 +9,7 @@ abstract class Product with _$Product {
   factory Product({
     required String id,
     required String name,
-    required String image,
+    String? image,
     required String categoryId,
     required List<ProductVariant> variants,
     @Default(false) bool isFavourite,

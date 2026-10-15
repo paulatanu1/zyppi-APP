@@ -11,7 +11,7 @@ import 'package:zippy/core/theme/app_typography.dart';
 /// price, and an ADD/stepper control.
 class ProductListRow extends StatelessWidget {
   final String name;
-  final String imagePath;
+  final String? imagePath;
   final String unit;
   final int pricePaise;
   final VoidCallback onClicked;

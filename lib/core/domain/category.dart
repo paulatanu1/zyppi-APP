@@ -11,7 +11,7 @@ abstract class Category with _$Category {
   factory Category({
     required String id,
     required String name,
-    required String image,
+    String? image,
     required String colorHex,
     required String borderColorHex,
   }) = _Category;

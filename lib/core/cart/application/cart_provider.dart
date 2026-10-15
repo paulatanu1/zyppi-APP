@@ -82,6 +82,7 @@ class CartNotifier extends StateNotifier<CartState> {
           ];
 
     await cartRepository.saveItems(nextItems);
+    await _load();
   }
 
   Future<void> addItem({
@@ -157,7 +158,10 @@ class CartNotifier extends StateNotifier<CartState> {
     );
   }
 
-  Future<void> clear() => cartRepository.saveItems(const []);
+  Future<void> clear() async {
+    await cartRepository.saveItems(const []);
+    await _load();
+  }
 
   Future<void> retry() => _load();
 }

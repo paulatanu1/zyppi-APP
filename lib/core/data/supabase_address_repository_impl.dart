@@ -32,8 +32,20 @@ class SupabaseAddressRepository implements AddressRepository {
       throw StateError('Cannot add an address while signed out');
     }
 
+    // place_order() rejects an address with no service_area_id. There's
+    // no real serviceability check yet (Phase 4: point-in-polygon/
+    // nearest-store against lat/lng) — picking any active area is a
+    // stand-in so checkout isn't permanently blocked until then.
+    final serviceArea = await client
+        .from('service_areas')
+        .select('id')
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle();
+
     await client.from('addresses').insert({
       'user_id': userId,
+      'service_area_id': serviceArea?['id'],
       'label': address.label,
       'line1': address.line1,
       'area': address.area,

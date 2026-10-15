@@ -9,7 +9,7 @@ part of 'product.dart';
 _Product _$ProductFromJson(Map<String, dynamic> json) => _Product(
   id: json['id'] as String,
   name: json['name'] as String,
-  image: json['image'] as String,
+  image: json['image'] as String?,
   categoryId: json['categoryId'] as String,
   variants: (json['variants'] as List<dynamic>)
       .map((e) => ProductVariant.fromJson(e as Map<String, dynamic>))

@@ -7,14 +7,14 @@ import 'package:zippy/core/theme/app_typography.dart';
 /// with the category label below.
 class CategoryCard extends StatelessWidget {
   final String categoryText;
-  final String imageUrl;
+  final String? imageUrl;
   final Color backgroundColor;
   final VoidCallback? onTap;
 
   const CategoryCard({
     super.key,
     required this.categoryText,
-    required this.imageUrl,
+    this.imageUrl,
     required this.backgroundColor,
     this.onTap,
   });

@@ -9,7 +9,7 @@ part of 'category.dart';
 _Category _$CategoryFromJson(Map<String, dynamic> json) => _Category(
   id: json['id'] as String,
   name: json['name'] as String,
-  image: json['image'] as String,
+  image: json['image'] as String?,
   colorHex: json['colorHex'] as String,
   borderColorHex: json['borderColorHex'] as String,
 );
