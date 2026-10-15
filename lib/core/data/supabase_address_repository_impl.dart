@@ -24,4 +24,26 @@ class SupabaseAddressRepository implements AddressRepository {
 
     return rows.map((row) => Address.fromJson(row)).toList();
   }
+
+  @override
+  Future<void> addAddress(Address address) async {
+    final userId = client.auth.currentUser?.id;
+    if (userId == null) {
+      throw StateError('Cannot add an address while signed out');
+    }
+
+    await client.from('addresses').insert({
+      'user_id': userId,
+      'label': address.label,
+      'line1': address.line1,
+      'area': address.area,
+      'city': address.city,
+      'state': address.state,
+      'postal_code': address.postalCode,
+      'landmark': address.landmark,
+      'lat': address.lat,
+      'lng': address.lng,
+      'is_default': address.isDefault,
+    });
+  }
 }

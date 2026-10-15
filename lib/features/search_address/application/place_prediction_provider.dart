@@ -1,6 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:zippy/core/data/address_repository.dart';
+import 'package:zippy/core/data/address_repository_impl.dart';
+import 'package:zippy/core/domain/address.dart';
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
 import 'package:zippy/core/utils/log.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
@@ -13,10 +16,14 @@ import 'place_prediction_state.dart';
 
 class PlacePredictionProvider extends StateNotifier<PlacePredictionState> {
   final PlaceRepository repository;
+  final AddressRepository addressRepository;
   final GetCurrentLocationProvider getCurrentLocationProvider;
 
-  PlacePredictionProvider(this.repository, this.getCurrentLocationProvider)
-    : super(PlacePredictionState());
+  PlacePredictionProvider(
+    this.repository,
+    this.addressRepository,
+    this.getCurrentLocationProvider,
+  ) : super(PlacePredictionState());
 
   Future<void> placePrediction({required String? input}) async {
     try {
@@ -106,27 +113,32 @@ class PlacePredictionProvider extends StateNotifier<PlacePredictionState> {
     required String? selectedAddress,
   }) async {
     try {
-      var (response, dioException) = await repository.addAddress(
-        placeDetails: placeDetails,
-        selectedAddress: selectedAddress,
+      // The map-pin picker and address-component parsing are Phase 4
+      // work (needs google_maps_flutter); these placeholders match what
+      // the old REST payload hardcoded for every address added here.
+      await addressRepository.addAddress(
+        Address(
+          id: 'address-${DateTime.now().millisecondsSinceEpoch}',
+          label: 'Other',
+          line1: selectedAddress ?? 'Unknown address',
+          area: 'Prince Anwar Shah Road',
+          city: 'Kolkata',
+          state: 'West Bengal',
+          postalCode: '123456',
+          landmark: 'South City',
+          lat: placeDetails?.result?.geometry?.location?.lat ?? 0.0,
+          lng: placeDetails?.result?.geometry?.location?.lng ?? 0.0,
+          isDefault: true,
+        ),
       );
 
-      if (response == null && dioException == null) {
-        showConnectionInterrupted();
-      } else if (dioException != null) {
-        AppLog.showLog(error: dioException.toString());
-        showDioError(dioException);
-      } else {
-        final addAddressSuccess = json.encode(response.data);
+      AppLog.showLog(tag: 'Add Address', message: 'Address added');
 
-        AppLog.showLog(tag: 'Add Address', message: addAddressSuccess);
-
-        showSuccessToast(message: 'Address Added Successfully');
-      }
+      showSuccessToast(message: 'Address Added Successfully');
     } catch (error, stackTrace) {
       AppLog.showLog(error: error, stackTrace: stackTrace);
 
-      showDioError(error);
+      showError(error);
     }
   }
 }
@@ -135,6 +147,7 @@ final placePredictionProvider =
     StateNotifierProvider<PlacePredictionProvider, PlacePredictionState>(
       (ref) => PlacePredictionProvider(
         ref.read(placeRepositoryProvider),
+        ref.read(addressRepositoryProvider),
         ref.read(currentLocation.notifier),
       ),
     );

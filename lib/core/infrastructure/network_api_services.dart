@@ -38,44 +38,4 @@ class NetworkApiServices implements BaseApiServices {
       return (null, null);
     }
   }
-
-  @override
-  Future<(dynamic, DioException?)> postApiRequest({
-    required String url,
-    required Map<String, dynamic> payload,
-  }) async {
-    // TODO: implement postApiRequest
-    try {
-      dio.options.headers.addAll(header.header());
-      AppLog.showLog(tag: 'Get URL', message: url);
-
-      final response = await dio.post(url, data: payload);
-
-      return (response, null);
-    } on DioException catch (e) {
-      return (null, e);
-    } catch (error) {
-      return (null, null);
-    }
-  }
-
-  @override
-  Future<(dynamic, DioException?)> postAuthenticatedApiRequest({
-    required String url,
-    required Map<String, dynamic> payload,
-  }) async {
-    // TODO: implement postApiRequest
-    try {
-      dio.options.headers.addAll(header.authenticatedHeader());
-      AppLog.showLog(tag: 'POST URL', message: url);
-
-      final response = await dio.post(url, data: payload);
-
-      return (response, null);
-    } on DioException catch (e) {
-      return (null, e);
-    } catch (error) {
-      return (null, null);
-    }
-  }
 }

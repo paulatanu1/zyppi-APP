@@ -7,6 +7,8 @@ import 'package:zippy/core/data/supabase_address_repository_impl.dart';
 import 'package:zippy/core/domain/address.dart';
 
 class MockAddressRepository implements AddressRepository {
+  final List<Address> _added = [];
+
   @override
   Future<List<Address>> fetchAddresses() async {
     await MockDataSource.simulateLatency();
@@ -15,9 +17,18 @@ class MockAddressRepository implements AddressRepository {
       'assets/mock/addresses.json',
     );
 
-    return json
+    final addresses = json
         .map((e) => Address.fromJson(e as Map<String, dynamic>))
         .toList();
+
+    return [..._added, ...addresses];
+  }
+
+  @override
+  Future<void> addAddress(Address address) async {
+    await MockDataSource.simulateLatency();
+
+    _added.add(address);
   }
 }
 
