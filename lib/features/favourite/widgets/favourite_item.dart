@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/common_widgets/price_tag.dart';
 import 'package:zippy/core/domain/product.dart';
 import 'package:zippy/core/theme/app_colors.dart';
@@ -26,8 +27,8 @@ class FavouriteItem extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
               child: Row(
                 children: [
-                  Image.asset(
-                    product.image,
+                  CatalogImage(
+                    image: product.image,
                     height: 56,
                     width: 56,
                     fit: BoxFit.contain,

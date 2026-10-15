@@ -3,6 +3,7 @@ import 'package:flutter_bounce/flutter_bounce.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/app_skeleton.dart';
+import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/favourites/application/favourites_provider.dart';
 import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/features/product_details/application/product_detail_provider.dart';
@@ -67,8 +68,8 @@ class ProductSlider extends ConsumerWidget {
             ),
             AppSkeleton(
               enabled: productDetail.loading,
-              child: Image.asset(
-                productDetail.product?.image ?? 'assets/images/item.png',
+              child: CatalogImage(
+                image: productDetail.product?.image,
                 height: height * 0.25,
                 width: width * 0.6,
                 fit: BoxFit.contain,

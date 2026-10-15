@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zippy/core/common_widgets/add_button.dart';
+import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/common_widgets/price_tag.dart';
 import 'package:zippy/core/common_widgets/quantity_stepper.dart';
 import 'package:zippy/core/theme/app_colors.dart';
@@ -49,7 +50,7 @@ class ProductListRow extends StatelessWidget {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(AppRadius.chip),
-                child: Image.asset(imagePath, fit: BoxFit.cover),
+                child: CatalogImage(image: imagePath),
               ),
             ),
             const SizedBox(width: AppSpacing.lg),

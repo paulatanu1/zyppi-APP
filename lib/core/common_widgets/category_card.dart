@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 
@@ -33,14 +34,7 @@ class CategoryCard extends StatelessWidget {
               color: backgroundColor,
               shape: BoxShape.circle,
             ),
-            child: ClipOval(
-              child: Image.asset(
-                imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    const SizedBox.shrink(),
-              ),
-            ),
+            child: ClipOval(child: CatalogImage(image: imageUrl)),
           ),
           const SizedBox(height: 6),
           Text(

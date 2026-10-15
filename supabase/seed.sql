@@ -1,6 +1,14 @@
 -- Mirrors assets/mock/*.json so the Supabase-backed data source looks
 -- the same as the mock one during development. Run via
 -- `supabase db reset` (local) or `psql ... -f supabase/seed.sql`.
+--
+-- `image` holds an object path inside the `catalog-images` Storage
+-- bucket (see 20261015120400_catalog_images_storage.sql), not a
+-- public URL — SupabaseCatalogRepository resolves it to one via
+-- `storage.from('catalog-images').getPublicUrl()`. The actual files
+-- (assets/images/*.png) still need uploading to that bucket once per
+-- project (`supabase storage cp` or the dashboard) — this seed only
+-- inserts the rows that reference them.
 
 insert into public.service_areas (id, name, is_active) values
   ('11111111-0000-0000-0000-000000000001', 'Purulia', true),
@@ -13,24 +21,24 @@ insert into public.stores (id, service_area_id, name, is_active) values
   ('22222222-0000-0000-0000-000000000003', '11111111-0000-0000-0000-000000000003', 'Zyppi Chelyama Dark Store', true);
 
 insert into public.categories (id, name, image, color_hex, border_color_hex, sort_order) values
-  ('33333333-0000-0000-0000-000000000001', 'Fresh Fruits & Vegetables', 'assets/images/category.png', '1A53B175', 'FF53B175', 0),
-  ('33333333-0000-0000-0000-000000000002', 'Bread & Eggs', 'assets/images/bread.png', 'FFFFECF7', 'FFFB54B6', 1),
-  ('33333333-0000-0000-0000-000000000003', 'Atta, Rice & Dals', 'assets/images/rice.png', '1AF8A44C', 'FFFABD7C', 2),
-  ('33333333-0000-0000-0000-000000000004', 'Masala & Dry Fruits', 'assets/images/category.png', 'FFEDF7FD', 'FF52BAF4', 3),
-  ('33333333-0000-0000-0000-000000000005', 'Cooking Oil & Ghee', 'assets/images/oil.png', '1AF8A44C', 'B2F8A44C', 4),
-  ('33333333-0000-0000-0000-000000000006', 'Meat & Fish', 'assets/images/meat.png', '3FF7A593', 'FFF7A593', 5),
-  ('33333333-0000-0000-0000-000000000007', 'Bakery & Snacks', 'assets/images/bread.png', '3FFDE598', 'FFFDE598', 6),
-  ('33333333-0000-0000-0000-000000000008', 'Beverages', 'assets/images/beverages.png', '3FB7DFF5', 'FFB7DFF5', 7);
+  ('33333333-0000-0000-0000-000000000001', 'Fresh Fruits & Vegetables', 'categories/category.png', '1A53B175', 'FF53B175', 0),
+  ('33333333-0000-0000-0000-000000000002', 'Bread & Eggs', 'categories/bread.png', 'FFFFECF7', 'FFFB54B6', 1),
+  ('33333333-0000-0000-0000-000000000003', 'Atta, Rice & Dals', 'categories/rice.png', '1AF8A44C', 'FFFABD7C', 2),
+  ('33333333-0000-0000-0000-000000000004', 'Masala & Dry Fruits', 'categories/category.png', 'FFEDF7FD', 'FF52BAF4', 3),
+  ('33333333-0000-0000-0000-000000000005', 'Cooking Oil & Ghee', 'categories/oil.png', '1AF8A44C', 'B2F8A44C', 4),
+  ('33333333-0000-0000-0000-000000000006', 'Meat & Fish', 'categories/meat.png', '3FF7A593', 'FFF7A593', 5),
+  ('33333333-0000-0000-0000-000000000007', 'Bakery & Snacks', 'categories/bread.png', '3FFDE598', 'FFFDE598', 6),
+  ('33333333-0000-0000-0000-000000000008', 'Beverages', 'categories/beverages.png', '3FB7DFF5', 'FFB7DFF5', 7);
 
 insert into public.products (id, category_id, name, image) values
-  ('44444444-0000-0000-0000-000000000001', '33333333-0000-0000-0000-000000000001', 'Fresh Tomatoes', 'assets/images/veg.png'),
-  ('44444444-0000-0000-0000-000000000002', '33333333-0000-0000-0000-000000000001', 'Apple', 'assets/images/apple.png'),
-  ('44444444-0000-0000-0000-000000000003', '33333333-0000-0000-0000-000000000002', 'Brown Bread', 'assets/images/bread.png'),
-  ('44444444-0000-0000-0000-000000000004', '33333333-0000-0000-0000-000000000003', 'Basmati Rice', 'assets/images/rice.png'),
-  ('44444444-0000-0000-0000-000000000005', '33333333-0000-0000-0000-000000000005', 'Sunflower Oil', 'assets/images/oil.png'),
-  ('44444444-0000-0000-0000-000000000006', '33333333-0000-0000-0000-000000000006', 'Chicken Curry Cut', 'assets/images/meat.png'),
-  ('44444444-0000-0000-0000-000000000007', '33333333-0000-0000-0000-000000000008', 'Toned Milk', 'assets/images/milk.png'),
-  ('44444444-0000-0000-0000-000000000008', '33333333-0000-0000-0000-000000000007', 'Butter Cookies', 'assets/images/item.png');
+  ('44444444-0000-0000-0000-000000000001', '33333333-0000-0000-0000-000000000001', 'Fresh Tomatoes', 'products/veg.png'),
+  ('44444444-0000-0000-0000-000000000002', '33333333-0000-0000-0000-000000000001', 'Apple', 'products/apple.png'),
+  ('44444444-0000-0000-0000-000000000003', '33333333-0000-0000-0000-000000000002', 'Brown Bread', 'products/bread.png'),
+  ('44444444-0000-0000-0000-000000000004', '33333333-0000-0000-0000-000000000003', 'Basmati Rice', 'products/rice.png'),
+  ('44444444-0000-0000-0000-000000000005', '33333333-0000-0000-0000-000000000005', 'Sunflower Oil', 'products/oil.png'),
+  ('44444444-0000-0000-0000-000000000006', '33333333-0000-0000-0000-000000000006', 'Chicken Curry Cut', 'products/meat.png'),
+  ('44444444-0000-0000-0000-000000000007', '33333333-0000-0000-0000-000000000008', 'Toned Milk', 'products/milk.png'),
+  ('44444444-0000-0000-0000-000000000008', '33333333-0000-0000-0000-000000000007', 'Butter Cookies', 'products/item.png');
 
 insert into public.product_variants (id, product_id, label, price_paise, mrp_paise) values
   ('55555555-0000-0000-0000-000000000001', '44444444-0000-0000-0000-000000000001', '500 g', 2500, 3000),

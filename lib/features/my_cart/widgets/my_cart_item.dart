@@ -3,6 +3,7 @@ import 'package:flutter_bounce/flutter_bounce.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/cart/domain/cart_line.dart';
+import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/common_widgets/price_tag.dart';
 import 'package:zippy/core/common_widgets/quantity_stepper.dart';
 import 'package:zippy/core/theme/app_colors.dart';
@@ -37,8 +38,8 @@ class MyCartItem extends ConsumerWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Image.asset(
-                  line.product.image,
+                CatalogImage(
+                  image: line.product.image,
                   height: height * 0.08,
                   width: width * 0.15,
                   fit: BoxFit.contain,

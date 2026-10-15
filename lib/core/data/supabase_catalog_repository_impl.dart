@@ -9,6 +9,8 @@ import 'package:zippy/core/domain/product.dart';
 /// map snake_case Postgres columns onto the camelCase fields the freezed
 /// fromJson expects.
 class SupabaseCatalogRepository implements CatalogRepository {
+  static const _imagesBucket = 'catalog-images';
+
   final SupabaseClient client;
 
   SupabaseCatalogRepository(this.client);
@@ -22,7 +24,7 @@ class SupabaseCatalogRepository implements CatalogRepository {
         )
         .order('sort_order');
 
-    return rows.map((row) => Category.fromJson(row)).toList();
+    return rows.map((row) => Category.fromJson(_resolveImage(row))).toList();
   }
 
   @override
@@ -35,7 +37,7 @@ class SupabaseCatalogRepository implements CatalogRepository {
         ''')
         .eq('is_active', true);
 
-    return rows.map((row) => Product.fromJson(row)).toList();
+    return rows.map((row) => Product.fromJson(_resolveImage(row))).toList();
   }
 
   @override
@@ -51,7 +53,7 @@ class SupabaseCatalogRepository implements CatalogRepository {
 
     if (row == null) return null;
 
-    return Product.fromJson(row);
+    return Product.fromJson(_resolveImage(row));
   }
 
   @override
@@ -73,6 +75,20 @@ class SupabaseCatalogRepository implements CatalogRepository {
           type: TextSearchType.websearch,
         );
 
-    return rows.map((row) => Product.fromJson(row)).toList();
+    return rows.map((row) => Product.fromJson(_resolveImage(row))).toList();
+  }
+
+  /// `image` is stored as an object path inside [_imagesBucket] (see
+  /// supabase/seed.sql), not a public URL — resolve it to one here so
+  /// every caller gets a ready-to-render value, same as mock mode's
+  /// bundled asset paths.
+  Map<String, dynamic> _resolveImage(Map<String, dynamic> row) {
+    final path = row['image'] as String?;
+    if (path == null || path.isEmpty) return row;
+
+    return {
+      ...row,
+      'image': client.storage.from(_imagesBucket).getPublicUrl(path),
+    };
   }
 }

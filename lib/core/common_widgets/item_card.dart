@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zippy/core/common_widgets/add_button.dart';
+import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/common_widgets/price_tag.dart';
 import 'package:zippy/core/common_widgets/quantity_stepper.dart';
 import 'package:zippy/core/theme/app_colors.dart';
@@ -65,8 +66,8 @@ class ItemCard extends StatelessWidget {
                     Center(
                       child: AspectRatio(
                         aspectRatio: 1,
-                        child: Image.asset(
-                          imagePath ?? 'assets/images/item.png',
+                        child: CatalogImage(
+                          image: imagePath,
                           fit: BoxFit.contain,
                         ),
                       ),
