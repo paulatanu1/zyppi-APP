@@ -24,7 +24,7 @@ class CartNotifier extends StateNotifier<CartState> {
     state = state.copyWith(loading: true, error: null);
 
     try {
-      final items = cartRepository.getItems();
+      final items = await cartRepository.getItems();
       final products = await catalogRepository.fetchProducts();
 
       final lines = <CartLine>[];
@@ -65,7 +65,7 @@ class CartNotifier extends StateNotifier<CartState> {
     required String variantId,
     required int quantity,
   }) async {
-    final items = cartRepository.getItems();
+    final items = await cartRepository.getItems();
     final withoutLine = items
         .where((i) => !(i.productId == productId && i.variantId == variantId))
         .toList();
@@ -89,7 +89,7 @@ class CartNotifier extends StateNotifier<CartState> {
     required String variantId,
     int quantity = 1,
   }) async {
-    final items = cartRepository.getItems();
+    final items = await cartRepository.getItems();
     final existing = items.where(
       (i) => i.productId == productId && i.variantId == variantId,
     );

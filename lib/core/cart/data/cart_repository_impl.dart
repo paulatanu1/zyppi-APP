@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:zippy/core/cart/data/supabase_cart_repository_impl.dart';
 import 'package:zippy/core/cart/domain/cart_repository.dart';
+import 'package:zippy/core/config/env.dart';
 import 'package:zippy/core/domain/cart_item.dart';
 
 /// Opened once in bootstrap() and provided via [cartBoxProvider]'s
@@ -20,7 +23,7 @@ class HiveCartRepository implements CartRepository {
   HiveCartRepository(this.box);
 
   @override
-  List<CartItem> getItems() {
+  Future<List<CartItem>> getItems() async {
     final raw = box.get(_itemsKey) as List<dynamic>? ?? const [];
 
     return raw
@@ -38,5 +41,7 @@ class HiveCartRepository implements CartRepository {
 }
 
 final cartRepositoryProvider = Provider<CartRepository>(
-  (ref) => HiveCartRepository(ref.read(cartBoxProvider)),
+  (ref) => Env.isMockDataSource
+      ? HiveCartRepository(ref.read(cartBoxProvider))
+      : SupabaseCartRepository(Supabase.instance.client),
 );

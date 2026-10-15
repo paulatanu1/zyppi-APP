@@ -6,7 +6,7 @@ import 'package:zippy/core/domain/cart_item.dart';
 /// means a cross-feature capability like this can't live in one
 /// feature's (e.g. my_cart's) domain/.
 abstract class CartRepository {
-  List<CartItem> getItems();
+  Future<List<CartItem>> getItems();
 
   Future<void> saveItems(List<CartItem> items);
 

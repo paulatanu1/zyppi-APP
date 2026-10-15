@@ -156,7 +156,7 @@ Done when: release APK runs splash → tracking fully offline and matches the mo
 - [ ] RLS on every table; catalog read-only for clients
 - [ ] Auth: phone OTP (dev: Supabase test numbers) + Google via `signInWithIdToken`; remove REST login and `firebase_auth`
 - [ ] `place_order` RPC: re-checks stock, prices, coupon, serviceability in one transaction
-- [ ] Supabase repositories: catalog, search (Postgres full-text), cart sync, addresses, orders; images in Supabase Storage — catalog, addresses and orders done (flavor-switched on `Env.dataSource`; orders read/placed via `place_order()`, status updates stay client-side mock-only until Phase 4's Realtime tracking); search and cart sync still outstanding, and cart sync blocks `place_order` actually succeeding end to end against a live project since it reads from `cart_items`
+- [ ] Supabase repositories: catalog, search (Postgres full-text), cart sync, addresses, orders; images in Supabase Storage — catalog, addresses, cart and orders done (flavor-switched on `Env.dataSource`); cart syncs to `cart_items` (delete-all-then-upsert on every save — no diffing), orders read/placed via `place_order()`; status updates and cross-device cart/order refresh stay client-side mock-only until Phase 4's Realtime tracking. Search is still outstanding
 - [ ] Delete `dio`, `lib/core/infrastructure/`, old base URL
 - [ ] Only the publishable/anon key in the app; service-role key only in Edge Functions
 - [ ] Flavor-based provider overrides; mock flavor still works
