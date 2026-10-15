@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zippy/core/domain/order.dart';
 import 'package:zippy/core/domain/order_item.dart';
@@ -92,8 +94,27 @@ class SupabaseOrderRepository implements OrderRepository {
     );
   }
 
+  /// Phase 4: fires on every change to the signed-in user's `orders` rows
+  /// (status updates from a future rider/admin app land here), via
+  /// Postgres Changes on the supabase_realtime publication - see
+  /// 20261015120900_orders_realtime.sql. Callers re-read [getOrders].
   @override
-  Stream<void> watch() => const Stream.empty();
+  Stream<void> watch() {
+    final controller = StreamController<void>.broadcast();
+    final channel = client
+        .channel('orders-changes')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'orders',
+          callback: (payload) => controller.add(null),
+        )
+        .subscribe();
+
+    controller.onCancel = () => client.removeChannel(channel);
+
+    return controller.stream;
+  }
 }
 
 OrderStatus _parseStatus(String value) => switch (value) {

@@ -22,10 +22,19 @@ class OrderTrackingProvider extends StateNotifier<OrderTrackingState> {
   final OrderRepository repository;
   final String orderId;
   Timer? _timer;
+  StreamSubscription<void>? _watchSubscription;
 
   OrderTrackingProvider(this.repository, this.orderId)
     : super(OrderTrackingState()) {
     _load();
+
+    // Under Supabase, status changes come from a future rider/admin app,
+    // not this client — Realtime (via repository.watch()) is what tells
+    // us to re-read the order. The mock flavor drives its own fake
+    // lifecycle timer below instead.
+    if (!Env.isMockDataSource) {
+      _watchSubscription = repository.watch().listen((_) => _load());
+    }
   }
 
   Future<void> _load() async {
@@ -66,6 +75,7 @@ class OrderTrackingProvider extends StateNotifier<OrderTrackingState> {
   @override
   void dispose() {
     _timer?.cancel();
+    _watchSubscription?.cancel();
     super.dispose();
   }
 }
