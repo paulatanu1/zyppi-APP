@@ -16,5 +16,6 @@ abstract class CheckoutState with _$CheckoutState {
     @Default(false) bool placingOrder,
     String? placedOrderId,
     String? error,
+    String? paymentError,
   }) = _CheckoutState;
 }

@@ -66,6 +66,8 @@ class SupabaseOrderRepository implements OrderRepository {
   Future<String> placeOrder(
     Order order, {
     required String deliverySlotId,
+    String? razorpayOrderId,
+    String? razorpayPaymentId,
   }) async {
     final orderId = await client.rpc(
       'place_order',
@@ -74,6 +76,8 @@ class SupabaseOrderRepository implements OrderRepository {
         'p_delivery_slot_id': deliverySlotId,
         'p_payment_method': order.paymentMethod,
         'p_tip_paise': order.tipPaise,
+        'p_razorpay_order_id': razorpayOrderId,
+        'p_razorpay_payment_id': razorpayPaymentId,
       },
     );
 

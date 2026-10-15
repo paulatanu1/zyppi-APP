@@ -40,3 +40,9 @@ skip_nonce_check = true
 # Authenticated app users only (anon key + a signed-in session); verified
 # via the standard Supabase JWT check.
 verify_jwt = true
+
+[functions.create-razorpay-order]
+verify_jwt = true
+
+[functions.verify-razorpay-payment]
+verify_jwt = true

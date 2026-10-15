@@ -11,7 +11,7 @@ import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/checkout/application/checkout_provider.dart';
 
-const _paymentMethods = ['UPI', 'Cash on delivery', 'Credit or debit card'];
+const _paymentMethods = ['UPI', codPaymentMethod, 'Credit or debit card'];
 
 class CheckoutScreen extends ConsumerWidget {
   const CheckoutScreen({super.key});
@@ -26,6 +26,11 @@ class CheckoutScreen extends ConsumerWidget {
       if (next.placedOrderId != null &&
           previous?.placedOrderId != next.placedOrderId) {
         context.go('/orderPlacedScreen?orderId=${next.placedOrderId}');
+      }
+      if (next.paymentError != null &&
+          previous?.paymentError != next.paymentError) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(next.paymentError!)));
       }
     });
 

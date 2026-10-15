@@ -8,8 +8,15 @@ abstract class OrderRepository {
   /// locally and returns its id unchanged.
   /// Supabase: ignores the client-built totals and calls place_order(),
   /// which re-derives everything from the user's synced cart server-side;
-  /// returns the server-generated order id.
-  Future<String> placeOrder(Order order, {required String deliverySlotId});
+  /// returns the server-generated order id. [razorpayOrderId] /
+  /// [razorpayPaymentId] are only passed once CheckoutProvider has
+  /// already verified the payment signature; omit both for COD.
+  Future<String> placeOrder(
+    Order order, {
+    required String deliverySlotId,
+    String? razorpayOrderId,
+    String? razorpayPaymentId,
+  });
 
   Future<void> updateStatus(String orderId, OrderStatus status);
 
