@@ -12,6 +12,17 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
+// Mirrors the Dart-side GOOGLE_MAPS_API_KEY from env/<flavor>.json (gitignored;
+// only env/*.example.json is committed) so the Maps SDK's manifest meta-data
+// stays out of source control too, per CLAUDE.md's secrets rule.
+import groovy.json.JsonSlurper
+def mapsApiKeyForFlavor(String flavorName) {
+    def envFile = rootProject.file("../env/${flavorName}.json")
+    if (!envFile.exists()) return ""
+    def config = new JsonSlurper().parse(envFile)
+    return config.GOOGLE_MAPS_API_KEY ?: ""
+}
+
 android {
     namespace = 'com.betastechnologies.zippy'
     compileSdk = flutter.compileSdkVersion
@@ -51,14 +62,17 @@ android {
         dev {
             dimension = "env"
             resValue "string", "app_name", "Zyppi Dev"
+            manifestPlaceholders = [mapsApiKey: mapsApiKeyForFlavor("dev")]
         }
         staging {
             dimension = "env"
             resValue "string", "app_name", "Zyppi Staging"
+            manifestPlaceholders = [mapsApiKey: mapsApiKeyForFlavor("staging")]
         }
         prod {
             dimension = "env"
             resValue "string", "app_name", "Zyppi"
+            manifestPlaceholders = [mapsApiKey: mapsApiKeyForFlavor("prod")]
         }
     }
 

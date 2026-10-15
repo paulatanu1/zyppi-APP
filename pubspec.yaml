@@ -45,7 +45,6 @@ dependencies:
   firebase_core: ^4.15.0
   dio: ^5.7.0
   shared_preferences: ^2.3.5
-  google_places_flutter: ^2.0.8
   freezed_annotation: ^3.1.0
   json_annotation: ^4.12.0
 
@@ -57,6 +56,10 @@ dependencies:
   hive_ce: ^2.21.0
   hive_ce_flutter: ^2.4.0
   cached_network_image: ^4.0.4
+  geocoding: ^5.0.0
+  google_maps_flutter: ^2.19.0
+  razorpay_flutter: ^1.4.7
+  firebase_messaging: ^16.7.0
 
 dev_dependencies:
   flutter_test:
