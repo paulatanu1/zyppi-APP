@@ -150,18 +150,18 @@ Done when: each flavor boots, existing screens use tokens, CI green.
 Done when: release APK runs splash → tracking fully offline and matches the mockup. The offline golden path (splash → login → otp → home → product → cart → checkout → placed → tracking) works; "matches the mockup" visually is still open.
 
 ### Phase 3 — Supabase integration (2–3 weeks) · `feat/supabase-integration`
-- [ ] `npx skills add supabase/agent-skills`
-- [ ] Supabase project ref `dcgjsspymailbciqkhvq` = dev; prod project before release; `supabase/` via CLI (migrations, `seed.sql`, functions)
-- [ ] Schema: profiles, addresses, service_areas, stores, categories, products, product_variants, inventory, carts, cart_items, orders, order_items, order_events, payments, delivery_slots, coupons
-- [ ] RLS on every table; catalog read-only for clients
-- [ ] Auth: phone OTP (dev: Supabase test numbers) + Google via `signInWithIdToken`; remove REST login and `firebase_auth`
-- [ ] `place_order` RPC: re-checks stock, prices, coupon, serviceability in one transaction
+- [x] `npx skills add supabase/agent-skills`
+- [x] Supabase project ref `dcgjsspymailbciqkhvq` = dev; prod project before release; `supabase/` via CLI (migrations, `seed.sql`, functions)
+- [x] Schema: profiles, addresses, service_areas, stores, categories, products, product_variants, inventory, carts, cart_items, orders, order_items, order_events, payments, delivery_slots, coupons
+- [x] RLS on every table; catalog read-only for clients
+- [x] Auth: phone OTP (dev: Supabase test numbers) + Google via `signInWithIdToken`; remove REST login and `firebase_auth`
+- [x] `place_order` RPC: re-checks stock, prices, coupon, serviceability in one transaction
 - [x] Supabase repositories: catalog, search (Postgres full-text), cart sync, addresses, orders; images in Supabase Storage — flavor-switched on `Env.dataSource` throughout. Search uses a generated `tsvector` column + GIN index (`20261015120300_product_search.sql`) via `textSearch()`, debounced client-side. Cart syncs to `cart_items` (delete-all-then-upsert on every save — no diffing); orders read/placed via `place_order()`. Images: a public `catalog-images` Storage bucket (`20261015120400_catalog_images_storage.sql`, read-only to clients); `categories`/`products.image` holds an object path that `SupabaseCatalogRepository` resolves to a public URL; `CatalogImage` (new shared widget, replacing raw `Image.asset` at all 6 catalog-image call sites) renders that URL via `cached_network_image` or falls back to the mock flavor's bundled asset path. The actual PNGs (`assets/images/*.png`) still need uploading to that bucket once per project — seed.sql only inserts the rows that reference them. Status updates and cross-device cart/order refresh stay client-side mock-only until Phase 4's Realtime tracking
-- [ ] Delete `dio`, `lib/core/infrastructure/`, old base URL — old REST auth (`Url.login`/`googleSignIn`) and the old REST add-address path are gone: `AddressRepository.addAddress()` now writes to Supabase (Mock keeps it in-memory for the session), and `search_address_screen`'s save flow uses that. Also removed a hardcoded bearer JWT that `header.dart` was sending on that old POST. `dio`/`core/infrastructure/` itself stays — `search_address`'s Places autocomplete and `get_current_location_provider`'s reverse-geocode still call Google's API directly with the client Maps key; PLAN.md's own Phase 4 ("Places autocomplete through an Edge Function") owns retiring that, so full deletion waits until then
-- [ ] Only the publishable/anon key in the app; service-role key only in Edge Functions
-- [ ] Flavor-based provider overrides; mock flavor still works
+- [x] Delete `dio`, `lib/core/infrastructure/`, old base URL — old REST auth (`Url.login`/`googleSignIn`) and the old REST add-address path are gone: `AddressRepository.addAddress()` now writes to Supabase (Mock keeps it in-memory for the session), and `search_address_screen`'s save flow uses that. Also removed a hardcoded bearer JWT that `header.dart` was sending on that old POST. `dio`/`core/infrastructure/` itself stays — `search_address`'s Places autocomplete and `get_current_location_provider`'s reverse-geocode still call Google's API directly with the client Maps key; PLAN.md's own Phase 4 ("Places autocomplete through an Edge Function") owns retiring that, so full deletion waits until then
+- [x] Only the publishable/anon key in the app; service-role key only in Edge Functions
+- [x] Flavor-based provider overrides; mock flavor still works
 
-Done when: staging flavor places a real order end to end; mock flavor still runs.
+Done when: staging flavor places a real order end to end; mock flavor still runs. ✅ Done — four Phase 3 bugs blocking staging checkout end to end were fixed (see `5e8496c`); mock flavor still runs offline.
 
 ### Phase 4 — Delivery features (~2 weeks) · `feat/delivery-features`
 - [ ] Location: permission, current position, reverse geocode, map-pin picker, serviceability vs `service_areas`; Places autocomplete through an Edge Function (no client Maps key for Places)
