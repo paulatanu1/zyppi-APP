@@ -1,4 +1,7 @@
 [
   { "id": "slot-express", "label": "In 12 minutes", "etaMinutes": 12, "isExpress": true },
-  { "id": "slot-schedule", "label": "Schedule for later", "etaMinutes": 60, "isExpress": false }
+  { "id": "slot-today-4-6", "label": "Today, 4:00 PM - 6:00 PM", "etaMinutes": 180, "isExpress": false },
+  { "id": "slot-today-6-8", "label": "Today, 6:00 PM - 8:00 PM", "etaMinutes": 300, "isExpress": false },
+  { "id": "slot-tomorrow-8-10", "label": "Tomorrow, 8:00 AM - 10:00 AM", "etaMinutes": 900, "isExpress": false },
+  { "id": "slot-tomorrow-10-12", "label": "Tomorrow, 10:00 AM - 12:00 PM", "etaMinutes": 1020, "isExpress": false }
 ]

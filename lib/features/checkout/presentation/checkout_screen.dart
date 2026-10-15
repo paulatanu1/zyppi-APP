@@ -6,6 +6,7 @@ import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/common_widgets/app_skeleton.dart';
 import 'package:zippy/core/common_widgets/price_tag.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
+import 'package:zippy/core/domain/delivery_slot.dart';
 import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
@@ -101,21 +102,10 @@ class CheckoutScreen extends ConsumerWidget {
                     ),
                     _section(
                       title: 'deliveryTime'.tr(),
-                      child: RadioGroup<String>(
-                        groupValue: state.selectedSlot?.id,
-                        onChanged: (value) => notifier.selectSlot(value!),
-                        child: Column(
-                          children: state.slots.map((slot) {
-                            return RadioListTile<String>(
-                              value: slot.id,
-                              activeColor: AppColors.primary,
-                              title: Text(
-                                slot.label,
-                                style: AppTypography.bodyLarge,
-                              ),
-                            );
-                          }).toList(),
-                        ),
+                      child: _DeliverySlotPicker(
+                        slots: state.slots,
+                        selectedSlot: state.selectedSlot,
+                        onSelect: notifier.selectSlot,
                       ),
                     ),
                     _section(
@@ -204,6 +194,121 @@ class CheckoutScreen extends ConsumerWidget {
           child,
           const Divider(height: 1, color: AppColors.divider),
         ],
+      ),
+    );
+  }
+}
+
+/// docs/mockups/Checkout.dc.html's two-button Express/Schedule toggle;
+/// tapping "Schedule" reveals the concrete scheduled windows below it.
+class _DeliverySlotPicker extends StatelessWidget {
+  final List<DeliverySlot> slots;
+  final DeliverySlot? selectedSlot;
+  final ValueChanged<String> onSelect;
+
+  const _DeliverySlotPicker({
+    required this.slots,
+    required this.selectedSlot,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final expressSlot = slots.where((s) => s.isExpress).firstOrNull;
+    final scheduledSlots = slots.where((s) => !s.isExpress).toList();
+    final isScheduleSelected = selectedSlot != null && !selectedSlot!.isExpress;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            if (expressSlot != null)
+              Expanded(
+                child: _SlotCategoryCard(
+                  title: 'express'.tr(),
+                  subtitle: expressSlot.label,
+                  selected: selectedSlot?.id == expressSlot.id,
+                  onTap: () => onSelect(expressSlot.id),
+                ),
+              ),
+            if (expressSlot != null && scheduledSlots.isNotEmpty)
+              const SizedBox(width: AppSpacing.base),
+            if (scheduledSlots.isNotEmpty)
+              Expanded(
+                child: _SlotCategoryCard(
+                  title: 'scheduleLabel'.tr(),
+                  subtitle: 'pickASlot'.tr(),
+                  selected: isScheduleSelected,
+                  onTap: () => onSelect(scheduledSlots.first.id),
+                ),
+              ),
+          ],
+        ),
+        if (isScheduleSelected) ...[
+          const SizedBox(height: AppSpacing.base),
+          Wrap(
+            spacing: AppSpacing.base,
+            runSpacing: AppSpacing.base,
+            children: scheduledSlots.map((slot) {
+              final selected = selectedSlot?.id == slot.id;
+
+              return ChoiceChip(
+                label: Text(slot.label),
+                selected: selected,
+                onSelected: (_) => onSelect(slot.id),
+              );
+            }).toList(),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _SlotCategoryCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _SlotCategoryCard({
+    required this.title,
+    required this.subtitle,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppRadius.input),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: selected ? AppColors.primary : AppColors.line,
+            width: selected ? 1.5 : 1,
+          ),
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          color: selected ? AppColors.primarySurface : AppColors.surface,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: AppTypography.bodyMedium.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            Text(
+              subtitle,
+              style: AppTypography.bodySmall.copyWith(color: AppColors.muted),
+            ),
+          ],
+        ),
       ),
     );
   }

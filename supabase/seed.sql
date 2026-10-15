@@ -60,9 +60,16 @@ select s.id, pv.id, 100
 from public.stores s
 cross join public.product_variants pv;
 
+-- One express slot plus several concrete scheduled windows (checkout's
+-- "Schedule" option lists these); eta_minutes on a scheduled slot is
+-- minutes-from-now at seed time, not a live countdown — refining that
+-- into real date-relative windows is future polish (PLAN.md §6).
 insert into public.delivery_slots (id, label, eta_minutes, is_express) values
   ('66666666-0000-0000-0000-000000000001', 'In 12 minutes', 12, true),
-  ('66666666-0000-0000-0000-000000000002', 'Schedule for later', 60, false);
+  ('66666666-0000-0000-0000-000000000002', 'Today, 4:00 PM - 6:00 PM', 180, false),
+  ('66666666-0000-0000-0000-000000000003', 'Today, 6:00 PM - 8:00 PM', 300, false),
+  ('66666666-0000-0000-0000-000000000004', 'Tomorrow, 8:00 AM - 10:00 AM', 900, false),
+  ('66666666-0000-0000-0000-000000000005', 'Tomorrow, 10:00 AM - 12:00 PM', 1020, false);
 
 insert into public.coupons (code, description, discount_paise, min_order_paise) values
   ('ZYPPI50', 'Flat ₹50 off on orders above ₹300', 5000, 30000);

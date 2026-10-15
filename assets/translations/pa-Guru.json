@@ -103,5 +103,8 @@
   "searchAreaPlaceholder": "ਇਲਾਕਾ, ਗਲੀ ਜਾਂ ਲੈਂਡਮਾਰਕ ਖੋਜੋ",
   "selectAddress": "ਪਤਾ ਚੁਣੋ",
   "useCurrentLocation": "ਮੌਜੂਦਾ ਟਿਕਾਣਾ ਵਰਤੋ",
-  "addressAddedSuccessfully": "ਪਤਾ ਸਫਲਤਾਪੂਰਵਕ ਸ਼ਾਮਲ ਕੀਤਾ ਗਿਆ"
+  "addressAddedSuccessfully": "ਪਤਾ ਸਫਲਤਾਪੂਰਵਕ ਸ਼ਾਮਲ ਕੀਤਾ ਗਿਆ",
+  "express": "ਐਕਸਪ੍ਰੈਸ",
+  "scheduleLabel": "ਸ਼ਡਿਊਲ",
+  "pickASlot": "ਸਲਾਟ ਚੁਣੋ"
 }

@@ -138,5 +138,8 @@
   "searchAreaPlaceholder": "Search area, street or landmark",
   "selectAddress": "Select address",
   "useCurrentLocation": "Use current location",
-  "addressAddedSuccessfully": "Address added successfully"
+  "addressAddedSuccessfully": "Address added successfully",
+  "express": "Express",
+  "scheduleLabel": "Schedule",
+  "pickASlot": "Pick a slot"
 }

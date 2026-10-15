@@ -104,5 +104,8 @@
   "searchAreaPlaceholder": "क्षेत्र, सड़क या लैंडमार्क खोजें",
   "selectAddress": "पता चुनें",
   "useCurrentLocation": "वर्तमान स्थान का उपयोग करें",
-  "addressAddedSuccessfully": "पता सफलतापूर्वक जोड़ा गया"
+  "addressAddedSuccessfully": "पता सफलतापूर्वक जोड़ा गया",
+  "express": "एक्सप्रेस",
+  "scheduleLabel": "शेड्यूल",
+  "pickASlot": "एक स्लॉट चुनें"
 }

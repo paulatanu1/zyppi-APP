@@ -104,5 +104,8 @@
   "searchAreaPlaceholder": "এলাকা, রাস্তা বা ল্যান্ডমার্ক খুঁজুন",
   "selectAddress": "ঠিকানা নির্বাচন করুন",
   "useCurrentLocation": "বর্তমান অবস্থান ব্যবহার করুন",
-  "addressAddedSuccessfully": "ঠিকানা সফলভাবে যুক্ত হয়েছে"
+  "addressAddedSuccessfully": "ঠিকানা সফলভাবে যুক্ত হয়েছে",
+  "express": "এক্সপ্রেস",
+  "scheduleLabel": "সময়সূচি",
+  "pickASlot": "একটি স্লট বাছুন"
 }
