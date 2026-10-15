@@ -86,16 +86,21 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/icons/appLogo.png"
+  # appLogo.png is a wide wordmark (icon + "ZYPPI" + tagline), not a
+  # square icon — appIconMark.png crops just the bicycle/gift mark,
+  # padded onto a square canvas. Source is only ~71x68px so this is
+  # still soft when upscaled; swap for a proper high-res icon when one
+  # exists.
+  image_path: "assets/icons/appIconMark.png"
   min_sdk_android: 21
   remove_alpha_ios: true
 
 flutter_native_splash:
   color: "#FFFFFF"
-  image: "assets/icons/appLogo.png"
+  image: "assets/icons/appIconMark.png"
   android_12:
     color: "#FFFFFF"
-    image: "assets/icons/appLogo.png"
+    image: "assets/icons/appIconMark.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -107,5 +107,6 @@
   "addressAddedSuccessfully": "पता सफलतापूर्वक जोड़ा गया",
   "express": "एक्सप्रेस",
   "scheduleLabel": "शेड्यूल",
-  "pickASlot": "एक स्लॉट चुनें"
+  "pickASlot": "एक स्लॉट चुनें",
+  "back": "वापस"
 }

@@ -141,5 +141,6 @@
   "addressAddedSuccessfully": "Address added successfully",
   "express": "Express",
   "scheduleLabel": "Schedule",
-  "pickASlot": "Pick a slot"
+  "pickASlot": "Pick a slot",
+  "back": "Back"
 }
