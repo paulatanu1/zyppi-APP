@@ -7,9 +7,8 @@ part 'search_state.freezed.dart';
 abstract class SearchState with _$SearchState {
   factory SearchState({
     @Default('') String query,
-    @Default([]) List<Product> allProducts,
     @Default([]) List<Product> results,
-    @Default(true) bool loading,
+    @Default(false) bool loading,
     String? error,
   }) = _SearchState;
 }

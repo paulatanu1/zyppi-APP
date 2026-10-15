@@ -42,6 +42,18 @@ class MockCatalogRepository implements CatalogRepository {
 
     return null;
   }
+
+  @override
+  Future<List<Product>> searchProducts(String query) async {
+    final normalized = query.trim().toLowerCase();
+    if (normalized.isEmpty) return [];
+
+    final products = await fetchProducts();
+
+    return products
+        .where((p) => p.name.toLowerCase().contains(normalized))
+        .toList();
+  }
 }
 
 final catalogRepositoryProvider = Provider<CatalogRepository>(

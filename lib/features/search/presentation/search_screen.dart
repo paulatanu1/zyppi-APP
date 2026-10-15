@@ -71,6 +71,10 @@ class SearchScreen extends ConsumerWidget {
                     ),
                   ),
                 )
+              else if (state.loading && state.results.isEmpty)
+                const Expanded(
+                  child: Center(child: CircularProgressIndicator()),
+                )
               else if (state.query.isNotEmpty && state.results.isEmpty)
                 Expanded(
                   child: Center(

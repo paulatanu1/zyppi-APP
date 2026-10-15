@@ -53,4 +53,26 @@ class SupabaseCatalogRepository implements CatalogRepository {
 
     return Product.fromJson(row);
   }
+
+  @override
+  Future<List<Product>> searchProducts(String query) async {
+    final normalized = query.trim();
+    if (normalized.isEmpty) return [];
+
+    final rows = await client
+        .from('products')
+        .select('''
+          id, name, image, categoryId:category_id,
+          variants:product_variants(id, label, pricePaise:price_paise, mrpPaise:mrp_paise)
+        ''')
+        .eq('is_active', true)
+        .textSearch(
+          'search_vector',
+          normalized,
+          config: 'english',
+          type: TextSearchType.websearch,
+        );
+
+    return rows.map((row) => Product.fromJson(row)).toList();
+  }
 }

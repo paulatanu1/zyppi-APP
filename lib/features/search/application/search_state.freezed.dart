@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SearchState {
 
- String get query; List<Product> get allProducts; List<Product> get results; bool get loading; String? get error;
+ String get query; List<Product> get results; bool get loading; String? get error;
 /// Create a copy of SearchState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $SearchStateCopyWith<SearchState> get copyWith => _$SearchStateCopyWithImpl<Sear
 @override
 bool operator ==(Object other) {
   final _this = this as SearchState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchState&&(identical(other.query, _this.query) || other.query == _this.query)&&const DeepCollectionEquality().equals(other.allProducts, _this.allProducts)&&const DeepCollectionEquality().equals(other.results, _this.results)&&(identical(other.loading, _this.loading) || other.loading == _this.loading)&&(identical(other.error, _this.error) || other.error == _this.error));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchState&&(identical(other.query, _this.query) || other.query == _this.query)&&const DeepCollectionEquality().equals(other.results, _this.results)&&(identical(other.loading, _this.loading) || other.loading == _this.loading)&&(identical(other.error, _this.error) || other.error == _this.error));
 }
 
 
 @override
 int get hashCode {
   final _this = this as SearchState;
-  return Object.hash(runtimeType,_this.query,const DeepCollectionEquality().hash(_this.allProducts),const DeepCollectionEquality().hash(_this.results),_this.loading,_this.error);
+  return Object.hash(runtimeType,_this.query,const DeepCollectionEquality().hash(_this.results),_this.loading,_this.error);
 }
 
 @override
 String toString() {
   final _this = this as SearchState;
-  return 'SearchState(query: ${_this.query}, allProducts: ${_this.allProducts}, results: ${_this.results}, loading: ${_this.loading}, error: ${_this.error})';
+  return 'SearchState(query: ${_this.query}, results: ${_this.results}, loading: ${_this.loading}, error: ${_this.error})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $SearchStateCopyWith<$Res>  {
   factory $SearchStateCopyWith(SearchState value, $Res Function(SearchState) _then) = _$SearchStateCopyWithImpl;
 @useResult
 $Res call({
- String query, List<Product> allProducts, List<Product> results, bool loading, String? error
+ String query, List<Product> results, bool loading, String? error
 });
 
 
@@ -68,11 +68,10 @@ class _$SearchStateCopyWithImpl<$Res>
 
 /// Create a copy of SearchState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? query = null,Object? allProducts = null,Object? results = null,Object? loading = null,Object? error = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? query = null,Object? results = null,Object? loading = null,Object? error = freezed,}) {
   return _then(SearchState(
 query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
-as String,allProducts: null == allProducts ? _self.allProducts : allProducts // ignore: cast_nullable_to_non_nullable
-as List<Product>,results: null == results ? _self.results : results // ignore: cast_nullable_to_non_nullable
+as String,results: null == results ? _self.results : results // ignore: cast_nullable_to_non_nullable
 as List<Product>,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
 as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
 as String?,
@@ -160,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String query,  List<Product> allProducts,  List<Product> results,  bool loading,  String? error)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String query,  List<Product> results,  bool loading,  String? error)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SearchState() when $default != null:
-return $default(_that.query,_that.allProducts,_that.results,_that.loading,_that.error);case _:
+return $default(_that.query,_that.results,_that.loading,_that.error);case _:
   return orElse();
 
 }
@@ -181,10 +180,10 @@ return $default(_that.query,_that.allProducts,_that.results,_that.loading,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String query,  List<Product> allProducts,  List<Product> results,  bool loading,  String? error)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String query,  List<Product> results,  bool loading,  String? error)  $default,) {final _that = this;
 switch (_that) {
 case _SearchState():
-return $default(_that.query,_that.allProducts,_that.results,_that.loading,_that.error);case _:
+return $default(_that.query,_that.results,_that.loading,_that.error);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -201,10 +200,10 @@ return $default(_that.query,_that.allProducts,_that.results,_that.loading,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String query,  List<Product> allProducts,  List<Product> results,  bool loading,  String? error)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String query,  List<Product> results,  bool loading,  String? error)?  $default,) {final _that = this;
 switch (_that) {
 case _SearchState() when $default != null:
-return $default(_that.query,_that.allProducts,_that.results,_that.loading,_that.error);case _:
+return $default(_that.query,_that.results,_that.loading,_that.error);case _:
   return null;
 
 }
@@ -216,17 +215,10 @@ return $default(_that.query,_that.allProducts,_that.results,_that.loading,_that.
 
 
 class _SearchState implements SearchState {
-   _SearchState({this.query = '',  List<Product> allProducts = const [],  List<Product> results = const [], this.loading = true, this.error}): _allProducts = allProducts,_results = results;
+   _SearchState({this.query = '',  List<Product> results = const [], this.loading = false, this.error}): _results = results;
   
 
 @override@JsonKey() final  String query;
- final  List<Product> _allProducts;
-@override@JsonKey() List<Product> get allProducts {
-  if (_allProducts is EqualUnmodifiableListView) return _allProducts;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_allProducts);
-}
-
  final  List<Product> _results;
 @override@JsonKey() List<Product> get results {
   if (_results is EqualUnmodifiableListView) return _results;
@@ -247,18 +239,18 @@ _$SearchStateCopyWith<_SearchState> get copyWith => __$SearchStateCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchState&&(identical(other.query, query) || other.query == query)&&const DeepCollectionEquality().equals(other.allProducts, _allProducts)&&const DeepCollectionEquality().equals(other.results, _results)&&(identical(other.loading, loading) || other.loading == loading)&&(identical(other.error, error) || other.error == error));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchState&&(identical(other.query, query) || other.query == query)&&const DeepCollectionEquality().equals(other.results, _results)&&(identical(other.loading, loading) || other.loading == loading)&&(identical(other.error, error) || other.error == error));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,query,const DeepCollectionEquality().hash(_allProducts),const DeepCollectionEquality().hash(_results),loading,error);
+    return Object.hash(runtimeType,query,const DeepCollectionEquality().hash(_results),loading,error);
 }
 
 @override
 String toString() {
-    return 'SearchState(query: $query, allProducts: $allProducts, results: $results, loading: $loading, error: $error)';
+    return 'SearchState(query: $query, results: $results, loading: $loading, error: $error)';
 }
 
 
@@ -269,7 +261,7 @@ abstract mixin class _$SearchStateCopyWith<$Res> implements $SearchStateCopyWith
   factory _$SearchStateCopyWith(_SearchState value, $Res Function(_SearchState) _then) = __$SearchStateCopyWithImpl;
 @override @useResult
 $Res call({
- String query, List<Product> allProducts, List<Product> results, bool loading, String? error
+ String query, List<Product> results, bool loading, String? error
 });
 
 
@@ -286,11 +278,10 @@ class __$SearchStateCopyWithImpl<$Res>
 
 /// Create a copy of SearchState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? query = null,Object? allProducts = null,Object? results = null,Object? loading = null,Object? error = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? query = null,Object? results = null,Object? loading = null,Object? error = freezed,}) {
   return _then(_SearchState(
 query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
-as String,allProducts: null == allProducts ? _self._allProducts : allProducts // ignore: cast_nullable_to_non_nullable
-as List<Product>,results: null == results ? _self._results : results // ignore: cast_nullable_to_non_nullable
+as String,results: null == results ? _self._results : results // ignore: cast_nullable_to_non_nullable
 as List<Product>,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
 as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
 as String?,

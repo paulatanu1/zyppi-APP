@@ -11,4 +11,9 @@ abstract class CatalogRepository {
   Future<List<Product>> fetchProducts();
 
   Future<Product?> fetchProductById(String id);
+
+  /// Supabase: Postgres full-text search (`products.search_vector`).
+  /// Mock: substring match on product name. Callers should skip calling
+  /// this for an empty/blank [query].
+  Future<List<Product>> searchProducts(String query);
 }
