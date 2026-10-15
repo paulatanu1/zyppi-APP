@@ -1,5 +1,26 @@
 [
-  { "id": "area-purulia", "name": "Purulia", "isActive": true },
-  { "id": "area-raghunathpur", "name": "Raghunathpur", "isActive": true },
-  { "id": "area-chelyama", "name": "Chelyama", "isActive": true }
+  {
+    "id": "area-purulia",
+    "name": "Purulia",
+    "isActive": true,
+    "centerLat": 23.3324,
+    "centerLng": 86.3617,
+    "radiusMeters": 6000
+  },
+  {
+    "id": "area-raghunathpur",
+    "name": "Raghunathpur",
+    "isActive": true,
+    "centerLat": 23.5667,
+    "centerLng": 86.6667,
+    "radiusMeters": 5000
+  },
+  {
+    "id": "area-chelyama",
+    "name": "Chelyama",
+    "isActive": true,
+    "centerLat": 23.4833,
+    "centerLng": 86.6333,
+    "radiusMeters": 4000
+  }
 ]

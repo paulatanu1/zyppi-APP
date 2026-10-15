@@ -1,7 +1,7 @@
-import 'package:dio/dio.dart';
-
 abstract class PlaceRepository {
-  Future<(dynamic, DioException?)> fetchPlacePredictions(String? input);
+  /// Raw Google Places Autocomplete JSON (see place_prediction.dart).
+  Future<Map<String, dynamic>> fetchPlacePredictions(String? input);
 
-  Future<(dynamic, DioException?)> fetchPlaceDetails(String? placeId);
+  /// Raw Google Places Details JSON (see place_details.dart).
+  Future<Map<String, dynamic>> fetchPlaceDetails(String? placeId);
 }

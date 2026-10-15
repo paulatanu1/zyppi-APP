@@ -1,10 +1,11 @@
-import 'dart:developer';
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
 
+/// Requests location permission once at app start (see bootstrap.dart);
+/// the map-pin picker re-checks and re-requests on its own if the user
+/// denied it here and later wants "use current location".
 class CheckAndRequestLocationProvider
     extends StateNotifier<LocationPermission> {
   CheckAndRequestLocationProvider()
@@ -13,28 +14,18 @@ class CheckAndRequestLocationProvider
   }
 
   Future<void> checkAndRequestLocationPermission() async {
-    log('Clicked');
+    var permission = await Geolocator.checkPermission();
 
-    LocationPermission locationPermission = await Geolocator.checkPermission();
-
-    log(locationPermission.name);
-
-    log('Clicked 2');
-
-    if (locationPermission == LocationPermission.denied ||
-        locationPermission == LocationPermission.deniedForever) {
-      locationPermission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
     }
 
-    if (locationPermission == LocationPermission.denied) {
-      locationPermission = await Geolocator.requestPermission();
-
-      showSuccessToast(message: 'locationPermissionRequired'.tr());
-    } else if (locationPermission == LocationPermission.deniedForever) {
-      locationPermission = await Geolocator.requestPermission();
-
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
       showSuccessToast(message: 'locationPermissionRequired'.tr());
     }
+
+    state = permission;
   }
 }
 

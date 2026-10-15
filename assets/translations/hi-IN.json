@@ -96,5 +96,13 @@
   "continueLabel": "जारी रखें",
   "termsAndPrivacy": "जारी रखकर आप हमारी सेवा की शर्तों और गोपनीयता नीति से सहमत होते हैं।",
   "edit": "संपादित करें",
-  "sentTo": "{} पर भेजा गया"
+  "sentTo": "{} पर भेजा गया",
+  "addressNotFound": "पता नहीं मिला",
+  "weDeliverHere": "हम यहाँ डिलीवर करते हैं · लगभग {} मिनट",
+  "notServiceableYet": "हम अभी यहाँ डिलीवर नहीं करते",
+  "confirmLocation": "स्थान की पुष्टि करें",
+  "searchAreaPlaceholder": "क्षेत्र, सड़क या लैंडमार्क खोजें",
+  "selectAddress": "पता चुनें",
+  "useCurrentLocation": "वर्तमान स्थान का उपयोग करें",
+  "addressAddedSuccessfully": "पता सफलतापूर्वक जोड़ा गया"
 }

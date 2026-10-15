@@ -1,37 +1,51 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zippy/core/config/env.dart';
-import 'package:zippy/core/infrastructure/network_api_services.dart';
-import 'package:zippy/core/infrastructure/url.dart';
-import 'package:zippy/core/shared_providers/network_provider.dart';
+import 'package:zippy/core/data/mock/mock_data_source.dart';
+import 'package:zippy/features/search_address/data/supabase_place_repository_impl.dart';
 import 'package:zippy/features/search_address/domain/place_repository.dart';
 
-// Phase 1 keeps the existing Google Places calls behind this interface;
-// Phase 4 swaps the implementation to an Edge Function (no client Maps
-// key for Places).
-class PlaceRepositoryImpl implements PlaceRepository {
-  final NetworkApiServices networkApiServices;
-
-  PlaceRepositoryImpl(this.networkApiServices);
-
+/// Canned predictions covering the three launch towns, so the search flow
+/// works offline in the mock flavor without a Places key at all.
+class MockPlaceRepository implements PlaceRepository {
   @override
-  Future<(dynamic, DioException?)> fetchPlacePredictions(String? input) {
-    return networkApiServices.getApiRequest(
-      url: '${Url.googleApi}/place/autocomplete/json?',
-      parameters:
-          'input=$input&language=en&types=geocode&key=${Env.googleMapsApiKey}',
+  Future<Map<String, dynamic>> fetchPlacePredictions(String? input) async {
+    await MockDataSource.simulateLatency();
+
+    final json = await MockDataSource.loadJsonMap(
+      'assets/mock/place_predictions.json',
     );
+    final predictions = json['predictions'] as List<dynamic>;
+    final query = (input ?? '').toLowerCase();
+
+    final matches = query.isEmpty
+        ? predictions
+        : predictions.where(
+            (p) => (p['description'] as String).toLowerCase().contains(query),
+          );
+
+    return {'predictions': matches.toList(), 'status': 'OK'};
   }
 
   @override
-  Future<(dynamic, DioException?)> fetchPlaceDetails(String? placeId) {
-    return networkApiServices.getApiRequest(
-      url: '${Url.googleApi}/place/details/json?',
-      parameters: 'placeid=$placeId&key=${Env.googleMapsApiKey}',
+  Future<Map<String, dynamic>> fetchPlaceDetails(String? placeId) async {
+    await MockDataSource.simulateLatency();
+
+    final json = await MockDataSource.loadJsonMap(
+      'assets/mock/place_predictions.json',
     );
+    final details = json['details'] as Map<String, dynamic>;
+    final result = details[placeId];
+
+    if (result == null) {
+      return {'status': 'NOT_FOUND'};
+    }
+    return {'result': result, 'status': 'OK'};
   }
 }
 
 final placeRepositoryProvider = Provider<PlaceRepository>(
-  (ref) => PlaceRepositoryImpl(ref.read(networkProvider)),
+  (ref) => Env.isMockDataSource
+      ? MockPlaceRepository()
+      : SupabasePlaceRepository(Supabase.instance.client),
 );

@@ -10,10 +10,12 @@
 -- project (`supabase storage cp` or the dashboard) — this seed only
 -- inserts the rows that reference them.
 
-insert into public.service_areas (id, name, is_active) values
-  ('11111111-0000-0000-0000-000000000001', 'Purulia', true),
-  ('11111111-0000-0000-0000-000000000002', 'Raghunathpur', true),
-  ('11111111-0000-0000-0000-000000000003', 'Chelyama', true);
+-- center_lat/lng/radius_meters are approximate town centers; refine
+-- against the real dark-store addresses before launch.
+insert into public.service_areas (id, name, is_active, center_lat, center_lng, radius_meters) values
+  ('11111111-0000-0000-0000-000000000001', 'Purulia', true, 23.3324, 86.3617, 6000),
+  ('11111111-0000-0000-0000-000000000002', 'Raghunathpur', true, 23.5667, 86.6667, 5000),
+  ('11111111-0000-0000-0000-000000000003', 'Chelyama', true, 23.4833, 86.6333, 4000);
 
 insert into public.stores (id, service_area_id, name, is_active) values
   ('22222222-0000-0000-0000-000000000001', '11111111-0000-0000-0000-000000000001', 'Zyppi Purulia Dark Store', true),

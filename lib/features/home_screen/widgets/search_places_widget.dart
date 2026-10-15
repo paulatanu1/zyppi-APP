@@ -1,103 +1,51 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
 import 'package:zippy/core/theme/app_colors.dart';
-import 'package:zippy/features/home_screen/application/address_provider.dart';
-import 'package:zippy/features/search_address/application/place_prediction_provider.dart';
+import 'package:zippy/core/theme/app_spacing.dart';
+import 'package:zippy/core/theme/app_typography.dart';
 
-class SearchPlacesWidget extends ConsumerStatefulWidget {
-  final bool? isHome;
-
-  const SearchPlacesWidget({required this.isHome, super.key});
-
-  @override
-  ConsumerState<SearchPlacesWidget> createState() => _SearchPlacesWidgetState();
-}
-
-class _SearchPlacesWidgetState extends ConsumerState<SearchPlacesWidget> {
-  final TextEditingController searchController = TextEditingController();
+/// Opens the full map-pin picker (search_address_screen.dart) to change the
+/// home screen's delivery location.
+class SearchPlacesWidget extends ConsumerWidget {
+  const SearchPlacesWidget({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final height = MediaQuery.of(context).size.height;
-    final width = MediaQuery.of(context).size.width;
-    final addressNotifier = ref.read(addressProvider.notifier);
-    final placePrediction = ref.watch(placePredictionProvider);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final location = ref.watch(currentLocation);
 
-    return GestureDetector(
-      onTap: () => widget.isHome!
-          ? context.pushNamed('SearchAddressScreen', extra: false)
-          : () {},
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppRadius.input),
+      onTap: () => context.pushNamed('SearchAddressScreen', extra: false),
       child: Container(
-        height: height * 0.065,
-        width: double.infinity,
+        height: AppSizes.inputMin,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.all(Radius.circular(width * 0.04)),
-          border: Border.all(color: AppColors.borderColor, width: 1.5),
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          border: Border.all(color: AppColors.line),
         ),
         child: Row(
           children: [
-            Flexible(
-              flex: 1,
-              fit: FlexFit.loose,
-              child: Center(
-                child: Image.asset('assets/icons/searchAddress.png'),
+            const Icon(Icons.search, size: 20, color: AppColors.muted),
+            const SizedBox(width: AppSpacing.base),
+            Expanded(
+              child: Text(
+                location.line1.isNotEmpty
+                    ? location.line1
+                    : 'searchAreaPlaceholder'.tr(),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.muted,
+                ),
               ),
-            ),
-            Flexible(
-              flex: 6,
-              fit: FlexFit.tight,
-              child: widget.isHome!
-                  ? Text(
-                      placePrediction.selectedAddress ??
-                          'Search for area, street name...',
-                      style: TextStyle(
-                        color: AppColors.grey,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    )
-                  : TextField(
-                      controller: searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Search for area, street name...',
-                        hintStyle: TextStyle(
-                          color: AppColors.grey,
-                          fontFamily: 'Poppins',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      onChanged: (value) {
-                        if (value.isNotEmpty) {
-                          ref
-                              .read(placePredictionProvider.notifier)
-                              .placePrediction(input: value);
-                        }
-                        {
-                          addressNotifier.searchBoxClick(value.isNotEmpty);
-                        }
-                      },
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        color: Colors.black,
-                      ),
-                    ),
             ),
           ],
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    searchController.dispose();
-    super.dispose();
   }
 }

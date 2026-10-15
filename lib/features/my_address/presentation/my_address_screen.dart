@@ -4,13 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
-import 'package:zippy/features/home_screen/widgets/add_and_current_widget.dart';
+import 'package:zippy/features/home_screen/widgets/add_new_address_row.dart';
 import 'package:zippy/features/my_address/application/addresses_provider.dart';
 import 'package:zippy/features/my_address/widgets/saved_address_row.dart';
 
-/// docs/mockups/Location.dc.html's "SAVED ADDRESSES" section — the
-/// map-pin picker above it needs google_maps_flutter (Phase 4), so
-/// this screen stays list-only for now.
+/// docs/mockups/Location.dc.html's "SAVED ADDRESSES" section; "Add new
+/// address" opens the map-pin picker (search_address_screen.dart).
 class MyAddressScreen extends ConsumerWidget {
   const MyAddressScreen({super.key});
 
@@ -43,7 +42,7 @@ class MyAddressScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const AddAndCurrentWidget(isAddAddress: true),
+                    const AddNewAddressRow(),
                     const SizedBox(height: AppSpacing.xxl),
                     Text(
                       'yourSavedAddress'.tr(),

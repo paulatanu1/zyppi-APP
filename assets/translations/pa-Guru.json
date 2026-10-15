@@ -95,5 +95,13 @@
   "continueLabel": "ਜਾਰੀ ਰੱਖੋ",
   "termsAndPrivacy": "ਜਾਰੀ ਰੱਖ ਕੇ ਤੁਸੀਂ ਸਾਡੀਆਂ ਸੇਵਾ ਸ਼ਰਤਾਂ ਅਤੇ ਪਰਦੇਦਾਰੀ ਨੀਤੀ ਨਾਲ ਸਹਿਮਤ ਹੁੰਦੇ ਹੋ।",
   "edit": "ਸੋਧੋ",
-  "sentTo": "{} 'ਤੇ ਭੇਜਿਆ ਗਿਆ"
+  "sentTo": "{} 'ਤੇ ਭੇਜਿਆ ਗਿਆ",
+  "addressNotFound": "ਪਤਾ ਨਹੀਂ ਮਿਲਿਆ",
+  "weDeliverHere": "ਅਸੀਂ ਇੱਥੇ ਡਿਲੀਵਰ ਕਰਦੇ ਹਾਂ · ਲਗਭਗ {} ਮਿੰਟ",
+  "notServiceableYet": "ਅਸੀਂ ਹਾਲੇ ਇੱਥੇ ਡਿਲੀਵਰ ਨਹੀਂ ਕਰਦੇ",
+  "confirmLocation": "ਟਿਕਾਣਾ ਪੱਕਾ ਕਰੋ",
+  "searchAreaPlaceholder": "ਇਲਾਕਾ, ਗਲੀ ਜਾਂ ਲੈਂਡਮਾਰਕ ਖੋਜੋ",
+  "selectAddress": "ਪਤਾ ਚੁਣੋ",
+  "useCurrentLocation": "ਮੌਜੂਦਾ ਟਿਕਾਣਾ ਵਰਤੋ",
+  "addressAddedSuccessfully": "ਪਤਾ ਸਫਲਤਾਪੂਰਵਕ ਸ਼ਾਮਲ ਕੀਤਾ ਗਿਆ"
 }

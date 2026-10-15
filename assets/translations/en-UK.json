@@ -130,5 +130,13 @@
   "continueLabel": "Continue",
   "termsAndPrivacy": "By continuing you agree to our Terms of Service and Privacy Policy.",
   "edit": "Edit",
-  "sentTo": "Sent to {}"
+  "sentTo": "Sent to {}",
+  "addressNotFound": "Address not found",
+  "weDeliverHere": "We deliver here · about {} min",
+  "notServiceableYet": "We don't deliver here yet",
+  "confirmLocation": "Confirm location",
+  "searchAreaPlaceholder": "Search area, street or landmark",
+  "selectAddress": "Select address",
+  "useCurrentLocation": "Use current location",
+  "addressAddedSuccessfully": "Address added successfully"
 }

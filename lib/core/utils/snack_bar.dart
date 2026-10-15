@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:zippy/core/infrastructure/dio_exceptions.dart';
 import 'package:zippy/core/theme/app_colors.dart';
 
 /// Attached to [MaterialApp.scaffoldMessengerKey] in lib/app/app.dart so
@@ -20,13 +19,6 @@ void showSuccessToast({String? message}) {
   _showSnackBar(message ?? '');
 }
 
-void showDioError(dynamic e) {
-  final errorResponse = DioExceptions.fromDioError(dioException: e);
-
-  _showSnackBar(errorResponse.toString());
-}
-
-/// For errors that aren't DioExceptions (e.g. Supabase AuthException).
 void showError(dynamic error) {
   _showSnackBar(error.toString());
 }

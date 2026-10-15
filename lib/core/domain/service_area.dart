@@ -10,6 +10,9 @@ abstract class ServiceArea with _$ServiceArea {
     required String id,
     required String name,
     @Default(true) bool isActive,
+    double? centerLat,
+    double? centerLng,
+    int? radiusMeters,
   }) = _ServiceArea;
 
   factory ServiceArea.fromJson(Map<String, dynamic> json) =>

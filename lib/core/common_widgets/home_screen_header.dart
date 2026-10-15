@@ -76,7 +76,7 @@ class HomeScreenHeader extends ConsumerWidget {
                           ),
                         )
                       : Text(
-                          getCurrentLocation.address ?? '',
+                          getCurrentLocation.address,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.bodySmall.copyWith(

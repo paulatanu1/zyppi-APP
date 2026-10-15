@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ServiceArea {
 
- String get id; String get name; bool get isActive;
+ String get id; String get name; bool get isActive; double? get centerLat; double? get centerLng; int? get radiusMeters;
 /// Create a copy of ServiceArea
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +30,20 @@ $ServiceAreaCopyWith<ServiceArea> get copyWith => _$ServiceAreaCopyWithImpl<Serv
 @override
 bool operator ==(Object other) {
   final _this = this as ServiceArea;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ServiceArea&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.isActive, _this.isActive) || other.isActive == _this.isActive));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ServiceArea&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.isActive, _this.isActive) || other.isActive == _this.isActive)&&(identical(other.centerLat, _this.centerLat) || other.centerLat == _this.centerLat)&&(identical(other.centerLng, _this.centerLng) || other.centerLng == _this.centerLng)&&(identical(other.radiusMeters, _this.radiusMeters) || other.radiusMeters == _this.radiusMeters));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as ServiceArea;
-  return Object.hash(runtimeType,_this.id,_this.name,_this.isActive);
+  return Object.hash(runtimeType,_this.id,_this.name,_this.isActive,_this.centerLat,_this.centerLng,_this.radiusMeters);
 }
 
 @override
 String toString() {
   final _this = this as ServiceArea;
-  return 'ServiceArea(id: ${_this.id}, name: ${_this.name}, isActive: ${_this.isActive})';
+  return 'ServiceArea(id: ${_this.id}, name: ${_this.name}, isActive: ${_this.isActive}, centerLat: ${_this.centerLat}, centerLng: ${_this.centerLng}, radiusMeters: ${_this.radiusMeters})';
 }
 
 
@@ -54,7 +54,7 @@ abstract mixin class $ServiceAreaCopyWith<$Res>  {
   factory $ServiceAreaCopyWith(ServiceArea value, $Res Function(ServiceArea) _then) = _$ServiceAreaCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, bool isActive
+ String id, String name, bool isActive, double? centerLat, double? centerLng, int? radiusMeters
 });
 
 
@@ -71,12 +71,15 @@ class _$ServiceAreaCopyWithImpl<$Res>
 
 /// Create a copy of ServiceArea
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? isActive = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? isActive = null,Object? centerLat = freezed,Object? centerLng = freezed,Object? radiusMeters = freezed,}) {
   return _then(ServiceArea(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,centerLat: freezed == centerLat ? _self.centerLat : centerLat // ignore: cast_nullable_to_non_nullable
+as double?,centerLng: freezed == centerLng ? _self.centerLng : centerLng // ignore: cast_nullable_to_non_nullable
+as double?,radiusMeters: freezed == radiusMeters ? _self.radiusMeters : radiusMeters // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 
@@ -161,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  bool isActive)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  bool isActive,  double? centerLat,  double? centerLng,  int? radiusMeters)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ServiceArea() when $default != null:
-return $default(_that.id,_that.name,_that.isActive);case _:
+return $default(_that.id,_that.name,_that.isActive,_that.centerLat,_that.centerLng,_that.radiusMeters);case _:
   return orElse();
 
 }
@@ -182,10 +185,10 @@ return $default(_that.id,_that.name,_that.isActive);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  bool isActive)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  bool isActive,  double? centerLat,  double? centerLng,  int? radiusMeters)  $default,) {final _that = this;
 switch (_that) {
 case _ServiceArea():
-return $default(_that.id,_that.name,_that.isActive);case _:
+return $default(_that.id,_that.name,_that.isActive,_that.centerLat,_that.centerLng,_that.radiusMeters);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +205,10 @@ return $default(_that.id,_that.name,_that.isActive);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  bool isActive)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  bool isActive,  double? centerLat,  double? centerLng,  int? radiusMeters)?  $default,) {final _that = this;
 switch (_that) {
 case _ServiceArea() when $default != null:
-return $default(_that.id,_that.name,_that.isActive);case _:
+return $default(_that.id,_that.name,_that.isActive,_that.centerLat,_that.centerLng,_that.radiusMeters);case _:
   return null;
 
 }
@@ -217,12 +220,15 @@ return $default(_that.id,_that.name,_that.isActive);case _:
 @JsonSerializable()
 
 class _ServiceArea implements ServiceArea {
-   _ServiceArea({required this.id, required this.name, this.isActive = true});
+   _ServiceArea({required this.id, required this.name, this.isActive = true, this.centerLat, this.centerLng, this.radiusMeters});
   factory _ServiceArea.fromJson(Map<String, dynamic> json) => _$ServiceAreaFromJson(json);
 
 @override final  String id;
 @override final  String name;
 @override@JsonKey() final  bool isActive;
+@override final  double? centerLat;
+@override final  double? centerLng;
+@override final  int? radiusMeters;
 
 /// Create a copy of ServiceArea
 /// with the given fields replaced by the non-null parameter values.
@@ -237,18 +243,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ServiceArea&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.isActive, isActive) || other.isActive == isActive));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ServiceArea&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.centerLat, centerLat) || other.centerLat == centerLat)&&(identical(other.centerLng, centerLng) || other.centerLng == centerLng)&&(identical(other.radiusMeters, radiusMeters) || other.radiusMeters == radiusMeters));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,name,isActive);
+    return Object.hash(runtimeType,id,name,isActive,centerLat,centerLng,radiusMeters);
 }
 
 @override
 String toString() {
-    return 'ServiceArea(id: $id, name: $name, isActive: $isActive)';
+    return 'ServiceArea(id: $id, name: $name, isActive: $isActive, centerLat: $centerLat, centerLng: $centerLng, radiusMeters: $radiusMeters)';
 }
 
 
@@ -259,7 +265,7 @@ abstract mixin class _$ServiceAreaCopyWith<$Res> implements $ServiceAreaCopyWith
   factory _$ServiceAreaCopyWith(_ServiceArea value, $Res Function(_ServiceArea) _then) = __$ServiceAreaCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, bool isActive
+ String id, String name, bool isActive, double? centerLat, double? centerLng, int? radiusMeters
 });
 
 
@@ -276,12 +282,15 @@ class __$ServiceAreaCopyWithImpl<$Res>
 
 /// Create a copy of ServiceArea
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? isActive = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? isActive = null,Object? centerLat = freezed,Object? centerLng = freezed,Object? radiusMeters = freezed,}) {
   return _then(_ServiceArea(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,centerLat: freezed == centerLat ? _self.centerLat : centerLat // ignore: cast_nullable_to_non_nullable
+as double?,centerLng: freezed == centerLng ? _self.centerLng : centerLng // ignore: cast_nullable_to_non_nullable
+as double?,radiusMeters: freezed == radiusMeters ? _self.radiusMeters : radiusMeters // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 

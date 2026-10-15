@@ -1,62 +1,31 @@
-import 'dart:convert';
-
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:zippy/core/data/address_repository.dart';
 import 'package:zippy/core/data/address_repository_impl.dart';
 import 'package:zippy/core/domain/address.dart';
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
-import 'package:zippy/core/utils/log.dart';
+import 'package:zippy/core/utils/parsed_address.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
 import 'package:zippy/features/search_address/data/place_repository_impl.dart';
 import 'package:zippy/features/search_address/domain/place_details.dart';
 import 'package:zippy/features/search_address/domain/place_prediction.dart';
-import 'package:zippy/features/search_address/domain/place_repository.dart';
 
 import 'place_prediction_state.dart';
 
 class PlacePredictionProvider extends StateNotifier<PlacePredictionState> {
-  final PlaceRepository repository;
-  final AddressRepository addressRepository;
-  final GetCurrentLocationProvider getCurrentLocationProvider;
+  final Ref ref;
 
-  PlacePredictionProvider(
-    this.repository,
-    this.addressRepository,
-    this.getCurrentLocationProvider,
-  ) : super(PlacePredictionState());
+  PlacePredictionProvider(this.ref) : super(PlacePredictionState());
 
   Future<void> placePrediction({required String? input}) async {
     try {
-      var (response, dioException) = await repository.fetchPlacePredictions(
-        input,
-      );
+      final json = await ref
+          .read(placeRepositoryProvider)
+          .fetchPlacePredictions(input);
 
-      if (response == null && dioException == null) {
-        showConnectionInterrupted();
-      } else if (dioException != null) {
-        AppLog.showLog(error: dioException.toString());
-        showDioError(dioException);
-      } else if (response.statusCode > 200 && response.statusCode <= 500) {
-        AppLog.showLog(
-          tag: 'Prediction Status Code: ${response.statusCode}',
-          message: json.encode(response.data),
-        );
-
-        showSuccessToast(message: 'Something Went Wrong');
-      } else {
-        final placePrediction = PlacePrediction.fromJson(response.data);
-
-        state = state.copyWith(placePrediction: placePrediction);
-
-        AppLog.showLog(
-          tag: 'Place Prediction',
-          message: json.encode(placePrediction),
-        );
-      }
-    } catch (error, stackTrace) {
-      AppLog.showLog(error: error, stackTrace: stackTrace);
-
-      showDioError(error);
+      state = state.copyWith(placePrediction: PlacePrediction.fromJson(json));
+    } catch (error) {
+      showError(error);
     }
   }
 
@@ -65,79 +34,67 @@ class PlacePredictionProvider extends StateNotifier<PlacePredictionState> {
     required String? selectedAddress,
   }) async {
     try {
-      var (response, dioException) = await repository.fetchPlaceDetails(
-        placeId,
+      final json = await ref
+          .read(placeRepositoryProvider)
+          .fetchPlaceDetails(placeId);
+      final placeDetails = PlaceDetails.fromJson(json);
+      final location = placeDetails.result?.geometry?.location;
+
+      state = state.copyWith(
+        placeDetails: placeDetails,
+        selectedAddress: selectedAddress,
       );
 
-      if (response == null && dioException == null) {
-        showConnectionInterrupted();
-      } else if (dioException != null) {
-        AppLog.showLog(error: dioException.toString());
-        showDioError(dioException);
-      } else if (response.statusCode > 200 && response.statusCode <= 500) {
-        AppLog.showLog(
-          tag: 'Prediction Status Code: ${response.statusCode}',
-          message: json.encode(response.data),
+      if (location?.lat != null && location?.lng != null) {
+        final parsed = ParsedAddress.fromGoogleComponents(
+          placeDetails.result?.addressComponents ?? const [],
+          fallbackLine1: selectedAddress ?? '',
         );
 
-        showSuccessToast(message: 'Something Went Wrong');
-      } else {
-        final placeDetails = PlaceDetails.fromJson(response.data);
-
-        state = state.copyWith(
-          placeDetails: placeDetails,
-          selectedAddress: selectedAddress,
-        );
-
-        getCurrentLocationProvider.state = getCurrentLocationProvider.state
-            .copyWith(
-              latitude: placeDetails.result?.geometry?.location?.lat ?? 0.0,
-              longitude: placeDetails.result?.geometry?.location?.lng ?? 0.0,
-              address: selectedAddress,
+        await ref
+            .read(currentLocation.notifier)
+            .setResolvedLocation(
+              lat: location!.lat!,
+              lng: location.lng!,
+              formattedAddress:
+                  placeDetails.result?.formattedAddress ??
+                  selectedAddress ??
+                  '',
+              parsed: parsed,
             );
-
-        AppLog.showLog(
-          tag: 'Place Detail',
-          message: json.encode(state.placeDetails),
-        );
       }
-    } catch (error, stackTrace) {
-      AppLog.showLog(error: error, stackTrace: stackTrace);
-
-      showDioError(error);
+    } catch (error) {
+      showError(error);
     }
   }
 
-  Future<void> addAddress({
-    required PlaceDetails? placeDetails,
-    required String? selectedAddress,
-  }) async {
+  /// Saves the currently-resolved [currentLocation] (either the map-pin
+  /// picker's center or a search result) as a new address.
+  Future<void> addAddress({required String label}) async {
+    final location = ref.read(currentLocation);
+
     try {
-      // The map-pin picker and address-component parsing are Phase 4
-      // work (needs google_maps_flutter); these placeholders match what
-      // the old REST payload hardcoded for every address added here.
-      await addressRepository.addAddress(
-        Address(
-          id: 'address-${DateTime.now().millisecondsSinceEpoch}',
-          label: 'Other',
-          line1: selectedAddress ?? 'Unknown address',
-          area: 'Prince Anwar Shah Road',
-          city: 'Kolkata',
-          state: 'West Bengal',
-          postalCode: '123456',
-          landmark: 'South City',
-          lat: placeDetails?.result?.geometry?.location?.lat ?? 0.0,
-          lng: placeDetails?.result?.geometry?.location?.lng ?? 0.0,
-          isDefault: true,
-        ),
-      );
+      await ref
+          .read(addressRepositoryProvider)
+          .addAddress(
+            Address(
+              id: 'address-${DateTime.now().millisecondsSinceEpoch}',
+              label: label,
+              line1: location.line1.isNotEmpty
+                  ? location.line1
+                  : location.address,
+              area: location.area,
+              city: location.city,
+              state: location.state,
+              postalCode: location.postalCode,
+              lat: location.latitude,
+              lng: location.longitude,
+              isDefault: false,
+            ),
+          );
 
-      AppLog.showLog(tag: 'Add Address', message: 'Address added');
-
-      showSuccessToast(message: 'Address Added Successfully');
-    } catch (error, stackTrace) {
-      AppLog.showLog(error: error, stackTrace: stackTrace);
-
+      showSuccessToast(message: 'addressAddedSuccessfully'.tr());
+    } catch (error) {
       showError(error);
     }
   }
@@ -145,9 +102,5 @@ class PlacePredictionProvider extends StateNotifier<PlacePredictionState> {
 
 final placePredictionProvider =
     StateNotifierProvider<PlacePredictionProvider, PlacePredictionState>(
-      (ref) => PlacePredictionProvider(
-        ref.read(placeRepositoryProvider),
-        ref.read(addressRepositoryProvider),
-        ref.read(currentLocation.notifier),
-      ),
+      (ref) => PlacePredictionProvider(ref),
     );

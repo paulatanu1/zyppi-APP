@@ -1,77 +1,73 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:zippy/features/home_screen/widgets/add_and_current_widget.dart';
-import 'package:zippy/features/home_screen/widgets/location_and_saved_address_widget.dart';
+import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
 import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_spacing.dart';
+import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/features/home_screen/widgets/add_new_address_row.dart';
 import 'package:zippy/features/home_screen/widgets/search_places_widget.dart';
+import 'package:zippy/features/my_address/application/addresses_provider.dart';
+import 'package:zippy/features/my_address/widgets/saved_address_row.dart';
 
+/// Tapping the home header's address row opens this sheet — a compact
+/// version of docs/mockups/Location.dc.html's "Select Address" step; the
+/// full map-pin picker lives at search_address_screen.dart.
 void bottomSheet(BuildContext context, WidgetRef ref) {
   showModalBottomSheet(
     context: context,
-    isScrollControlled: true, // Allows the bottom sheet to grow dynamically
-    backgroundColor: AppColors.bottomSheet,
+    isScrollControlled: true,
+    backgroundColor: AppColors.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(AppRadius.sheetTop),
+      ),
+    ),
     builder: (context) {
-      return Container(
-        padding: EdgeInsets.all(MediaQuery.of(context).size.height * 0.01),
-        height: MediaQuery.of(context).size.height * 0.8,
-        decoration: BoxDecoration(
-          color: AppColors.bottomSheet,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(MediaQuery.of(context).size.width * 0.1),
-            topRight: Radius.circular(MediaQuery.of(context).size.width * 0.1),
-          ),
-        ),
+      return Padding(
+        padding: const EdgeInsets.all(AppSpacing.xxl),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            LocationAndSavedAddressWidget(isLocationEnabled: true),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Container(
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.8,
-                ),
-                child: Text(
-                  'Select Address',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Poppins',
-                    fontSize: 20,
-                  ),
-                ),
-              ),
+            Text('selectAddress'.tr(), style: AppTypography.titleMedium),
+            const SizedBox(height: AppSpacing.xxl),
+            const SearchPlacesWidget(),
+            const SizedBox(height: AppSpacing.base),
+            const AddNewAddressRow(),
+            const SizedBox(height: AppSpacing.xxl),
+            Text(
+              'yourSavedAddress'.tr(),
+              style: AppTypography.labelSmall.copyWith(color: AppColors.muted),
             ),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-            SearchPlacesWidget(isHome: true),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.04),
-            AddAndCurrentWidget(isAddAddress: false),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-            AddAndCurrentWidget(isAddAddress: true),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Container(
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.8,
-                ),
-                child: Text(
-                  'Your saved addresses',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontFamily: 'Poppins',
+            Consumer(
+              builder: (context, ref, _) {
+                final addressesAsync = ref.watch(addressesProvider);
+
+                return addressesAsync.when(
+                  loading: () => const SizedBox.shrink(),
+                  error: (error, stackTrace) => const SizedBox.shrink(),
+                  data: (addresses) => Column(
+                    children: addresses
+                        .map(
+                          (address) => InkWell(
+                            onTap: () async {
+                              await ref
+                                  .read(currentLocation.notifier)
+                                  .selectSavedAddress(address);
+                              if (context.mounted) Navigator.pop(context);
+                            },
+                            child: SavedAddressRow(address: address),
+                          ),
+                        )
+                        .toList(),
                   ),
-                ),
-              ),
+                );
+              },
             ),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-            LocationAndSavedAddressWidget(isLocationEnabled: false),
           ],
         ),
       );
-      //   },
-      // );
     },
   );
 }

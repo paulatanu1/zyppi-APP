@@ -36,4 +36,9 @@ class MockDataSource {
     final raw = await rootBundle.loadString(assetPath);
     return json.decode(raw) as List<dynamic>;
   }
+
+  static Future<Map<String, dynamic>> loadJsonMap(String assetPath) async {
+    final raw = await rootBundle.loadString(assetPath);
+    return json.decode(raw) as Map<String, dynamic>;
+  }
 }

@@ -1,0 +1,66 @@
+{
+  "predictions": [
+    {
+      "description": "Green Residency, Purulia, West Bengal",
+      "placeId": "mock-place-purulia",
+      "structuredFormatting": {
+        "mainText": "Green Residency",
+        "secondaryText": "Purulia, West Bengal"
+      }
+    },
+    {
+      "description": "Civil Township, Raghunathpur, West Bengal",
+      "placeId": "mock-place-raghunathpur",
+      "structuredFormatting": {
+        "mainText": "Civil Township",
+        "secondaryText": "Raghunathpur, West Bengal"
+      }
+    },
+    {
+      "description": "Chelyama Bazar, Chelyama, West Bengal",
+      "placeId": "mock-place-chelyama",
+      "structuredFormatting": {
+        "mainText": "Chelyama Bazar",
+        "secondaryText": "Chelyama, West Bengal"
+      }
+    }
+  ],
+  "details": {
+    "mock-place-purulia": {
+      "name": "Green Residency",
+      "formattedAddress": "Green Residency, Purulia, West Bengal 723101, India",
+      "geometry": { "location": { "lat": 23.3324, "lng": 86.3617 } },
+      "addressComponents": [
+        { "longName": "Green Residency", "shortName": "Green Residency", "types": ["premise"] },
+        { "longName": "Purulia", "shortName": "Purulia", "types": ["locality"] },
+        { "longName": "Purulia", "shortName": "Purulia", "types": ["administrative_area_level_2"] },
+        { "longName": "West Bengal", "shortName": "WB", "types": ["administrative_area_level_1"] },
+        { "longName": "723101", "shortName": "723101", "types": ["postal_code"] }
+      ]
+    },
+    "mock-place-raghunathpur": {
+      "name": "Civil Township",
+      "formattedAddress": "Civil Township, Raghunathpur, West Bengal 723133, India",
+      "geometry": { "location": { "lat": 23.5667, "lng": 86.6667 } },
+      "addressComponents": [
+        { "longName": "Civil Township", "shortName": "Civil Township", "types": ["premise"] },
+        { "longName": "Raghunathpur", "shortName": "Raghunathpur", "types": ["locality"] },
+        { "longName": "Purulia", "shortName": "Purulia", "types": ["administrative_area_level_2"] },
+        { "longName": "West Bengal", "shortName": "WB", "types": ["administrative_area_level_1"] },
+        { "longName": "723133", "shortName": "723133", "types": ["postal_code"] }
+      ]
+    },
+    "mock-place-chelyama": {
+      "name": "Chelyama Bazar",
+      "formattedAddress": "Chelyama Bazar, Chelyama, West Bengal 723121, India",
+      "geometry": { "location": { "lat": 23.4833, "lng": 86.6333 } },
+      "addressComponents": [
+        { "longName": "Chelyama Bazar", "shortName": "Chelyama Bazar", "types": ["premise"] },
+        { "longName": "Chelyama", "shortName": "Chelyama", "types": ["locality"] },
+        { "longName": "Purulia", "shortName": "Purulia", "types": ["administrative_area_level_2"] },
+        { "longName": "West Bengal", "shortName": "WB", "types": ["administrative_area_level_1"] },
+        { "longName": "723121", "shortName": "723121", "types": ["postal_code"] }
+      ]
+    }
+  }
+}
