@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/theme/app_colors.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -14,16 +15,16 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Timer(Duration(seconds: 3), () {
-      context.go('/Slider');
+    Timer(const Duration(seconds: 3), () {
+      if (mounted) context.go('/slider');
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(child: Image.asset('assets/icons/splash_image.png')),
+      backgroundColor: AppColors.white,
+      body: Center(child: Image.asset('assets/icons/appLogo.png', width: 160)),
     );
   }
 }

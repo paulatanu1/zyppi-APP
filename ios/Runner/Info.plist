@@ -30,7 +30,7 @@
 			<string>pa</string>
 		</array>
 		<key>LSRequiresIPhoneOS</key>
-		<true />
+		<true/>
 		<key>UILaunchStoryboardName</key>
 		<string>LaunchScreen</string>
 		<key>UIMainStoryboardFile</key>
@@ -49,16 +49,16 @@
 			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
 		<key>CADisableMinimumFrameDurationOnPhone</key>
-		<true />
+		<true/>
 		<key>UIApplicationSupportsIndirectInputEvents</key>
-		<true />
+		<true/>
 		<key>NSLocationWhenInUseUsageDescription</key>
-		<string>Zyppi uses your location to find your delivery address and show accurate delivery
-			times.</string>
+		<string>Zyppi uses your location to find your delivery address and show accurate delivery times.</string>
 		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-		<string>So that the application recognizes real time location updates without the user
-			having to restart the application for a location update</string>
+		<string>So that the application recognizes real time location updates without the user having to restart the application for a location update</string>
 		<key>GoogleMapsApiKey</key>
 		<string>$(GOOGLE_MAPS_API_KEY)</string>
+		<key>UIStatusBarHidden</key>
+		<false/>
 	</dict>
 </plist>

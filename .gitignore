@@ -74,3 +74,4 @@ doc/api/
 env/*.json
 !env/*.example.json
 ios/Flutter/Secrets.xcconfig
+android/.kotlin/

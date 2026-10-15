@@ -90,6 +90,13 @@ flutter_launcher_icons:
   min_sdk_android: 21
   remove_alpha_ios: true
 
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: "assets/icons/appLogo.png"
+  android_12:
+    color: "#FFFFFF"
+    image: "assets/icons/appLogo.png"
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
