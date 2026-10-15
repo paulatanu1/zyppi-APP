@@ -1,7 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_spacing.dart';
+import 'package:zippy/core/theme/app_typography.dart';
 
 class GoogleSignInButton extends StatelessWidget {
   final VoidCallback action;
@@ -10,26 +11,24 @@ class GoogleSignInButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
-    return GestureDetector(
+    return InkWell(
       onTap: action,
+      borderRadius: BorderRadius.circular(AppRadius.input),
       child: Container(
-        height: 20.h,
-        width: 350.w,
-        padding: EdgeInsets.only(left: 15.sp, right: 15.sp),
+        height: AppSizes.button,
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
         decoration: BoxDecoration(
           color: AppColors.googleSignInButtonColor,
-          borderRadius: BorderRadius.circular(40.sp),
-          border: Border.all(color: AppColors.googleSignInShadowColor),
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          border: Border.all(color: AppColors.line),
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset('assets/icons/googleIcon.png'),
-            Text(
-              'signInWithGoogle'.tr(),
-              style: TextStyle(fontSize: 25.sp, fontWeight: FontWeight.bold),
-            ),
+            Image.asset('assets/icons/googleIcon.png', width: 20, height: 20),
+            const SizedBox(width: AppSpacing.lg),
+            Text('signInWithGoogle'.tr(), style: AppTypography.labelLarge),
           ],
         ),
       ),
