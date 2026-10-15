@@ -26,9 +26,17 @@ enable_signup = true
 [auth.sms]
 enable_signup = true
 enable_confirmations = false
-# Configure a real SMS provider (Twilio/MessageBird/Vonage) before
-# going live; the Supabase dashboard's test phone numbers are enough
-# for the dev flavor.
+# Supabase's test phone numbers (dashboard-configured) are enough for
+# dev/staging - see [auth.hook.send_sms] below for the prod path.
+
+[auth.hook.send_sms]
+enabled = false
+uri = "https://<project-ref>.supabase.co/functions/v1/send-sms-hook"
+secrets = "env(SEND_SMS_HOOK_SECRET)"
+# MSG91 (DLT sender ID + template) replaces Supabase's built-in SMS
+# providers only in prod - flip `enabled` and fill in the real
+# project-ref per environment; see send-sms-hook/index.ts for the
+# other required secrets (MSG91_AUTH_KEY, MSG91_DLT_TEMPLATE_ID).
 
 [auth.external.google]
 enabled = true
@@ -51,3 +59,8 @@ verify_jwt = true
 # Called by the on_order_event_notify trigger with the service role key
 # as a bearer token, not an end-user session.
 verify_jwt = true
+
+[functions.send-sms-hook]
+# Called by Supabase Auth itself (signed with the hook secret via
+# standardwebhooks), not an app user - no Supabase JWT involved.
+verify_jwt = false
