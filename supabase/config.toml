@@ -46,3 +46,8 @@ verify_jwt = true
 
 [functions.verify-razorpay-payment]
 verify_jwt = true
+
+[functions.push-on-order-event]
+# Called by the on_order_event_notify trigger with the service role key
+# as a bearer token, not an end-user session.
+verify_jwt = true

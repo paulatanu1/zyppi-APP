@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
+import 'package:zippy/core/push/push_notification_service.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
 import 'package:zippy/features/auth/google_sign_in/data/google_auth_repository_impl.dart';
 import 'package:zippy/features/auth/google_sign_in/domain/google_auth_repository.dart';
@@ -30,6 +31,7 @@ class GoogleLogin extends StateNotifier<GoogleState> {
       await ref
           .read(sharedPreferenceProvider.notifier)
           .setLocalStorage(authToken: accessToken);
+      await PushNotificationService.registerTokenAfterLogin(ref.read);
       // The router's redirect (watching sharedPreferenceProvider) takes
       // it from here — no manual navigation needed.
     } catch (error) {

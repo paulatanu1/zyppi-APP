@@ -11,6 +11,7 @@ import 'package:zippy/core/config/env.dart';
 import 'package:zippy/core/constants/constants.dart';
 import 'package:zippy/core/favourites/data/favourites_repository_impl.dart';
 import 'package:zippy/core/order/data/order_repository_impl.dart';
+import 'package:zippy/core/push/push_notification_service.dart';
 import 'package:zippy/core/shared_providers/location/provider/request_location_provider.dart';
 import 'package:zippy/routes/routes.dart';
 
@@ -55,6 +56,8 @@ Future<void> bootstrap() async {
 
   final routes = Routes(container);
   final router = await routes.getRouter();
+
+  await PushNotificationService.initialize(container, router);
 
   runApp(
     EasyLocalization(

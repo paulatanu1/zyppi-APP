@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
+import 'package:zippy/core/push/push_notification_service.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
 import 'package:zippy/features/auth/otp_verification/data/otp_auth_repository_impl.dart';
 import 'package:zippy/features/auth/otp_verification/domain/otp_auth_repository.dart';
@@ -61,6 +62,7 @@ class OtpLogin extends StateNotifier<OtpState> {
       await ref
           .read(sharedPreferenceProvider.notifier)
           .setLocalStorage(authToken: accessToken);
+      await PushNotificationService.registerTokenAfterLogin(ref.read);
 
       if (!context.mounted) return;
       context.goNamed('NavigationBar');
