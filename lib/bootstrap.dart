@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -34,7 +35,15 @@ Future<void> bootstrap() async {
 
   await Firebase.initializeApp();
 
-  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+  // Chain rather than replace: FlutterError.onError already points to the
+  // test harness's own handler when running under flutter_test (replacing
+  // it outright breaks expect()'s own error capturing), and in production
+  // there may be other framework-installed handlers worth preserving too.
+  final previousOnError = FlutterError.onError;
+  FlutterError.onError = (details) {
+    FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+    previousOnError?.call(details);
+  };
   PlatformDispatcher.instance.onError = (error, stack) {
     FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
     return true;
@@ -63,14 +72,21 @@ Future<void> bootstrap() async {
     ],
   );
 
-  await container
-      .read(checkAndRequestLocation.notifier)
-      .checkAndRequestLocationPermission();
-
   final routes = Routes(container);
   final router = await routes.getRouter();
 
-  await PushNotificationService.initialize(container, router);
+  // Neither of these should gate runApp() behind a native permission
+  // dialog — nothing on the first frame requires location or push
+  // permission to already be granted (Home's own location provider and
+  // the push service both handle "not granted yet" on their own), and
+  // blocking here means a user (or an automated test) who doesn't
+  // immediately answer the system prompt never sees the app at all.
+  unawaited(
+    container
+        .read(checkAndRequestLocation.notifier)
+        .checkAndRequestLocationPermission(),
+  );
+  unawaited(PushNotificationService.initialize(container, router));
 
   runApp(
     EasyLocalization(

@@ -28,8 +28,10 @@ class GetCurrentLocationProvider
 
     try {
       final position = await Geolocator.getCurrentPosition();
+      if (!mounted) return;
       await resolveLatLng(position.latitude, position.longitude);
     } catch (error) {
+      if (!mounted) return;
       state = state.copyWith(isDetecting: false, error: error.toString());
       showError(error);
     }
@@ -52,6 +54,7 @@ class GetCurrentLocationProvider
         lat,
         lng,
       );
+      if (!mounted) return;
       final parsed = placemarks.isNotEmpty
           ? ParsedAddress.fromPlacemark(placemarks.first)
           : const ParsedAddress(
@@ -78,9 +81,11 @@ class GetCurrentLocationProvider
         postalCode: parsed.postalCode,
       );
     } catch (error) {
+      if (!mounted) return;
       state = state.copyWith(isDetecting: false, error: error.toString());
     }
 
+    if (!mounted) return;
     await _checkServiceability(lat, lng);
   }
 
@@ -136,8 +141,10 @@ class GetCurrentLocationProvider
           .read(serviceAreaRepositoryProvider)
           .findServiceableArea(lat, lng);
 
+      if (!mounted) return;
       state = state.copyWith(checkingServiceability: false, serviceArea: area);
     } catch (_) {
+      if (!mounted) return;
       state = state.copyWith(checkingServiceability: false, serviceArea: null);
     }
   }
