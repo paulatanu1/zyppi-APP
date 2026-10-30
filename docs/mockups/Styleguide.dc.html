@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Zyppi Design System</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./zyppi.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Manrope:wght@500;600;700;800&amp;display=swap">
+<style>body{margin:0}
+.sg-col{display:flex;flex-direction:column;gap:14px}
+.sg-h{font:800 11px 'Manrope',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.ts{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--line);padding:6px 0}
+.ts code{width:150px;flex:none;font:600 11.5px ui-monospace,monospace;color:var(--ink-3)}
+.sw{display:flex;flex-direction:column;gap:4px;font:700 11px 'Manrope',sans-serif;color:var(--ink-2)}
+.sw span{height:44px;border-radius:12px;border:1px solid var(--line)}
+.sw code{font:600 10.5px ui-monospace,monospace;color:var(--ink-3)}
+.mo{display:flex;justify-content:space-between;font-size:12.5px;padding:6px 0;border-bottom:1px solid var(--line);color:var(--ink-2);font-weight:600}
+.mo b{color:var(--ink)}
+</style>
+</helmet>
+<div class="z" style="width:1180px;height:844px;padding:36px 40px;display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:36px">
+  <div class="sg-col">
+    <div><img src="img/logo.png" alt="Zyppi" style="height:40px"></div>
+    <h1 class="h" style="margin:0;font-size:34px;line-height:1.1">Zyppi design system</h1>
+    <p class="muted" style="margin:0;font-size:14px;line-height:1.55">Sora for headings gives Zyppi a confident, geometric voice; Manrope keeps prices, labels and long lists easy to read at small sizes. Both are free on Google Fonts. Add Noto Sans Bengali, Devanagari and Gurmukhi as fallbacks for bn, hi and pa.</p>
+    <span class="sg-h" style="margin-top:6px">Type scale</span>
+    <div>
+      <div class="ts"><code>display · Sora 31/700</code><span class="h" style="font-size:31px">12 minutes</span></div>
+      <div class="ts"><code>title-l · Sora 24/700</code><span class="h" style="font-size:24px">Shimla Apples</span></div>
+      <div class="ts"><code>title-m · Sora 18/700</code><span class="h" style="font-size:18px">Your cart</span></div>
+      <div class="ts"><code>section · Sora 17/700</code><span class="h" style="font-size:17px">Shop by category</span></div>
+      <div class="ts"><code>body · Manrope 15/500</code><span style="font-size:15px;font-weight:500">We'll text you a 6-digit code.</span></div>
+      <div class="ts"><code>label · Manrope 14/700</code><span style="font-size:14px;font-weight:700">Seasonal Veg Box</span></div>
+      <div class="ts"><code>price · Manrope 15/800</code><span class="price">₹149</span> <span class="mrp">₹179</span></div>
+      <div class="ts"><code>caption · Manrope 12/600</code><span class="faint" style="font-size:12px;font-weight:600">1 kg · inclusive of taxes</span></div>
+      <div class="ts" style="border:0"><code>overline · Manrope 11/800</code><span class="over">Arriving in</span></div>
+    </div>
+  </div>
+
+  <div class="sg-col">
+    <span class="sg-h">Colour · light</span>
+    <div style="display:grid;grid-template-columns:repeat(4, minmax(0, 1fr));gap:10px">
+      <div class="sw"><span style="background:#D4127B"></span>Brand<code>#D4127B</code></div>
+      <div class="sw"><span style="background:#FDE8F3"></span>Brand soft<code>#FDE8F3</code></div>
+      <div class="sw"><span style="background:#2443D6"></span>Blue<code>#2443D6</code></div>
+      <div class="sw"><span style="background:#FFC83D"></span>Deal<code>#FFC83D</code></div>
+      <div class="sw"><span style="background:#141519"></span>Ink<code>#141519</code></div>
+      <div class="sw"><span style="background:#F6F5F2"></span>Background<code>#F6F5F2</code></div>
+      <div class="sw"><span style="background:#138A4A"></span>Success<code>#138A4A</code></div>
+      <div class="sw"><span style="background:#C2263A"></span>Danger<code>#C2263A</code></div>
+    </div>
+    <div class="z dark" style="width:auto;height:auto;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px">
+      <span class="sg-h">Colour · dark</span>
+      <div style="display:grid;grid-template-columns:repeat(4, minmax(0, 1fr));gap:10px">
+        <div class="sw"><span style="background:#E0198A"></span>Brand<code>#E0198A</code></div>
+        <div class="sw"><span style="background:#FF6DB7"></span>Brand text<code>#FF6DB7</code></div>
+        <div class="sw"><span style="background:#16171C"></span>Surface<code>#16171C</code></div>
+        <div class="sw"><span style="background:#0D0E11"></span>Background<code>#0D0E11</code></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center"><span class="btn" style="height:44px;flex:1;font-size:14px">Add to cart</span><span class="add">ADD</span><span class="step"><b>−</b>2<b>+</b></span></div>
+    </div>
+    <span class="sg-h" style="margin-top:4px">Radius &amp; spacing</span>
+    <p class="muted" style="margin:0;font-size:13px;line-height:1.55">Radius 11 controls · 14–16 buttons and inputs · 18 cards · 26 sheets. Spacing on a 4-pt grid: 4, 8, 12, 16, 20, 24, 32. Minimum touch target 44 × 44.</p>
+  </div>
+
+  <div class="sg-col">
+    <span class="sg-h">Components</span>
+    <a class="btn">Primary · Continue</a>
+    <div style="display:flex;gap:8px"><span class="btn ghost" style="flex:1;height:44px;font-size:14px">Secondary</span><span class="btn line" style="flex:1;height:44px;font-size:14px">Outline</span></div>
+    <div style="display:flex;gap:8px;align-items:center"><span class="add">ADD</span><span class="step"><b>−</b>1<b>+</b></span><span class="off">17% OFF</span><span class="eta"><svg class="ic fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>12 MINS</span></div>
+    <div style="display:flex;gap:8px"><span class="chip on">Offers</span><span class="chip">Organic</span><span class="chip">Sort</span></div>
+    <div style="display:flex;gap:10px">
+      <div class="pc" style="width:150px"><span class="off">10% OFF</span><span class="tile"><img src="img/apple.png" alt=""></span><span class="nm">Shimla Apples</span><span class="qty">1 kg</span><span class="row"><span><span class="price">₹179</span><br><span class="mrp">₹199</span></span><span class="add">ADD</span></span></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:8px"><span class="skel" style="height:92px"></span><span class="skel" style="height:12px;width:80%"></span><span class="skel" style="height:12px;width:50%"></span><span class="faint" style="font-size:11px;font-weight:700">Loading skeleton</span></div>
+    </div>
+    <span class="sg-h" style="margin-top:4px">Motion</span>
+    <div>
+      <div class="mo"><span>Press feedback</span><b>scale .96 · 120 ms</b></div>
+      <div class="mo"><span>Screen entrance</span><b>fade-up 14 px · 420 ms · 60 ms stagger</b></div>
+      <div class="mo"><span>Sheets &amp; cart bar</span><b>slide-up · 500 ms</b></div>
+      <div class="mo"><span>Success</span><b>pop + ring + confetti</b></div>
+      <div class="mo" style="border:0"><span>Reduce motion</span><b>all animations off</b></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1180,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

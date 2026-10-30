@@ -1,6 +1,6 @@
 # Mockup source files
 
-Each `*.dc.html` file is one 390×844 phone screen from the approved Zyppi mockup (live, clickable canvas: https://claude.ai/artifact/BYGQkySYxNKCvX9kQvRbnM — private to the owner).
+Design v2. Each `*.dc.html` file is one 390×844 phone screen (shared styles in `zyppi.css`, images in `img/`); rendered PNGs are in `../screens/`. It comes from the approved Zyppi mockup (live, clickable canvas: https://claude.ai/artifact/BYGQkySYxNKCvX9kQvRbnM — private to the owner).
 
 They are design references, not code to port line by line. Most screens already exist in `lib/features/` — restyle those to match (PLAN.md §3 maps each mockup to its existing code):
 - Layout and styles are in plain inline CSS plus a small `<style>` block in `<helmet>` — read them for spacing, sizes and hierarchy.

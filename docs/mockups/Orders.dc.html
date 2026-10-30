@@ -4,69 +4,56 @@
 <meta charset="utf-8">
 <title>Zyppi Orders</title>
 <script src="./support.js"></script>
+<link rel="stylesheet" href="./zyppi.css">
 </head>
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&amp;family=Poppins:wght@400;500;600;700&amp;display=swap">
-<style>
-body{margin:0}
-a{color:#D81B87}a:hover{color:#A8106A}
-.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
-.h{font-family:'Montserrat',sans-serif;letter-spacing:-0.01em}
-.muted{color:#5B655F}
-.ord{background:#fff;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
-.thumbs{display:flex;gap:6px}
-.thumbs span{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center}
-.thumbs .ic{width:20px;height:20px}
-.badge{font-size:11px;font-weight:700;padding:4px 8px;border-radius:6px}
-.ob{flex:1;display:flex;align-items:center;justify-content:center;height:40px;border-radius:10px;font:700 13px 'Poppins',sans-serif;text-decoration:none}
-.nav{position:absolute;left:0;right:0;bottom:0;height:72px;background:#fff;border-top:1px solid #E4E6E1;display:flex}
-.nav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;font-weight:600;color:#5B655F;text-decoration:none}
-.nav a.on{color:#D81B87}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Manrope:wght@500;600;700;800&amp;display=swap">
+<style>body{margin:0}
+.ord{display:flex;flex-direction:column;gap:12px;padding:14px}
+.ord .top{display:flex;align-items:center;gap:10px}
+.ord .act{flex:1;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:800;font-size:13px}
 </style>
 </helmet>
-<div style="width:390px;height:844px;position:relative;overflow:hidden;background:#F2F3EE;font-family:'Poppins',sans-serif;color:#17201B;box-sizing:border-box">
-  <header style="background:#fff;padding:20px 16px 14px">
-    <h1 class="h" style="margin:0;font-size:24px;font-weight:700">Your orders</h1>
+<div class="{{mode}}" style="display:flex;flex-direction:column">
+  <header class="topbar">
+    <a href="Profile.dc.html" class="icon-btn clear" aria-label="Back"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></a>
+    <h1 class="h ttl" style="margin:0">Your orders</h1>
   </header>
   <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
-    <a href="Tracking.dc.html" class="ord" style="text-decoration:none;color:#17201B;border:1.5px solid #D81B87">
-      <div style="display:flex;justify-content:space-between;align-items:center"><span class="badge" style="background:#FFF1C2;color:#7A5A00">Out for delivery</span><span class="muted" style="font-size:12px">Today</span></div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="thumbs"><span style="background:#FDECE7;color:#C2410C"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/></svg></span><span style="background:#E8F1FB;color:#1F5FD6"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2h8"/><path d="M9 2v3l-2 4v11a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9l-2-4V2"/></svg></span><span style="background:#F3EFE6;color:#7A5A20"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16V8l-9-5-9 5v8l9 5z"/></svg></span></div>
-        <div style="flex:1;text-align:right"><div style="font-weight:700">₹253</div><div class="muted" style="font-size:12px">3 items</div></div>
-      </div>
-      <span class="ob" style="background:#D81B87;color:#fff">Track order · arriving in 6 min</span>
+    <div class="in" style="display:flex;gap:8px"><span class="chip on">All</span><span class="chip">Active</span><span class="chip">Delivered</span><span class="chip">Cancelled</span></div>
+
+    <a href="Tracking.dc.html" class="card ord in" style="--i:1;color:var(--ink);border:1.5px solid var(--brand-text)">
+      <div class="top"><span class="badge-s" style="background:var(--warn-soft);color:var(--warn);display:flex;align-items:center;gap:6px"><span class="pulse" style="width:7px;height:7px;border-radius:4px;background:currentColor"></span>On the way</span><span class="faint" style="margin-left:auto;font-size:12px;font-weight:700">Today, 7:42 PM</span></div>
+      <div style="display:flex;align-items:center;gap:10px"><span class="stack"><span style="border-color:var(--surface);background:var(--surface-2)"><img src="img/veg.png" alt=""></span><span style="border-color:var(--surface);background:var(--surface-2)"><img src="img/apple.png" alt=""></span><span style="border-color:var(--surface);background:var(--surface-2)"><img src="img/juice.png" alt=""></span></span><span style="flex:1"></span><span style="text-align:right"><span class="h" style="font-size:16px;display:block">₹477</span><span class="faint" style="font-size:12px;font-weight:600">3 items</span></span></div>
+      <span class="act" style="background:var(--brand);color:#fff">Track order · arriving in 6 min</span>
     </a>
-    <section class="ord">
-      <div style="display:flex;justify-content:space-between;align-items:center"><span class="badge" style="background:#FFECF7;color:#A8106A">Delivered</span><span class="muted" style="font-size:12px">[Date] · [Time]</span></div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="thumbs"><span style="background:#E6F3E4;color:#2F7D32"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/></svg></span><span style="background:#FBF1E2;color:#A16207"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22c6.23-.05 7.87-5.57 7.5-10-.36-4.34-3.95-9.96-7.5-10-3.55.04-7.14 5.66-7.5 10-.37 4.43 1.27 9.95 7.5 10z"/></svg></span><span style="background:#EEF0EA;color:#5B655F;font-size:12px;font-weight:700">+4</span></div>
-        <div style="flex:1;text-align:right"><div style="font-weight:700">₹612</div><div class="muted" style="font-size:12px">6 items</div></div>
-      </div>
-      <div style="display:flex;gap:8px"><a href="Cart.dc.html" class="ob" style="background:#FFECF7;color:#A8106A">Reorder</a><a href="#" class="ob" style="border:1px solid #E4E6E1;color:#17201B">Invoice</a><a href="#" class="ob" style="border:1px solid #E4E6E1;color:#17201B">Help</a></div>
+
+    <section class="card ord in" style="--i:2">
+      <div class="top"><span class="badge-s" style="background:var(--ok-soft);color:var(--ok)">Delivered</span><span class="faint" style="margin-left:auto;font-size:12px;font-weight:700">[Date] · in 11 min</span></div>
+      <div style="display:flex;align-items:center;gap:10px"><span class="stack"><span style="border-color:var(--surface);background:var(--surface-2)"><img src="img/dairy.png" alt=""></span><span style="border-color:var(--surface);background:var(--surface-2)"><img src="img/bread.png" alt=""></span><span style="border-color:var(--surface);background:var(--surface-2)"><img src="img/oil.png" alt=""></span><span style="border-color:var(--surface);background:var(--surface-3);color:var(--ink-2);font-size:12px;font-weight:800">+4</span></span><span style="flex:1"></span><span style="text-align:right"><span class="h" style="font-size:16px;display:block">₹612</span><span class="faint" style="font-size:12px;font-weight:600">7 items</span></span></div>
+      <div style="display:flex;gap:8px"><a href="Cart.dc.html" class="act" style="background:var(--brand-soft);color:var(--brand-text)"><svg class="ic" style="width:16px;height:16px" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Reorder</a><a href="#" class="act" style="border:1px solid var(--line);color:var(--ink)">Invoice</a><a href="#" class="act" style="border:1px solid var(--line);color:var(--ink)">Rate</a></div>
     </section>
-    <section class="ord">
-      <div style="display:flex;justify-content:space-between;align-items:center"><span class="badge" style="background:#FDECE7;color:#9A3412">Cancelled</span><span class="muted" style="font-size:12px">[Date] · [Time]</span></div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="thumbs"><span style="background:#F1ECFB;color:#6D3FC0"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/></svg></span></div>
-        <div style="flex:1;text-align:right"><div style="font-weight:700">₹90</div><div class="muted" style="font-size:12px">1 item · refunded</div></div>
-      </div>
+
+    <section class="card ord in" style="--i:3">
+      <div class="top"><span class="badge-s" style="background:var(--danger-soft);color:var(--danger)">Cancelled</span><span class="faint" style="margin-left:auto;font-size:12px;font-weight:700">[Date]</span></div>
+      <div style="display:flex;align-items:center;gap:10px"><span class="stack"><span style="border-color:var(--surface);background:var(--surface-2)"><img src="img/drinks.png" alt=""></span></span><span class="muted" style="flex:1;font-size:13px;font-weight:600">Refund of ₹90 sent to your UPI</span><span class="h" style="font-size:16px">₹90</span></div>
     </section>
   </div>
+
   <nav class="nav" aria-label="Main">
-    <a href="Main.dc.html"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>Home</a>
-    <a href="Category.dc.html"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36z"/></svg>Explore</a>
-    <a href="Cart.dc.html"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Cart</a>
-    <a href="#"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>Favourite</a>
-    <a href="Profile.dc.html" class="on"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Account</a>
+    <a href="Main.dc.html"><span class="pill"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/></svg></span>Home</a>
+    <a href="Category.dc.html"><span class="pill"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg></span>Explore</a>
+    <a href="Cart.dc.html"><span class="pill"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span>Cart</a>
+    <a href="#"><span class="pill"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7z"/></svg></span>Favourite</a>
+    <a href="Profile.dc.html" class="on"><span class="pill"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>Account</a>
   </nav>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":390,"height":844}}'>
 class Component extends DCLogic {
-  renderVals() { return {}; }
+  renderVals() { return { mode: this.props.dark ? 'z dark' : 'z' }; }
 }
 </script>
 </body>

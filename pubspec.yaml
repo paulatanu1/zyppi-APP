@@ -118,6 +118,7 @@ flutter:
     - assets/icons/
     - assets/fonts/
     - assets/images/
+    - assets/images/products/
     - assets/mock/
 
   # An image asset can refer to one or more resolution-specific "variants", see
@@ -132,44 +133,12 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
-  - family: Montserrat
+  - family: Sora
     fonts:
-      - asset: assets/fonts/Montserrat/Montserrat-Regular.ttf
-      - asset: assets/fonts/Montserrat/Montserrat-Black.ttf
-        weight: 900
-      - asset: assets/fonts/Montserrat/Montserrat-Bold.ttf
-        weight: 700
-      - asset: assets/fonts/Montserrat/Montserrat-ExtraBold.ttf
-        weight: 800
-      - asset: assets/fonts/Montserrat/Montserrat-ExtraLight.ttf
-        weight: 200
-      - asset: assets/fonts/Montserrat/Montserrat-Light.ttf
-        weight: 300
-      - asset: assets/fonts/Montserrat/Montserrat-Medium.ttf
-        weight: 500
-      - asset: assets/fonts/Montserrat/Montserrat-SemiBold.ttf
-        weight: 600
-      - asset: assets/fonts/Montserrat/Montserrat-Thin.ttf
-        weight: 100
-  - family: Poppins
+      - asset: assets/fonts/Sora/Sora-VariableFont_wght.ttf
+  - family: Manrope
     fonts:
-      - asset: assets/fonts/Poppins/Poppins-Regular.ttf
-      - asset: assets/fonts/Poppins/Poppins-Black.ttf
-        weight: 900
-      - asset: assets/fonts/Poppins/Poppins-Bold.ttf
-        weight: 700
-      - asset: assets/fonts/Poppins/Poppins-ExtraBold.ttf
-        weight: 800
-      - asset: assets/fonts/Poppins/Poppins-ExtraLight.ttf
-        weight: 200
-      - asset: assets/fonts/Poppins/Poppins-Light.ttf
-        weight: 300
-      - asset: assets/fonts/Poppins/Poppins-Medium.ttf
-        weight: 500
-      - asset: assets/fonts/Poppins/Poppins-SemiBold.ttf
-        weight: 600
-      - asset: assets/fonts/Poppins/Poppins-Thin.ttf
-        weight: 100
+      - asset: assets/fonts/Manrope/Manrope-VariableFont_wght.ttf
 
   #   - family: Trajan Pro
   #     fonts:

@@ -4,6 +4,7 @@ Zyppi is a quick-commerce grocery customer app (Flutter, FVM-pinned 3.47.x) movi
 
 ## Read first
 - `docs/PLAN.md` — the approved plan. Work only on the phase named in the prompt; stop at its "Done when" checks.
+- `docs/UI_GUIDE.md` — how to build the v2 UI. **For any UI work, the PNGs in `docs/screens/light` and `docs/screens/dark` are the visual target; match them.**
 - `docs/design-tokens.md` — colors, fonts, radii, sizes.
 - `docs/mockups/*.dc.html` — screen designs (HTML). Match layout, hierarchy and spacing; ignore the `x-dc` / `support.js` wrapper. PLAN.md §3 maps each screen to existing code.
 
@@ -15,12 +16,14 @@ Zyppi is a quick-commerce grocery customer app (Flutter, FVM-pinned 3.47.x) movi
 
 ## Code rules
 - This is an existing codebase: extend and refactor it; don't rewrite screens from scratch unless PLAN.md says the screen is missing.
-- Dart package name is `zippy` (imports `package:zippy/...`); Android id `com.betastechnologies.zippy` — do not change either.
+- Dart package name is `zippy` (imports `package:zippy/...`) — do not change. Android application id / iOS bundle id is `com.zyppi.one` (changed from `com.betastechnologies.zippy` 2026-10-17, before any Play Store submission; register this id as the one in Play Console and Firebase).
 - Feature-first layout per PLAN.md §4; new files snake_case.
 - Riverpod 3 with codegen; freezed 3 for state and models.
 - Screens read data only through repository interfaces — never call Supabase, dio or `assets/mock` from a widget.
 - Money = `int` paise, formatted only in the UI.
-- No literal colors/font sizes/radii in widgets — use `core/theme` tokens.
+- No literal colors/font sizes/radii in widgets — use `context.z.*`, `Theme.of(context).textTheme.*`, `ZRadius`, `ZSpace`, `ZSize`.
+- Reuse `lib/core/widgets` (ZProductCard, ZAddStepper, ZCategoryTile, ZCartBar, ZNavBar, ZSearchBar, ZSectionHeader, ZEntrance, ZPressable, ZLoop, ZSkeleton) before writing new UI.
+- Every screen must look right in both light and dark theme; animations must respect `MediaQuery.disableAnimationsOf`.
 - Every async screen: loading (skeleton), empty, error + retry, data.
 - User-facing strings via easy_localization; add every new key to all 4 files in `assets/translations/` (en-UK, bn-BN, hi-IN, pa-Guru).
 - Commit generated `*.g.dart` / `*.freezed.dart`.

@@ -1,59 +1,72 @@
-# Zyppi design tokens (approved mockup, existing Zyppi brand)
+# Zyppi design tokens — v2 (Sora + Manrope, light + dark)
 
-Implement in `lib/core/theme/` (`app_colors.dart`, `app_typography.dart`, `app_spacing.dart`, `app_theme.dart`), replacing `lib/core/constants/colors.dart`. Widgets never use literal colors or sizes.
+**Source of truth is code:** `lib/core/theme/` (ZColors, ZyppiTheme, ZSpace, ZRadius, ZSize, ZMotion). This file is the human-readable copy. Visual truth is `docs/screens/{light,dark}/*.png`.
 
-Brand source: `assets/icons/appLogo.png` (blue "ZY", pink "PPi", tagline "Quick Easy Reliable") and the existing `AppColors`.
+Rules: widgets never use literal colours, font sizes or radii — read `context.z.<token>`, `Theme.of(context).textTheme.<style>`, `ZRadius.*`, `ZSpace.*`.
 
-## Colors
+## Colours
 
-| Token | Hex | Use |
-| --- | --- | --- |
-| brandPink | `#F32AA0` | Logo pink, decorative accents (existing `primaryButtonColor`) |
-| primary | `#D81B87` | Buttons, steppers, header, active tab, links — brand pink darkened so white text passes 4.5:1 |
-| primaryDark | `#A8106A` | Pressed state, avatar on header |
-| primaryTint | `#FFECF7` | Info/success banners, icon chips, secondary button bg (existing category pink) |
-| primarySurface | `#FFF5FB` | Selected option / filled OTP box |
-| onPrimaryMuted | `#FFD3EC` | Secondary text on primary |
-| brandBlue | `#3158E9` | Logo blue; secondary accent (existing `deepBlue`) |
-| navy | `#05416F` | Existing `blue`; optional headings |
-| green | `#53B175` | Existing green; success / "delivered" |
-| accent | `#FFCB45` | Discount badge, promo banner, onboarding CTA, current timeline step |
-| accentTint | `#FFF1C2` | Out-for-delivery badge bg |
-| ink | `#17201B` | Primary text |
-| muted | `#5B655F` | Secondary text, MRP strike, inactive nav |
-| line | `#E4E6E1` | Borders, dividers, inputs |
-| divider | `#EEF0EA` | List separators, side-rail bg |
-| background | `#F6F7F3` | Default screen bg |
-| backgroundAlt | `#F2F3EE` | Cart / checkout / orders / account bg |
-| surface | `#FFFFFF` | Cards, sheets, nav bar |
-| danger | `#B42318` / tint `#FDECEA` | Logout, errors |
+| Token (`context.z.`) | Light | Dark | Use |
+| --- | --- | --- | --- |
+| `bg` | `#F6F5F2` | `#0D0E11` | Scaffold background |
+| `surface` | `#FFFFFF` | `#16171C` | Cards, sheets, nav bar, app bar |
+| `surface2` | `#F0EEE9` | `#1E2026` | Image tiles, wells, ETA chip |
+| `surface3` | `#E8E5DF` | `#272930` | Progress track, skeleton highlight |
+| `line` / `line2` | `#E4E1DA` / `#D6D2C9` | `#2A2C33` / `#383B43` | Borders / input + outline-button borders |
+| `ink` / `ink2` / `ink3` | `#141519` / `#55585F` / `#83868D` | `#F2F2F4` / `#A8AAB2` / `#787B84` | Text: primary / secondary / captions |
+| `brand` | `#D4127B` | `#E0198A` | Primary buttons, stepper, cart bar, header (light) |
+| `brandText` | `#C0106F` | `#FF6DB7` | Links, ADD outline, active tab icon (text-safe brand) |
+| `brandSoft` / `brandSoft2` | `#FDE8F3` / `#FBD3E8` | `#33142A` / `#4A1B3C` | Active tab pill, selected option bg |
+| `header` | `#D4127B` | `#1A0A15` | Home/Account header band |
+| `blue` / `blueText` / `blueSoft` | `#2443D6` / `#2443D6` / `#E7EBFD` | `#4865F0` / `#97A9FF` / `#1A2150` | "% OFF" badge, secondary accent |
+| `deal` / `dealInk` | `#FFC83D` / `#3B2A00` | same | Promo banner |
+| `ok` / `okSoft` | `#138A4A` / `#E2F4E9` | `#3FD27F` / `#0F2E1D` | Savings, delivered, success |
+| `warn` / `warnSoft` | `#9A5B00` / `#FFF1CF` | `#F6B73C` / `#33270A` | "On the way" |
+| `danger` / `dangerSoft` | `#C2263A` / `#FDE8EA` | `#FF6B7D` / `#3A1218` | Errors, cancelled, log out |
+| `tileVeg … tileAll` | see `zyppi_colors.dart` | | Category / product tile tints |
 
-Category tiles (bg / icon): Vegetables `#E6F3E4`/`#2F7D32` · Fruits `#FDECE7`/`#C2410C` · Dairy & Bread `#E8F1FB`/`#1F5FD6` · Eggs & Meat `#FBF1E2`/`#A16207` · Snacks `#FFF5D6`/`#A16207` · Drinks `#F1ECFB`/`#6D3FC0` · Atta, Rice & Dal `#F3EFE6`/`#7A5A20` · Cleaning `#E3F5F3`/`#0F766E`. The existing `AppColors.categoryColors` list can map onto these.
+## Typography (bundled in `assets/fonts/`)
 
-Order status badges: Out for delivery `#FFF1C2`/`#7A5A00` · Delivered `#E7F4EC`/`#0A5A34` · Cancelled `#FDECE7`/`#9A3412`.
+| Style (`textTheme.`) | Font | Size / weight | Example |
+| --- | --- | --- | --- |
+| `displaySmall` | Sora | 31 / 700 | "Groceries at your door in 12 minutes" |
+| `headlineMedium` | Sora | 27 / 700 | "Log in or sign up" |
+| `headlineSmall` | Sora | 24 / 700 | "12 minutes" (home), product title 22 |
+| `titleLarge` | Sora | 18 / 700 | App-bar titles |
+| `titleMedium` | Sora | 17 / 700 | Section headers |
+| `bodyLarge` | Manrope | 15 / 500, ink2 | Paragraphs |
+| `bodyMedium` | Manrope | 14 / 500 | Default |
+| `labelLarge` | Manrope | 14 / 700 | Product names, list rows |
+| `labelMedium` | Manrope | 13 / 700 | Chips, links |
+| `bodySmall` | Manrope | 12 / 600, ink3 | Weight, captions |
+| `labelSmall` | Manrope | 11 / 800, +0.08em, ink3 | Overlines, badges |
+| `.price` / `.mrp` (extension) | Manrope | 15 / 800 · 12 / 600 struck | ₹149 ₹179 |
 
-## Typography (fonts already bundled in `assets/fonts/`)
-
-| Style | Font | Size / weight |
-| --- | --- | --- |
-| displayLarge | Montserrat | 34 / 700 |
-| headlineMedium | Montserrat | 28 / 700 |
-| headlineSmall | Montserrat | 24 / 700 |
-| titleLarge | Montserrat | 19–20 / 700 |
-| titleMedium | Montserrat | 17 / 700 |
-| bodyLarge | Poppins | 15–16 / 400–500 |
-| bodyMedium | Poppins | 14 / 500–600 |
-| labelLarge | Poppins | 16 / 700 (buttons) |
-| bodySmall | Poppins | 12–13 / 500 |
-| labelSmall | Poppins | 11 / 600–700 (badges, nav labels, overlines 0.06em) |
-
-Remove unused families from `pubspec.yaml`: Righteous, Aclonica, AirbnbCereal.
+Headings use letter-spacing −0.02em. All numbers use tabular figures. For Bengali/Hindi/Punjabi bundle Noto Sans Bengali / Devanagari / Gurmukhi (already listed as fallbacks).
 
 ## Shape, spacing, sizes
 
-- Radius: 6 badge · 8 chip · 9 add button / stepper · 10–12 inputs, tiles, buttons · 14 cards · 16 banner · 18 pill chips · 22 sheet top corners
-- Spacing: 4, 6, 8, 10, 12, 14, 16, 20, 24, 32 · screen padding 16 (12 on dense lists)
-- Heights: button 52 · bottom CTA 56 · input 48–56 · ADD / stepper 36 · nav 72 · floating cart bar 52–56 · min touch target 44
-- Design size for flutter_screenutil: 390 × 844
-- Elevation: flat cards with 1 px `line` border; shadows only on floating cart bar, map buttons, sheets
-- Icons: outline, 1.8 stroke, 20–22 px. Existing PNG nav icons in `assets/icons/` may stay until replaced.
+- Radius: badge 7 · control (ADD, stepper) 11 · tile 16 · button/input 16 · card 18 · chip 18 (stadium) · sheet 26
+- Spacing: 4-pt grid — 4, 8, 12, 16, 20, 24, 32. Screen padding 16.
+- Heights: primary button 54 · input 56 · search 50 · ADD/stepper 34 · cart bar 60 · nav bar 66 + safe area · touch ≥ 44
+- Tiles: product image 112 high; category tile 76 × 72
+- Elevation: flat cards with 1 px `line` border. Shadows only on cart bar, map buttons, sheets.
+
+## Motion (`ZMotion`, widgets in `z_motion.dart`)
+
+| What | Spec | Widget |
+| --- | --- | --- |
+| Press feedback | scale 0.96, 120 ms | `ZPressable` |
+| Screen entrance | fade + 14 px rise, 420 ms, 60 ms stagger | `ZEntrance(index:)` |
+| Cart bar / sheets | slide up 500 ms, emphasized curve | `ZCartBar` (built in) |
+| ADD → stepper | scale + fade 240 ms; count slides | `ZAddStepper` |
+| ETA bolt | pulse 1.6 s loop | `ZLoop(kind: pulse)` |
+| Illustrations | bob 2.4 s / float 4 s | `ZLoop(kind: bob/float)` |
+| Loading | shimmer 1.2 s | `ZSkeleton` |
+| Order placed | check pop + ring + confetti | build per screen |
+
+All motion is skipped when `MediaQuery.disableAnimationsOf(context)` is true.
+
+## Icons
+
+Material Symbols rounded/outlined (`Icons.*_rounded`, `Icons.*_outlined`) at 20–22 px. No extra icon package needed.

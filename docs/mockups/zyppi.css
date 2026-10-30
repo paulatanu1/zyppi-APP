@@ -1,0 +1,157 @@
+/* Zyppi design system v2 — light + dark. Type: Sora (display) + Manrope (UI/body). */
+.z{
+  --bg:#F6F5F2; --surface:#FFFFFF; --surface-2:#F0EEE9; --surface-3:#E8E5DF; --line:#E4E1DA; --line-2:#D6D2C9;
+  --ink:#141519; --ink-2:#55585F; --ink-3:#83868D; --on-brand:#FFFFFF;
+  --brand:#D4127B; --brand-press:#B00E66; --brand-text:#C0106F; --brand-soft:#FDE8F3; --brand-soft-2:#FBD3E8;
+  --header:#D4127B; --header-2:#B00E66; --header-ink:#FFFFFF; --header-ink-2:#FFD6EB;
+  --blue:#2443D6; --blue-text:#2443D6; --blue-soft:#E7EBFD;
+  --ok:#138A4A; --ok-soft:#E2F4E9; --warn:#9A5B00; --warn-soft:#FFF1CF; --danger:#C2263A; --danger-soft:#FDE8EA;
+  --deal:#FFC83D; --deal-ink:#3B2A00;
+  --t-fruit:#FFF0E6; --t-veg:#EAF6E4; --t-dairy:#EAF1FC; --t-bakery:#FBF0E2; --t-meat:#FDEBEA; --t-drink:#F1ECFB; --t-oil:#FFF6D9; --t-all:#EEF0EA;
+  --shadow:0 1px 2px rgba(20,21,25,.06),0 8px 24px rgba(20,21,25,.08);
+  --shadow-up:0 -6px 24px rgba(20,21,25,.08);
+  --map-bg:#ECEAE4; --map-road:#FFFFFF; --map-block:#E2DFD8; --map-park:#D9EDD2; --map-water:#CFE3F5;
+  width:390px; height:844px; position:relative; overflow:hidden; box-sizing:border-box;
+  background:var(--bg); color:var(--ink);
+  font-family:'Manrope',system-ui,sans-serif; font-size:14px; line-height:1.4;
+  -webkit-font-smoothing:antialiased; font-feature-settings:"tnum" 1;
+}
+.z.dark{
+  --bg:#0D0E11; --surface:#16171C; --surface-2:#1E2026; --surface-3:#272930; --line:#2A2C33; --line-2:#383B43;
+  --ink:#F2F2F4; --ink-2:#A8AAB2; --ink-3:#787B84; --on-brand:#FFFFFF;
+  --brand:#E0198A; --brand-press:#C21275; --brand-text:#FF6DB7; --brand-soft:#33142A; --brand-soft-2:#4A1B3C;
+  --header:#1A0A15; --header-2:#2A1022; --header-ink:#FFFFFF; --header-ink-2:#F3A9D0;
+  --blue:#4865F0; --blue-text:#97A9FF; --blue-soft:#1A2150;
+  --ok:#3FD27F; --ok-soft:#0F2E1D; --warn:#F6B73C; --warn-soft:#33270A; --danger:#FF6B7D; --danger-soft:#3A1218;
+  --deal:#FFC83D; --deal-ink:#3B2A00;
+  --t-fruit:#2A1E17; --t-veg:#18261A; --t-dairy:#17202E; --t-bakery:#2A2216; --t-meat:#2C1A1B; --t-drink:#211B2E; --t-oil:#2B2612; --t-all:#1E2026;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+  --shadow-up:0 -6px 24px rgba(0,0,0,.45);
+  --map-bg:#15171C; --map-road:#2A2D35; --map-block:#1C1E24; --map-park:#16261B; --map-water:#14243A;
+}
+.z *{box-sizing:border-box}
+.z a{color:var(--brand-text);text-decoration:none}
+.z button{font-family:inherit;cursor:pointer}
+.z .h{font-family:'Sora','Manrope',sans-serif;letter-spacing:-0.02em;font-weight:700}
+.z .ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.z .ic.fill{fill:currentColor;stroke:none}
+.z .muted{color:var(--ink-2)} .z .faint{color:var(--ink-3)}
+.z .over{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+
+/* surfaces */
+.z .card{background:var(--surface);border:1px solid var(--line);border-radius:18px}
+.z .sheet{background:var(--surface);border-radius:26px 26px 0 0;box-shadow:var(--shadow-up)}
+.z .well{background:var(--surface-2);border-radius:14px}
+.z .hr{height:1px;background:var(--line);border:0;margin:0}
+
+/* buttons */
+.z .btn{display:flex;align-items:center;justify-content:center;gap:8px;height:54px;padding:0 20px;border:0;border-radius:16px;background:var(--brand);color:var(--on-brand);font:800 16px 'Manrope',sans-serif;letter-spacing:.01em;text-decoration:none}
+.z .btn:hover{background:var(--brand-press);color:var(--on-brand)}
+.z .btn.ghost{background:var(--brand-soft);color:var(--brand-text)}
+.z .btn.line{background:var(--surface);color:var(--ink);border:1.5px solid var(--line-2)}
+.z .icon-btn{width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:center;flex:none}
+.z .icon-btn.clear{border:0;background:transparent}
+.z .chip{height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:700 13px 'Manrope',sans-serif;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none}
+.z .chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* commerce */
+.z .add{height:34px;min-width:70px;padding:0 12px;border-radius:11px;border:1.5px solid var(--brand-text);background:var(--surface);color:var(--brand-text);font:800 13px 'Manrope',sans-serif;letter-spacing:.04em;display:flex;align-items:center;justify-content:center;gap:2px}
+.z .step{height:34px;min-width:84px;border-radius:11px;background:var(--brand);color:var(--on-brand);display:flex;align-items:center;justify-content:space-between;font:800 14px 'Manrope',sans-serif;padding:0 4px}
+.z .step b{width:26px;text-align:center;font-size:18px;line-height:34px;font-weight:700}
+.z .price{font-weight:800;font-size:15px;color:var(--ink)}
+.z .mrp{color:var(--ink-3);text-decoration:line-through;font-size:12px;font-weight:600}
+.z .off{background:var(--blue);color:#fff;font-size:10.5px;font-weight:800;letter-spacing:.02em;border-radius:7px;padding:3px 6px}
+.z .eta{display:inline-flex;align-items:center;gap:3px;background:var(--surface-2);color:var(--ink-2);font-size:10.5px;font-weight:800;letter-spacing:.04em;border-radius:6px;padding:3px 6px}
+.z .eta .ic{width:11px;height:11px}
+.z .save{color:var(--ok);font-weight:800}
+.z .tile{border-radius:16px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.z .tile img{max-width:82%;max-height:82%;object-fit:contain}
+
+/* product card */
+.z .pc{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:8px 8px 10px;display:flex;flex-direction:column;gap:6px;text-decoration:none;color:var(--ink);position:relative}
+.z .pc .tile{height:112px;background:var(--surface-2)}
+.z .pc .nm{font-size:13.5px;font-weight:700;line-height:1.25;color:var(--ink);height:34px;overflow:hidden}
+.z .pc .qty{font-size:12px;color:var(--ink-3);font-weight:600}
+.z .pc .row{display:flex;align-items:flex-end;justify-content:space-between;gap:6px;margin-top:auto}
+.z .pc .off{position:absolute;top:14px;left:14px}
+.z .pc .fav{position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:15px;background:var(--surface);color:var(--ink-2);display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow)}
+.z .pc .fav .ic{width:16px;height:16px}
+
+/* app chrome */
+.z .topbar{display:flex;align-items:center;gap:8px;padding:10px 12px 10px 8px;background:var(--surface);border-bottom:1px solid var(--line)}
+.z .topbar .ttl{flex:1;font-size:18px}
+.z .nav{position:absolute;left:0;right:0;bottom:0;height:78px;padding-bottom:12px;background:var(--surface);border-top:1px solid var(--line);display:flex}
+.z .nav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;font-weight:700;color:var(--ink-3);position:relative}
+.z .nav a .pill{width:52px;height:30px;border-radius:15px;display:flex;align-items:center;justify-content:center}
+.z .nav a.on{color:var(--ink)}
+.z .nav a.on .pill{background:var(--brand-soft);color:var(--brand-text)}
+.z .nav .badge{position:absolute;top:6px;left:calc(50% + 6px);min-width:18px;height:18px;border-radius:9px;background:var(--brand);color:#fff;font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid var(--surface)}
+.z .cartbar{position:absolute;left:16px;right:16px;bottom:90px;height:60px;border-radius:18px;background:var(--brand);color:#fff;display:flex;align-items:center;gap:10px;padding:0 8px 0 10px;box-shadow:0 10px 28px rgba(212,18,123,.35);text-decoration:none}
+.z .cartbar:hover{color:#fff}
+.z .stack{display:flex}
+.z .stack span{width:38px;height:38px;border-radius:12px;background:#fff;border:2px solid var(--brand);display:flex;align-items:center;justify-content:center;margin-left:-12px;overflow:hidden}
+.z .stack span:first-child{margin-left:0}
+.z .stack img{width:30px;height:30px;object-fit:contain}
+.z .cartbar .go{margin-left:auto;height:44px;padding:0 14px;border-radius:13px;background:rgba(255,255,255,.18);display:flex;align-items:center;gap:4px;font-weight:800;font-size:14px}
+.z .field{display:flex;align-items:center;gap:10px;height:56px;padding:0 16px;border:1.5px solid var(--line-2);border-radius:16px;background:var(--surface)}
+.z .field.focus{border-color:var(--brand-text);box-shadow:0 0 0 4px var(--brand-soft)}
+.z .field input{flex:1;border:0;outline:none;background:transparent;color:var(--ink);font:700 17px 'Manrope',sans-serif;letter-spacing:.03em;min-width:0}
+.z .field input::placeholder{color:var(--ink-3);font-weight:500;letter-spacing:0}
+.z .search{display:flex;align-items:center;gap:10px;height:50px;padding:0 6px 0 14px;border-radius:15px;background:var(--surface);color:var(--ink-3);font-size:14.5px;font-weight:500;text-decoration:none}
+.z .search .mic{margin-left:auto;width:38px;height:38px;border-radius:11px;background:var(--surface-2);color:var(--ink-2);display:flex;align-items:center;justify-content:center}
+.z .sec{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.z .sec h2{margin:0;font-family:'Sora',sans-serif;font-size:17px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+.z .sec a{font-size:13px;font-weight:800}
+.z .list-row{display:flex;align-items:center;gap:14px;min-height:56px;padding:0 16px;color:var(--ink);font-weight:700;font-size:14.5px;text-decoration:none}
+.z .list-row + .list-row{border-top:1px solid var(--line)}
+.z .list-row .ii{width:38px;height:38px;border-radius:12px;background:var(--surface-2);color:var(--ink-2);display:flex;align-items:center;justify-content:center;flex:none}
+.z .badge-s{font-size:11px;font-weight:800;border-radius:8px;padding:4px 8px}
+.z .radio{width:22px;height:22px;border-radius:11px;border:2px solid var(--line-2);flex:none}
+.z .radio.on{border:7px solid var(--brand-text)}
+.z .seg{display:flex;padding:4px;gap:4px;background:var(--surface-2);border-radius:14px}
+.z .seg button{flex:1;height:38px;border:0;border-radius:11px;background:transparent;color:var(--ink-2);font:700 13px 'Manrope',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px}
+.z .seg button.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+
+/* motion — durations: 120ms press, 240ms UI, 420ms entrance; easing: standard + emphasized */
+.z{--ease:cubic-bezier(.2,.7,.2,1);--ease-out:cubic-bezier(.16,1,.3,1)}
+@keyframes z-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes z-fade{from{opacity:0}to{opacity:1}}
+@keyframes z-rise{from{transform:translateY(120%)}to{transform:none}}
+@keyframes z-pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
+@keyframes z-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.18);opacity:.8}}
+@keyframes z-ring{0%{transform:scale(.7);opacity:.6}100%{transform:scale(2.2);opacity:0}}
+@keyframes z-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes z-float{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-8px) rotate(2deg)}}
+@keyframes z-shimmer{from{background-position:-200px 0}to{background-position:200px 0}}
+@keyframes z-caret{0%,49%{opacity:1}50%,100%{opacity:0}}
+@keyframes z-confetti{0%{transform:translateY(-40px) rotate(0);opacity:0}10%{opacity:1}100%{transform:translateY(420px) rotate(540deg);opacity:0}}
+@keyframes z-dash{to{stroke-dashoffset:-24}}
+@keyframes z-ride{0%{offset-distance:8%}100%{offset-distance:58%}}
+@keyframes z-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.z .in{animation:z-up .42s var(--ease-out) both;animation-delay:calc(var(--i,0) * 60ms)}
+.z .fade{animation:z-fade .5s var(--ease) both}
+.z .cartbar,.z .rise{animation:z-rise .5s var(--ease-out) .35s both}
+.z .pop{animation:z-pop .55s var(--ease-out) both}
+.z .pulse{animation:z-pulse 1.6s ease-in-out infinite;transform-origin:center}
+.z .bob{animation:z-bob 2.4s ease-in-out infinite}
+.z .float{animation:z-float 4s ease-in-out infinite}
+.z .ring{position:absolute;inset:0;border-radius:inherit;border:2px solid currentColor;animation:z-ring 1.8s ease-out infinite}
+.z .caret{display:inline-block;width:2px;height:24px;background:var(--brand-text);animation:z-caret 1s step-end infinite}
+.z .skel{background:linear-gradient(90deg,var(--surface-2) 0,var(--surface-3) 50%,var(--surface-2) 100%);background-size:400px 100%;animation:z-shimmer 1.2s linear infinite;border-radius:10px}
+.z .btn,.z .add,.z .chip,.z .pc,.z .icon-btn,.z .cartbar,.z .tile{transition:transform .12s var(--ease),background-color .24s var(--ease),box-shadow .24s var(--ease)}
+.z .btn:active,.z .add:active,.z .chip:active,.z .icon-btn:active,.z .cartbar:active{transform:scale(.96)}
+.z .pc:active{transform:scale(.98)}
+.z .pc:hover{box-shadow:var(--shadow)}
+.z a:hover .tile{transform:translateY(-2px)}
+.z .nav a .pill{transition:background-color .24s var(--ease),color .24s var(--ease)}
+.z .nav a.on .pill{animation:z-pop .4s var(--ease-out) both}
+.z .route{stroke-dasharray:2 10;animation:z-dash .8s linear infinite}
+@media (prefers-reduced-motion: reduce){.z *,.z *::before,.z *::after{animation:none!important;transition:none!important}}
+.z .only-dark{display:none}
+.z.dark .only-dark{display:block}
+.z.dark .only-light{display:none}
+.z .illo{border-radius:28px;background:#EEF4FB;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative}
+.z.dark .illo{background:#E9EEF6}
+.z .float-chip{position:absolute;display:flex;align-items:center;gap:6px;background:var(--surface);color:var(--ink);border-radius:14px;padding:8px 12px;font-weight:800;font-size:13px;box-shadow:var(--shadow)}
+.z .m-bg{fill:var(--map-bg)} .z .m-road{stroke:var(--map-road);fill:none;stroke-linecap:round} .z .m-block{fill:var(--map-block)} .z .m-park{fill:var(--map-park)} .z .m-water{fill:var(--map-water)} .z .m-label{fill:var(--ink-3);font:700 9.5px 'Manrope',sans-serif;letter-spacing:.06em}
+.z .m-route{stroke:var(--brand-text);fill:none;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}

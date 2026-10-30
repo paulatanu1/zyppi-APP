@@ -2,66 +2,76 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Zyppi Profile</title>
+<title>Zyppi Account</title>
 <script src="./support.js"></script>
+<link rel="stylesheet" href="./zyppi.css">
 </head>
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&amp;family=Poppins:wght@400;500;600;700&amp;display=swap">
-<style>
-body{margin:0}
-a{color:#D81B87}a:hover{color:#A8106A}
-.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
-.h{font-family:'Montserrat',sans-serif;letter-spacing:-0.01em}
-.muted{color:#5B655F}
-.grp{background:#fff;border-radius:14px;display:flex;flex-direction:column;overflow:hidden}
-.item{display:flex;align-items:center;gap:12px;min-height:52px;padding:0 14px;text-decoration:none;color:#17201B;font-size:14.5px;font-weight:600;border-top:1px solid #EEF0EA}
-.item:first-child{border-top:0}
-.item .i{width:36px;height:36px;border-radius:10px;background:#FFECF7;color:#D81B87;display:flex;align-items:center;justify-content:center}
-.quick{flex:1;background:#fff;border-radius:14px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 4px;text-decoration:none;color:#17201B;font-size:12.5px;font-weight:600}
-.quick .ic{color:#D81B87;width:24px;height:24px}
-.nav{position:absolute;left:0;right:0;bottom:0;height:72px;background:#fff;border-top:1px solid #E4E6E1;display:flex}
-.nav a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;font-weight:600;color:#5B655F;text-decoration:none}
-.nav a.on{color:#D81B87}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Manrope:wght@500;600;700;800&amp;display=swap">
+<style>body{margin:0}
+.z{transition:background-color .35s var(--ease),color .35s var(--ease)}
+.qa{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 4px;font-size:12.5px;font-weight:700;color:var(--ink)}
+.qa .ii{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center}
 </style>
 </helmet>
-<div style="width:390px;height:844px;position:relative;overflow:hidden;background:#F2F3EE;font-family:'Poppins',sans-serif;color:#17201B;box-sizing:border-box">
-  <header style="background:#fff;padding:20px 16px 18px;display:flex;align-items:center;gap:14px">
-    <div style="width:56px;height:56px;border-radius:28px;background:#D81B87;color:#fff;display:flex;align-items:center;justify-content:center" class="h"><span style="font-size:22px;font-weight:700">A</span></div>
-    <div style="flex:1"><h1 class="h" style="margin:0;font-size:22px;font-weight:700">Atanu</h1><div class="muted" style="font-size:13px">+91 98765 43210</div></div>
-    <a href="#" style="font-size:13px;font-weight:700;text-decoration:none;padding:12px 0 12px 12px">Edit</a>
+<div class="{{mode}}" style="display:flex;flex-direction:column">
+  <header style="background:var(--header);color:var(--header-ink);padding:18px 16px 54px;display:flex;align-items:center;gap:14px;transition:background-color .35s">
+    <div style="width:56px;height:56px;border-radius:28px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font:800 22px 'Sora',sans-serif">A</div>
+    <div style="flex:1"><h1 class="h" style="margin:0;font-size:21px">Atanu</h1><div style="font-size:13px;color:var(--header-ink-2);font-weight:600">+91 98765 43210</div></div>
+    <a href="#" style="color:#fff;font-weight:800;font-size:13px;background:rgba(255,255,255,.16);padding:8px 12px;border-radius:12px">Edit</a>
   </header>
-  <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
-    <div style="display:flex;gap:10px">
-      <a href="Orders.dc.html" class="quick"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.29 7 12 12l8.71-5"/><path d="M12 22V12"/></svg>Orders</a>
-      <a href="#" class="quick"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>Wishlist</a>
-      <a href="#" class="quick"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg>Help</a>
+
+  <div style="padding:0 12px;margin-top:-38px;display:flex;flex-direction:column;gap:12px">
+    <div class="card in" style="display:flex;box-shadow:var(--shadow)">
+      <a href="Orders.dc.html" class="qa"><span class="ii" style="background:var(--brand-soft);color:var(--brand-text)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span>Orders</a>
+      <a href="#" class="qa"><span class="ii" style="background:var(--blue-soft);color:var(--blue-text)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7z"/></svg></span>Favourites</a>
+      <a href="#" class="qa"><span class="ii" style="background:var(--ok-soft);color:var(--ok)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg></span>Help</a>
     </div>
-    <nav class="grp" aria-label="Account">
-      <a href="Location.dc.html" class="item"><span class="i"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span><span style="flex:1">Saved addresses</span><svg class="ic muted" style="width:16px;height:16px" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
-      <a href="#" class="item"><span class="i"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span><span style="flex:1">Payment methods</span><svg class="ic muted" style="width:16px;height:16px" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
-      <a href="#" class="item"><span class="i"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span><span style="flex:1">Notifications</span><svg class="ic muted" style="width:16px;height:16px" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
-      <a href="#" class="item"><span class="i"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></svg></span><span style="flex:1">Language</span><span class="muted" style="font-size:13px;font-weight:500">English</span><svg class="ic muted" style="width:16px;height:16px" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
+
+    <section class="card in" style="--i:1;padding:14px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:8px"><span class="h" style="font-size:15px;flex:1">Appearance</span><span class="faint" style="font-size:12px;font-weight:700">Try it</span></div>
+      <div class="seg">
+        <sc-for list="{{themes}}" as="t" hint-placeholder-count="3"><button class="{{t.cls}}" onClick="{{t.pick}}"><svg class="ic" style="width:16px;height:16px" viewBox="0 0 24 24" aria-hidden="true"><path d="{{t.icon}}"/></svg>{{t.label}}</button></sc-for>
+      </div>
+    </section>
+
+    <nav class="card in" aria-label="Account" style="--i:2;overflow:hidden">
+      <a href="Location.dc.html" class="list-row"><span class="ii"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span><span style="flex:1">Saved addresses</span><span class="faint" style="font-size:12.5px;font-weight:700">2</span><svg class="ic" style="width:16px;height:16px;color:var(--ink-3)" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a>
+      <a href="#" class="list-row"><span class="ii"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span><span style="flex:1">Payment methods</span><svg class="ic" style="width:16px;height:16px;color:var(--ink-3)" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a>
+      <a href="#" class="list-row"><span class="ii"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span><span style="flex:1">Language</span><span class="faint" style="font-size:12.5px;font-weight:700">English</span><svg class="ic" style="width:16px;height:16px;color:var(--ink-3)" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a>
+      <a href="#" class="list-row"><span class="ii"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a2 2 0 0 0 3.4 0"/></svg></span><span style="flex:1">Notifications</span><svg class="ic" style="width:16px;height:16px;color:var(--ink-3)" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a>
+      <a href="Login.dc.html" class="list-row" style="color:var(--danger)"><span class="ii" style="background:var(--danger-soft);color:var(--danger)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></svg></span><span style="flex:1">Log out</span></a>
     </nav>
-    <nav class="grp" aria-label="About">
-      <a href="#" class="item"><span class="i" style="background:#EEF0EA;color:#5B655F"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M14 2v6h6"/></svg></span><span style="flex:1">Terms and privacy</span></a>
-      <a href="Login.dc.html" class="item" style="color:#B42318"><span class="i" style="background:#FDECEA;color:#B42318"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></svg></span><span style="flex:1">Log out</span></a>
-    </nav>
-    <div class="muted" style="font-size:12px;text-align:center">Zyppi v1.0.0</div>
+    <div class="faint" style="font-size:12px;text-align:center;font-weight:600">Zyppi v1.0.0 · Quick Easy Reliable</div>
   </div>
+
   <nav class="nav" aria-label="Main">
-    <a href="Main.dc.html"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>Home</a>
-    <a href="Category.dc.html"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36z"/></svg>Explore</a>
-    <a href="Cart.dc.html"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Cart</a>
-    <a href="#"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>Favourite</a>
-    <a href="Profile.dc.html" class="on"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Account</a>
+    <a href="Main.dc.html"><span class="pill"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/></svg></span>Home</a>
+    <a href="Category.dc.html"><span class="pill"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg></span>Explore</a>
+    <a href="Cart.dc.html"><span class="pill"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span>Cart</a>
+    <a href="#"><span class="pill"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7z"/></svg></span>Favourite</a>
+    <a href="Profile.dc.html" class="on"><span class="pill"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>Account</a>
   </nav>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":390,"height":844}}'>
 class Component extends DCLogic {
-  renderVals() { return {}; }
+  constructor(p){ super(p); this.state = { theme: null }; }
+  renderVals() {
+    const sel = this.state.theme ?? (this.props.dark ? 'dark' : 'system');
+    const list = [
+      { id: 'light', label: 'Light', icon: 'M12 3v2M12 19v2M5 5l1.5 1.5M17.5 17.5 19 19M3 12h2M19 12h2M5 19l1.5-1.5M17.5 6.5 19 5M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z' },
+      { id: 'dark', label: 'Dark', icon: 'M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z' },
+      { id: 'system', label: 'System', icon: 'M4 4h16v12H4zM8 20h8M12 16v4' }
+    ];
+    const isDark = sel === 'dark' || (sel === 'system' && !!this.props.dark);
+    return {
+      mode: isDark ? 'z dark' : 'z',
+      themes: list.map(t => ({ ...t, cls: t.id === sel ? 'on' : '', pick: () => this.setState({ theme: t.id }) }))
+    };
+  }
 }
 </script>
 </body>

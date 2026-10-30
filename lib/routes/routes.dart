@@ -10,6 +10,7 @@ import 'package:zippy/features/auth/login/presentation/login_screen.dart';
 import 'package:zippy/features/auth/otp_verification/presentation/otp_verification_screen.dart';
 import 'package:zippy/features/category_details/presentation/category_details_screen.dart';
 import 'package:zippy/core/common_widgets/nav_bar/presentation/nav_bar.dart';
+import 'package:zippy/design_v2/home_v2_screen.dart';
 import 'package:zippy/features/checkout/presentation/checkout_screen.dart';
 import 'package:zippy/features/explore/presentation/explore_screen.dart';
 import 'package:zippy/features/favourite/presentation/favourite_screen.dart';
@@ -38,6 +39,8 @@ class Routes {
       GoRouterRefreshListenable(container);
 
   String? _redirect(GoRouterState state) {
+    if (state.matchedLocation == '/design-v2') return null;
+
     final token = container.read(sharedPreferenceProvider).authToken;
     final isLoggedIn = token != null && token.isNotEmpty;
     final isUnauthenticatedRoute = _unauthenticatedRoutes.contains(
@@ -180,6 +183,11 @@ class Routes {
             final orderId = state.uri.queryParameters['orderId'] ?? '';
             return OrderTrackingScreen(orderId: orderId);
           },
+        ),
+        GoRoute(
+          path: '/design-v2',
+          name: 'DesignV2Home',
+          builder: (context, state) => const HomeV2Screen(),
         ),
       ],
     );

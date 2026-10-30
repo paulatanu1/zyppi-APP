@@ -4,47 +4,47 @@
 <meta charset="utf-8">
 <title>Zyppi Login</title>
 <script src="./support.js"></script>
+<link rel="stylesheet" href="./zyppi.css">
 </head>
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&amp;family=Poppins:wght@400;500;600;700&amp;display=swap">
-<style>
-body{margin:0}
-a{color:#D81B87}a:hover{color:#A8106A}
-.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
-.h{font-family:'Montserrat',sans-serif;letter-spacing:-0.01em}
-.btn{display:flex;align-items:center;justify-content:center;gap:8px;height:52px;border:0;border-radius:12px;background:#D81B87;color:#fff;font:700 16px 'Poppins',sans-serif;text-decoration:none}
-.btn:hover{color:#fff;background:#A8106A}
-.muted{color:#5B655F}
-</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Manrope:wght@500;600;700;800&amp;display=swap">
+<style>body{margin:0}</style>
 </helmet>
-<div style="width:390px;height:844px;position:relative;overflow:hidden;background:#fff;font-family:'Poppins',sans-serif;color:#17201B;box-sizing:border-box;display:flex;flex-direction:column">
-  <div style="height:300px;background:#FFECF7;display:flex;align-items:center;justify-content:center;position:relative">
-    <div style="display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:12px">
-      <div style="width:72px;height:72px;border-radius:18px;background:#fff;color:#2F7D32;display:flex;align-items:center;justify-content:center"><svg class="ic" style="width:34px;height:34px;stroke-width:1.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg></div>
-      <div style="width:72px;height:72px;border-radius:18px;background:#FFCB45;color:#17201B;display:flex;align-items:center;justify-content:center"><svg class="ic" style="width:34px;height:34px;stroke-width:1.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
-      <div style="width:72px;height:72px;border-radius:18px;background:#fff;color:#1F5FD6;display:flex;align-items:center;justify-content:center"><svg class="ic" style="width:34px;height:34px;stroke-width:1.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2h8"/><path d="M9 2v2.8a4 4 0 0 1-.7 2.2l-.6 1A4 4 0 0 0 7 10.2V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9.8a4 4 0 0 0-.7-2.2l-.6-1A4 4 0 0 1 15 4.8V2"/></svg></div>
-    </div>
+<div class="{{mode}}" style="display:flex;flex-direction:column">
+  <div class="fade" style="height:318px;background:var(--brand-soft);border-radius:0 0 36px 36px;position:relative;display:flex;align-items:flex-end;justify-content:center;overflow:hidden">
+    <div style="position:absolute;left:-60px;top:-60px;width:220px;height:220px;border-radius:110px;background:var(--brand-soft-2)"></div>
+    <div style="position:absolute;right:-40px;top:40px;width:120px;height:120px;border-radius:60px;background:var(--blue-soft)"></div>
+    <a href="Onboarding.dc.html" class="icon-btn" aria-label="Back" style="position:absolute;left:16px;top:16px"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></a>
+    <img class="bob" src="img/splash-phone.png" alt="" style="position:relative;height:270px;margin-bottom:-6px">
   </div>
-  <div style="flex:1;padding:28px 24px 32px;display:flex;flex-direction:column;gap:18px">
-    <div style="display:flex;flex-direction:column;gap:6px">
-      <h1 class="h" style="margin:0;font-size:28px;font-weight:700">Log in or sign up</h1>
-      <p class="muted" style="margin:0;font-size:15px">We'll send a 6-digit code to verify your number.</p>
+
+  <div style="flex:1;padding:26px 20px 24px;display:flex;flex-direction:column;gap:16px">
+    <div class="in" style="--i:1;display:flex;flex-direction:column;gap:6px">
+      <h1 class="h" style="margin:0;font-size:27px">Log in or sign up</h1>
+      <p class="muted" style="margin:0;font-size:15px">We'll text you a 6-digit code to verify your number.</p>
     </div>
-    <label for="phone" style="font-size:13px;font-weight:600">Mobile number</label>
-    <div style="display:flex;align-items:center;gap:10px;height:56px;border:1.5px solid #D81B87;border-radius:12px;padding:0 14px;margin-top:-10px">
-      <span style="font-weight:700;font-size:16px;padding-right:10px;border-right:1px solid #E4E6E1">+91</span>
-      <input id="phone" type="tel" value="98765 43210" style="flex:1;border:0;outline:none;font:600 17px 'Poppins',sans-serif;letter-spacing:0.04em;color:#17201B;background:transparent">
+    <div class="in" style="--i:2;display:flex;flex-direction:column;gap:8px">
+      <label for="phone" style="font-size:13px;font-weight:700;color:var(--ink-2)">Mobile number</label>
+      <div class="field focus">
+        <span style="display:flex;align-items:center;gap:6px;font-weight:800;font-size:16px;padding-right:12px;border-right:1px solid var(--line)"><span aria-hidden="true" style="width:22px;height:15px;border-radius:3px;overflow:hidden;display:flex;flex-direction:column"><span style="flex:1;background:#FF9933"></span><span style="flex:1;background:#FFFFFF"></span><span style="flex:1;background:#138808"></span></span>+91</span>
+        <input id="phone" type="tel" inputmode="numeric" value="98765 43210">
+      </div>
     </div>
-    <a href="Otp.dc.html" class="btn">Continue</a>
-    <p class="muted" style="margin:auto 0 0;font-size:12px;line-height:1.5;text-align:center">By continuing you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</p>
+    <a href="Otp.dc.html" class="btn in" style="--i:3">Continue</a>
+    <div class="in" style="--i:4;display:flex;align-items:center;gap:12px;color:var(--ink-3);font-size:12.5px;font-weight:700"><span class="hr" style="flex:1"></span>OR<span class="hr" style="flex:1"></span></div>
+    <button class="btn line in" style="--i:5">
+      <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+      Continue with Google
+    </button>
+    <p class="faint" style="margin:auto 0 0;font-size:12px;line-height:1.5;text-align:center">By continuing you agree to Zyppi's <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</p>
   </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":390,"height":844}}'>
 class Component extends DCLogic {
-  renderVals() { return {}; }
+  renderVals() { return { mode: this.props.dark ? 'z dark' : 'z' }; }
 }
 </script>
 </body>
