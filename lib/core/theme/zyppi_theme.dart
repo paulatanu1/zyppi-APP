@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'app_colors_ext.dart';
 import 'zyppi_colors.dart';
 import 'zyppi_tokens.dart';
 import 'zyppi_typography.dart';
@@ -61,7 +62,10 @@ abstract final class ZyppiTheme {
       canvasColor: c.bg,
       fontFamily: ZFonts.body,
       textTheme: text,
-      extensions: [c],
+      extensions: [
+        c,
+        b == Brightness.light ? AppColorsExt.light : AppColorsExt.dark,
+      ],
       splashFactory: InkSparkle.splashFactory,
       dividerTheme: DividerThemeData(color: c.line, thickness: 1, space: 1),
       appBarTheme: AppBarTheme(
@@ -79,6 +83,16 @@ abstract final class ZyppiTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
+          backgroundColor: c.brand,
+          foregroundColor: c.onBrand,
+          minimumSize: const Size.fromHeight(ZSize.button),
+          shape: buttonShape,
+          textStyle: buttonText,
+          elevation: 0,
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
           backgroundColor: c.brand,
           foregroundColor: c.onBrand,
           minimumSize: const Size.fromHeight(ZSize.button),
