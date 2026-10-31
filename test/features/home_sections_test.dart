@@ -1,5 +1,8 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:zippy/core/constants/constants.dart';
 import 'package:zippy/core/common_widgets/app_error_widget.dart';
 import 'package:zippy/core/domain/home_section.dart';
 import 'package:zippy/core/domain/home_section_item.dart';
@@ -7,8 +10,12 @@ import 'package:zippy/core/theme/app_colors_ext.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/features/home_screen/widgets/sections/banner_carousel_section.dart';
+import 'package:zippy/features/home_screen/widgets/sections/category_cluster_section.dart';
 import 'package:zippy/features/home_screen/widgets/sections/category_grid_section.dart';
 import 'package:zippy/features/home_screen/widgets/sections/category_tabs_section.dart';
+import 'package:zippy/features/home_screen/widgets/sections/spotlight_cards_section.dart';
+import 'package:zippy/core/widgets/z_chrome.dart';
+import 'package:zippy/core/domain/product.dart';
 
 const _screenWidth = 390.0;
 
@@ -106,4 +113,114 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets('cart bar fits three thumbnails and a large total', (
+    tester,
+  ) async {
+    // The bar uses `.plural()`, which needs a real EasyLocalization locale.
+    SharedPreferences.setMockInitialValues({});
+    await EasyLocalization.ensureInitialized();
+
+    // Translation assets load with real I/O, so let them finish outside
+    // the fake clock before settling.
+    await tester.runAsync(() async {
+      await tester.pumpWidget(
+        EasyLocalization(
+          supportedLocales: const [Locale('en', 'UK')],
+          fallbackLocale: const Locale('en', 'UK'),
+          startLocale: const Locale('en', 'UK'),
+          path: Constants.translationPath,
+          child: Builder(
+            builder: (context) => MaterialApp(
+              theme: ZyppiTheme.light,
+              localizationsDelegates: context.localizationDelegates,
+              supportedLocales: context.supportedLocales,
+              locale: context.locale,
+              home: Scaffold(
+                body: Center(
+                  child: SizedBox(
+                    width: _screenWidth,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xxl,
+                      ),
+                      child: ZCartBar(
+                        thumbnails: [
+                          for (var i = 0; i < 3; i++)
+                            const ColoredBox(color: Colors.green),
+                        ],
+                        itemCount: 12,
+                        total: 12345600,
+                        saved: 50000,
+                        onTap: () {},
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+    });
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('View cart'), findsOneWidget);
+    expect(find.textContaining('12 items'), findsOneWidget);
+  });
+
+  testWidgets('frequently-bought tiles share one height', (tester) async {
+    // Home puts sections in a scroll view (unbounded height), which is
+    // where unequal tiles show up.
+    await tester.pumpWidget(
+      _wrap(
+        SingleChildScrollView(
+          child: CategoryClusterSection(
+            section: _section('category_cluster', [
+              {'label': 'Fruits & Vegetables', 'count': 8},
+              {'label': 'Atta, Rice & Dals', 'count': 10},
+              {'label': 'Oil', 'count': 3},
+            ]),
+            categoriesById: const {},
+          ),
+        ),
+      ),
+    );
+
+    final tiles = find.descendant(
+      of: find.byType(CategoryClusterSection),
+      matching: find.byType(InkWell),
+    );
+    final heights = tiles
+        .evaluate()
+        .map((e) => tester.getSize(find.byWidget(e.widget)).height)
+        .toSet();
+    expect(heights, hasLength(1));
+  });
+
+  testWidgets('long spotlight badge fits its card', (tester) async {
+    final product = Product(
+      id: 'p1',
+      name: 'Bread',
+      categoryId: 'c1',
+      image: '',
+      variants: const [],
+    );
+
+    await tester.pumpWidget(
+      _wrap(
+        SpotlightCardsSection(
+          section: _section('spotlight_cards', [
+            {'product_id': 'p1', 'badge': 'Customer favourite'},
+          ]),
+          productsById: {'p1': product},
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Customer favourite'), findsOneWidget);
+  });
 }

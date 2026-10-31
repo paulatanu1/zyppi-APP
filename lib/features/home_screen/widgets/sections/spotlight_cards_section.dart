@@ -6,6 +6,7 @@ import 'package:zippy/core/domain/product.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/zyppi_colors.dart';
 import 'package:zippy/features/home_screen/widgets/sections/section_data.dart';
 
 /// Blinkit-referenced "Featured this week" ribbon-badge spotlight cards.
@@ -27,6 +28,7 @@ class SpotlightCardsSection extends StatelessWidget {
       height: 140,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
         itemCount: section.items.length,
         separatorBuilder: (context, index) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
@@ -73,13 +75,17 @@ class SpotlightCardsSection extends StatelessWidget {
                             topRight: Radius.circular(AppRadius.card),
                           ),
                         ),
-                        child: Text(
-                          badge,
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.overline.copyWith(
-                            color: context.colors.surface,
+                        // Scale long labels ("Customer favourite") down to
+                        // fit the card rather than cutting them off.
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            badge,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            style: AppTypography.overline.copyWith(
+                              color: context.z.onBrand,
+                            ),
                           ),
                         ),
                       ),

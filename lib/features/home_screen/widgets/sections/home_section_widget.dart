@@ -64,10 +64,17 @@ class HomeSectionWidget extends StatelessWidget {
     // screen's normal content padding with an optional title.
     if (section.type == 'category_tabs') return body;
 
-    // banner_carousel also bleeds full-bleed (the carousel itself spans
-    // the full screen width), but — unlike category_tabs — it can still
-    // have an optional title, which stays inset like every other section's.
-    if (section.type == 'banner_carousel') {
+    // Banners and horizontal lists bleed full-width (lists pad their own
+    // first/last item so they scroll out to the screen edge instead of
+    // being clipped at the content padding), but — unlike category_tabs —
+    // they can still have an optional title, which stays inset like every
+    // other section's.
+    const fullBleed = {
+      'banner_carousel',
+      'product_carousel',
+      'spotlight_cards',
+    };
+    if (fullBleed.contains(section.type)) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

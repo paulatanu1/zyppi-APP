@@ -5,6 +5,7 @@ import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/common_widgets/item_card.dart';
 import 'package:zippy/core/domain/home_section.dart';
 import 'package:zippy/core/domain/product.dart';
+import 'package:zippy/core/theme/app_spacing.dart';
 
 /// Blinkit-referenced horizontally scrolling product carousel (their
 /// "Deals for you" / "Festive Specials" pattern).
@@ -27,10 +28,13 @@ class ProductCarouselSection extends ConsumerWidget {
 
     if (products.isEmpty) return const SizedBox.shrink();
 
+    final cart = ref.watch(cartProvider);
+
     return SizedBox(
       height: 240,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
         itemCount: products.length,
         separatorBuilder: (context, index) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
@@ -38,6 +42,13 @@ class ProductCarouselSection extends ConsumerWidget {
           final variant = product.variants.isNotEmpty
               ? product.variants.first
               : null;
+          final cartLine = cart.lines.where(
+            (l) =>
+                l.product.id == product.id &&
+                variant != null &&
+                l.variant.id == variant.id,
+          );
+          final cartQuantity = cartLine.isEmpty ? 0 : cartLine.first.quantity;
 
           return SizedBox(
             width: 150,
@@ -49,11 +60,30 @@ class ProductCarouselSection extends ConsumerWidget {
               imagePath: product.image,
               onClicked: () =>
                   context.push('/productDetailsScreen?productId=${product.id}'),
+              cartQuantity: cartQuantity,
               onAddClicked: variant == null
                   ? null
                   : () => ref
                         .read(cartProvider.notifier)
                         .addItem(productId: product.id, variantId: variant.id),
+              onIncrement: variant == null
+                  ? null
+                  : () => ref
+                        .read(cartProvider.notifier)
+                        .setQuantity(
+                          productId: product.id,
+                          variantId: variant.id,
+                          quantity: cartQuantity + 1,
+                        ),
+              onDecrement: variant == null
+                  ? null
+                  : () => ref
+                        .read(cartProvider.notifier)
+                        .setQuantity(
+                          productId: product.id,
+                          variantId: variant.id,
+                          quantity: cartQuantity - 1,
+                        ),
             ),
           );
         },

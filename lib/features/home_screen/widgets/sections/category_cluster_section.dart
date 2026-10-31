@@ -24,15 +24,18 @@ class CategoryClusterSection extends StatelessWidget {
   Widget build(BuildContext context) {
     if (section.items.isEmpty) return const SizedBox.shrink();
 
-    return Row(
-      children: section.items.map((item) {
-        final category = categoriesById[item.data['category_id']];
-        final label = item.data.string('label') ?? category?.name ?? '';
-        final count = item.data.integer('count');
+    // IntrinsicHeight + stretch: every tile matches the tallest one, even
+    // when one label wraps to two lines and another doesn't.
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpacing.base,
+        children: section.items.map((item) {
+          final category = categoriesById[item.data['category_id']];
+          final label = item.data.string('label') ?? category?.name ?? '';
+          final count = item.data.integer('count');
 
-        return Expanded(
-          child: Padding(
-            padding: const EdgeInsets.only(right: AppSpacing.base),
+          return Expanded(
             child: InkWell(
               onTap: category == null
                   ? null
@@ -94,9 +97,9 @@ class CategoryClusterSection extends StatelessWidget {
                 ),
               ),
             ),
-          ),
-        );
-      }).toList(),
+          );
+        }).toList(),
+      ),
     );
   }
 }
