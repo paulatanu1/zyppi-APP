@@ -3,9 +3,9 @@ import 'package:zippy/core/common_widgets/add_button.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/common_widgets/price_tag.dart';
 import 'package:zippy/core/common_widgets/quantity_stepper.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// docs/mockups/Main.dc.html's product card: image with an optional
 /// % off badge, unit, name, price (+ struck-through MRP) and either an
@@ -50,7 +50,7 @@ class ItemCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppRadius.card),
-          border: Border.all(color: AppColors.line),
+          border: Border.all(color: context.colors.line),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(
@@ -82,7 +82,7 @@ class ItemCard extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.accent,
+                            color: context.colors.accent,
                             borderRadius: BorderRadius.circular(
                               AppRadius.badge,
                             ),
@@ -90,7 +90,7 @@ class ItemCard extends StatelessWidget {
                           child: Text(
                             '$discountPercent% OFF',
                             style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.ink,
+                              color: context.colors.ink,
                             ),
                           ),
                         ),
@@ -111,7 +111,9 @@ class ItemCard extends StatelessWidget {
                 quantity ?? '',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTypography.bodySmall,
+                style: AppTypography.bodySmall.copyWith(
+                  color: context.colors.muted,
+                ),
               ),
               const SizedBox(height: AppSpacing.sm),
               Row(

@@ -3,9 +3,9 @@ import 'package:zippy/core/common_widgets/add_button.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/common_widgets/price_tag.dart';
 import 'package:zippy/core/common_widgets/quantity_stepper.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// docs/mockups/Search.dc.html's `.row`: a thumbnail, name + unit ·
 /// price, and an ADD/stepper control.
@@ -45,7 +45,7 @@ class ProductListRow extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: AppColors.primaryTint,
+                color: context.colors.primaryTint,
                 borderRadius: BorderRadius.circular(AppRadius.chip),
               ),
               child: ClipRRect(
@@ -67,7 +67,7 @@ class ProductListRow extends StatelessWidget {
                   Text(
                     '$unit · ${PriceTag.format(pricePaise)}',
                     style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.muted,
+                      color: context.colors.muted,
                     ),
                   ),
                 ],

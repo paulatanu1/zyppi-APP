@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// Shared ADD / quantity stepper per docs/design-tokens.md (height 36,
 /// radius 9). Stateless — the caller owns the quantity.
@@ -23,7 +24,7 @@ class QuantityStepper extends StatelessWidget {
     return Container(
       height: AppSizes.stepper.h,
       decoration: BoxDecoration(
-        color: AppColors.primary,
+        color: context.colors.primary,
         borderRadius: BorderRadius.circular(AppRadius.stepper.r),
       ),
       child: Row(

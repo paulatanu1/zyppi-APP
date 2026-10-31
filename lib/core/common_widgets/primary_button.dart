@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String buttonTitle;
@@ -28,7 +29,7 @@ class PrimaryButton extends StatelessWidget {
         height: AppSizes.button.h,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: buttonColor ?? AppColors.primary,
+          color: buttonColor ?? context.colors.primary,
           borderRadius: BorderRadius.circular(
             borderRadius ?? AppRadius.input.r,
           ),

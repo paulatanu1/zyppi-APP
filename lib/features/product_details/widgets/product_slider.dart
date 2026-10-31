@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/app_skeleton.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/favourites/application/favourites_provider.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/features/product_details/application/product_detail_provider.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 class ProductSlider extends ConsumerWidget {
   final String productId;
@@ -25,7 +25,7 @@ class ProductSlider extends ConsumerWidget {
     return Container(
       width: width,
       decoration: BoxDecoration(
-        color: AppColors.grey2,
+        color: context.colors.surfaceAlt,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(height * 0.025),
           bottomRight: Radius.circular(height * 0.025),
@@ -60,7 +60,9 @@ class ProductSlider extends ConsumerWidget {
                     child: Icon(
                       isFavourite ? Icons.favorite : Icons.favorite_border,
                       size: 26,
-                      color: isFavourite ? AppColors.primary : AppColors.ink,
+                      color: isFavourite
+                          ? context.colors.primary
+                          : context.colors.ink,
                     ),
                   ),
                 ),

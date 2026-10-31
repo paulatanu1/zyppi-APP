@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$GetCurrentLocationState {
 
- bool get isDetecting; double get latitude; double get longitude; String get address; String get line1; String get area; String get city; String get state; String get postalCode; bool get checkingServiceability; ServiceArea? get serviceArea; String? get error;
+ bool get isDetecting; double get latitude; double get longitude; String get address; String get line1; String get area; String get city; String get state; String get postalCode; String? get landmark; bool get checkingServiceability; ServiceArea? get serviceArea; String? get error;
 /// Create a copy of GetCurrentLocationState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $GetCurrentLocationStateCopyWith<GetCurrentLocationState> get copyWith => _$GetC
 @override
 bool operator ==(Object other) {
   final _this = this as GetCurrentLocationState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GetCurrentLocationState&&(identical(other.isDetecting, _this.isDetecting) || other.isDetecting == _this.isDetecting)&&(identical(other.latitude, _this.latitude) || other.latitude == _this.latitude)&&(identical(other.longitude, _this.longitude) || other.longitude == _this.longitude)&&(identical(other.address, _this.address) || other.address == _this.address)&&(identical(other.line1, _this.line1) || other.line1 == _this.line1)&&(identical(other.area, _this.area) || other.area == _this.area)&&(identical(other.city, _this.city) || other.city == _this.city)&&(identical(other.state, _this.state) || other.state == _this.state)&&(identical(other.postalCode, _this.postalCode) || other.postalCode == _this.postalCode)&&(identical(other.checkingServiceability, _this.checkingServiceability) || other.checkingServiceability == _this.checkingServiceability)&&(identical(other.serviceArea, _this.serviceArea) || other.serviceArea == _this.serviceArea)&&(identical(other.error, _this.error) || other.error == _this.error));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GetCurrentLocationState&&(identical(other.isDetecting, _this.isDetecting) || other.isDetecting == _this.isDetecting)&&(identical(other.latitude, _this.latitude) || other.latitude == _this.latitude)&&(identical(other.longitude, _this.longitude) || other.longitude == _this.longitude)&&(identical(other.address, _this.address) || other.address == _this.address)&&(identical(other.line1, _this.line1) || other.line1 == _this.line1)&&(identical(other.area, _this.area) || other.area == _this.area)&&(identical(other.city, _this.city) || other.city == _this.city)&&(identical(other.state, _this.state) || other.state == _this.state)&&(identical(other.postalCode, _this.postalCode) || other.postalCode == _this.postalCode)&&(identical(other.landmark, _this.landmark) || other.landmark == _this.landmark)&&(identical(other.checkingServiceability, _this.checkingServiceability) || other.checkingServiceability == _this.checkingServiceability)&&(identical(other.serviceArea, _this.serviceArea) || other.serviceArea == _this.serviceArea)&&(identical(other.error, _this.error) || other.error == _this.error));
 }
 
 
 @override
 int get hashCode {
   final _this = this as GetCurrentLocationState;
-  return Object.hash(runtimeType,_this.isDetecting,_this.latitude,_this.longitude,_this.address,_this.line1,_this.area,_this.city,_this.state,_this.postalCode,_this.checkingServiceability,_this.serviceArea,_this.error);
+  return Object.hash(runtimeType,_this.isDetecting,_this.latitude,_this.longitude,_this.address,_this.line1,_this.area,_this.city,_this.state,_this.postalCode,_this.landmark,_this.checkingServiceability,_this.serviceArea,_this.error);
 }
 
 @override
 String toString() {
   final _this = this as GetCurrentLocationState;
-  return 'GetCurrentLocationState(isDetecting: ${_this.isDetecting}, latitude: ${_this.latitude}, longitude: ${_this.longitude}, address: ${_this.address}, line1: ${_this.line1}, area: ${_this.area}, city: ${_this.city}, state: ${_this.state}, postalCode: ${_this.postalCode}, checkingServiceability: ${_this.checkingServiceability}, serviceArea: ${_this.serviceArea}, error: ${_this.error})';
+  return 'GetCurrentLocationState(isDetecting: ${_this.isDetecting}, latitude: ${_this.latitude}, longitude: ${_this.longitude}, address: ${_this.address}, line1: ${_this.line1}, area: ${_this.area}, city: ${_this.city}, state: ${_this.state}, postalCode: ${_this.postalCode}, landmark: ${_this.landmark}, checkingServiceability: ${_this.checkingServiceability}, serviceArea: ${_this.serviceArea}, error: ${_this.error})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $GetCurrentLocationStateCopyWith<$Res>  {
   factory $GetCurrentLocationStateCopyWith(GetCurrentLocationState value, $Res Function(GetCurrentLocationState) _then) = _$GetCurrentLocationStateCopyWithImpl;
 @useResult
 $Res call({
- bool isDetecting, double latitude, double longitude, String address, String line1, String area, String city, String state, String postalCode, bool checkingServiceability, ServiceArea? serviceArea, String? error
+ bool isDetecting, double latitude, double longitude, String address, String line1, String area, String city, String state, String postalCode, String? landmark, bool checkingServiceability, ServiceArea? serviceArea, String? error
 });
 
 
@@ -68,7 +68,7 @@ class _$GetCurrentLocationStateCopyWithImpl<$Res>
 
 /// Create a copy of GetCurrentLocationState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? isDetecting = null,Object? latitude = null,Object? longitude = null,Object? address = null,Object? line1 = null,Object? area = null,Object? city = null,Object? state = null,Object? postalCode = null,Object? checkingServiceability = null,Object? serviceArea = freezed,Object? error = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? isDetecting = null,Object? latitude = null,Object? longitude = null,Object? address = null,Object? line1 = null,Object? area = null,Object? city = null,Object? state = null,Object? postalCode = null,Object? landmark = freezed,Object? checkingServiceability = null,Object? serviceArea = freezed,Object? error = freezed,}) {
   return _then(GetCurrentLocationState(
 isDetecting: null == isDetecting ? _self.isDetecting : isDetecting // ignore: cast_nullable_to_non_nullable
 as bool,latitude: null == latitude ? _self.latitude : latitude // ignore: cast_nullable_to_non_nullable
@@ -79,7 +79,8 @@ as String,area: null == area ? _self.area : area // ignore: cast_nullable_to_non
 as String,city: null == city ? _self.city : city // ignore: cast_nullable_to_non_nullable
 as String,state: null == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
 as String,postalCode: null == postalCode ? _self.postalCode : postalCode // ignore: cast_nullable_to_non_nullable
-as String,checkingServiceability: null == checkingServiceability ? _self.checkingServiceability : checkingServiceability // ignore: cast_nullable_to_non_nullable
+as String,landmark: freezed == landmark ? _self.landmark : landmark // ignore: cast_nullable_to_non_nullable
+as String?,checkingServiceability: null == checkingServiceability ? _self.checkingServiceability : checkingServiceability // ignore: cast_nullable_to_non_nullable
 as bool,serviceArea: freezed == serviceArea ? _self.serviceArea : serviceArea // ignore: cast_nullable_to_non_nullable
 as ServiceArea?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
 as String?,
@@ -179,10 +180,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isDetecting,  double latitude,  double longitude,  String address,  String line1,  String area,  String city,  String state,  String postalCode,  bool checkingServiceability,  ServiceArea? serviceArea,  String? error)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isDetecting,  double latitude,  double longitude,  String address,  String line1,  String area,  String city,  String state,  String postalCode,  String? landmark,  bool checkingServiceability,  ServiceArea? serviceArea,  String? error)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _GetCurrentLocationState() when $default != null:
-return $default(_that.isDetecting,_that.latitude,_that.longitude,_that.address,_that.line1,_that.area,_that.city,_that.state,_that.postalCode,_that.checkingServiceability,_that.serviceArea,_that.error);case _:
+return $default(_that.isDetecting,_that.latitude,_that.longitude,_that.address,_that.line1,_that.area,_that.city,_that.state,_that.postalCode,_that.landmark,_that.checkingServiceability,_that.serviceArea,_that.error);case _:
   return orElse();
 
 }
@@ -200,10 +201,10 @@ return $default(_that.isDetecting,_that.latitude,_that.longitude,_that.address,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isDetecting,  double latitude,  double longitude,  String address,  String line1,  String area,  String city,  String state,  String postalCode,  bool checkingServiceability,  ServiceArea? serviceArea,  String? error)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isDetecting,  double latitude,  double longitude,  String address,  String line1,  String area,  String city,  String state,  String postalCode,  String? landmark,  bool checkingServiceability,  ServiceArea? serviceArea,  String? error)  $default,) {final _that = this;
 switch (_that) {
 case _GetCurrentLocationState():
-return $default(_that.isDetecting,_that.latitude,_that.longitude,_that.address,_that.line1,_that.area,_that.city,_that.state,_that.postalCode,_that.checkingServiceability,_that.serviceArea,_that.error);case _:
+return $default(_that.isDetecting,_that.latitude,_that.longitude,_that.address,_that.line1,_that.area,_that.city,_that.state,_that.postalCode,_that.landmark,_that.checkingServiceability,_that.serviceArea,_that.error);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -220,10 +221,10 @@ return $default(_that.isDetecting,_that.latitude,_that.longitude,_that.address,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isDetecting,  double latitude,  double longitude,  String address,  String line1,  String area,  String city,  String state,  String postalCode,  bool checkingServiceability,  ServiceArea? serviceArea,  String? error)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isDetecting,  double latitude,  double longitude,  String address,  String line1,  String area,  String city,  String state,  String postalCode,  String? landmark,  bool checkingServiceability,  ServiceArea? serviceArea,  String? error)?  $default,) {final _that = this;
 switch (_that) {
 case _GetCurrentLocationState() when $default != null:
-return $default(_that.isDetecting,_that.latitude,_that.longitude,_that.address,_that.line1,_that.area,_that.city,_that.state,_that.postalCode,_that.checkingServiceability,_that.serviceArea,_that.error);case _:
+return $default(_that.isDetecting,_that.latitude,_that.longitude,_that.address,_that.line1,_that.area,_that.city,_that.state,_that.postalCode,_that.landmark,_that.checkingServiceability,_that.serviceArea,_that.error);case _:
   return null;
 
 }
@@ -235,7 +236,7 @@ return $default(_that.isDetecting,_that.latitude,_that.longitude,_that.address,_
 
 
 class _GetCurrentLocationState implements GetCurrentLocationState {
-   _GetCurrentLocationState({required this.isDetecting, required this.latitude, required this.longitude, required this.address, this.line1 = '', this.area = '', this.city = '', this.state = '', this.postalCode = '', this.checkingServiceability = false, this.serviceArea, this.error});
+   _GetCurrentLocationState({required this.isDetecting, required this.latitude, required this.longitude, required this.address, this.line1 = '', this.area = '', this.city = '', this.state = '', this.postalCode = '', this.landmark, this.checkingServiceability = false, this.serviceArea, this.error});
   
 
 @override final  bool isDetecting;
@@ -247,6 +248,7 @@ class _GetCurrentLocationState implements GetCurrentLocationState {
 @override@JsonKey() final  String city;
 @override@JsonKey() final  String state;
 @override@JsonKey() final  String postalCode;
+@override final  String? landmark;
 @override@JsonKey() final  bool checkingServiceability;
 @override final  ServiceArea? serviceArea;
 @override final  String? error;
@@ -261,18 +263,18 @@ _$GetCurrentLocationStateCopyWith<_GetCurrentLocationState> get copyWith => __$G
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _GetCurrentLocationState&&(identical(other.isDetecting, isDetecting) || other.isDetecting == isDetecting)&&(identical(other.latitude, latitude) || other.latitude == latitude)&&(identical(other.longitude, longitude) || other.longitude == longitude)&&(identical(other.address, address) || other.address == address)&&(identical(other.line1, line1) || other.line1 == line1)&&(identical(other.area, area) || other.area == area)&&(identical(other.city, city) || other.city == city)&&(identical(other.state, state) || other.state == state)&&(identical(other.postalCode, postalCode) || other.postalCode == postalCode)&&(identical(other.checkingServiceability, checkingServiceability) || other.checkingServiceability == checkingServiceability)&&(identical(other.serviceArea, serviceArea) || other.serviceArea == serviceArea)&&(identical(other.error, error) || other.error == error));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _GetCurrentLocationState&&(identical(other.isDetecting, isDetecting) || other.isDetecting == isDetecting)&&(identical(other.latitude, latitude) || other.latitude == latitude)&&(identical(other.longitude, longitude) || other.longitude == longitude)&&(identical(other.address, address) || other.address == address)&&(identical(other.line1, line1) || other.line1 == line1)&&(identical(other.area, area) || other.area == area)&&(identical(other.city, city) || other.city == city)&&(identical(other.state, state) || other.state == state)&&(identical(other.postalCode, postalCode) || other.postalCode == postalCode)&&(identical(other.landmark, landmark) || other.landmark == landmark)&&(identical(other.checkingServiceability, checkingServiceability) || other.checkingServiceability == checkingServiceability)&&(identical(other.serviceArea, serviceArea) || other.serviceArea == serviceArea)&&(identical(other.error, error) || other.error == error));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,isDetecting,latitude,longitude,address,line1,area,city,state,postalCode,checkingServiceability,serviceArea,error);
+    return Object.hash(runtimeType,isDetecting,latitude,longitude,address,line1,area,city,state,postalCode,landmark,checkingServiceability,serviceArea,error);
 }
 
 @override
 String toString() {
-    return 'GetCurrentLocationState(isDetecting: $isDetecting, latitude: $latitude, longitude: $longitude, address: $address, line1: $line1, area: $area, city: $city, state: $state, postalCode: $postalCode, checkingServiceability: $checkingServiceability, serviceArea: $serviceArea, error: $error)';
+    return 'GetCurrentLocationState(isDetecting: $isDetecting, latitude: $latitude, longitude: $longitude, address: $address, line1: $line1, area: $area, city: $city, state: $state, postalCode: $postalCode, landmark: $landmark, checkingServiceability: $checkingServiceability, serviceArea: $serviceArea, error: $error)';
 }
 
 
@@ -283,7 +285,7 @@ abstract mixin class _$GetCurrentLocationStateCopyWith<$Res> implements $GetCurr
   factory _$GetCurrentLocationStateCopyWith(_GetCurrentLocationState value, $Res Function(_GetCurrentLocationState) _then) = __$GetCurrentLocationStateCopyWithImpl;
 @override @useResult
 $Res call({
- bool isDetecting, double latitude, double longitude, String address, String line1, String area, String city, String state, String postalCode, bool checkingServiceability, ServiceArea? serviceArea, String? error
+ bool isDetecting, double latitude, double longitude, String address, String line1, String area, String city, String state, String postalCode, String? landmark, bool checkingServiceability, ServiceArea? serviceArea, String? error
 });
 
 
@@ -300,7 +302,7 @@ class __$GetCurrentLocationStateCopyWithImpl<$Res>
 
 /// Create a copy of GetCurrentLocationState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? isDetecting = null,Object? latitude = null,Object? longitude = null,Object? address = null,Object? line1 = null,Object? area = null,Object? city = null,Object? state = null,Object? postalCode = null,Object? checkingServiceability = null,Object? serviceArea = freezed,Object? error = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? isDetecting = null,Object? latitude = null,Object? longitude = null,Object? address = null,Object? line1 = null,Object? area = null,Object? city = null,Object? state = null,Object? postalCode = null,Object? landmark = freezed,Object? checkingServiceability = null,Object? serviceArea = freezed,Object? error = freezed,}) {
   return _then(_GetCurrentLocationState(
 isDetecting: null == isDetecting ? _self.isDetecting : isDetecting // ignore: cast_nullable_to_non_nullable
 as bool,latitude: null == latitude ? _self.latitude : latitude // ignore: cast_nullable_to_non_nullable
@@ -311,7 +313,8 @@ as String,area: null == area ? _self.area : area // ignore: cast_nullable_to_non
 as String,city: null == city ? _self.city : city // ignore: cast_nullable_to_non_nullable
 as String,state: null == state ? _self.state : state // ignore: cast_nullable_to_non_nullable
 as String,postalCode: null == postalCode ? _self.postalCode : postalCode // ignore: cast_nullable_to_non_nullable
-as String,checkingServiceability: null == checkingServiceability ? _self.checkingServiceability : checkingServiceability // ignore: cast_nullable_to_non_nullable
+as String,landmark: freezed == landmark ? _self.landmark : landmark // ignore: cast_nullable_to_non_nullable
+as String?,checkingServiceability: null == checkingServiceability ? _self.checkingServiceability : checkingServiceability // ignore: cast_nullable_to_non_nullable
 as bool,serviceArea: freezed == serviceArea ? _self.serviceArea : serviceArea // ignore: cast_nullable_to_non_nullable
 as ServiceArea?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
 as String?,

@@ -7,12 +7,12 @@ import 'package:zippy/core/common_widgets/app_skeleton.dart';
 import 'package:zippy/core/common_widgets/price_tag.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/common_widgets/text_form_field.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/my_cart/widgets/bill_details.dart';
 import 'package:zippy/features/my_cart/widgets/my_cart_item.dart';
 import 'package:zippy/features/my_cart/widgets/tip_selector.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 class MyCartScreen extends ConsumerWidget {
   const MyCartScreen({super.key});
@@ -23,24 +23,9 @@ class MyCartScreen extends ConsumerWidget {
     final cart = ref.watch(cartProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Center(
-              child: Text(
-                'myCart'.tr(),
-                style: AppTypography.titleMedium.copyWith(
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ),
-            SizedBox(height: height * 0.025),
-            Divider(height: 1, color: AppColors.grey5),
-            Expanded(child: _buildBody(context, ref, cart, height)),
-          ],
-        ),
-      ),
+      backgroundColor: context.colors.surface,
+      appBar: AppBar(title: Text('myCart'.tr())),
+      body: SafeArea(top: false, child: _buildBody(context, ref, cart, height)),
     );
   }
 
@@ -85,7 +70,7 @@ class MyCartScreen extends ConsumerWidget {
                     vertical: AppSpacing.base,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryTint,
+                    color: context.colors.primaryTint,
                     borderRadius: BorderRadius.circular(AppRadius.input),
                   ),
                   child: Text(
@@ -93,7 +78,7 @@ class MyCartScreen extends ConsumerWidget {
                       args: [PriceTag.format(cart.bill.savingsPaise)],
                     ),
                     style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.primaryDark,
+                      color: context.colors.primaryDark,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -148,7 +133,9 @@ class _CouponFieldState extends ConsumerState<_CouponField> {
           Expanded(
             child: Text(
               '${widget.appliedCoupon.code} · ${'couponApplied'.tr()}',
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.green),
+              style: AppTypography.bodyMedium.copyWith(
+                color: context.colors.green,
+              ),
             ),
           ),
           TextButton(
@@ -160,11 +147,12 @@ class _CouponFieldState extends ConsumerState<_CouponField> {
     }
 
     return Row(
+      spacing: AppSpacing.sm,
       children: [
         Expanded(
           child: TextformField(
             textFormFieldController: _controller,
-            labelText: 'applyCoupon'.tr(),
+            labelText: 'couponCode'.tr(),
           ),
         ),
         TextButton(

@@ -14,6 +14,7 @@ import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
 import 'package:zippy/features/product_details/application/product_detail_provider.dart';
 import 'package:zippy/features/product_details/widgets/product_slider.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// docs/mockups/Product.dc.html (the "Similar items" row is skipped —
 /// no cross-product recommendation logic yet).
@@ -30,7 +31,6 @@ class ProductDetailsScreen extends ConsumerWidget {
 
     if (state.error != null) {
       return Scaffold(
-        backgroundColor: AppColors.white,
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -56,7 +56,6 @@ class ProductDetailsScreen extends ConsumerWidget {
         : variants[state.selectedVariantIndex.clamp(0, variants.length - 1)];
 
     return Scaffold(
-      backgroundColor: AppColors.white,
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -108,7 +107,7 @@ class ProductDetailsScreen extends ConsumerWidget {
                                       fontWeight: FontWeight.w700,
                                       color: selected
                                           ? AppColors.white
-                                          : AppColors.ink,
+                                          : context.colors.ink,
                                     ),
                                   ),
                                   Text(
@@ -116,16 +115,16 @@ class ProductDetailsScreen extends ConsumerWidget {
                                     style: AppTypography.bodySmall.copyWith(
                                       color: selected
                                           ? AppColors.white
-                                          : AppColors.muted,
+                                          : context.colors.muted,
                                     ),
                                   ),
                                 ],
                               ),
                               selected: selected,
                               onSelected: (_) => notifier.selectVariant(index),
-                              selectedColor: AppColors.primary,
-                              backgroundColor: AppColors.surface,
-                              side: BorderSide(color: AppColors.line),
+                              selectedColor: context.colors.primary,
+                              backgroundColor: context.colors.surface,
+                              side: BorderSide(color: context.colors.line),
                             );
                           }),
                         ),
@@ -139,7 +138,9 @@ class ProductDetailsScreen extends ConsumerWidget {
                         const SizedBox(height: AppSpacing.sm),
                         Text(
                           'aboutThisItemPlaceholder'.tr(),
-                          style: AppTypography.bodySmall,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: context.colors.muted,
+                          ),
                         ),
                       ],
                     ),
@@ -159,9 +160,9 @@ class ProductDetailsScreen extends ConsumerWidget {
                 AppSpacing.xxl,
                 AppSpacing.xxxl,
               ),
-              decoration: const BoxDecoration(
-                color: AppColors.white,
-                border: Border(top: BorderSide(color: AppColors.line)),
+              decoration: BoxDecoration(
+                color: context.colors.surface,
+                border: Border(top: BorderSide(color: context.colors.line)),
               ),
               child: Row(
                 children: [
@@ -196,12 +197,12 @@ class ProductDetailsScreen extends ConsumerWidget {
                       width: AppSizes.inputMax,
                       height: AppSizes.inputMax,
                       decoration: BoxDecoration(
-                        color: AppColors.primaryTint,
+                        color: context.colors.primaryTint,
                         borderRadius: BorderRadius.circular(AppRadius.input),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.shopping_bag_outlined,
-                        color: AppColors.primary,
+                        color: context.colors.primary,
                       ),
                     ),
                   ),

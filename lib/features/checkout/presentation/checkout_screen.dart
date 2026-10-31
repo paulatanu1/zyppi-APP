@@ -7,10 +7,10 @@ import 'package:zippy/core/common_widgets/app_skeleton.dart';
 import 'package:zippy/core/common_widgets/price_tag.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/domain/delivery_slot.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/checkout/application/checkout_provider.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 const _paymentMethods = ['UPI', codPaymentMethod, 'Credit or debit card'];
 
@@ -37,7 +37,6 @@ class CheckoutScreen extends ConsumerWidget {
 
     if (state.error != null) {
       return Scaffold(
-        backgroundColor: AppColors.white,
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -60,7 +59,7 @@ class CheckoutScreen extends ConsumerWidget {
     final itemCount = cart.lines.fold<int>(0, (sum, l) => sum + l.quantity);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(title: Text('checkout'.tr())),
       body: AppSkeleton(
         enabled: state.loading,
@@ -72,6 +71,7 @@ class CheckoutScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _section(
+                      context,
                       title: 'deliverTo'.tr(),
                       child: RadioGroup<String>(
                         groupValue: state.selectedAddress?.id,
@@ -84,7 +84,7 @@ class CheckoutScreen extends ConsumerWidget {
 
                             return RadioListTile<String>(
                               value: address.id,
-                              activeColor: AppColors.primary,
+                              activeColor: context.colors.primary,
                               title: Text(
                                 address.label,
                                 style: AppTypography.bodyLarge.copyWith(
@@ -93,7 +93,9 @@ class CheckoutScreen extends ConsumerWidget {
                               ),
                               subtitle: Text(
                                 '${address.line1}, ${address.area}, ${address.city}',
-                                style: AppTypography.bodySmall,
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: context.colors.muted,
+                                ),
                               ),
                             );
                           }).toList(),
@@ -101,6 +103,7 @@ class CheckoutScreen extends ConsumerWidget {
                       ),
                     ),
                     _section(
+                      context,
                       title: 'deliveryTime'.tr(),
                       child: _DeliverySlotPicker(
                         slots: state.slots,
@@ -109,6 +112,7 @@ class CheckoutScreen extends ConsumerWidget {
                       ),
                     ),
                     _section(
+                      context,
                       title: 'paymentMethod'.tr(),
                       child: RadioGroup<String>(
                         groupValue: state.paymentMethod,
@@ -118,7 +122,7 @@ class CheckoutScreen extends ConsumerWidget {
                           children: _paymentMethods.map((method) {
                             return RadioListTile<String>(
                               value: method,
-                              activeColor: AppColors.primary,
+                              activeColor: context.colors.primary,
                               title: Text(
                                 method,
                                 style: AppTypography.bodyLarge,
@@ -139,9 +143,9 @@ class CheckoutScreen extends ConsumerWidget {
                 AppSpacing.xxl,
                 AppSpacing.xxxl,
               ),
-              decoration: const BoxDecoration(
-                color: AppColors.white,
-                border: Border(top: BorderSide(color: AppColors.line)),
+              decoration: BoxDecoration(
+                color: context.colors.surface,
+                border: Border(top: BorderSide(color: context.colors.line)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -152,7 +156,7 @@ class CheckoutScreen extends ConsumerWidget {
                       Text(
                         '$itemCount items${cart.bill.savingsPaise > 0 ? ' · ${'youSave'.tr(args: [PriceTag.format(cart.bill.savingsPaise)])}' : ''}',
                         style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.muted,
+                          color: context.colors.muted,
                         ),
                       ),
                       Text(
@@ -184,7 +188,11 @@ class CheckoutScreen extends ConsumerWidget {
     );
   }
 
-  Widget _section({required String title, required Widget child}) {
+  Widget _section(
+    BuildContext context, {
+    required String title,
+    required Widget child,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
@@ -192,7 +200,7 @@ class CheckoutScreen extends ConsumerWidget {
         children: [
           Text(title, style: AppTypography.titleMedium),
           child,
-          const Divider(height: 1, color: AppColors.divider),
+          Divider(height: 1, color: context.colors.divider),
         ],
       ),
     );
@@ -288,11 +296,13 @@ class _SlotCategoryCard extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
           border: Border.all(
-            color: selected ? AppColors.primary : AppColors.line,
+            color: selected ? context.colors.primary : context.colors.line,
             width: selected ? 1.5 : 1,
           ),
           borderRadius: BorderRadius.circular(AppRadius.input),
-          color: selected ? AppColors.primarySurface : AppColors.surface,
+          color: selected
+              ? context.colors.primarySurface
+              : context.colors.surface,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,7 +315,9 @@ class _SlotCategoryCard extends StatelessWidget {
             ),
             Text(
               subtitle,
-              style: AppTypography.bodySmall.copyWith(color: AppColors.muted),
+              style: AppTypography.bodySmall.copyWith(
+                color: context.colors.muted,
+              ),
             ),
           ],
         ),

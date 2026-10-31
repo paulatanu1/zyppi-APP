@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_spacing.dart';
+import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 class TextformField extends StatefulWidget {
   final TextEditingController textFormFieldController;
@@ -25,32 +26,56 @@ class TextformField extends StatefulWidget {
 }
 
 class _TextformFieldState extends State<TextformField> {
+  final _focusNode = FocusNode();
+  bool _isFocused = false;
+
   @override
   void initState() {
     super.initState();
-    widget.textFormFieldController.addListener(() {
-      setState(() {});
-    });
+    widget.textFormFieldController.addListener(_onTextChanged);
+    _focusNode.addListener(
+      () => setState(() => _isFocused = _focusNode.hasFocus),
+    );
   }
+
+  void _onTextChanged() => setState(() {});
 
   @override
   void dispose() {
-    widget.textFormFieldController.removeListener(() {});
+    widget.textFormFieldController.removeListener(_onTextChanged);
+    _focusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final height = MediaQuery.of(context).size.height;
-    final width = MediaQuery.of(context).size.width;
-
     return Container(
-      //margin: EdgeInsets.only(left: 30.sp, right: 30.sp),
+      height: AppSizes.inputMin,
       decoration: BoxDecoration(
-        color: AppColors.hintTextColor1,
-        borderRadius: BorderRadius.circular(widget.borderRadius ?? 15.sp),
+        color: context.colors.surface,
+        border: Border.all(
+          color: _isFocused
+              ? context.colors.primaryText
+              : context.colors.lineAlt,
+          width: _isFocused ? 1.5 : 1,
+        ),
+        borderRadius: BorderRadius.circular(
+          widget.borderRadius ?? AppRadius.input,
+        ),
+        boxShadow: _isFocused
+            ? [
+                BoxShadow(
+                  color: context.colors.primaryTint,
+                  blurRadius: 0,
+                  spreadRadius: 4,
+                ),
+              ]
+            : null,
       ),
+      alignment: Alignment.center,
       child: TextField(
+        focusNode: _focusNode,
+        textAlignVertical: TextAlignVertical.center,
         controller: widget.textFormFieldController,
         onChanged: widget.onChanged,
         keyboardType: widget.isNumber == true
@@ -58,15 +83,26 @@ class _TextformFieldState extends State<TextformField> {
             : TextInputType.text,
         decoration: InputDecoration(
           hintText: widget.labelText,
-          hintStyle: const TextStyle(color: AppColors.hintTextColor),
+          hintStyle: AppTypography.bodyMedium.copyWith(
+            color: context.colors.muted,
+          ),
           border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          disabledBorder: InputBorder.none,
+          errorBorder: InputBorder.none,
+          focusedErrorBorder: InputBorder.none,
+          isCollapsed: true,
           prefixIcon: widget.prefixIcon == null || widget.prefixIcon == false
               ? null
               : const Icon(Icons.search),
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: width * 0.05,
-            vertical: height * 0.018,
-            // horizontal: 50.w, vertical: 8.h
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.lg,
+          ),
+          suffixIconConstraints: const BoxConstraints(
+            minWidth: AppSizes.inputMin,
+            minHeight: AppSizes.inputMin - 4,
           ),
           suffixIcon: widget.textFormFieldController.text.isEmpty
               ? null

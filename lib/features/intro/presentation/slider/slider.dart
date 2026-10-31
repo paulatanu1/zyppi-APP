@@ -1,11 +1,21 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 
-/// docs/mockups/Onboarding.dc.html.
+const _heroImages = [
+  'assets/images/Splash-1.png',
+  'assets/images/Splash-2.png',
+  'assets/images/Splash-3.png',
+  'assets/images/Splash-4.png',
+];
+
+/// Based on docs/mockups (v2) Onboarding.dc.html, extended to swipe through
+/// `_heroImages`: logo + Skip, a swipeable hero illustration with floating
+/// info chips, a headline + subtext, a step indicator bound to the current
+/// page, "Get started" and a "Log in" link.
 class SliderScreen extends StatefulWidget {
   const SliderScreen({super.key});
 
@@ -14,48 +24,26 @@ class SliderScreen extends StatefulWidget {
 }
 
 class _SliderScreenState extends State<SliderScreen> {
-  int currentStep = 0;
+  final _pageController = PageController();
+  int _currentPage = 0;
 
-  final List<String> images = [
-    'assets/images/Splash-1.png',
-    'assets/images/Splash-2.png',
-    'assets/images/Splash-3.png',
-    'assets/images/Splash-4.png',
-  ];
-  late final List<String> titles = [
-    'perfectPick'.tr(),
-    'pickupProducts'.tr(),
-    'doorstepDelivery'.tr(),
-    'getYourOrder'.tr(),
-  ];
-  late final List<String> descriptions = [
-    'perfectPickDescription'.tr(),
-    'pickupProductsDescription'.tr(),
-    'doorstepDeliveryDescription'.tr(),
-    'getYourOrderDescription'.tr(),
-  ];
-
-  void _next() {
-    if (currentStep < titles.length - 1) {
-      setState(() => currentStep++);
-    } else {
-      context.push('/loginScreen');
-    }
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final isLast = currentStep == titles.length - 1;
-
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: context.colors.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
-            AppSpacing.huge,
+            AppSpacing.xxl,
+            AppSpacing.xxl,
             AppSpacing.xxl,
             AppSpacing.huge,
-            AppSpacing.giant,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,107 +51,127 @@ class _SliderScreenState extends State<SliderScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Zyppi',
-                    style: AppTypography.headlineMedium.copyWith(
-                      color: AppColors.white,
-                    ),
-                  ),
+                  Image.asset('assets/icons/appLogo.png', height: 34),
                   TextButton(
                     onPressed: () => context.push('/loginScreen'),
                     child: Text(
                       'skip'.tr(),
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.onPrimaryMuted,
+                      style: AppTypography.label.copyWith(
+                        color: context.colors.muted,
                       ),
                     ),
                   ),
                 ],
               ),
+              const SizedBox(height: AppSpacing.base),
               Expanded(
-                child: Center(
-                  child: Container(
-                    width: 220,
-                    height: 220,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primaryDark,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 400),
-                        child: Image.asset(
-                          images[currentStep],
-                          key: ValueKey<int>(currentStep),
-                          width: 160,
-                          height: 160,
-                          fit: BoxFit.contain,
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: _heroImages.length,
+                  onPageChanged: (index) =>
+                      setState(() => _currentPage = index),
+                  itemBuilder: (context, index) => Stack(
+                    children: [
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: context.colors.blueSoft,
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                          child: Center(
+                            child: Image.asset(
+                              _heroImages[index],
+                              width: 260,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      Positioned(
+                        left: 14,
+                        top: 20,
+                        child: _FloatChip(
+                          icon: Icons.bolt,
+                          iconColor: context.colors.accent,
+                          label: 'deliveryChipLabel'.tr(),
+                        ),
+                      ),
+                      Positioned(
+                        right: 14,
+                        bottom: 24,
+                        child: _FloatChip(
+                          icon: Icons.check_circle,
+                          iconColor: context.colors.green,
+                          label: 'qualityChipLabel'.tr(),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: Column(
-                  key: ValueKey<int>(currentStep),
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(height: AppSpacing.huge),
+              RichText(
+                text: TextSpan(
+                  style: AppTypography.display.copyWith(
+                    color: context.colors.ink,
+                  ),
                   children: [
-                    Text(
-                      titles[currentStep],
-                      style: AppTypography.headlineSmall.copyWith(
-                        color: AppColors.white,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      descriptions[currentStep],
-                      style: AppTypography.bodyLarge.copyWith(
-                        color: AppColors.onPrimaryMuted,
-                      ),
+                    TextSpan(text: '${'onboardingHeadlinePrefix'.tr()} '),
+                    TextSpan(
+                      text: 'onboardingHeadlineHighlight'.tr(),
+                      style: TextStyle(color: context.colors.primaryText),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.huge),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'onboardingSubtext'.tr(),
+                style: AppTypography.body.copyWith(color: context.colors.muted),
+              ),
+              const Spacer(),
               Row(
-                children: List.generate(titles.length, (index) {
-                  final selected = index == currentStep;
-
-                  return Padding(
-                    padding: const EdgeInsets.only(right: AppSpacing.sm),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      width: selected ? 24 : 6,
+                children: [
+                  for (var i = 0; i < _heroImages.length; i++) ...[
+                    if (i > 0) const SizedBox(width: AppSpacing.xs),
+                    Container(
+                      width: i == _currentPage ? 26 : 6,
                       height: 6,
                       decoration: BoxDecoration(
-                        color: selected
-                            ? AppColors.accent
-                            : const Color(0xFFF07BBE),
+                        color: i == _currentPage
+                            ? context.colors.primary
+                            : context.colors.lineAlt,
                         borderRadius: BorderRadius.circular(3),
                       ),
                     ),
-                  );
-                }),
+                  ],
+                ],
               ),
               const SizedBox(height: AppSpacing.xxl),
               SizedBox(
                 width: double.infinity,
                 height: AppSizes.button,
                 child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent,
-                    foregroundColor: AppColors.ink,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.input),
-                    ),
-                  ),
-                  onPressed: _next,
-                  child: Text(
-                    isLast ? 'getStart'.tr() : 'next'.tr(),
-                    style: AppTypography.labelLarge.copyWith(
-                      color: AppColors.ink,
+                  onPressed: () => context.push('/loginScreen'),
+                  child: Text('getStart'.tr()),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Center(
+                child: TextButton(
+                  onPressed: () => context.push('/loginScreen'),
+                  child: Text.rich(
+                    TextSpan(
+                      text: '${'alreadyHaveAccount'.tr()} ',
+                      style: AppTypography.label.copyWith(
+                        color: context.colors.muted,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: 'login'.tr(),
+                          style: TextStyle(color: context.colors.primaryText),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -171,6 +179,44 @@ class _SliderScreenState extends State<SliderScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _FloatChip extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+
+  const _FloatChip({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.base,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.input),
+        boxShadow: [BoxShadow(color: context.colors.shadow, blurRadius: 8)],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: iconColor),
+          const SizedBox(width: AppSpacing.xs),
+          Text(
+            label,
+            style: AppTypography.label.copyWith(color: context.colors.ink),
+          ),
+        ],
       ),
     );
   }

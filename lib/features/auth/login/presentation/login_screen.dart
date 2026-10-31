@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/common_widgets/google_sign_in_button.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/auth/google_sign_in/application/google_provider.dart';
 import 'package:zippy/features/auth/otp_verification/application/otp_provider.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// docs/mockups/Login.dc.html.
 class LoginScreen extends ConsumerWidget {
@@ -20,7 +20,6 @@ class LoginScreen extends ConsumerWidget {
     final otpState = ref.watch(otpProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -30,11 +29,11 @@ class LoginScreen extends ConsumerWidget {
               Container(
                 width: double.infinity,
                 height: 220,
-                color: AppColors.primaryTint,
-                child: const Icon(
+                color: context.colors.primaryTint,
+                child: Icon(
                   Icons.shopping_bag_outlined,
                   size: 72,
-                  color: AppColors.primary,
+                  color: context.colors.primary,
                 ),
               ),
               Padding(
@@ -50,13 +49,14 @@ class LoginScreen extends ConsumerWidget {
                     Text(
                       'otpSentDescription'.tr(),
                       style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.muted,
+                        color: context.colors.muted,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xxl),
                     Text(
                       'mobileNumber'.tr(),
                       style: AppTypography.bodySmall.copyWith(
+                        color: context.colors.muted,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -68,7 +68,7 @@ class LoginScreen extends ConsumerWidget {
                       ),
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: AppColors.primary,
+                          color: context.colors.primary,
                           width: 1.5,
                         ),
                         borderRadius: BorderRadius.circular(AppRadius.input),
@@ -80,7 +80,7 @@ class LoginScreen extends ConsumerWidget {
                           Container(
                             width: 1,
                             height: 24,
-                            color: AppColors.line,
+                            color: context.colors.line,
                           ),
                           const SizedBox(width: AppSpacing.base),
                           Expanded(
@@ -90,6 +90,11 @@ class LoginScreen extends ConsumerWidget {
                               style: AppTypography.bodyLarge,
                               decoration: const InputDecoration(
                                 border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                disabledBorder: InputBorder.none,
+                                errorBorder: InputBorder.none,
+                                focusedErrorBorder: InputBorder.none,
                               ),
                             ),
                           ),
@@ -115,7 +120,7 @@ class LoginScreen extends ConsumerWidget {
                       child: Text(
                         'continueWith'.tr(),
                         style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.muted,
+                          color: context.colors.muted,
                         ),
                       ),
                     ),
@@ -134,7 +139,7 @@ class LoginScreen extends ConsumerWidget {
                       'termsAndPrivacy'.tr(),
                       textAlign: TextAlign.center,
                       style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.muted,
+                        color: context.colors.muted,
                       ),
                     ),
                   ],

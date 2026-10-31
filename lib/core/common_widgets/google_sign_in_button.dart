@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 class GoogleSignInButton extends StatelessWidget {
   final VoidCallback action;
@@ -21,7 +22,7 @@ class GoogleSignInButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.googleSignInButtonColor,
           borderRadius: BorderRadius.circular(AppRadius.input),
-          border: Border.all(color: AppColors.line),
+          border: Border.all(color: context.colors.line),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/common_widgets/nav_bar/provider/nav_bar_provider.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/account/presentation/account_screen.dart';
@@ -11,6 +10,7 @@ import 'package:zippy/features/explore/presentation/explore_screen.dart';
 import 'package:zippy/features/favourite/presentation/favourite_screen.dart';
 import 'package:zippy/features/home_screen/presentation/home_screen.dart';
 import 'package:zippy/features/my_cart/presentation/my_cart_screen.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 const _tabs = [
   (icon: Icons.home_outlined, activeIcon: Icons.home, labelKey: 'home'),
@@ -51,9 +51,12 @@ class NavBar extends ConsumerWidget {
     ];
 
     SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        systemNavigationBarColor: AppColors.surface,
-        systemNavigationBarIconBrightness: Brightness.dark,
+      SystemUiOverlayStyle(
+        systemNavigationBarColor: context.colors.surface,
+        systemNavigationBarIconBrightness:
+            Theme.of(context).brightness == Brightness.dark
+            ? Brightness.light
+            : Brightness.dark,
       ),
     );
 
@@ -66,9 +69,9 @@ class NavBar extends ConsumerWidget {
         body: IndexedStack(index: currentIndex, children: screens),
         bottomNavigationBar: Container(
           height: AppSizes.navBar,
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
-            border: Border(top: BorderSide(color: AppColors.line)),
+          decoration: BoxDecoration(
+            color: context.colors.surface,
+            border: Border(top: BorderSide(color: context.colors.line)),
           ),
           child: Row(
             children: List.generate(_tabs.length, (index) {
@@ -83,14 +86,18 @@ class NavBar extends ConsumerWidget {
                     children: [
                       Icon(
                         selected ? tab.activeIcon : tab.icon,
-                        color: selected ? AppColors.primary : AppColors.muted,
+                        color: selected
+                            ? context.colors.primary
+                            : context.colors.muted,
                         size: 22,
                       ),
                       const SizedBox(height: 4),
                       Text(
                         tab.labelKey.tr(),
                         style: AppTypography.labelSmall.copyWith(
-                          color: selected ? AppColors.primary : AppColors.muted,
+                          color: selected
+                              ? context.colors.primary
+                              : context.colors.muted,
                         ),
                       ),
                     ],

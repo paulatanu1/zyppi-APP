@@ -23,7 +23,6 @@ class ExploreScreen extends ConsumerWidget {
     final exploreState = ref.watch(exploreNotifier);
 
     return Scaffold(
-      backgroundColor: AppColors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),

@@ -81,12 +81,16 @@ Future<void> bootstrap() async {
   // the push service both handle "not granted yet" on their own), and
   // blocking here means a user (or an automated test) who doesn't
   // immediately answer the system prompt never sees the app at all.
+  // Sequenced so the location and notification permission dialogs never
+  // overlap (Android only shows one permission request at a time).
   unawaited(
     container
         .read(checkAndRequestLocation.notifier)
-        .checkAndRequestLocationPermission(),
+        .checkAndRequestLocationPermission()
+        .whenComplete(
+          () => PushNotificationService.initialize(container, router),
+        ),
   );
-  unawaited(PushNotificationService.initialize(container, router));
 
   runApp(
     EasyLocalization(

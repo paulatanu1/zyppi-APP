@@ -1,7 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 class FilterHeader extends StatelessWidget {
   final VoidCallback? onCrossIconClicked;
@@ -16,7 +16,7 @@ class FilterHeader extends StatelessWidget {
         Text('filters'.tr(), style: AppTypography.titleMedium),
         IconButton(
           onPressed: onCrossIconClicked,
-          icon: const Icon(Icons.close, color: AppColors.ink),
+          icon: Icon(Icons.close, color: context.colors.ink),
           tooltip: 'close'.tr(),
         ),
       ],

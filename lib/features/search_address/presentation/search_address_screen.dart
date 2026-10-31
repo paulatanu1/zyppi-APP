@@ -2,19 +2,21 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/domain/address.dart';
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/my_address/application/addresses_provider.dart';
 import 'package:zippy/features/search_address/application/place_prediction_provider.dart';
 import 'package:zippy/features/search_address/domain/place_prediction.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
-/// docs/mockups/Location.dc.html: a full-screen map-pin picker. The pin
-/// stays centered; dragging the map re-geocodes whatever is under it.
+/// docs/mockups/Location.dc.html, minus the embedded Google Maps pin-picker:
+/// delivery here only ever needs a GPS `lat`/`lng` (the rider navigates with
+/// their own phone's Maps app), so this screen resolves a location via GPS
+/// or place search and lets the customer edit the address text directly
+/// instead of dragging a pin to confirm it visually.
 /// `addLocation == true` means "save this as a new address" (reached from
 /// MyAddressScreen's "Add new address"); `false` just picks a location for
 /// the home screen's delivery context (reached from the header/search bar).
@@ -30,15 +32,16 @@ class SearchAddressScreen extends ConsumerStatefulWidget {
 
 class _SearchAddressScreenState extends ConsumerState<SearchAddressScreen> {
   final _searchController = TextEditingController();
-  GoogleMapController? _mapController;
-  LatLng _lastCameraTarget = _defaultCenter;
+  final _line1Controller = TextEditingController();
+  final _landmarkController = TextEditingController();
   String _label = 'Home';
-
-  static const _defaultCenter = LatLng(23.3324, 86.3617); // Purulia
+  String? _syncedForAddress;
 
   @override
   void dispose() {
     _searchController.dispose();
+    _line1Controller.dispose();
+    _landmarkController.dispose();
     super.dispose();
   }
 
@@ -49,117 +52,104 @@ class _SearchAddressScreenState extends ConsumerState<SearchAddressScreen> {
         ref.watch(placePredictionProvider).placePrediction?.predictions ??
         const [];
 
-    ref.listen(currentLocation, (previous, next) {
-      final moved =
-          previous?.latitude != next.latitude ||
-          previous?.longitude != next.longitude;
-      if (moved && !next.isDetecting) {
-        final target = LatLng(next.latitude, next.longitude);
-        _lastCameraTarget = target;
-        _mapController?.animateCamera(CameraUpdate.newLatLng(target));
-      }
-    });
-
-    final initialTarget = location.latitude == 0.0 && location.longitude == 0.0
-        ? _defaultCenter
-        : LatLng(location.latitude, location.longitude);
+    // Re-sync the editable text fields whenever a fresh resolution comes in
+    // (GPS, search result or saved address) — but not on every rebuild, so
+    // the user's own edits aren't clobbered while they type.
+    if (_syncedForAddress != location.address) {
+      _syncedForAddress = location.address;
+      _line1Controller.text = location.line1.isNotEmpty
+          ? location.line1
+          : location.address;
+      _landmarkController.text = location.landmark ?? '';
+    }
 
     return Scaffold(
-      body: Stack(
-        children: [
-          GoogleMap(
-            initialCameraPosition: CameraPosition(
-              target: initialTarget,
-              zoom: 16,
+      backgroundColor: context.colors.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xxl,
+                vertical: AppSpacing.lg,
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () => context.pop(),
+                    icon: Icon(Icons.arrow_back, color: context.colors.muted),
+                    tooltip: 'back'.tr(),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: _SearchBar(
+                      controller: _searchController,
+                      onChanged: (value) {
+                        setState(() {});
+                        ref
+                            .read(placePredictionProvider.notifier)
+                            .placePrediction(input: value);
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
-            onMapCreated: (controller) => _mapController = controller,
-            onCameraMove: (position) => _lastCameraTarget = position.target,
-            onCameraIdle: () => ref
-                .read(currentLocation.notifier)
-                .resolveLatLng(
-                  _lastCameraTarget.latitude,
-                  _lastCameraTarget.longitude,
+            if (predictions.isNotEmpty && _searchController.text.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+                child: _PredictionsList(
+                  predictions: predictions,
+                  onSelected: (prediction) async {
+                    _searchController.clear();
+                    await ref
+                        .read(placePredictionProvider.notifier)
+                        .placeDetails(
+                          placeId: prediction.placeId,
+                          selectedAddress: prediction.description,
+                        );
+                    setState(() {});
+                  },
                 ),
-            myLocationButtonEnabled: false,
-            zoomControlsEnabled: false,
-          ),
-          const IgnorePointer(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: 40),
-              child: Icon(
-                Icons.location_pin,
-                size: 44,
-                color: AppColors.primary,
+              ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSpacing.xxl),
+                child: _ConfirmSheet(
+                  addLocation: widget.addLocation,
+                  label: _label,
+                  onLabelChanged: (value) => setState(() => _label = value),
+                  line1Controller: _line1Controller,
+                  landmarkController: _landmarkController,
+                  onUseCurrentLocation: () =>
+                      ref.read(currentLocation.notifier).getCurrentLocation(),
+                  onConfirm: () async {
+                    ref
+                        .read(currentLocation.notifier)
+                        .applyEditedText(
+                          line1: _line1Controller.text,
+                          landmark: _landmarkController.text.isEmpty
+                              ? null
+                              : _landmarkController.text,
+                        );
+                    if (widget.addLocation) {
+                      await ref
+                          .read(placePredictionProvider.notifier)
+                          .addAddress(label: _label);
+                    }
+                    if (context.mounted) context.pop();
+                  },
+                  onSavedAddressTap: (address) async {
+                    await ref
+                        .read(currentLocation.notifier)
+                        .selectSavedAddress(address);
+                    if (context.mounted) context.pop();
+                  },
+                ),
               ),
             ),
-          ),
-          Positioned(
-            left: AppSpacing.xxl,
-            right: AppSpacing.xxl,
-            top: AppSpacing.xxl,
-            child: _SearchBar(
-              controller: _searchController,
-              onChanged: (value) {
-                setState(() {});
-                ref
-                    .read(placePredictionProvider.notifier)
-                    .placePrediction(input: value);
-              },
-              onBack: () => context.pop(),
-            ),
-          ),
-          if (predictions.isNotEmpty && _searchController.text.isNotEmpty)
-            Positioned(
-              left: AppSpacing.xxl,
-              right: AppSpacing.xxl,
-              top: 72,
-              child: _PredictionsList(
-                predictions: predictions,
-                onSelected: (prediction) async {
-                  _searchController.clear();
-                  await ref
-                      .read(placePredictionProvider.notifier)
-                      .placeDetails(
-                        placeId: prediction.placeId,
-                        selectedAddress: prediction.description,
-                      );
-                  setState(() {});
-                },
-              ),
-            ),
-          Positioned(
-            right: AppSpacing.xxl,
-            top: 220,
-            child: _CurrentLocationButton(
-              onPressed: () =>
-                  ref.read(currentLocation.notifier).getCurrentLocation(),
-            ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: _ConfirmSheet(
-              addLocation: widget.addLocation,
-              label: _label,
-              onLabelChanged: (value) => setState(() => _label = value),
-              onConfirm: () async {
-                if (widget.addLocation) {
-                  await ref
-                      .read(placePredictionProvider.notifier)
-                      .addAddress(label: _label);
-                }
-                if (context.mounted) context.pop();
-              },
-              onSavedAddressTap: (address) async {
-                await ref
-                    .read(currentLocation.notifier)
-                    .selectSavedAddress(address);
-                if (context.mounted) context.pop();
-              },
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -168,13 +158,8 @@ class _SearchAddressScreenState extends ConsumerState<SearchAddressScreen> {
 class _SearchBar extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
-  final VoidCallback onBack;
 
-  const _SearchBar({
-    required this.controller,
-    required this.onChanged,
-    required this.onBack,
-  });
+  const _SearchBar({required this.controller, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -182,38 +167,32 @@ class _SearchBar extends StatelessWidget {
       height: AppSizes.inputMin,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.input),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x1A17201B),
+            color: context.colors.shadow,
             blurRadius: 10,
             offset: Offset(0, 2),
           ),
         ],
       ),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: onBack,
-            icon: const Icon(Icons.arrow_back, color: AppColors.muted),
-            tooltip: 'back'.tr(),
+      child: TextField(
+        controller: controller,
+        onChanged: onChanged,
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          disabledBorder: InputBorder.none,
+          errorBorder: InputBorder.none,
+          focusedErrorBorder: InputBorder.none,
+          hintText: 'searchAreaPlaceholder'.tr(),
+          hintStyle: AppTypography.bodyMedium.copyWith(
+            color: context.colors.muted,
           ),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              onChanged: onChanged,
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                hintText: 'searchAreaPlaceholder'.tr(),
-                hintStyle: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.muted,
-                ),
-              ),
-              style: AppTypography.bodyMedium,
-            ),
-          ),
-        ],
+        ),
+        style: AppTypography.bodyMedium,
       ),
     );
   }
@@ -228,55 +207,39 @@ class _PredictionsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      margin: const EdgeInsets.only(top: AppSpacing.sm),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.card),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x1A17201B),
+            color: context.colors.shadow,
             blurRadius: 10,
             offset: Offset(0, 2),
           ),
         ],
       ),
-      child: ListView.separated(
-        shrinkWrap: true,
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-        itemCount: predictions.length,
-        separatorBuilder: (context, index) =>
-            const Divider(height: 1, color: AppColors.divider),
-        itemBuilder: (context, index) {
-          final prediction = predictions[index];
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListView.separated(
+          shrinkWrap: true,
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+          itemCount: predictions.length,
+          separatorBuilder: (context, index) =>
+              Divider(height: 1, color: context.colors.divider),
+          itemBuilder: (context, index) {
+            final prediction = predictions[index];
 
-          return ListTile(
-            leading: const Icon(Icons.location_pin, color: AppColors.primary),
-            title: Text(
-              prediction.description ?? '',
-              style: AppTypography.bodyMedium,
-            ),
-            onTap: () => onSelected(prediction),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _CurrentLocationButton extends StatelessWidget {
-  final VoidCallback onPressed;
-
-  const _CurrentLocationButton({required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surface,
-      shape: const CircleBorder(),
-      elevation: 2,
-      child: IconButton(
-        onPressed: onPressed,
-        icon: const Icon(Icons.my_location, color: AppColors.primary),
-        tooltip: 'useCurrentLocation'.tr(),
+            return ListTile(
+              leading: Icon(Icons.location_pin, color: context.colors.primary),
+              title: Text(
+                prediction.description ?? '',
+                style: AppTypography.bodyMedium,
+              ),
+              onTap: () => onSelected(prediction),
+            );
+          },
+        ),
       ),
     );
   }
@@ -288,6 +251,9 @@ class _ConfirmSheet extends ConsumerWidget {
   final bool addLocation;
   final String label;
   final ValueChanged<String> onLabelChanged;
+  final TextEditingController line1Controller;
+  final TextEditingController landmarkController;
+  final VoidCallback onUseCurrentLocation;
   final VoidCallback onConfirm;
   final ValueChanged<Address> onSavedAddressTap;
 
@@ -295,6 +261,9 @@ class _ConfirmSheet extends ConsumerWidget {
     required this.addLocation,
     required this.label,
     required this.onLabelChanged,
+    required this.line1Controller,
+    required this.landmarkController,
+    required this.onUseCurrentLocation,
     required this.onConfirm,
     required this.onSavedAddressTap,
   });
@@ -305,68 +274,51 @@ class _ConfirmSheet extends ConsumerWidget {
     final savedAddresses = ref.watch(addressesProvider);
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.xxl,
-        AppSpacing.xxl,
-        AppSpacing.xxl,
-        AppSpacing.xxxl,
-      ),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppRadius.sheetTop),
-        ),
+      padding: const EdgeInsets.all(AppSpacing.xxl),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.card),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryTint,
-                  borderRadius: BorderRadius.circular(AppRadius.input),
-                ),
-                child: const Icon(Icons.location_pin, color: AppColors.primary),
-              ),
-              const SizedBox(width: AppSpacing.lg),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      location.line1.isNotEmpty
-                          ? location.line1
-                          : location.address,
-                      style: AppTypography.titleMedium,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      location.address,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.muted,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                child: Text(
+                  'yourDeliveryLocation'.tr(),
+                  style: AppTypography.titleMedium,
+                ),
+              ),
+              Material(
+                color: context.colors.primaryTint,
+                shape: const CircleBorder(),
+                child: IconButton(
+                  onPressed: onUseCurrentLocation,
+                  icon: Icon(Icons.my_location, color: context.colors.primary),
+                  tooltip: 'useCurrentLocation'.tr(),
                 ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
           if (location.isDetecting || location.checkingServiceability)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
-              child: LinearProgressIndicator(color: AppColors.primary),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+              child: LinearProgressIndicator(color: context.colors.primary),
             )
           else
             _ServiceabilityBanner(serviceable: location.serviceArea != null),
+          const SizedBox(height: AppSpacing.lg),
+          TextField(
+            controller: line1Controller,
+            decoration: InputDecoration(labelText: 'addressLine'.tr()),
+          ),
+          const SizedBox(height: AppSpacing.base),
+          TextField(
+            controller: landmarkController,
+            decoration: InputDecoration(labelText: 'landmarkOptional'.tr()),
+          ),
           if (addLocation) ...[
             const SizedBox(height: AppSpacing.lg),
             Wrap(
@@ -392,7 +344,7 @@ class _ConfirmSheet extends ConsumerWidget {
 
               return PrimaryButton(
                 buttonTitle: 'confirmLocation'.tr(),
-                buttonColor: canConfirm ? null : AppColors.line,
+                buttonColor: canConfirm ? null : context.colors.line,
                 action: canConfirm ? onConfirm : () {},
               );
             },
@@ -410,7 +362,7 @@ class _ConfirmSheet extends ConsumerWidget {
                         Text(
                           'yourSavedAddress'.tr(),
                           style: AppTypography.labelSmall.copyWith(
-                            color: AppColors.muted,
+                            color: context.colors.muted,
                           ),
                         ),
                         for (final address in addresses)
@@ -450,7 +402,9 @@ class _ServiceabilityBanner extends StatelessWidget {
         vertical: AppSpacing.base,
       ),
       decoration: BoxDecoration(
-        color: serviceable ? AppColors.primaryTint : AppColors.dangerTint,
+        color: serviceable
+            ? context.colors.primaryTint
+            : context.colors.dangerTint,
         borderRadius: BorderRadius.circular(AppRadius.input),
       ),
       child: Row(
@@ -458,7 +412,9 @@ class _ServiceabilityBanner extends StatelessWidget {
           Icon(
             serviceable ? Icons.check_circle : Icons.error_outline,
             size: 16,
-            color: serviceable ? AppColors.primaryDark : AppColors.danger,
+            color: serviceable
+                ? context.colors.primaryDark
+                : context.colors.danger,
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -468,7 +424,9 @@ class _ServiceabilityBanner extends StatelessWidget {
                   : 'notServiceableYet'.tr(),
               style: AppTypography.bodySmall.copyWith(
                 fontWeight: FontWeight.w600,
-                color: serviceable ? AppColors.primaryDark : AppColors.danger,
+                color: serviceable
+                    ? context.colors.primaryDark
+                    : context.colors.danger,
               ),
             ),
           ),

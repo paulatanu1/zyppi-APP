@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/favourite/application/favourite_products_provider.dart';
 import 'package:zippy/features/favourite/widgets/favourite_item.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 class FavouriteScreen extends ConsumerWidget {
   const FavouriteScreen({super.key});
@@ -17,7 +17,6 @@ class FavouriteScreen extends ConsumerWidget {
     final productsAsync = ref.watch(favouriteProductsProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -25,7 +24,7 @@ class FavouriteScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(AppSpacing.xxl),
               child: Text('favourite'.tr(), style: AppTypography.headlineSmall),
             ),
-            const Divider(height: 1, color: AppColors.divider),
+            Divider(height: 1, color: context.colors.divider),
             Expanded(
               child: productsAsync.when(
                 loading: () => const SizedBox.shrink(),

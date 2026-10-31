@@ -1,12 +1,12 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/home_screen/widgets/add_new_address_row.dart';
 import 'package:zippy/features/my_address/application/addresses_provider.dart';
 import 'package:zippy/features/my_address/widgets/saved_address_row.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// docs/mockups/Location.dc.html's "SAVED ADDRESSES" section; "Add new
 /// address" opens the map-pin picker (search_address_screen.dart).
@@ -18,7 +18,6 @@ class MyAddressScreen extends ConsumerWidget {
     final addressesAsync = ref.watch(addressesProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.white,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -36,7 +35,7 @@ class MyAddressScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            const Divider(height: 1, color: AppColors.divider),
+            Divider(height: 1, color: context.colors.divider),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.xxl),
@@ -48,7 +47,7 @@ class MyAddressScreen extends ConsumerWidget {
                     Text(
                       'yourSavedAddress'.tr(),
                       style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.muted,
+                        color: context.colors.muted,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.base),
@@ -61,10 +60,8 @@ class MyAddressScreen extends ConsumerWidget {
                         ),
                         data: (addresses) => ListView.separated(
                           itemCount: addresses.length,
-                          separatorBuilder: (context, index) => const Divider(
-                            height: 1,
-                            color: AppColors.divider,
-                          ),
+                          separatorBuilder: (context, index) =>
+                              Divider(height: 1, color: context.colors.divider),
                           itemBuilder: (context, index) =>
                               SavedAddressRow(address: addresses[index]),
                         ),

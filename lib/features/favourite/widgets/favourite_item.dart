@@ -3,9 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/common_widgets/price_tag.dart';
 import 'package:zippy/core/domain/product.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 class FavouriteItem extends StatelessWidget {
   final Product product;
@@ -47,22 +47,22 @@ class FavouriteItem extends StatelessWidget {
                         Text(
                           variant?.label ?? '',
                           style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.muted,
+                            color: context.colors.muted,
                           ),
                         ),
                       ],
                     ),
                   ),
                   if (variant != null) PriceTag(pricePaise: variant.pricePaise),
-                  const Icon(
+                  Icon(
                     Icons.arrow_forward_ios,
                     size: 16,
-                    color: AppColors.muted,
+                    color: context.colors.muted,
                   ),
                 ],
               ),
             ),
-            const Divider(height: 1, color: AppColors.divider),
+            Divider(height: 1, color: context.colors.divider),
           ],
         ),
       ),

@@ -7,37 +7,38 @@ import 'package:zippy/core/domain/order_status.dart';
 import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
-(Color, Color, String) _badge(OrderStatus status) {
+(Color, Color, String) _badge(BuildContext context, OrderStatus status) {
   switch (status) {
     case OrderStatus.outForDelivery:
       return (
-        const Color(0xFFFFF1C2),
-        const Color(0xFF7A5A00),
+        context.colors.outForDeliveryBg,
+        context.colors.outForDeliveryFg,
         'orderStatusOutForDelivery'.tr(),
       );
     case OrderStatus.delivered:
       return (
-        AppColors.primaryTint,
-        AppColors.primaryDark,
+        context.colors.deliveredBg,
+        context.colors.deliveredFg,
         'orderStatusDelivered'.tr(),
       );
     case OrderStatus.cancelled:
       return (
-        const Color(0xFFFDECE7),
-        const Color(0xFF9A3412),
+        context.colors.cancelledBg,
+        context.colors.cancelledFg,
         'orderStatusCancelled'.tr(),
       );
     case OrderStatus.placed:
       return (
-        AppColors.primaryTint,
-        AppColors.primaryDark,
+        context.colors.primaryTint,
+        context.colors.primaryDark,
         'orderStatusPlaced'.tr(),
       );
     case OrderStatus.packed:
       return (
-        AppColors.primaryTint,
-        AppColors.primaryDark,
+        context.colors.primaryTint,
+        context.colors.primaryDark,
         'orderStatusPacked'.tr(),
       );
   }
@@ -51,7 +52,7 @@ class YourOrderWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (bg, fg, label) = _badge(order.status);
+    final (bg, fg, label) = _badge(context, order.status);
     final itemCount = order.items.fold<int>(0, (sum, i) => sum + i.quantity);
     final isActive =
         order.status == OrderStatus.placed ||
@@ -66,7 +67,7 @@ class YourOrderWidget extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           border: Border.all(
-            color: isActive ? AppColors.primary : AppColors.line,
+            color: isActive ? context.colors.primary : context.colors.line,
             width: isActive ? 1.5 : 1,
           ),
           borderRadius: BorderRadius.circular(AppRadius.card),
@@ -95,7 +96,7 @@ class YourOrderWidget extends StatelessWidget {
                 Text(
                   '${order.placedAt.day}/${order.placedAt.month}/${order.placedAt.year}',
                   style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.muted,
+                    color: context.colors.muted,
                   ),
                 ),
               ],
@@ -112,13 +113,13 @@ class YourOrderWidget extends StatelessWidget {
                           width: 32,
                           height: 32,
                           decoration: BoxDecoration(
-                            color: AppColors.primaryTint,
+                            color: context.colors.primaryTint,
                             borderRadius: BorderRadius.circular(AppRadius.chip),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.shopping_basket_outlined,
                             size: 16,
-                            color: AppColors.primaryDark,
+                            color: context.colors.primaryDark,
                           ),
                         ),
                       ),
@@ -136,7 +137,7 @@ class YourOrderWidget extends StatelessWidget {
                     Text(
                       '$itemCount items',
                       style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.muted,
+                        color: context.colors.muted,
                       ),
                     ),
                   ],
@@ -152,7 +153,7 @@ class YourOrderWidget extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                   decoration: BoxDecoration(
-                    color: AppColors.primary,
+                    color: context.colors.primary,
                     borderRadius: BorderRadius.circular(AppRadius.chip),
                   ),
                   child: Text(
@@ -196,10 +197,13 @@ class _ActionChip extends StatelessWidget {
           vertical: AppSpacing.md,
         ),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.line),
+          border: Border.all(color: context.colors.line),
           borderRadius: BorderRadius.circular(AppRadius.chip),
         ),
-        child: Text(label, style: AppTypography.labelSmall),
+        child: Text(
+          label,
+          style: AppTypography.labelSmall.copyWith(color: context.colors.muted),
+        ),
       ),
     );
   }

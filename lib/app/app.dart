@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -28,6 +29,18 @@ class Zyppi extends ConsumerWidget {
         supportedLocales: context.supportedLocales,
         locale: context.locale,
         debugShowCheckedModeBanner: false,
+        // Status-bar icons follow the active theme (bootstrap only sets the
+        // initial light-theme style).
+        builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
+          value: Theme.of(context).brightness == Brightness.dark
+              ? SystemUiOverlayStyle.light.copyWith(
+                  statusBarColor: Colors.transparent,
+                )
+              : SystemUiOverlayStyle.dark.copyWith(
+                  statusBarColor: Colors.transparent,
+                ),
+          child: child!,
+        ),
       ),
     );
   }

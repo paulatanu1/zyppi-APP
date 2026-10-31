@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:geocoding/geocoding.dart' as geocoding;
 import 'package:geolocator/geolocator.dart';
 import 'package:zippy/core/data/service_area_repository_impl.dart';
+import 'package:zippy/core/shared_providers/location/provider/request_location_provider.dart';
 import 'package:zippy/core/domain/address.dart';
 import 'package:zippy/core/utils/parsed_address.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
@@ -27,6 +28,16 @@ class GetCurrentLocationProvider
     state = state.copyWith(isDetecting: true, error: null);
 
     try {
+      // Don't prompt from here — CheckAndRequestLocationProvider owns the
+      // permission request; without a grant there's nothing to detect.
+      final permission = await Geolocator.checkPermission();
+      if (!mounted) return;
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        state = state.copyWith(isDetecting: false);
+        return;
+      }
+
       final position = await Geolocator.getCurrentPosition();
       if (!mounted) return;
       await resolveLatLng(position.latitude, position.longitude);
@@ -135,6 +146,13 @@ class GetCurrentLocationProvider
     return _checkServiceability(address.lat, address.lng);
   }
 
+  /// Applies user-edited `line1`/`landmark` text (typed in the confirm
+  /// screen in place of the old map-pin visual check) without touching the
+  /// resolved coordinates or re-running serviceability.
+  void applyEditedText({required String line1, String? landmark}) {
+    state = state.copyWith(line1: line1, landmark: landmark);
+  }
+
   Future<void> _checkServiceability(double lat, double lng) async {
     try {
       final area = await ref
@@ -154,4 +172,15 @@ final currentLocation =
     StateNotifierProvider.autoDispose<
       GetCurrentLocationProvider,
       GetCurrentLocationState
-    >((ref) => GetCurrentLocationProvider(ref));
+    >((ref) {
+      final notifier = GetCurrentLocationProvider(ref);
+      // On first launch the grant arrives after this provider is built;
+      // detect again once it does.
+      ref.listen(checkAndRequestLocation, (previous, next) {
+        if (next == LocationPermission.always ||
+            next == LocationPermission.whileInUse) {
+          notifier.getCurrentLocation();
+        }
+      });
+      return notifier;
+    });

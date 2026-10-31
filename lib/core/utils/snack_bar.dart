@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 
 /// Attached to [MaterialApp.scaffoldMessengerKey] in lib/app/app.dart so
 /// these helpers can show a SnackBar without needing a BuildContext at
@@ -8,10 +7,8 @@ final rootScaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
 void _showSnackBar(String message) {
   rootScaffoldMessengerKey.currentState?.showSnackBar(
-    SnackBar(
-      content: Text(message, style: const TextStyle(color: AppColors.white)),
-      backgroundColor: AppColors.black,
-    ),
+    // Colours come from ZyppiTheme's snackBarTheme so it flips with dark mode.
+    SnackBar(content: Text(message)),
   );
 }
 

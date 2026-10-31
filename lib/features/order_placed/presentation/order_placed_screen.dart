@@ -7,6 +7,7 @@ import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/order_placed/application/order_by_id_provider.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// docs/mockups/Placed.dc.html — full-bleed pink confirmation.
 class OrderPlacedScreen extends ConsumerWidget {
@@ -19,7 +20,7 @@ class OrderPlacedScreen extends ConsumerWidget {
     final order = ref.watch(orderByIdProvider(orderId)).value;
 
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: context.colors.primary,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(
@@ -35,21 +36,21 @@ class OrderPlacedScreen extends ConsumerWidget {
                     Container(
                       width: 132,
                       height: 132,
-                      decoration: const BoxDecoration(
-                        color: AppColors.primaryDark,
+                      decoration: BoxDecoration(
+                        color: context.colors.primaryDark,
                         shape: BoxShape.circle,
                       ),
                       child: Center(
                         child: Container(
                           width: 92,
                           height: 92,
-                          decoration: const BoxDecoration(
-                            color: AppColors.accent,
+                          decoration: BoxDecoration(
+                            color: context.colors.accent,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.check,
-                            color: AppColors.primaryDark,
+                            color: context.colors.primaryDark,
                             size: 50,
                           ),
                         ),
@@ -67,7 +68,7 @@ class OrderPlacedScreen extends ConsumerWidget {
                       'orderPlacedDescription'.tr(),
                       textAlign: TextAlign.center,
                       style: AppTypography.bodyLarge.copyWith(
-                        color: AppColors.onPrimaryMuted,
+                        color: context.colors.onPrimaryMuted,
                       ),
                     ),
                     if (order != null) ...[
@@ -96,8 +97,8 @@ class OrderPlacedScreen extends ConsumerWidget {
                     height: AppSizes.button,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.accent,
-                        foregroundColor: AppColors.ink,
+                        backgroundColor: context.colors.accent,
+                        foregroundColor: context.colors.ink,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppRadius.input),
                         ),
@@ -107,7 +108,7 @@ class OrderPlacedScreen extends ConsumerWidget {
                       child: Text(
                         'trackOrder'.tr(),
                         style: AppTypography.labelLarge.copyWith(
-                          color: AppColors.ink,
+                          color: context.colors.ink,
                         ),
                       ),
                     ),
@@ -148,7 +149,7 @@ class _KeyValueRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.base),
       decoration: BoxDecoration(
         border: showDivider
-            ? const Border(bottom: BorderSide(color: Color(0x24FFFFFF)))
+            ? Border(bottom: BorderSide(color: context.colors.dividerOnPrimary))
             : null,
       ),
       child: Row(
@@ -157,7 +158,7 @@ class _KeyValueRow extends StatelessWidget {
           Text(
             label,
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.onPrimaryMuted,
+              color: context.colors.onPrimaryMuted,
             ),
           ),
           Text(

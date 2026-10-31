@@ -4,10 +4,10 @@ import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/auth/otp_verification/application/otp_provider.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// docs/mockups/Otp.dc.html.
 class OtpVerificationScreen extends ConsumerWidget {
@@ -20,7 +20,6 @@ class OtpVerificationScreen extends ConsumerWidget {
     final otpVerification = ref.watch(otpProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -39,7 +38,7 @@ class OtpVerificationScreen extends ConsumerWidget {
                       child: Text(
                         'sentTo'.tr(args: [phoneNumber ?? '']),
                         style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.muted,
+                          color: context.colors.muted,
                         ),
                       ),
                     ),
@@ -54,8 +53,8 @@ class OtpVerificationScreen extends ConsumerWidget {
                   numberOfFields: 6,
                   fieldWidth: MediaQuery.of(context).size.width * 0.11,
                   margin: const EdgeInsets.all(4),
-                  focusedBorderColor: AppColors.primary,
-                  enabledBorderColor: AppColors.line,
+                  focusedBorderColor: context.colors.primary,
+                  enabledBorderColor: context.colors.line,
                   borderRadius: BorderRadius.circular(AppRadius.input),
                   borderWidth: 1.5,
                   showFieldAsBox: true,
@@ -68,7 +67,7 @@ class OtpVerificationScreen extends ConsumerWidget {
                 Text(
                   'resendCode'.tr(),
                   style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.primary,
+                    color: context.colors.primary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

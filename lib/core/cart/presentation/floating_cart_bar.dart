@@ -7,6 +7,7 @@ import 'package:zippy/core/common_widgets/price_tag.dart';
 import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// docs/mockups/Main.dc.html's floating "View cart" bar. Renders
 /// nothing while the cart is empty.
@@ -28,11 +29,11 @@ class FloatingCartBar extends ConsumerWidget {
         height: AppSizes.floatingCartBarMax,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
         decoration: BoxDecoration(
-          color: AppColors.primary,
+          color: context.colors.primary,
           borderRadius: BorderRadius.circular(AppRadius.card),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.28),
+              color: context.colors.primary.withValues(alpha: 0.28),
               blurRadius: 18,
               offset: const Offset(0, 6),
             ),
@@ -49,7 +50,7 @@ class FloatingCartBar extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '$itemCount items · ${PriceTag.format(cart.bill.totalPaise)}',
+                      '${'itemCount'.plural(itemCount)} · ${PriceTag.format(cart.bill.totalPaise)}',
                       style: AppTypography.bodyMedium.copyWith(
                         color: AppColors.white,
                         fontWeight: FontWeight.w700,
@@ -61,7 +62,7 @@ class FloatingCartBar extends ConsumerWidget {
                           args: [PriceTag.format(cart.bill.savingsPaise)],
                         ),
                         style: AppTypography.labelSmall.copyWith(
-                          color: AppColors.onPrimaryMuted,
+                          color: context.colors.onPrimaryMuted,
                         ),
                       ),
                   ],

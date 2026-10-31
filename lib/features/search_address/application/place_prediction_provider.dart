@@ -87,6 +87,7 @@ class PlacePredictionProvider extends StateNotifier<PlacePredictionState> {
               city: location.city,
               state: location.state,
               postalCode: location.postalCode,
+              landmark: location.landmark,
               lat: location.latitude,
               lng: location.longitude,
               isDefault: false,

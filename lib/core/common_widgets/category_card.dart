@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// docs/mockups/Main.dc.html's `.cat` chip: a circular colored icon
 /// with the category label below.
@@ -21,6 +21,15 @@ class CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Category tints come from catalog data as light pastels; on a dark
+    // surface they glare, so mute them into the surface colour.
+    final circleColor = Theme.of(context).brightness == Brightness.dark
+        ? Color.alphaBlend(
+            backgroundColor.withValues(alpha: 0.16),
+            context.colors.surface,
+          )
+        : backgroundColor;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(36),
@@ -31,7 +40,7 @@ class CategoryCard extends StatelessWidget {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: backgroundColor,
+              color: circleColor,
               shape: BoxShape.circle,
             ),
             child: ClipOval(child: CatalogImage(image: imageUrl)),
@@ -42,7 +51,7 @@ class CategoryCard extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: AppTypography.labelSmall.copyWith(color: AppColors.ink),
+            style: AppTypography.labelSmall.copyWith(color: context.colors.ink),
           ),
         ],
       ),

@@ -2,13 +2,14 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/common_widgets/app_skeleton.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
-import 'package:zippy/core/data/catalog_repository_impl.dart';
-import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/features/filter/application/filter_categories_provider.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/filter/widgets/filter_header.dart';
 import 'package:zippy/features/filter/widgets/filter_item.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// Filter by category (real data). Brand faceting is skipped — there's
 /// no brand field in the catalog data model yet.
@@ -24,14 +25,9 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final categoriesAsync = ref.watch(
-      FutureProvider(
-        (ref) => ref.read(catalogRepositoryProvider).fetchCategories(),
-      ),
-    );
+    final categoriesAsync = ref.watch(filterCategoriesProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.white,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,8 +39,8 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
             Expanded(
               child: Container(
                 width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: AppColors.backgroundAlt,
+                decoration: BoxDecoration(
+                  color: context.colors.backgroundAlt,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(AppRadius.sheetTop),
                     topRight: Radius.circular(AppRadius.sheetTop),
@@ -59,10 +55,31 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
                       const SizedBox(height: AppSpacing.lg),
                       Expanded(
                         child: categoriesAsync.when(
-                          loading: () => const SizedBox.shrink(),
-                          error: (error, stackTrace) => Text(
-                            'somethingWentWrong'.tr(),
-                            style: AppTypography.bodyMedium,
+                          loading: () => AppSkeleton(
+                            enabled: true,
+                            child: ListView.builder(
+                              itemCount: 6,
+                              itemBuilder: (context, index) => FilterItem(
+                                label: 'Category name',
+                                value: false,
+                                onCheckBoxChanged: (_) {},
+                              ),
+                            ),
+                          ),
+                          error: (error, stackTrace) => Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'somethingWentWrong'.tr(),
+                                style: AppTypography.bodyMedium,
+                              ),
+                              TextButton(
+                                onPressed: () =>
+                                    ref.invalidate(filterCategoriesProvider),
+                                child: Text('retry'.tr()),
+                              ),
+                            ],
                           ),
                           data: (categories) => ListView.builder(
                             itemCount: categories.length,

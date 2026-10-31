@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 class FilterItem extends StatelessWidget {
   final String label;
@@ -21,10 +22,10 @@ class FilterItem extends StatelessWidget {
         Checkbox(
           value: value,
           onChanged: onCheckBoxChanged,
-          activeColor: AppColors.primary,
+          activeColor: context.colors.primary,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
-            side: const BorderSide(color: AppColors.grey3),
+            borderRadius: BorderRadius.circular(AppRadius.badge),
+            side: BorderSide(color: context.colors.line),
           ),
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),

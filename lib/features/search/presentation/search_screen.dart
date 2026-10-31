@@ -5,11 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/common_widgets/text_form_field.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/search/application/search_provider.dart';
 import 'package:zippy/features/search/widgets/product_list_row.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// docs/mockups/Search.dc.html, minus the recent/trending-search chips
 /// (no search-history persistence yet).
@@ -25,7 +25,6 @@ class SearchScreen extends ConsumerWidget {
     final cart = ref.watch(cartProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
@@ -90,7 +89,7 @@ class SearchScreen extends ConsumerWidget {
                   child: ListView.separated(
                     itemCount: state.results.length,
                     separatorBuilder: (context, index) =>
-                        const Divider(height: 1, color: AppColors.divider),
+                        Divider(height: 1, color: context.colors.divider),
                     itemBuilder: (context, index) {
                       final product = state.results[index];
                       final variant = product.variants.isNotEmpty

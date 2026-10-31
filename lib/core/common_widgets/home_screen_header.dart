@@ -8,6 +8,7 @@ import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/home_screen/widgets/address_sheet.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// Matches docs/mockups/Main.dc.html's header: delivery ETA + profile
 /// avatar, address row, search bar.
@@ -20,7 +21,7 @@ class HomeScreenHeader extends ConsumerWidget {
 
     return Container(
       width: double.infinity,
-      color: AppColors.primary,
+      color: context.colors.primary,
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.xxxl,
         AppSpacing.xxxl,
@@ -44,10 +45,13 @@ class HomeScreenHeader extends ConsumerWidget {
               InkWell(
                 onTap: () => ref.read(navBarProvider.notifier).updateIndex(4),
                 borderRadius: BorderRadius.circular(22),
-                child: const CircleAvatar(
+                child: CircleAvatar(
                   radius: 22,
-                  backgroundColor: AppColors.primaryDark,
-                  child: Icon(Icons.person_outline, color: AppColors.white),
+                  backgroundColor: context.colors.primaryDark,
+                  child: const Icon(
+                    Icons.person_outline,
+                    color: AppColors.white,
+                  ),
                 ),
               ),
             ],
@@ -66,7 +70,9 @@ class HomeScreenHeader extends ConsumerWidget {
                   ),
                 ),
                 Expanded(
-                  child: getCurrentLocation.isDetecting == true
+                  child:
+                      getCurrentLocation.isDetecting ||
+                          getCurrentLocation.checkingServiceability
                       ? const SizedBox(
                           height: 14,
                           width: 14,
@@ -80,14 +86,14 @@ class HomeScreenHeader extends ConsumerWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.onPrimaryMuted,
+                            color: context.colors.onPrimaryMuted,
                           ),
                         ),
                 ),
-                const Icon(
+                Icon(
                   Icons.keyboard_arrow_down,
                   size: 16,
-                  color: AppColors.onPrimaryMuted,
+                  color: context.colors.onPrimaryMuted,
                 ),
               ],
             ),
@@ -112,13 +118,13 @@ class HomeScreenHeader extends ConsumerWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.search, size: 20, color: AppColors.muted),
+                  Icon(Icons.search, size: 20, color: context.colors.muted),
                   const SizedBox(width: AppSpacing.base),
                   Expanded(
                     child: Text(
                       'homeSearchHint'.tr(),
                       style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.muted,
+                        color: context.colors.muted,
                       ),
                     ),
                   ),

@@ -1,11 +1,11 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/your_order/application/orders_provider.dart';
 import 'package:zippy/features/your_order/widgets/your_order_widget.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// docs/mockups/Orders.dc.html.
 class YourOrderScreen extends ConsumerWidget {
@@ -16,22 +16,13 @@ class YourOrderScreen extends ConsumerWidget {
     final ordersAsync = ref.watch(ordersProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundAlt,
+      backgroundColor: context.colors.backgroundAlt,
+      appBar: AppBar(title: Text('yourOrder'.tr())),
       body: SafeArea(
+        top: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: double.infinity,
-              color: AppColors.white,
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.xxl,
-                AppSpacing.xxxl,
-                AppSpacing.xxl,
-                AppSpacing.xl,
-              ),
-              child: Text('yourOrder'.tr(), style: AppTypography.headlineSmall),
-            ),
             Expanded(
               child: ordersAsync.when(
                 loading: () => const SizedBox.shrink(),

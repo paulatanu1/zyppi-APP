@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 const _presetsPaise = [1000, 2000, 3000];
 
@@ -32,7 +33,9 @@ class TipSelector extends StatelessWidget {
           Text('tip'.tr(), style: AppTypography.titleMedium),
           Text(
             'tipGoesFullyToPartner'.tr(),
-            style: AppTypography.bodySmall.copyWith(color: AppColors.muted),
+            style: AppTypography.bodySmall.copyWith(
+              color: context.colors.muted,
+            ),
           ),
           const SizedBox(height: AppSpacing.base),
           Wrap(
@@ -43,9 +46,11 @@ class TipSelector extends StatelessWidget {
                   label: Text('₹${preset ~/ 100}'),
                   selected: tipPaise == preset,
                   onSelected: (_) => onChanged(tipPaise == preset ? 0 : preset),
-                  selectedColor: AppColors.primary,
+                  selectedColor: context.colors.primary,
                   labelStyle: AppTypography.bodySmall.copyWith(
-                    color: tipPaise == preset ? AppColors.white : AppColors.ink,
+                    color: tipPaise == preset
+                        ? AppColors.white
+                        : context.colors.ink,
                   ),
                 ),
               ),
@@ -53,9 +58,9 @@ class TipSelector extends StatelessWidget {
                 label: Text('custom'.tr()),
                 selected: isCustom,
                 onSelected: (_) => _showCustomTipDialog(context),
-                selectedColor: AppColors.primary,
+                selectedColor: context.colors.primary,
                 labelStyle: AppTypography.bodySmall.copyWith(
-                  color: isCustom ? AppColors.white : AppColors.ink,
+                  color: isCustom ? AppColors.white : context.colors.ink,
                 ),
               ),
             ],

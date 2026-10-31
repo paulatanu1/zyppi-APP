@@ -8,6 +8,7 @@ import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/order_tracking/application/order_tracking_provider.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 const _timeline = [
   OrderStatus.placed,
@@ -44,7 +45,7 @@ class OrderTrackingScreen extends ConsumerWidget {
     final order = state.order;
 
     return Scaffold(
-      backgroundColor: AppColors.primaryTint,
+      backgroundColor: context.colors.primaryTint,
       body: SafeArea(
         child: Column(
           children: [
@@ -65,9 +66,9 @@ class OrderTrackingScreen extends ConsumerWidget {
             Expanded(
               child: Container(
                 width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.only(
+                decoration: BoxDecoration(
+                  color: context.colors.surface,
+                  borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(AppRadius.sheetTop),
                     topRight: Radius.circular(AppRadius.sheetTop),
                   ),
@@ -97,7 +98,9 @@ class OrderTrackingScreen extends ConsumerWidget {
                                       Text(
                                         'arrivingIn'.tr(),
                                         style: AppTypography.labelSmall
-                                            .copyWith(color: AppColors.muted),
+                                            .copyWith(
+                                              color: context.colors.muted,
+                                            ),
                                       ),
                                       Text(
                                         order.status == OrderStatus.delivered
@@ -113,7 +116,7 @@ class OrderTrackingScreen extends ConsumerWidget {
                                       vertical: AppSpacing.sm,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: AppColors.primaryTint,
+                                      color: context.colors.primaryTint,
                                       borderRadius: BorderRadius.circular(
                                         AppRadius.chip,
                                       ),
@@ -121,7 +124,7 @@ class OrderTrackingScreen extends ConsumerWidget {
                                     child: Text(
                                       _statusLabel(order.status),
                                       style: AppTypography.labelSmall.copyWith(
-                                        color: AppColors.primaryDark,
+                                        color: context.colors.primaryDark,
                                       ),
                                     ),
                                   ),
@@ -131,19 +134,21 @@ class OrderTrackingScreen extends ConsumerWidget {
                               Container(
                                 padding: const EdgeInsets.all(AppSpacing.lg),
                                 decoration: BoxDecoration(
-                                  border: Border.all(color: AppColors.line),
+                                  border: Border.all(
+                                    color: context.colors.line,
+                                  ),
                                   borderRadius: BorderRadius.circular(
                                     AppRadius.card,
                                   ),
                                 ),
                                 child: Row(
                                   children: [
-                                    const CircleAvatar(
+                                    CircleAvatar(
                                       radius: 22,
-                                      backgroundColor: AppColors.divider,
+                                      backgroundColor: context.colors.divider,
                                       child: Icon(
                                         Icons.person_outline,
-                                        color: AppColors.muted,
+                                        color: context.colors.muted,
                                       ),
                                     ),
                                     const SizedBox(width: AppSpacing.lg),
@@ -163,7 +168,7 @@ class OrderTrackingScreen extends ConsumerWidget {
                                             'yourDeliveryPartner'.tr(),
                                             style: AppTypography.bodySmall
                                                 .copyWith(
-                                                  color: AppColors.muted,
+                                                  color: context.colors.muted,
                                                 ),
                                           ),
                                         ],
@@ -171,7 +176,7 @@ class OrderTrackingScreen extends ConsumerWidget {
                                     ),
                                     CircleAvatar(
                                       radius: 22,
-                                      backgroundColor: AppColors.primary,
+                                      backgroundColor: context.colors.primary,
                                       child: const Icon(
                                         Icons.call,
                                         color: AppColors.white,
@@ -200,16 +205,16 @@ class OrderTrackingScreen extends ConsumerWidget {
                                             ? Icons.check_circle
                                             : Icons.radio_button_unchecked,
                                         color: isDone
-                                            ? AppColors.primary
-                                            : AppColors.grey,
+                                            ? context.colors.primary
+                                            : context.colors.faint,
                                       ),
                                       const SizedBox(width: AppSpacing.lg),
                                       Text(
                                         _statusLabel(status),
                                         style: AppTypography.bodyLarge.copyWith(
                                           color: isDone
-                                              ? AppColors.ink
-                                              : AppColors.muted,
+                                              ? context.colors.ink
+                                              : context.colors.muted,
                                           fontWeight: isDone
                                               ? FontWeight.w700
                                               : FontWeight.w400,

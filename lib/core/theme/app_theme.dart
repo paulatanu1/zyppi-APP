@@ -1,46 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 
 class AppTheme {
   AppTheme._();
 
-  static ThemeData get light => ThemeData(
+  static ThemeData get light =>
+      _theme(colors: AppColorsExt.light, brightness: Brightness.light);
+
+  static ThemeData get dark =>
+      _theme(colors: AppColorsExt.dark, brightness: Brightness.dark);
+
+  static ThemeData _theme({
+    required AppColorsExt colors,
+    required Brightness brightness,
+  }) => ThemeData(
     useMaterial3: true,
-    scaffoldBackgroundColor: AppColors.background,
+    brightness: brightness,
+    scaffoldBackgroundColor: colors.background,
     colorScheme: ColorScheme.fromSeed(
-      seedColor: AppColors.primary,
-      primary: AppColors.primary,
-      secondary: AppColors.brandBlue,
-      surface: AppColors.surface,
-      error: AppColors.danger,
+      brightness: brightness,
+      seedColor: colors.primary,
+      primary: colors.primary,
+      secondary: colors.brandBlue,
+      surface: colors.surface,
+      error: colors.danger,
     ),
-    fontFamily: AppTypography.poppins,
-    textTheme: const TextTheme(
-      displayLarge: AppTypography.displayLarge,
-      headlineMedium: AppTypography.headlineMedium,
-      headlineSmall: AppTypography.headlineSmall,
-      titleLarge: AppTypography.titleLarge,
-      titleMedium: AppTypography.titleMedium,
-      bodyLarge: AppTypography.bodyLarge,
-      bodyMedium: AppTypography.bodyMedium,
-      labelLarge: AppTypography.labelLarge,
-      bodySmall: AppTypography.bodySmall,
-      labelSmall: AppTypography.labelSmall,
+    extensions: [colors],
+    fontFamily: AppTypography.manrope,
+    textTheme: TextTheme(
+      displayLarge: AppTypography.displayLarge.copyWith(color: colors.ink),
+      headlineMedium: AppTypography.headlineMedium.copyWith(color: colors.ink),
+      headlineSmall: AppTypography.headlineSmall.copyWith(color: colors.ink),
+      titleLarge: AppTypography.titleLarge.copyWith(color: colors.ink),
+      titleMedium: AppTypography.titleMedium.copyWith(color: colors.ink),
+      bodyLarge: AppTypography.bodyLarge.copyWith(color: colors.ink),
+      bodyMedium: AppTypography.bodyMedium.copyWith(color: colors.ink),
+      labelLarge: AppTypography.labelLarge.copyWith(color: colors.ink),
+      bodySmall: AppTypography.bodySmall.copyWith(color: colors.muted),
+      labelSmall: AppTypography.labelSmall.copyWith(color: colors.muted),
     ),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: AppColors.surface,
-      foregroundColor: AppColors.ink,
+    appBarTheme: AppBarTheme(
+      backgroundColor: colors.surface,
+      foregroundColor: colors.ink,
       elevation: 0,
     ),
-    dividerTheme: const DividerThemeData(
-      color: AppColors.divider,
-      thickness: 1,
-    ),
+    dividerTheme: DividerThemeData(color: colors.divider, thickness: 1),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.primary,
+        backgroundColor: colors.primary,
         foregroundColor: AppColors.white,
         minimumSize: const Size.fromHeight(AppSizes.button),
         shape: RoundedRectangleBorder(
@@ -50,10 +60,10 @@ class AppTheme {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: AppColors.surface,
+      fillColor: colors.surface,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadius.input),
-        borderSide: const BorderSide(color: AppColors.line),
+        borderSide: BorderSide(color: colors.line),
       ),
     ),
   );

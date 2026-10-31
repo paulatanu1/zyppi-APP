@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zippy/core/common_widgets/add_button.dart';
 import 'package:zippy/core/common_widgets/item_card.dart';
+import 'package:zippy/core/theme/app_theme.dart';
 
 Widget _wrap(Widget child) {
   return MaterialApp(
+    theme: AppTheme.light,
     home: Scaffold(body: SizedBox(width: 200, height: 280, child: child)),
   );
 }

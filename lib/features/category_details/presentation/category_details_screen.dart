@@ -6,7 +6,7 @@ import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/common_widgets/app_skeleton.dart';
 import 'package:zippy/core/common_widgets/item_card.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
-import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/category_details/application/category_details_provider.dart';
@@ -26,7 +26,6 @@ class CategoryDetailsScreen extends ConsumerWidget {
     final cart = ref.watch(cartProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -57,6 +56,17 @@ class CategoryDetailsScreen extends ConsumerWidget {
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                )
+              else if (!state.loading && state.products.isEmpty)
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      'noProductsFound'.tr(),
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: context.colors.muted,
+                      ),
                     ),
                   ),
                 )

@@ -27,7 +27,11 @@ class SharedPreferenceProvider extends StateNotifier<SharedPreferenceState> {
       authToken: ref.read(sharedPreferencesProvider).getString(KeyNames.token),
     );
 
-    AppLog.showLog(tag: 'Stored Token', message: state.authToken);
+    // Never log the token itself — it's a live bearer credential.
+    AppLog.showLog(
+      tag: 'Stored Token',
+      message: state.authToken == null ? 'none' : 'present',
+    );
   }
 
   Future<void> setLocalStorage({required String authToken}) async {
@@ -37,7 +41,7 @@ class SharedPreferenceProvider extends StateNotifier<SharedPreferenceState> {
 
     state = state.copyWith(authToken: authToken);
 
-    AppLog.showLog(tag: 'Saved Token', message: state.authToken);
+    AppLog.showLog(tag: 'Saved Token', message: 'present');
   }
 
   Future<void> logOut() async {

@@ -6,7 +6,7 @@ import 'package:zippy/core/cart/domain/cart_line.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/common_widgets/price_tag.dart';
 import 'package:zippy/core/common_widgets/quantity_stepper.dart';
-import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 
 class MyCartItem extends ConsumerWidget {
@@ -54,7 +54,7 @@ class MyCartItem extends ConsumerWidget {
                       Text(
                         line.variant.label,
                         style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.grey3,
+                          color: context.colors.muted,
                         ),
                       ),
                       SizedBox(height: height * 0.02),
@@ -76,7 +76,7 @@ class MyCartItem extends ConsumerWidget {
                       child: Icon(
                         Icons.close,
                         size: 30,
-                        color: AppColors.grey3,
+                        color: context.colors.muted,
                       ),
                     ),
                     SizedBox(height: height * 0.04),
@@ -91,7 +91,7 @@ class MyCartItem extends ConsumerWidget {
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Divider(height: 1, color: AppColors.grey5),
+            child: Divider(height: 1, color: context.colors.divider),
           ),
         ],
       ),

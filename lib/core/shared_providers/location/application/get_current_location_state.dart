@@ -15,6 +15,7 @@ abstract class GetCurrentLocationState with _$GetCurrentLocationState {
     @Default('') String city,
     @Default('') String state,
     @Default('') String postalCode,
+    String? landmark,
     @Default(false) bool checkingServiceability,
     ServiceArea? serviceArea,
     String? error,

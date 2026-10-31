@@ -13,7 +13,14 @@ class CheckAndRequestLocationProvider
     checkAndRequestLocationPermission();
   }
 
-  Future<void> checkAndRequestLocationPermission() async {
+  Future<void>? _inFlight;
+
+  /// Safe to call more than once: concurrent callers share one request, as
+  /// Android rejects a second permission dialog while one is showing.
+  Future<void> checkAndRequestLocationPermission() =>
+      _inFlight ??= _checkAndRequest().whenComplete(() => _inFlight = null);
+
+  Future<void> _checkAndRequest() async {
     var permission = await Geolocator.checkPermission();
 
     if (permission == LocationPermission.denied) {
@@ -25,7 +32,7 @@ class CheckAndRequestLocationProvider
       showSuccessToast(message: 'locationPermissionRequired'.tr());
     }
 
-    state = permission;
+    if (mounted) state = permission;
   }
 }
 

@@ -1,8 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// docs/mockups/Category.dc.html's header: back, title + item count,
 /// search.
@@ -31,8 +31,10 @@ class CategoryDetailsHeader extends StatelessWidget {
             children: [
               Text(title, style: AppTypography.titleLarge),
               Text(
-                '$itemCount items',
-                style: AppTypography.bodySmall.copyWith(color: AppColors.muted),
+                'itemCount'.plural(itemCount),
+                style: AppTypography.bodySmall.copyWith(
+                  color: context.colors.muted,
+                ),
               ),
             ],
           ),

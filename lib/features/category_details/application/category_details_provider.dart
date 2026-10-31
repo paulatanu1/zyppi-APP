@@ -16,8 +16,10 @@ class CategoryDetailsProvider extends StateNotifier<CategoryDetailsState> {
     state = state.copyWith(loading: true, error: null);
 
     try {
-      final categories = await repository.fetchCategories();
-      final products = await repository.fetchProducts();
+      final (categories, products) = await (
+        repository.fetchCategories(),
+        repository.fetchProducts(),
+      ).wait;
 
       final category = categories.where((c) => c.id == categoryId);
 

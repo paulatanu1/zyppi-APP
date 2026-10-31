@@ -1,6 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// Renders a category/product image: a Supabase Storage URL in
 /// Supabase mode, or a bundled asset path in mock mode — the catalog
@@ -42,7 +42,7 @@ class CatalogImage extends StatelessWidget {
         width: width,
         height: height,
         placeholder: (context, url) => ColoredBox(
-          color: AppColors.divider,
+          color: context.colors.divider,
           child: SizedBox(width: width, height: height),
         ),
         errorWidget: (context, url, error) =>
