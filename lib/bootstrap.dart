@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zippy/app/app.dart';
 import 'package:zippy/core/cart/data/cart_repository_impl.dart';
+import 'package:zippy/core/common_widgets/app_error_widget.dart';
 import 'package:zippy/core/config/env.dart';
 import 'package:zippy/core/constants/constants.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
@@ -48,6 +50,13 @@ Future<void> bootstrap() async {
     FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
     return true;
   };
+
+  // Release users get a small "Something went wrong" card instead of a
+  // blank grey box for a widget that failed to build; the rest of the
+  // screen keeps working. Debug keeps the red error screen.
+  if (kReleaseMode) {
+    ErrorWidget.builder = (details) => const AppErrorWidget();
+  }
 
   // Auth always goes through Supabase (Phase 3), independent of
   // Env.dataSource — that flag only picks mock-JSON vs live Supabase
