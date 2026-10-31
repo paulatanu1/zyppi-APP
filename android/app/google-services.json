@@ -48,6 +48,58 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:182229138750:android:8a15989c354ae2949a806f",
+        "android_client_info": {
+          "package_name": "com.zyppi.one"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "182229138750-47tao9d4ici7a61uhsvicst87rmlgvgf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zyppi.one",
+            "certificate_hash": "c4d918b4162fb5b152a9dc720af352bdbeb6cc4d"
+          }
+        },
+        {
+          "client_id": "182229138750-fmr0gn0no8dk2so44oiptddli5uep6qb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zyppi.one",
+            "certificate_hash": "86ca263ef55f1fe0c08bd55c4dd93163cc56d009"
+          }
+        },
+        {
+          "client_id": "182229138750-d37945j2e0j25iuaotv2biu1p497br95.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtCIZ3-QYywv4Dk1FNzILo6b8gNb1cld8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "182229138750-d37945j2e0j25iuaotv2biu1p497br95.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "182229138750-r1krjq23t1mkqni52v15qm0tu2cch2mn.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.betastechnologies.zippy"
+              }
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"

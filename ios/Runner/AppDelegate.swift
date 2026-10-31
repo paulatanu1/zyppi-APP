@@ -1,5 +1,4 @@
 import Flutter
-import GoogleMaps
 import UIKit
 
 @main
@@ -9,11 +8,21 @@ import UIKit
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
-    if let mapsApiKey = Bundle.main.object(forInfoDictionaryKey: "GoogleMapsApiKey") as? String,
-      !mapsApiKey.isEmpty
-    {
-      GMSServices.provideAPIKey(mapsApiKey)
-    }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  // PhonePe's SDK resumes the payment flow when the PhonePe app redirects
+  // back via our custom URL scheme (see Info.plist's CFBundleURLTypes).
+  override func application(
+    _ app: UIApplication,
+    open url: URL,
+    options: [UIApplication.OpenURLOptionsKey: Any] = [:]
+  ) -> Bool {
+    NotificationCenter.default.post(
+      name: NSNotification.Name("ApplicationOpenURLNotification"),
+      object: nil,
+      userInfo: ["url": url, "options": options]
+    )
+    return true
   }
 }
