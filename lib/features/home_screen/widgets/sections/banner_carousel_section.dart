@@ -7,6 +7,7 @@ import 'package:zippy/core/domain/home_section.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/features/home_screen/widgets/sections/section_data.dart';
 
 /// Blinkit-referenced swipeable promo banner strip — replaces the old
 /// single static PromoBanner. `config.autoplay` toggles auto-advance.
@@ -42,86 +43,93 @@ class _BannerCarouselSectionState extends State<BannerCarouselSection> {
             onPageChanged: (index, reason) => setState(() => _page = index),
           ),
           items: items.map((item) {
-            final title = item.data['title'] as String? ?? '';
-            final ctaText = item.data['cta_text'] as String?;
-            final linkType = item.data['link_type'] as String?;
-            final linkTarget = item.data['link_target'] as String?;
-            final imageUrl = item.data['image_url'] as String?;
+            final title = item.data.string('title') ?? '';
+            final ctaText = item.data.string('cta_text');
+            final linkType = item.data.string('link_type');
+            final linkTarget = item.data.string('link_target');
+            final imageUrl = item.data.string('image_url');
 
-            return InkWell(
-              onTap: linkType == 'category' && linkTarget != null
-                  ? () => context.push(
-                      '/categoryDetailsScreen?categoryId=$linkTarget',
-                    )
-                  : null,
-              borderRadius: BorderRadius.circular(AppRadius.banner),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: context.colors.accent,
-                  borderRadius: BorderRadius.circular(AppRadius.banner),
-                ),
-                // Image owns the right ~42%, text the rest, so they never
-                // overlap whatever the image's aspect ratio.
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final imageWidth = constraints.maxWidth * 0.42;
+            // The carousel hands each slide loose constraints; without an
+            // explicit width the card shrinks to its content.
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+              child: InkWell(
+                onTap: linkType == 'category' && linkTarget != null
+                    ? () => context.push(
+                        '/categoryDetailsScreen?categoryId=$linkTarget',
+                      )
+                    : null,
+                borderRadius: BorderRadius.circular(AppRadius.banner),
+                child: Container(
+                  width: double.infinity,
+                  height: double.infinity,
+                  decoration: BoxDecoration(
+                    color: context.colors.accent,
+                    borderRadius: BorderRadius.circular(AppRadius.banner),
+                  ),
+                  // Image owns the right ~42%, text the rest, so they never
+                  // overlap whatever the image's aspect ratio.
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final imageWidth = constraints.maxWidth * 0.42;
 
-                    return Stack(
-                      children: [
-                        Positioned(
-                          top: 0,
-                          right: 0,
-                          bottom: 0,
-                          width: imageWidth,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(
-                              AppRadius.banner,
-                            ),
-                            child: CatalogImage(
-                              image: imageUrl,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            AppSpacing.xxl,
-                            AppSpacing.xxl,
-                            imageWidth,
-                            AppSpacing.xxl,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                title,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                // Accent yellow in both themes, so use its
-                                // fixed dark ink rather than the theme ink.
-                                style: AppTypography.titleL.copyWith(
-                                  color: context.colors.accentInk,
-                                ),
+                      return Stack(
+                        children: [
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            bottom: 0,
+                            width: imageWidth,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.banner,
                               ),
-                              if (ctaText != null) ...[
-                                const SizedBox(height: AppSpacing.xs),
+                              child: CatalogImage(
+                                image: imageUrl,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              AppSpacing.xxl,
+                              AppSpacing.xxl,
+                              imageWidth,
+                              AppSpacing.xxl,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
                                 Text(
-                                  ctaText,
-                                  maxLines: 1,
+                                  title,
+                                  maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                  style: AppTypography.label.copyWith(
+                                  // Accent yellow in both themes, so use its
+                                  // fixed dark ink rather than the theme ink.
+                                  style: AppTypography.titleL.copyWith(
                                     color: context.colors.accentInk,
-                                    fontWeight: FontWeight.w800,
                                   ),
                                 ),
+                                if (ctaText != null) ...[
+                                  const SizedBox(height: AppSpacing.xs),
+                                  Text(
+                                    ctaText,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTypography.label.copyWith(
+                                      color: context.colors.accentInk,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ],
                               ],
-                            ],
+                            ),
                           ),
-                        ),
-                      ],
-                    );
-                  },
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ),
             );

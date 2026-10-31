@@ -5,6 +5,7 @@ import 'package:zippy/core/theme/app_colors_ext.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/home_screen/widgets/sections/section_icons.dart';
+import 'package:zippy/features/home_screen/widgets/sections/section_data.dart';
 
 /// Blinkit-referenced horizontal icon+label tabs strip, directly under
 /// search. Admin-configured via `home_sections.type == 'category_tabs'`;
@@ -29,8 +30,8 @@ class CategoryTabsSection extends StatelessWidget {
               const SizedBox(width: AppSpacing.xl),
           itemBuilder: (context, index) {
             final item = section.items[index];
-            final label = item.data['label'] as String? ?? '';
-            final categoryId = item.data['category_id'] as String?;
+            final label = item.data.string('label') ?? '';
+            final categoryId = item.data.string('category_id');
 
             return InkWell(
               onTap: categoryId == null
@@ -42,7 +43,7 @@ class CategoryTabsSection extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    resolveSectionIcon(item.data['icon'] as String?),
+                    resolveSectionIcon(item.data.string('icon')),
                     size: 22,
                     color: context.colors.ink,
                   ),

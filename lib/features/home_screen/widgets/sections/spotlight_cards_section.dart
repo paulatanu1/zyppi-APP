@@ -6,6 +6,7 @@ import 'package:zippy/core/domain/product.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/features/home_screen/widgets/sections/section_data.dart';
 
 /// Blinkit-referenced "Featured this week" ribbon-badge spotlight cards.
 class SpotlightCardsSection extends StatelessWidget {
@@ -31,7 +32,7 @@ class SpotlightCardsSection extends StatelessWidget {
         itemBuilder: (context, index) {
           final item = section.items[index];
           final product = productsById[item.data['product_id']];
-          final badge = item.data['badge'] as String?;
+          final badge = item.data.string('badge');
           if (product == null) return const SizedBox.shrink();
 
           return InkWell(

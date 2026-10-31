@@ -6,6 +6,7 @@ import 'package:zippy/core/domain/home_section.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/features/home_screen/widgets/sections/section_data.dart';
 
 /// Blinkit-referenced "Frequently bought" cluster cards: a thumbnail,
 /// "+N more" badge and category label.
@@ -26,8 +27,8 @@ class CategoryClusterSection extends StatelessWidget {
     return Row(
       children: section.items.map((item) {
         final category = categoriesById[item.data['category_id']];
-        final label = item.data['label'] as String? ?? category?.name ?? '';
-        final count = item.data['count'] as int?;
+        final label = item.data.string('label') ?? category?.name ?? '';
+        final count = item.data.integer('count');
 
         return Expanded(
           child: Padding(
