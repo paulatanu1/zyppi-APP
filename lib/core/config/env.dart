@@ -11,8 +11,9 @@ class Env {
 
   static const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   static const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
-  static const googleMapsApiKey = String.fromEnvironment('GOOGLE_MAPS_API_KEY');
-  static const razorpayKeyId = String.fromEnvironment('RAZORPAY_KEY_ID');
 
   static bool get isMockDataSource => dataSource == 'mock';
+
+  static String get phonePeEnvironment =>
+      flavor == 'prod' ? 'PRODUCTION' : 'SANDBOX';
 }

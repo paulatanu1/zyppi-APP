@@ -56,8 +56,7 @@ dependencies:
   hive_ce_flutter: ^2.4.0
   cached_network_image: ^4.0.4
   geocoding: ^5.0.0
-  google_maps_flutter: ^2.19.0
-  razorpay_flutter: ^1.4.7
+  phonepe_payment_sdk: ^3.0.2
   firebase_messaging: ^16.7.0
   firebase_crashlytics: ^5.4.0
   firebase_analytics: ^12.6.0
@@ -101,6 +100,15 @@ flutter_native_splash:
   android_12:
     color: "#FFFFFF"
     image: "assets/icons/appIconMark.png"
+
+# phonepe_payment_sdk 3.0.2's own android/build.gradle targets a too-old
+# compileSdk and calls a removed proguard API - both break this project's
+# release build. third_party/phonepe_payment_sdk is a vendored, patched
+# copy (see that file's own top comment) - remove this override if a
+# future phonepe_payment_sdk release fixes it upstream.
+dependency_overrides:
+  phonepe_payment_sdk:
+    path: third_party/phonepe_payment_sdk
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

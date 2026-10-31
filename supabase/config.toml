@@ -49,10 +49,10 @@ skip_nonce_check = true
 # via the standard Supabase JWT check.
 verify_jwt = true
 
-[functions.create-razorpay-order]
+[functions.create-phonepe-order]
 verify_jwt = true
 
-[functions.verify-razorpay-payment]
+[functions.verify-phonepe-payment]
 verify_jwt = true
 
 [functions.push-on-order-event]

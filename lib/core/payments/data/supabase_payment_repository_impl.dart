@@ -1,46 +1,46 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:zippy/core/payments/domain/payment_order.dart';
 import 'package:zippy/core/payments/domain/payment_repository.dart';
-import 'package:zippy/core/payments/domain/razorpay_order.dart';
 
-/// Calls create-razorpay-order / verify-razorpay-payment (Edge Functions) -
-/// RAZORPAY_KEY_SECRET never reaches the client.
+/// Calls create-phonepe-order / verify-phonepe-payment (Edge Functions) -
+/// PHONEPE_CLIENT_SECRET never reaches the client.
 class SupabasePaymentRepository implements PaymentRepository {
   final SupabaseClient client;
 
   SupabasePaymentRepository(this.client);
 
   @override
-  Future<RazorpayOrder> createOrder(int amountPaise) async {
+  Future<PaymentOrder> createOrder(
+    int amountPaise, {
+    required String paymentMethod,
+  }) async {
     final response = await client.functions.invoke(
-      'create-razorpay-order',
-      body: {'amountPaise': amountPaise},
+      'create-phonepe-order',
+      body: {'amountPaise': amountPaise, 'paymentMethod': paymentMethod},
     );
     final data = response.data as Map<String, dynamic>;
 
-    return RazorpayOrder(
+    return PaymentOrder(
+      merchantOrderId: data['merchantOrderId'] as String,
       orderId: data['orderId'] as String,
-      amountPaise: data['amountPaise'] as int,
-      currency: data['currency'] as String,
-      keyId: data['keyId'] as String,
+      token: data['token'] as String,
+      merchantId: data['merchantId'] as String,
     );
   }
 
   @override
-  Future<bool> verifyPayment({
-    required String razorpayOrderId,
-    required String razorpayPaymentId,
-    required String razorpaySignature,
-  }) async {
+  Future<({bool verified, String? transactionId})> verifyPayment(
+    String merchantOrderId,
+  ) async {
     final response = await client.functions.invoke(
-      'verify-razorpay-payment',
-      body: {
-        'razorpayOrderId': razorpayOrderId,
-        'razorpayPaymentId': razorpayPaymentId,
-        'razorpaySignature': razorpaySignature,
-      },
+      'verify-phonepe-payment',
+      body: {'merchantOrderId': merchantOrderId},
     );
     final data = response.data as Map<String, dynamic>;
 
-    return data['verified'] as bool;
+    return (
+      verified: data['verified'] as bool,
+      transactionId: data['transactionId'] as String?,
+    );
   }
 }

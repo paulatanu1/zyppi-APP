@@ -2,8 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zippy/core/config/env.dart';
 import 'package:zippy/core/payments/data/supabase_payment_repository_impl.dart';
+import 'package:zippy/core/payments/domain/payment_order.dart';
 import 'package:zippy/core/payments/domain/payment_repository.dart';
-import 'package:zippy/core/payments/domain/razorpay_order.dart';
 
 /// The mock flavor has no real gateway to open, so checkout_provider.dart
 /// never actually calls this - it short-circuits straight to place_order()
@@ -12,17 +12,18 @@ import 'package:zippy/core/payments/domain/razorpay_order.dart';
 /// isn't initialized in mock mode).
 class MockPaymentRepository implements PaymentRepository {
   @override
-  Future<RazorpayOrder> createOrder(int amountPaise) async {
-    throw UnsupportedError('No Razorpay gateway in the mock flavor');
+  Future<PaymentOrder> createOrder(
+    int amountPaise, {
+    required String paymentMethod,
+  }) async {
+    throw UnsupportedError('No PhonePe gateway in the mock flavor');
   }
 
   @override
-  Future<bool> verifyPayment({
-    required String razorpayOrderId,
-    required String razorpayPaymentId,
-    required String razorpaySignature,
-  }) async {
-    throw UnsupportedError('No Razorpay gateway in the mock flavor');
+  Future<({bool verified, String? transactionId})> verifyPayment(
+    String merchantOrderId,
+  ) async {
+    throw UnsupportedError('No PhonePe gateway in the mock flavor');
   }
 }
 

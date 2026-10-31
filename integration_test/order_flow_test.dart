@@ -98,7 +98,7 @@ void main() {
     );
 
     // Checkout: a default address + slot are pre-selected from mock data;
-    // place the order (mock flavor skips Razorpay for every payment
+    // place the order (mock flavor skips PhonePe for every payment
     // method - see checkout_provider.dart).
     expect(find.byType(PrimaryButton), findsOneWidget);
     await tester.tap(find.byType(PrimaryButton));

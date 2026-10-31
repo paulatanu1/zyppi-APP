@@ -39,8 +39,8 @@ class HiveOrderRepository implements OrderRepository {
   Future<String> placeOrder(
     Order order, {
     required String deliverySlotId,
-    String? razorpayOrderId,
-    String? razorpayPaymentId,
+    String? phonePeMerchantOrderId,
+    String? phonePeTransactionId,
   }) async {
     final orders = await getOrders();
     orders.insert(0, order);
