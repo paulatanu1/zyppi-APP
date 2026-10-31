@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/nav_bar/provider/nav_bar_provider.dart';
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/zyppi_colors.dart';
 import 'package:zippy/features/home_screen/widgets/address_sheet.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
 
@@ -38,7 +38,7 @@ class HomeScreenHeader extends ConsumerWidget {
                 child: Text(
                   'deliveryEta'.tr(),
                   style: AppTypography.headlineSmall.copyWith(
-                    color: AppColors.white,
+                    color: context.z.onBrand,
                   ),
                 ),
               ),
@@ -48,10 +48,7 @@ class HomeScreenHeader extends ConsumerWidget {
                 child: CircleAvatar(
                   radius: 22,
                   backgroundColor: context.colors.primaryDark,
-                  child: const Icon(
-                    Icons.person_outline,
-                    color: AppColors.white,
-                  ),
+                  child: Icon(Icons.person_outline, color: context.z.onBrand),
                 ),
               ),
             ],
@@ -65,7 +62,7 @@ class HomeScreenHeader extends ConsumerWidget {
                 Text(
                   '${'home'.tr()} · ',
                   style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.white,
+                    color: context.z.onBrand,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -73,12 +70,32 @@ class HomeScreenHeader extends ConsumerWidget {
                   child:
                       getCurrentLocation.isDetecting ||
                           getCurrentLocation.checkingServiceability
-                      ? const SizedBox(
-                          height: 14,
-                          width: 14,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.white,
+                      // Aligned so Expanded can't stretch the spinner across
+                      // the row; same text style/height as the address.
+                      ? Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (!MediaQuery.disableAnimationsOf(context)) ...[
+                                SizedBox.square(
+                                  dimension: 12,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 1.5,
+                                    color: context.colors.onPrimaryMuted,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                              ],
+                              Text(
+                                'detectingLocation'.tr(),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: context.colors.onPrimaryMuted,
+                                ),
+                              ),
+                            ],
                           ),
                         )
                       : Text(

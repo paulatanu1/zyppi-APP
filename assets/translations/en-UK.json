@@ -163,5 +163,6 @@
     "zero": "{} items",
     "one": "{} item",
     "other": "{} items"
-  }
+  },
+  "detectingLocation": "Detecting location…"
 }
