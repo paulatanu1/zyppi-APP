@@ -73,3 +73,52 @@ insert into public.delivery_slots (id, label, eta_minutes, is_express) values
 
 insert into public.coupons (code, description, discount_paise, min_order_paise) values
   ('ZYPPI50', 'Flat ₹50 off on orders above ₹300', 5000, 30000);
+
+-- Home screen sections (Blinkit-referenced layout, admin-editable in
+-- zyppi-admin later) — seeded with real Zyppi categories/products where
+-- the section type references them; clearly-placeholder marketing copy
+-- for pure-content sections. display_order controls the stack on Home.
+insert into public.home_sections (id, type, title, subtitle, display_order, config) values
+  ('77777777-0000-0000-0000-000000000001', 'category_tabs', null, null, 0, '{"sticky": true}'),
+  ('77777777-0000-0000-0000-000000000002', 'banner_carousel', null, null, 1, '{"autoplay": true}'),
+  ('77777777-0000-0000-0000-000000000003', 'category_grid', 'Shop by category', null, 2, '{"columns": 4}'),
+  ('77777777-0000-0000-0000-000000000004', 'product_carousel', 'Deals for you', null, 3, '{}'),
+  ('77777777-0000-0000-0000-000000000005', 'category_cluster', 'Frequently bought', null, 4, '{}'),
+  ('77777777-0000-0000-0000-000000000006', 'spotlight_cards', 'Featured this week', null, 5, '{}');
+
+insert into public.home_section_items (section_id, display_order, data) values
+  -- category_tabs
+  ('77777777-0000-0000-0000-000000000001', 0, '{"label": "All", "icon": "grid_view"}'),
+  ('77777777-0000-0000-0000-000000000001', 1, jsonb_build_object('label', 'Fruits & Veg', 'icon', 'eco', 'category_id', '33333333-0000-0000-0000-000000000001')),
+  ('77777777-0000-0000-0000-000000000001', 2, jsonb_build_object('label', 'Dairy & Bakery', 'icon', 'bakery_dining', 'category_id', '33333333-0000-0000-0000-000000000002')),
+  ('77777777-0000-0000-0000-000000000001', 3, jsonb_build_object('label', 'Beverages', 'icon', 'local_drink', 'category_id', '33333333-0000-0000-0000-000000000008')),
+
+  -- banner_carousel
+  ('77777777-0000-0000-0000-000000000002', 0, '{"title": "Fresh fruits, flat 20% off", "cta_text": "Shop now", "link_type": "category", "link_target": "33333333-0000-0000-0000-000000000001", "image_url": "products/apple.png"}'),
+  ('77777777-0000-0000-0000-000000000002', 1, '{"title": "Free delivery above ₹299", "cta_text": "Order now", "link_type": "category", "link_target": null, "image_url": "categories/category.png"}'),
+
+  -- category_grid ("Shop by category") — mirrors the 8 seeded categories
+  ('77777777-0000-0000-0000-000000000003', 0, jsonb_build_object('category_id', '33333333-0000-0000-0000-000000000001')),
+  ('77777777-0000-0000-0000-000000000003', 1, jsonb_build_object('category_id', '33333333-0000-0000-0000-000000000002')),
+  ('77777777-0000-0000-0000-000000000003', 2, jsonb_build_object('category_id', '33333333-0000-0000-0000-000000000003')),
+  ('77777777-0000-0000-0000-000000000003', 3, jsonb_build_object('category_id', '33333333-0000-0000-0000-000000000004')),
+  ('77777777-0000-0000-0000-000000000003', 4, jsonb_build_object('category_id', '33333333-0000-0000-0000-000000000005')),
+  ('77777777-0000-0000-0000-000000000003', 5, jsonb_build_object('category_id', '33333333-0000-0000-0000-000000000006')),
+  ('77777777-0000-0000-0000-000000000003', 6, jsonb_build_object('category_id', '33333333-0000-0000-0000-000000000007')),
+  ('77777777-0000-0000-0000-000000000003', 7, jsonb_build_object('category_id', '33333333-0000-0000-0000-000000000008')),
+
+  -- product_carousel ("Deals for you")
+  ('77777777-0000-0000-0000-000000000004', 0, jsonb_build_object('product_id', '44444444-0000-0000-0000-000000000001')),
+  ('77777777-0000-0000-0000-000000000004', 1, jsonb_build_object('product_id', '44444444-0000-0000-0000-000000000002')),
+  ('77777777-0000-0000-0000-000000000004', 2, jsonb_build_object('product_id', '44444444-0000-0000-0000-000000000007')),
+  ('77777777-0000-0000-0000-000000000004', 3, jsonb_build_object('product_id', '44444444-0000-0000-0000-000000000008')),
+
+  -- category_cluster ("Frequently bought")
+  ('77777777-0000-0000-0000-000000000005', 0, jsonb_build_object('label', 'Fruits & Vegetables', 'category_id', '33333333-0000-0000-0000-000000000001', 'count', 8)),
+  ('77777777-0000-0000-0000-000000000005', 1, jsonb_build_object('label', 'Atta, Rice & Dals', 'category_id', '33333333-0000-0000-0000-000000000003', 'count', 10)),
+  ('77777777-0000-0000-0000-000000000005', 2, jsonb_build_object('label', 'Oil & Ghee', 'category_id', '33333333-0000-0000-0000-000000000005', 'count', 3)),
+
+  -- spotlight_cards ("Featured this week")
+  ('77777777-0000-0000-0000-000000000006', 0, jsonb_build_object('badge', 'Newly launched', 'product_id', '44444444-0000-0000-0000-000000000006')),
+  ('77777777-0000-0000-0000-000000000006', 1, jsonb_build_object('badge', 'Featured', 'product_id', '44444444-0000-0000-0000-000000000005')),
+  ('77777777-0000-0000-0000-000000000006', 2, jsonb_build_object('badge', 'Customer favourite', 'product_id', '44444444-0000-0000-0000-000000000004'));

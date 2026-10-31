@@ -1,9 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// Opens the map-pin picker in "save a new address" mode.
 class AddNewAddressRow extends StatelessWidget {
@@ -18,27 +18,27 @@ class AddNewAddressRow extends StatelessWidget {
         height: AppSizes.inputMin,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(AppRadius.input),
-          border: Border.all(color: AppColors.line),
+          border: Border.all(color: context.colors.line),
         ),
         child: Row(
           children: [
-            const Icon(Icons.add, color: AppColors.primary),
+            Icon(Icons.add, color: context.colors.primary),
             const SizedBox(width: AppSpacing.base),
             Expanded(
               child: Text(
                 'addNewAddress'.tr(),
                 style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.primary,
+                  color: context.colors.primary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-            const Icon(
+            Icon(
               Icons.arrow_forward_ios,
               size: 14,
-              color: AppColors.primary,
+              color: context.colors.primary,
             ),
           ],
         ),

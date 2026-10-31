@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// Opens the full map-pin picker (search_address_screen.dart) to change the
 /// home screen's delivery location.
@@ -23,13 +23,13 @@ class SearchPlacesWidget extends ConsumerWidget {
         height: AppSizes.inputMin,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(AppRadius.input),
-          border: Border.all(color: AppColors.line),
+          border: Border.all(color: context.colors.line),
         ),
         child: Row(
           children: [
-            const Icon(Icons.search, size: 20, color: AppColors.muted),
+            Icon(Icons.search, size: 20, color: context.colors.muted),
             const SizedBox(width: AppSpacing.base),
             Expanded(
               child: Text(
@@ -39,7 +39,7 @@ class SearchPlacesWidget extends ConsumerWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.muted,
+                  color: context.colors.muted,
                 ),
               ),
             ),

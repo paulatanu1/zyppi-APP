@@ -1,23 +1,28 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/cart/presentation/floating_cart_bar.dart';
+import 'package:zippy/core/common_widgets/app_skeleton.dart';
 import 'package:zippy/core/common_widgets/home_screen_header.dart';
-import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/common_widgets/primary_button.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
-import 'package:zippy/features/home_screen/widgets/categories.dart';
-import 'package:zippy/features/home_screen/widgets/home_page_products.dart';
-import 'package:zippy/features/home_screen/widgets/promo_banner.dart';
+import 'package:zippy/features/home_screen/application/home_sections_provider.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:zippy/features/home_screen/widgets/sections/home_section_widget.dart';
 
-/// docs/mockups/Main.dc.html.
-class HomeScreen extends StatelessWidget {
+/// Backend/admin-driven Home screen — renders `home_sections` in order
+/// (see docs/PLAN.md's Blinkit-referenced redesign note). The delivery
+/// header and search stay fixed app chrome, not admin content.
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sectionsAsync = ref.watch(homeSectionsProvider);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       body: Stack(
         children: [
           SafeArea(
@@ -28,50 +33,47 @@ class HomeScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const HomeScreenHeader(),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.xxl,
-                      AppSpacing.xl,
-                      AppSpacing.xxl,
-                      0,
+                  const SizedBox(height: AppSpacing.base),
+                  sectionsAsync.when(
+                    loading: () => const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+                      child: AppSkeleton(
+                        enabled: true,
+                        child: SizedBox(height: 400),
+                      ),
                     ),
-                    child: Column(
+                    error: (error, stackTrace) => Padding(
+                      padding: const EdgeInsets.all(AppSpacing.xxl),
+                      child: Column(
+                        children: [
+                          Text(
+                            'somethingWentWrong'.tr(),
+                            style: AppTypography.bodyMedium,
+                          ),
+                          const SizedBox(height: AppSpacing.base),
+                          SizedBox(
+                            width: 140,
+                            child: PrimaryButton(
+                              buttonTitle: 'retry'.tr(),
+                              action: () =>
+                                  ref.invalidate(homeSectionsProvider),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    data: (data) => Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const PromoBanner(),
-                        const SizedBox(height: AppSpacing.xxl),
-                        Text(
-                          'shopByCategory'.tr(),
-                          style: AppTypography.titleMedium,
-                        ),
-                        const SizedBox(height: AppSpacing.base),
-                        const Categories(),
-                        const SizedBox(height: AppSpacing.xxl),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'dealsForYou'.tr(),
-                              style: AppTypography.titleMedium,
-                            ),
-                            GestureDetector(
-                              onTap: () => context.push('/exploreScreen'),
-                              child: Text(
-                                'seeAll'.tr(),
-                                style: AppTypography.bodyMedium.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.base),
-                        HomePageProducts(
-                          onClicked: (productId) => context.push(
-                            '/productDetailsScreen?productId=$productId',
+                        for (final section in data.sections) ...[
+                          HomeSectionWidget(
+                            section: section,
+                            categoriesById: data.categoriesById,
+                            productsById: data.productsById,
                           ),
-                        ),
-                        const SizedBox(height: 120),
+                          const SizedBox(height: AppSpacing.xxl),
+                        ],
+                        const SizedBox(height: 100),
                       ],
                     ),
                   ),

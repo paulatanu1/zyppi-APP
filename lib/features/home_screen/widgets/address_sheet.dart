@@ -2,13 +2,13 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/home_screen/widgets/add_new_address_row.dart';
 import 'package:zippy/features/home_screen/widgets/search_places_widget.dart';
 import 'package:zippy/features/my_address/application/addresses_provider.dart';
 import 'package:zippy/features/my_address/widgets/saved_address_row.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// Tapping the home header's address row opens this sheet — a compact
 /// version of docs/mockups/Location.dc.html's "Select Address" step; the
@@ -17,7 +17,7 @@ void bottomSheet(BuildContext context, WidgetRef ref) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    backgroundColor: AppColors.surface,
+    backgroundColor: context.colors.surface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(
         top: Radius.circular(AppRadius.sheetTop),
@@ -38,7 +38,9 @@ void bottomSheet(BuildContext context, WidgetRef ref) {
             const SizedBox(height: AppSpacing.xxl),
             Text(
               'yourSavedAddress'.tr(),
-              style: AppTypography.labelSmall.copyWith(color: AppColors.muted),
+              style: AppTypography.labelSmall.copyWith(
+                color: context.colors.muted,
+              ),
             ),
             Consumer(
               builder: (context, ref, _) {

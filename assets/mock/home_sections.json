@@ -1,0 +1,72 @@
+[
+  {
+    "id": "home-sec-tabs",
+    "type": "category_tabs",
+    "config": { "sticky": true },
+    "items": [
+      { "id": "tab-all", "data": { "label": "All", "icon": "grid_view" } },
+      { "id": "tab-fruits", "data": { "label": "Fruits & Veg", "icon": "eco", "category_id": "cat-fruits-veg" } },
+      { "id": "tab-dairy", "data": { "label": "Dairy & Bakery", "icon": "bakery_dining", "category_id": "cat-bread-eggs" } },
+      { "id": "tab-drinks", "data": { "label": "Beverages", "icon": "local_drink", "category_id": "cat-beverages" } }
+    ]
+  },
+  {
+    "id": "home-sec-banners",
+    "type": "banner_carousel",
+    "config": { "autoplay": true },
+    "items": [
+      { "id": "banner-1", "data": { "title": "Fresh fruits, flat 20% off", "cta_text": "Shop now", "link_type": "category", "link_target": "cat-fruits-veg", "image_url": "assets/images/apple.png" } },
+      { "id": "banner-2", "data": { "title": "Free delivery above ₹299", "cta_text": "Order now", "link_type": "category", "link_target": null, "image_url": "assets/images/category.png" } }
+    ]
+  },
+  {
+    "id": "home-sec-categories",
+    "type": "category_grid",
+    "title": "Shop by category",
+    "config": { "columns": 4 },
+    "items": [
+      { "id": "cg-1", "data": { "category_id": "cat-fruits-veg" } },
+      { "id": "cg-2", "data": { "category_id": "cat-bread-eggs" } },
+      { "id": "cg-3", "data": { "category_id": "cat-atta-rice-dal" } },
+      { "id": "cg-4", "data": { "category_id": "cat-masala-dry-fruits" } },
+      { "id": "cg-5", "data": { "category_id": "cat-oil-ghee" } },
+      { "id": "cg-6", "data": { "category_id": "cat-meat-fish" } },
+      { "id": "cg-7", "data": { "category_id": "cat-bakery-snacks" } },
+      { "id": "cg-8", "data": { "category_id": "cat-beverages" } }
+    ]
+  },
+  {
+    "id": "home-sec-deals",
+    "type": "product_carousel",
+    "title": "Deals for you",
+    "config": {},
+    "items": [
+      { "id": "deal-1", "data": { "product_id": "prod-tomato" } },
+      { "id": "deal-2", "data": { "product_id": "prod-apple" } },
+      { "id": "deal-3", "data": { "product_id": "prod-bread" } },
+      { "id": "deal-4", "data": { "product_id": "prod-rice" } }
+    ]
+  },
+  {
+    "id": "home-sec-frequent",
+    "type": "category_cluster",
+    "title": "Frequently bought",
+    "config": {},
+    "items": [
+      { "id": "fc-1", "data": { "label": "Fruits & Vegetables", "category_id": "cat-fruits-veg", "count": 8 } },
+      { "id": "fc-2", "data": { "label": "Atta, Rice & Dals", "category_id": "cat-atta-rice-dal", "count": 10 } },
+      { "id": "fc-3", "data": { "label": "Oil & Ghee", "category_id": "cat-oil-ghee", "count": 3 } }
+    ]
+  },
+  {
+    "id": "home-sec-featured",
+    "type": "spotlight_cards",
+    "title": "Featured this week",
+    "config": {},
+    "items": [
+      { "id": "sp-1", "data": { "badge": "Newly launched", "product_id": "prod-rice" } },
+      { "id": "sp-2", "data": { "badge": "Featured", "product_id": "prod-apple" } },
+      { "id": "sp-3", "data": { "badge": "Customer favourite", "product_id": "prod-bread" } }
+    ]
+  }
+]
