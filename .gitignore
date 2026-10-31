@@ -18,7 +18,8 @@ migrate_working_dir/
 *.iml
 *.ipr
 *.iws
-.idea/
+.idea/*
+!.idea/runConfigurations/
 
 # Flutter/Dart/Pub related
 **/doc/api/

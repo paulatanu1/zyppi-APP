@@ -12,7 +12,7 @@ Zyppi is a quick-commerce grocery customer app (Flutter, FVM-pinned 3.47.x) movi
 - Always `fvm flutter …` / `fvm dart …`, never a global `flutter`.
 - After every change: `fvm dart format .` → `fvm flutter analyze` (0 issues) → `fvm flutter test`.
 - After editing freezed / json / riverpod-annotated files: `fvm dart run build_runner build -d`.
-- Run: `fvm flutter run --flavor dev --dart-define-from-file=env/dev.json` (flavors exist from Phase 1; before that drop `--flavor`).
+- Run: `fvm flutter run --flavor dev --dart-define-from-file=env/dev.json` (flavors exist from Phase 1; before that drop `--flavor`). Android Studio: use the checked-in "dev"/"staging"/"prod" run configurations (`.idea/runConfigurations/`) instead of the default flavorless one, which fails to produce an APK on this flavored project.
 
 ## Code rules
 - This is an existing codebase: extend and refactor it; don't rewrite screens from scratch unless PLAN.md says the screen is missing.
