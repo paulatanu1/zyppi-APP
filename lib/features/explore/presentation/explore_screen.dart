@@ -77,7 +77,7 @@ class ExploreScreen extends ConsumerWidget {
                             crossAxisCount: 4,
                             crossAxisSpacing: AppSpacing.md,
                             mainAxisSpacing: AppSpacing.lg,
-                            childAspectRatio: 0.78,
+                            childAspectRatio: 0.68,
                           ),
                       itemCount: exploreState.loading
                           ? 8

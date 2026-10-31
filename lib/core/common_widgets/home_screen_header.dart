@@ -100,8 +100,15 @@ class HomeScreenHeader extends ConsumerWidget {
               height: AppSizes.inputMin,
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: context.colors.surface,
                 borderRadius: BorderRadius.circular(AppRadius.input),
+                boxShadow: [
+                  BoxShadow(
+                    color: context.colors.shadow,
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Row(
                 children: [

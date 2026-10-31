@@ -63,7 +63,7 @@ class NavBar extends ConsumerWidget {
         if (!didPop) SystemNavigator.pop();
       },
       child: Scaffold(
-        body: screens[currentIndex],
+        body: IndexedStack(index: currentIndex, children: screens),
         bottomNavigationBar: Container(
           height: AppSizes.navBar,
           decoration: const BoxDecoration(
