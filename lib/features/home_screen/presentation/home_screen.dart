@@ -7,6 +7,7 @@ import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/zyppi_tokens.dart';
 import 'package:zippy/features/home_screen/application/home_sections_provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:zippy/features/home_screen/widgets/sections/home_section_widget.dart';
@@ -73,7 +74,9 @@ class HomeScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: AppSpacing.xxl),
                         ],
-                        const SizedBox(height: 100),
+                        // Room for the floating cart bar so the last
+                        // section isn't hidden behind it.
+                        const SizedBox(height: ZSize.cartBar + ZSpace.x6),
                       ],
                     ),
                   ),
@@ -82,9 +85,10 @@ class HomeScreen extends ConsumerWidget {
             ),
           ),
           Positioned(
-            left: AppSpacing.xxl,
-            right: AppSpacing.xxl,
-            bottom: AppSpacing.giant,
+            left: ZSpace.screen,
+            right: ZSpace.screen,
+            // 12px above the nav bar, per docs/mockups/zyppi.css .cartbar.
+            bottom: ZSpace.x3,
             child: const FloatingCartBar(),
           ),
         ],

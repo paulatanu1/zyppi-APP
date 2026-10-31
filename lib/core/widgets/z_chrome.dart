@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/zyppi_theme.dart';
@@ -149,6 +150,8 @@ class ZSearchBar extends StatelessWidget {
 
 /// Floating magenta cart bar: stacked thumbnails · "3 items · ₹447 / You save ₹50" · View cart ›.
 /// Slides up on first build. Place in a Stack, 12 px above the nav bar.
+/// [thumbnails] are widgets (e.g. `CatalogImage`) so network and asset
+/// images both work; at most three are shown.
 class ZCartBar extends StatelessWidget {
   const ZCartBar({
     super.key,
@@ -158,7 +161,7 @@ class ZCartBar extends StatelessWidget {
     this.saved = 0,
     required this.onTap,
   });
-  final List<ImageProvider> thumbnails;
+  final List<Widget> thumbnails;
   final int itemCount, total, saved;
   final VoidCallback onTap;
 
@@ -193,48 +196,59 @@ class ZCartBar extends StatelessWidget {
           ),
           child: Row(
             children: [
-              SizedBox(
-                width: 38 + (thumbs.length - 1) * 26,
-                height: 38,
-                child: Stack(
-                  children: [
-                    for (var i = 0; i < thumbs.length; i++)
-                      Positioned(
-                        left: i * 26,
-                        child: Container(
-                          width: 38,
-                          height: 38,
-                          padding: const EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: ZRadius.all(12),
-                            border: Border.all(color: z.brand, width: 2),
+              if (thumbs.isNotEmpty) ...[
+                SizedBox(
+                  width: 38 + (thumbs.length - 1) * 26,
+                  height: 38,
+                  child: Stack(
+                    children: [
+                      for (var i = 0; i < thumbs.length; i++)
+                        Positioned(
+                          left: i * 26,
+                          child: Container(
+                            width: 38,
+                            height: 38,
+                            padding: const EdgeInsets.all(3),
+                            decoration: BoxDecoration(
+                              // Product shots are on white in both themes.
+                              color: z.onBrand,
+                              borderRadius: ZRadius.all(12),
+                              border: Border.all(color: z.brand, width: 2),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: ZRadius.all(8),
+                              child: thumbs[i],
+                            ),
                           ),
-                          child: Image(image: thumbs[i], fit: BoxFit.contain),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
+                const SizedBox(width: 10),
+              ],
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '$itemCount items · ${rupees(total)}',
+                      '${'itemCount'.plural(itemCount)} · ${rupees(total)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: t.labelLarge!.copyWith(
-                        color: Colors.white,
+                        color: z.onBrand,
                         fontSize: 14.5,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                     if (saved > 0)
                       Text(
-                        'You save ${rupees(saved)}',
+                        'youSave'.tr(args: [rupees(saved)]),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: t.bodySmall!.copyWith(
-                          color: const Color(0xFFFFD6EB),
+                          color: z.headerInk2,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                   ],
@@ -244,21 +258,21 @@ class ZCartBar extends StatelessWidget {
                 height: 44,
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: .18),
+                  color: z.onBrand.withValues(alpha: .18),
                   borderRadius: ZRadius.all(13),
                 ),
                 child: Row(
                   children: [
                     Text(
-                      'View cart',
+                      'viewCart'.tr(),
                       style: t.labelLarge!.copyWith(
-                        color: Colors.white,
+                        color: z.onBrand,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const Icon(
+                    Icon(
                       Icons.chevron_right_rounded,
-                      color: Colors.white,
+                      color: z.onBrand,
                       size: 20,
                     ),
                   ],

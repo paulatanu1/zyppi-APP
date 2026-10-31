@@ -168,7 +168,8 @@ class _HomeV2ScreenState extends State<HomeV2Screen> {
               child: ZCartBar(
                 thumbnails: [
                   for (final d in _demoDeals)
-                    if ((_cart[d.name] ?? 0) > 0) AssetImage(d.asset),
+                    if ((_cart[d.name] ?? 0) > 0)
+                      Image.asset(d.asset, fit: BoxFit.contain),
                 ],
                 itemCount: _count,
                 total: _total,
