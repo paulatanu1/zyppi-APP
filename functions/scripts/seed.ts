@@ -238,6 +238,8 @@ async function main() {
       isActive: true,
       keywords: productKeywords(p.name),
       variants: p.variants.map(([id, label, pricePaise, mrpPaise]) => ({ id, label, pricePaise, mrpPaise })),
+      // Lets the admin panel find a variant's product (array-contains).
+      variantIds: p.variants.map(([id]) => id),
       createdAt: now,
     });
     for (const s of stores) {

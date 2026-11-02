@@ -65,6 +65,7 @@ describe("placeOrderInTx", () => {
     expect(order.totalPaise).toBe(4 * 6400 + 500);
     expect(order.items[0]).toMatchObject({ variantId: "v-milk", quantity: 4, unit: "1 L" });
     expect(order.addressText).toBe("12 Station Rd, Ward 5, Purulia, 723101");
+    expect(order.address).toMatchObject({ label: "Home", postalCode: "723101", landmark: null });
 
     // 3 from the fuller store, 1 from the other.
     expect(await stockOf(STORE_A, "v-milk")).toBe(0);

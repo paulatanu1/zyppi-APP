@@ -51,8 +51,21 @@ export interface QuoteLine {
   allocations: { ref: DocumentReference; take: number; current: number }[];
 }
 
+export interface AddressSnapshot {
+  label: string;
+  line1: string;
+  area: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  landmark: string | null;
+  lat: number;
+  lng: number;
+}
+
 export interface Quote {
   serviceAreaId: string;
+  address: AddressSnapshot;
   addressLabel: string;
   addressText: string;
   etaMinutes: number | null;
@@ -204,6 +217,17 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
 
   return {
     serviceAreaId: area.id,
+    address: {
+      label: address.label,
+      line1: address.line1,
+      area: address.area ?? "",
+      city: address.city ?? "",
+      state: address.state ?? "",
+      postalCode: address.postalCode ?? "",
+      landmark: address.landmark ?? null,
+      lat: address.lat,
+      lng: address.lng,
+    },
     addressLabel: address.label,
     addressText,
     etaMinutes: (slotSnap.get("etaMinutes") as number | undefined) ?? null,
@@ -253,6 +277,9 @@ export async function placeOrderInTx(
     addressId: p.addressId,
     addressLabel: quote.addressLabel,
     addressText: quote.addressText,
+    // Full copy for the admin panel / invoices; survives address edits
+    // and account deletion.
+    address: quote.address,
     serviceAreaId: quote.serviceAreaId,
     deliverySlotId: p.deliverySlotId,
     etaMinutes: quote.etaMinutes,
