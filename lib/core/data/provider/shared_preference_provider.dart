@@ -1,7 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zippy/core/cart/data/local_cart_store.dart';
 import 'package:zippy/core/data/data_source/key_names.dart';
 import 'package:zippy/core/payments/data/payment_repository_impl.dart';
@@ -50,7 +50,7 @@ class SharedPreferenceProvider extends StateNotifier<SharedPreferenceState> {
 
   bool _loggingOut = false;
 
-  /// Ends the session everywhere. Safe to call when Supabase has already
+  /// Ends the session everywhere. Safe to call when Firebase has already
   /// signed the user out (expired/revoked session): the auth listener in
   /// bootstrap.dart calls this too.
   Future<void> logOut() async {
@@ -81,10 +81,10 @@ class SharedPreferenceProvider extends StateNotifier<SharedPreferenceState> {
         await ref.read(pushTokenRepositoryProvider).clearToken();
       } catch (_) {}
 
-      // Ends the Supabase session too, so a guest (anonymous) session
+      // Ends the Firebase session too, so a guest (anonymous) session
       // doesn't linger. Local logout must still succeed if this fails.
       try {
-        await Supabase.instance.client.auth.signOut();
+        await FirebaseAuth.instance.signOut();
       } catch (error) {
         AppLog.showLog(tag: 'Sign out', message: error.toString());
       }

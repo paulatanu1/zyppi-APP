@@ -28,8 +28,8 @@ class OrderTrackingProvider extends StateNotifier<OrderTrackingState> {
     : super(OrderTrackingState()) {
     _load();
 
-    // Under Supabase, status changes come from a future rider/admin app,
-    // not this client — Realtime (via repository.watch()) is what tells
+    // Under Firebase, status changes come from the admin panel, not this
+    // client — a Firestore listener (repository.watch()) is what tells
     // us to re-read the order. The mock flavor drives its own fake
     // lifecycle timer below instead.
     if (!Env.isMockDataSource) {
@@ -46,7 +46,7 @@ class OrderTrackingProvider extends StateNotifier<OrderTrackingState> {
       state = state.copyWith(order: order, loading: false);
     } catch (error) {
       if (!mounted) return;
-      // Keep showing the last known order if a Realtime refresh fails.
+      // Keep showing the last known order if a live refresh fails.
       state = state.copyWith(loading: false, error: error.toString());
       return;
     }
@@ -61,8 +61,8 @@ class OrderTrackingProvider extends StateNotifier<OrderTrackingState> {
 
   void _scheduleNextStep() {
     // The fake lifecycle timer only applies to the offline mock flavor —
-    // under Supabase, status is server-controlled (Phase 4 wires it up
-    // via Realtime).
+    // under Firebase, status is server-controlled and arrives through
+    // repository.watch().
     if (!Env.isMockDataSource) return;
 
     final order = state.order;

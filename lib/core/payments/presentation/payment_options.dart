@@ -5,7 +5,7 @@ import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/common_widgets/section_card.dart';
 
 /// The values stay exactly what the backend expects (create-phonepe-order,
-/// place_order's p_payment_method, profiles.preferred_payment_method);
+/// placeOrder's paymentMethod, users.preferredPaymentMethod);
 /// only the display text is translated.
 const upiPaymentMethod = 'UPI';
 const cardPaymentMethod = 'Credit or debit card';

@@ -4,8 +4,8 @@ abstract class AddressRepository {
   Future<List<Address>> fetchAddresses();
 
   /// [serviceAreaId] is the area the serviceability check matched for this
-  /// location (place_order rejects addresses without one). Mock: kept
-  /// in-memory for the session. Supabase: [address.id] is ignored — the
+  /// location (placeOrder rejects addresses outside every area). Mock: kept
+  /// in-memory for the session. Firebase: [address.id] is ignored — the
   /// server generates it.
   Future<void> addAddress(Address address, {required String serviceAreaId});
 

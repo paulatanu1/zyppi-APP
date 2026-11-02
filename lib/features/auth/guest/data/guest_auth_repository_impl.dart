@@ -1,23 +1,22 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zippy/features/auth/guest/domain/guest_auth_repository.dart';
 
-/// Supabase anonymous sign-in. The guest still gets an `authenticated` JWT,
-/// so cart/address/order RLS and the payment Edge Functions work unchanged.
-/// Needs "Anonymous sign-ins" enabled under Auth → Providers per project.
-class SupabaseGuestAuthRepository implements GuestAuthRepository {
-  final SupabaseClient client;
+/// Firebase anonymous sign-in. The guest is a real (anonymous) Firebase
+/// user, so cart / address / order rules and the Cloud Functions work
+/// unchanged. Needs the Anonymous provider enabled in the console.
+class FirebaseGuestAuthRepository implements GuestAuthRepository {
+  final FirebaseAuth auth;
 
-  SupabaseGuestAuthRepository(this.client);
+  FirebaseGuestAuthRepository(this.auth);
 
   @override
   Future<String?> signIn() async {
-    final response = await client.auth.signInAnonymously();
-
-    return response.session?.accessToken;
+    final result = await auth.signInAnonymously();
+    return result.user?.uid;
   }
 }
 
 final guestAuthRepositoryProvider = Provider<GuestAuthRepository>(
-  (ref) => SupabaseGuestAuthRepository(Supabase.instance.client),
+  (ref) => FirebaseGuestAuthRepository(FirebaseAuth.instance),
 );

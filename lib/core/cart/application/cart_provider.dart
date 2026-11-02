@@ -20,7 +20,7 @@ import 'package:zippy/core/domain/product.dart';
 import 'package:zippy/core/domain/product_variant.dart';
 
 /// Local-first cart. A tap changes [state] and [store] synchronously, so
-/// the UI updates on the same frame; the server ([remote], supabase flavor
+/// the UI updates on the same frame; the server ([remote], firebase data source
 /// only) is synced in the background:
 /// - push: [pushDebounce] after the last tap, each changed ("dirty")
 ///   variant is written once with its latest quantity. Failures keep the
@@ -273,7 +273,7 @@ class CartNotifier extends StateNotifier<CartState> {
   }
 
   /// Pushes pending changes now. Checkout calls this first because
-  /// place_order() reads the *server's* cart. Throws if anything is still
+  /// placeOrder reads the *server's* cart. Throws if anything is still
   /// unsynced afterwards.
   Future<void> flush() async {
     if (remote == null) return;
@@ -337,7 +337,7 @@ class CartNotifier extends StateNotifier<CartState> {
     );
   }
 
-  /// After an order: place_order() already emptied the server cart, so
+  /// After an order: placeOrder already emptied the server cart, so
   /// only the device copy (and its pending changes) needs clearing.
   Future<void> clear() async {
     _pushTimer?.cancel();

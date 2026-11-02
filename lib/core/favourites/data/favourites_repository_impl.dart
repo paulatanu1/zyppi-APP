@@ -1,8 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zippy/core/config/env.dart';
-import 'package:zippy/core/favourites/data/supabase_favourites_repository_impl.dart';
+import 'package:zippy/core/favourites/data/firebase_favourites_repository_impl.dart';
 import 'package:zippy/core/favourites/domain/favourites_repository.dart';
 
 /// Opened once in bootstrap() and provided via [favouritesBoxProvider]'s
@@ -41,5 +42,8 @@ class HiveFavouritesRepository implements FavouritesRepository {
 final favouritesRepositoryProvider = Provider<FavouritesRepository>(
   (ref) => Env.isMockDataSource
       ? HiveFavouritesRepository(ref.read(favouritesBoxProvider))
-      : SupabaseFavouritesRepository(Supabase.instance.client),
+      : FirebaseFavouritesRepository(
+          FirebaseAuth.instance,
+          FirebaseFirestore.instance,
+        ),
 );

@@ -1,10 +1,12 @@
+import 'package:zippy/core/firebase/firebase_setup.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zippy/core/config/env.dart';
 import 'package:zippy/core/domain/order.dart';
 import 'package:zippy/core/domain/order_status.dart';
-import 'package:zippy/core/order/data/supabase_order_repository_impl.dart';
+import 'package:zippy/core/order/data/firebase_order_repository_impl.dart';
 import 'package:zippy/core/order/domain/order_repository.dart';
 
 /// Opened once in bootstrap() and provided via [orderBoxProvider]'s
@@ -75,5 +77,9 @@ class HiveOrderRepository implements OrderRepository {
 final orderRepositoryProvider = Provider<OrderRepository>(
   (ref) => Env.isMockDataSource
       ? HiveOrderRepository(ref.read(orderBoxProvider))
-      : SupabaseOrderRepository(Supabase.instance.client),
+      : FirebaseOrderRepository(
+          FirebaseAuth.instance,
+          FirebaseFirestore.instance,
+          zyppiFunctions(),
+        ),
 );

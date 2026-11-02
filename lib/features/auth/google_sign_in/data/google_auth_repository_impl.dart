@@ -1,14 +1,13 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zippy/features/auth/google_sign_in/domain/google_auth_repository.dart';
 
-// Phase 3: google_sign_in only obtains the Google ID token; Supabase
-// Auth's signInWithIdToken exchanges it for a Supabase session
-// (replacing the Firebase credential exchange used through Phase 2).
+// google_sign_in only obtains the Google ID token; Firebase Auth exchanges
+// it for a Firebase session (signInWithCredential).
 bool _googleInitialized = false;
 
-/// Google's ID token for the user's chosen account (Supabase exchanges or
+/// Google's ID token for the user's chosen account (Firebase exchanges or
 /// links it). Throws [GoogleSignInCancelled] if they close the picker.
 Future<String?> fetchGoogleIdToken() async {
   final googleSignIn = GoogleSignIn.instance;
@@ -38,12 +37,13 @@ class GoogleAuthRepositoryImpl implements GoogleAuthRepository {
     final idToken = await fetchGoogleIdToken();
     if (idToken == null) return null;
 
-    final response = await Supabase.instance.client.auth.signInWithIdToken(
-      provider: OAuthProvider.google,
-      idToken: idToken,
+    final result = await FirebaseAuth.instance.signInWithCredential(
+      GoogleAuthProvider.credential(idToken: idToken),
     );
 
-    return response.session?.accessToken;
+    // The uid is the app's local "signed in" marker; Firebase keeps the
+    // real session.
+    return result.user?.uid;
   }
 }
 

@@ -13,7 +13,7 @@ import 'package:zippy/main.dart' as app;
 ///     -d `<device>` --flavor dev --dart-define-from-file=env/dev.json
 ///
 /// Pre-seeds a fake auth token so the router's auth gate is bypassed —
-/// login itself always goes through real Supabase (see bootstrap.dart),
+/// login itself always goes through real Firebase Auth (see bootstrap.dart),
 /// so it can't be driven here without live credentials; that boundary is
 /// covered manually, not by this test.
 /// Live/on-device integration tests don't reliably settle via
@@ -44,7 +44,7 @@ void main() {
     // main.dart), so runApp() hasn't necessarily happened yet when this
     // call returns — pumpAndSettle alone can return immediately with no
     // widget tree mounted. Pump with real wall-clock gaps first so
-    // bootstrap()'s Firebase/Supabase/Hive chain gets a chance to finish.
+    // bootstrap()'s Firebase/Hive chain gets a chance to finish.
     app.main();
     await _waitUntil(
       tester,

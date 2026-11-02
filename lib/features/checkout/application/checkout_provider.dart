@@ -340,7 +340,7 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
   }
 
   /// The client-side view of the order; only the mock repository stores
-  /// it as-is (Supabase re-derives everything server-side).
+  /// it as-is (the placeOrder function re-derives everything server-side).
   Order _orderFromCart() {
     final cart = ref.read(cartProvider);
 

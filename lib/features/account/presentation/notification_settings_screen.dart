@@ -26,7 +26,7 @@ final _osNotificationsAllowedProvider = FutureProvider.autoDispose<bool>((
 });
 
 /// Account → Notification preferences. "Order updates" is honoured by the
-/// push-on-order-event Edge Function; "Offers" is stored for future
+/// onOrderEventCreated Cloud Function; "Offers" is stored for future
 /// marketing pushes.
 class NotificationSettingsScreen extends ConsumerStatefulWidget {
   const NotificationSettingsScreen({super.key});

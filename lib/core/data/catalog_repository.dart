@@ -20,7 +20,7 @@ abstract class CatalogRepository {
   /// match an active product are skipped.
   Future<List<Product>> fetchProductsByIds(List<String> ids);
 
-  /// Supabase: Postgres full-text search (`products.search_vector`).
+  /// Firebase: prefix match on each product's `keywords` array.
   /// Mock: substring match on product name. Callers should skip calling
   /// this for an empty/blank [query].
   Future<List<Product>> searchProducts(String query);

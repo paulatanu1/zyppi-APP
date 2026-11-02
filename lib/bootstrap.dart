@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
@@ -10,13 +11,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zippy/app/app.dart';
 import 'package:zippy/core/cart/data/local_cart_store.dart';
 import 'package:zippy/core/common_widgets/app_error_widget.dart';
 import 'package:zippy/core/config/env.dart';
 import 'package:zippy/core/constants/constants.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
+import 'package:zippy/core/firebase/firebase_setup.dart';
 import 'package:zippy/core/favourites/data/favourites_repository_impl.dart';
 import 'package:zippy/core/order/data/order_repository_impl.dart';
 import 'package:zippy/core/payments/application/resume_pending_payment.dart';
@@ -37,6 +38,7 @@ Future<void> bootstrap() async {
   );
 
   await Firebase.initializeApp();
+  await configureFirebase();
 
   // Chain rather than replace: FlutterError.onError already points to the
   // test harness's own handler when running under flutter_test (replacing
@@ -58,14 +60,6 @@ Future<void> bootstrap() async {
   if (kReleaseMode) {
     ErrorWidget.builder = (details) => const AppErrorWidget();
   }
-
-  // Auth always goes through Supabase (Phase 3), independent of
-  // Env.dataSource — that flag only picks mock-JSON vs live Supabase
-  // tables for the *catalog* repositories.
-  await Supabase.initialize(
-    url: Env.supabaseUrl,
-    publishableKey: Env.supabaseAnonKey,
-  );
 
   await Hive.initFlutter();
   final cartBox = await Hive.openBox('cart');
@@ -132,28 +126,26 @@ bool _isLoggedIn(ProviderContainer container) {
   return token != null && token.isNotEmpty;
 }
 
-/// The router's "logged in" check is a flag in SharedPreferences; Supabase
-/// owns the real session. Keep them in step: if the session is gone at
-/// startup, or Supabase ends it later (refresh token expired/revoked, user
-/// deleted), log out locally so the router returns to the login screen
-/// instead of leaving every user-scoped request failing.
+/// The router's "logged in" check is a flag in SharedPreferences; Firebase
+/// Auth owns the real session. Keep them in step: if there's no Firebase
+/// user at startup, or Firebase signs the user out later (account deleted
+/// or disabled, token revoked), log out locally so the router returns to
+/// the login screen instead of leaving every user-scoped request failing.
 void _watchAuthSession(ProviderContainer container) {
-  final auth = Supabase.instance.client.auth;
+  // The mock flavor's integration test signs in with a fake local token
+  // and no Firebase user; there's no backend session to keep in step.
+  if (Env.isMockDataSource) return;
+
   // Read the notifier fresh each time: the provider is autoDispose.
   void logOut() =>
       unawaited(container.read(sharedPreferenceProvider.notifier).logOut());
 
-  if (_isLoggedIn(container) && auth.currentSession == null) {
-    logOut();
-  }
-
-  auth.onAuthStateChange.listen(
-    (event) {
-      if (event.event == AuthChangeEvent.signedOut && _isLoggedIn(container)) {
-        logOut();
-      }
+  // The first event is the restored session (or null); later events are
+  // sign-ins and sign-outs.
+  FirebaseAuth.instance.authStateChanges().listen(
+    (user) {
+      if (user == null && _isLoggedIn(container)) logOut();
     },
-    // A failed token refresh surfaces here; the session is unusable.
     onError: (_) {
       if (_isLoggedIn(container)) logOut();
     },

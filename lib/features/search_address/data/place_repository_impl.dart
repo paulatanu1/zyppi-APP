@@ -1,8 +1,8 @@
+import 'package:zippy/core/firebase/firebase_setup.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zippy/core/config/env.dart';
 import 'package:zippy/core/data/mock/mock_data_source.dart';
-import 'package:zippy/features/search_address/data/supabase_place_repository_impl.dart';
+import 'package:zippy/features/search_address/data/firebase_place_repository_impl.dart';
 import 'package:zippy/features/search_address/domain/place_repository.dart';
 
 /// Canned predictions covering the three launch towns, so the search flow
@@ -47,5 +47,5 @@ class MockPlaceRepository implements PlaceRepository {
 final placeRepositoryProvider = Provider<PlaceRepository>(
   (ref) => Env.isMockDataSource
       ? MockPlaceRepository()
-      : SupabasePlaceRepository(Supabase.instance.client),
+      : FirebasePlaceRepository(zyppiFunctions()),
 );

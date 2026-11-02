@@ -10,7 +10,7 @@ import 'package:zippy/core/shared_providers/location/provider/get_current_locati
 import 'package:zippy/core/utils/parsed_address.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
 import 'package:zippy/features/search_address/data/place_repository_impl.dart';
-import 'package:zippy/features/search_address/data/supabase_place_repository_impl.dart';
+import 'package:zippy/features/search_address/data/firebase_place_repository_impl.dart';
 import 'package:zippy/features/search_address/domain/place_details.dart';
 import 'package:zippy/features/search_address/domain/place_prediction.dart';
 
@@ -26,7 +26,7 @@ class PlacePredictionProvider extends StateNotifier<PlacePredictionState> {
   int _requestId = 0;
 
   /// Debounced Places search: one request after the user pauses typing
-  /// (each call costs a places-proxy Edge Function invocation), and only
+  /// (each call costs a placesProxy Cloud Function invocation), and only
   /// the latest query's results are ever shown.
   void placePrediction({required String? input}) {
     _timer?.cancel();

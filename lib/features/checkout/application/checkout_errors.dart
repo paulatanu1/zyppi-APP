@@ -1,15 +1,15 @@
 import 'package:easy_localization/easy_localization.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:zippy/core/payments/domain/payment_repository.dart';
 
-/// Turns a place_order / quote_order failure into a translated message.
-/// The SQL raises fixed English sentences (see
-/// supabase/migrations/20261101120000_secure_payments.sql); anything
+/// Turns a placeOrder / createPhonePeOrder failure into a translated
+/// message. The functions return fixed English sentences (OrderError in
+/// functions/src/orders/quote.ts) as the error message; anything
 /// unrecognised falls back to a generic message rather than a raw
 /// exception dump.
 String friendlyOrderError(Object error) {
   final message = switch (error) {
-    PostgrestException(:final message) => message,
+    FirebaseFunctionsException(:final message) => message ?? '',
     PaymentException(:final message) => message,
     _ => '',
   };

@@ -15,7 +15,7 @@ final cartBoxProvider = Provider<Box>(
 
 /// The cart's source of truth on the device, in every flavor. Reads and
 /// writes are synchronous so a tap updates the UI on the same frame;
-/// CartNotifier syncs the server behind it (supabase flavor).
+/// CartNotifier syncs the server behind it (firebase data source).
 class LocalCartStore {
   static const _linesKey = 'lines';
   static const _dirtyKey = 'dirty';

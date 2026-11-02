@@ -1,6 +1,6 @@
 import 'package:zippy/core/domain/cart_item.dart';
 
-/// The server copy of the cart (supabase flavor). The device copy lives in
+/// The server copy of the cart (firebase data source). The device copy lives in
 /// LocalCartStore; CartNotifier syncs the two. Lives in core/ — "Add to
 /// basket" needs to be reachable from product_details, home_screen,
 /// explore, etc, and CLAUDE.md's "features import only core/ and

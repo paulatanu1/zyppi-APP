@@ -1,6 +1,6 @@
 abstract class GoogleAuthRepository {
-  /// Signs the user in with Google (via Supabase Auth's
-  /// signInWithIdToken), returning the session's access token on
+  /// Signs the user in with Google (via Firebase Auth
+  /// signInWithCredential), returning the user id on
   /// success.
   Future<String?> signIn();
 }

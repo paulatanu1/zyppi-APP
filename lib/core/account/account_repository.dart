@@ -1,25 +1,23 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zippy/core/config/env.dart';
+import 'package:zippy/core/firebase/firebase_setup.dart';
 
 abstract class AccountRepository {
   /// Permanently deletes the signed-in user's account and personal data
-  /// (orders are kept anonymised for accounting). Server side:
-  /// supabase/functions/delete-account.
+  /// (orders are kept anonymised for accounting). Server side: the
+  /// deleteAccount Cloud Function (functions/src/account.ts).
   Future<void> deleteAccount();
 }
 
-class SupabaseAccountRepository implements AccountRepository {
-  final SupabaseClient client;
+class FirebaseAccountRepository implements AccountRepository {
+  final FirebaseFunctions functions;
 
-  SupabaseAccountRepository(this.client);
+  FirebaseAccountRepository(this.functions);
 
   @override
   Future<void> deleteAccount() async {
-    await client.functions.invoke(
-      'delete-account',
-      body: {'confirm': 'DELETE'},
-    );
+    await functions.httpsCallable('deleteAccount').call({'confirm': 'DELETE'});
   }
 }
 
@@ -33,5 +31,5 @@ class MockAccountRepository implements AccountRepository {
 final accountRepositoryProvider = Provider<AccountRepository>(
   (ref) => Env.isMockDataSource
       ? MockAccountRepository()
-      : SupabaseAccountRepository(Supabase.instance.client),
+      : FirebaseAccountRepository(zyppiFunctions()),
 );

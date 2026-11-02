@@ -1,40 +1,37 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zippy/features/auth/google_sign_in/data/google_auth_repository_impl.dart';
 import 'package:zippy/features/auth/guest/domain/guest_upgrade_repository.dart';
+import 'package:zippy/features/auth/otp_verification/data/phone_verifier.dart';
 
-/// Supabase identity linking: the anonymous user gains a phone (via a
-/// phone-change OTP) or a Google identity and stops being anonymous; the
-/// user id — and everything keyed to it — stays the same. Google linking
-/// needs "Manual linking" enabled under Auth → Providers.
-class SupabaseGuestUpgradeRepository implements GuestUpgradeRepository {
-  final SupabaseClient client;
+/// Firebase account linking: the anonymous user gains a phone number or a
+/// Google account and stops being anonymous; the uid — and everything keyed
+/// to it — stays the same.
+class FirebaseGuestUpgradeRepository implements GuestUpgradeRepository {
+  final FirebaseAuth auth;
+  final FirebaseFirestore firestore;
+  final PhoneVerifier _verifier;
 
-  SupabaseGuestUpgradeRepository(this.client);
+  FirebaseGuestUpgradeRepository(this.auth, this.firestore)
+    : _verifier = PhoneVerifier(auth);
 
   @override
   Future<void> sendPhoneCode(String phone) =>
-      _guard(() => client.auth.updateUser(UserAttributes(phone: phone)));
+      _guard(() => _verifier.sendCode(phone));
 
   @override
   Future<void> verifyPhoneCode({
     required String phone,
     required String code,
   }) async {
-    await _guard(
-      () => client.auth.verifyOTP(
-        type: OtpType.phoneChange,
-        phone: phone,
-        token: code,
-      ),
-    );
+    final user = _currentUser();
+    await _guard(() => user.linkWithCredential(_verifier.credentialFor(code)));
 
-    // profiles.phone is filled by the sign-up trigger, which ran when the
-    // guest had no phone; keep it in step for the account screen.
-    final userId = client.auth.currentUser?.id;
-    if (userId != null) {
-      await client.from('profiles').update({'phone': phone}).eq('id', userId);
-    }
+    // Keep the profile's phone in step for the account screen.
+    await firestore.collection('users').doc(user.uid).set({
+      'phone': phone,
+    }, SetOptions(merge: true));
   }
 
   @override
@@ -47,21 +44,29 @@ class SupabaseGuestUpgradeRepository implements GuestUpgradeRepository {
     }
     if (idToken == null) return false;
 
+    final user = _currentUser();
     await _guard(
-      () => client.auth.linkIdentityWithIdToken(
-        provider: OAuthProvider.google,
-        idToken: idToken!,
+      () => user.linkWithCredential(
+        GoogleAuthProvider.credential(idToken: idToken),
       ),
     );
     return true;
   }
 
+  User _currentUser() {
+    final user = auth.currentUser;
+    if (user == null) throw FirebaseAuthException(code: 'no-current-user');
+    return user;
+  }
+
   Future<T> _guard<T>(Future<T> Function() call) async {
     try {
       return await call();
-    } on AuthException catch (error) {
-      if (error.code == 'phone_exists' ||
-          error.code == 'identity_already_exists') {
+    } on FirebaseAuthException catch (error) {
+      if (error.code == 'credential-already-in-use' ||
+          error.code == 'provider-already-linked' ||
+          error.code == 'account-exists-with-different-credential' ||
+          error.code == 'email-already-in-use') {
         throw const AccountAlreadyExists();
       }
       rethrow;
@@ -69,6 +74,10 @@ class SupabaseGuestUpgradeRepository implements GuestUpgradeRepository {
   }
 }
 
+// Not autoDispose: the verifier must survive from "send code" to "verify".
 final guestUpgradeRepositoryProvider = Provider<GuestUpgradeRepository>(
-  (ref) => SupabaseGuestUpgradeRepository(Supabase.instance.client),
+  (ref) => FirebaseGuestUpgradeRepository(
+    FirebaseAuth.instance,
+    FirebaseFirestore.instance,
+  ),
 );

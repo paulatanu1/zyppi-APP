@@ -27,7 +27,7 @@ class FavouritesNotifier extends StateNotifier<Set<String>> {
   Future<void> toggle(String productId) async {
     final adding = !state.contains(productId);
 
-    // Optimistic: the Supabase repo has no change stream to echo it back.
+    // Optimistic: the Firebase repo has no change stream to echo it back.
     state = adding ? {...state, productId} : ({...state}..remove(productId));
     try {
       adding

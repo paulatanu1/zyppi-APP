@@ -1,5 +1,5 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:geocoding/geocoding.dart' as geocoding;
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zippy/features/search_address/domain/place_repository.dart';
 
 /// Prefix for predictions that came from the device geocoder instead of
@@ -7,16 +7,21 @@ import 'package:zippy/features/search_address/domain/place_repository.dart';
 /// directly (place_prediction_provider.dart) — there's no Places id.
 const devicePlacePrefix = 'geo:';
 
-/// Places autocomplete/details go through the `places-proxy` Edge Function
-/// (no client-side Google key; supabase/functions/places-proxy/index.ts).
+/// Places autocomplete/details go through the `placesProxy` Cloud Function
+/// (no Google key in the app; functions/src/places.ts).
 ///
-/// If Places is unavailable — key not configured, quota, offline proxy —
-/// search falls back to the phone's own geocoder (the same keyless one
-/// "use current location" uses), so finding an area never just breaks.
-class SupabasePlaceRepository implements PlaceRepository {
-  final SupabaseClient client;
+/// If Places is unavailable — key not configured, quota, offline — search
+/// falls back to the phone's own geocoder (the same keyless one "use
+/// current location" uses), so finding an area never just breaks.
+class FirebasePlaceRepository implements PlaceRepository {
+  final FirebaseFunctions functions;
 
-  SupabasePlaceRepository(this.client);
+  FirebasePlaceRepository(this.functions);
+
+  Future<Map<String, dynamic>> _call(Map<String, dynamic> body) async {
+    final result = await functions.httpsCallable('placesProxy').call(body);
+    return Map<String, dynamic>.from(result.data as Map);
+  }
 
   @override
   Future<Map<String, dynamic>> fetchPlacePredictions(String? input) async {
@@ -24,11 +29,7 @@ class SupabasePlaceRepository implements PlaceRepository {
     if (query.isEmpty) return {'status': 'ZERO_RESULTS', 'predictions': []};
 
     try {
-      final response = await client.functions.invoke(
-        'places-proxy',
-        body: {'action': 'autocomplete', 'input': query},
-      );
-      final data = response.data as Map<String, dynamic>;
+      final data = await _call({'action': 'autocomplete', 'input': query});
       final status = data['status'] as String?;
       if (status == 'OK' || status == 'ZERO_RESULTS') return data;
     } catch (_) {
@@ -39,14 +40,8 @@ class SupabasePlaceRepository implements PlaceRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> fetchPlaceDetails(String? placeId) async {
-    final response = await client.functions.invoke(
-      'places-proxy',
-      body: {'action': 'details', 'placeId': placeId},
-    );
-
-    return response.data as Map<String, dynamic>;
-  }
+  Future<Map<String, dynamic>> fetchPlaceDetails(String? placeId) =>
+      _call({'action': 'details', 'placeId': placeId});
 
   /// Google-shaped predictions from the platform geocoder.
   Future<Map<String, dynamic>> _devicePredictions(String query) async {

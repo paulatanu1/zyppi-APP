@@ -1,6 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:zippy/core/cart/data/supabase_cart_repository_impl.dart';
+import 'package:zippy/core/cart/data/firebase_cart_repository_impl.dart';
 import 'package:zippy/core/cart/domain/cart_repository.dart';
 import 'package:zippy/core/config/env.dart';
 
@@ -9,5 +10,8 @@ import 'package:zippy/core/config/env.dart';
 final cartRepositoryProvider = Provider<CartRepository?>(
   (ref) => Env.isMockDataSource
       ? null
-      : SupabaseCartRepository(Supabase.instance.client),
+      : FirebaseCartRepository(
+          FirebaseAuth.instance,
+          FirebaseFirestore.instance,
+        ),
 );
