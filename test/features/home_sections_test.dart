@@ -223,4 +223,53 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text('Customer favourite'), findsOneWidget);
   });
+
+  testWidgets('spotlight skips items whose product is missing', (tester) async {
+    final product = Product(
+      id: 'p1',
+      name: 'Bread',
+      categoryId: 'c1',
+      image: '',
+      variants: const [],
+    );
+
+    await tester.pumpWidget(
+      _wrap(
+        SpotlightCardsSection(
+          section: _section('spotlight_cards', [
+            {'product_id': 'gone', 'badge': 'Missing'},
+            {'product_id': 'p1', 'badge': 'Fresh'},
+          ]),
+          productsById: {'p1': product},
+        ),
+      ),
+    );
+
+    expect(find.text('Missing'), findsNothing);
+    // The real card is first in the row, not pushed along by an empty slot.
+    final rowLeft = tester.getTopLeft(find.byType(SpotlightCardsSection)).dx;
+    expect(
+      tester.getTopLeft(find.byType(InkWell)).dx - rowLeft,
+      AppSpacing.xxl,
+    );
+  });
+
+  testWidgets('category tabs strip matches its sticky header height', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        CategoryTabsSection(
+          section: _section('category_tabs', [
+            {'label': 'All', 'icon': 'grid'},
+          ]),
+        ),
+      ),
+    );
+
+    expect(
+      tester.getSize(find.byType(CategoryTabsSection)).height,
+      CategoryTabsSection.height,
+    );
+  });
 }

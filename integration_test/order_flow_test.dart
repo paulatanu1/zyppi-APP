@@ -1,8 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zippy/core/common_widgets/add_button.dart';
-import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/data/data_source/key_names.dart';
 import 'package:zippy/main.dart' as app;
 
@@ -94,14 +94,18 @@ void main() {
     await tester.tap(find.text('Proceed to checkout →'));
     await _waitUntil(
       tester,
-      () => find.byType(PrimaryButton).evaluate().isNotEmpty,
+      // The Pay button enables once the address + slot have loaded.
+      () => find
+          .byWidgetPredicate((w) => w is FilledButton && w.onPressed != null)
+          .evaluate()
+          .isNotEmpty,
     );
 
     // Checkout: a default address + slot are pre-selected from mock data;
     // place the order (mock flavor skips PhonePe for every payment
     // method - see checkout_provider.dart).
-    expect(find.byType(PrimaryButton), findsOneWidget);
-    await tester.tap(find.byType(PrimaryButton));
+    expect(find.byType(FilledButton), findsOneWidget);
+    await tester.tap(find.byType(FilledButton));
     await _waitUntil(
       tester,
       () => find.text('Track order').evaluate().isNotEmpty,

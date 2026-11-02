@@ -11,7 +11,7 @@ class _DetectingLocation extends GetCurrentLocationProvider {
   _DetectingLocation(super.ref);
 
   @override
-  Future<void> getCurrentLocation() async {
+  Future<void> getCurrentLocation({bool requestPermission = false}) async {
     state = GetCurrentLocationState.initial();
   }
 }

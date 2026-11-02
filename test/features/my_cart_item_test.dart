@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:zippy/core/cart/domain/cart_line.dart';
 import 'package:zippy/core/domain/product.dart';
 import 'package:zippy/core/domain/product_variant.dart';
-import 'package:zippy/core/theme/app_theme.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/features/my_cart/widgets/my_cart_item.dart';
 
 void main() {
@@ -34,7 +34,7 @@ void main() {
         child: ScreenUtilInit(
           designSize: const Size(390, 844),
           builder: (context, _) => MaterialApp(
-            theme: AppTheme.light,
+            theme: ZyppiTheme.light,
             home: Scaffold(
               body: SizedBox(height: 844, child: MyCartItem(line: line)),
             ),
