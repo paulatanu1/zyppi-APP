@@ -74,6 +74,17 @@
 					<string>com.zyppi.one.payments</string>
 				</array>
 			</dict>
+			<dict>
+				<key>CFBundleURLName</key>
+				<string>com.zyppi.one.auth</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<!-- Google Sign-In (REVERSED_CLIENT_ID from GoogleService-Info.plist) -->
+					<string>com.googleusercontent.apps.182229138750-svu7g9tma7pomljs49vlv5fqs49s1qqr</string>
+					<!-- Firebase Phone Auth reCAPTCHA fallback (encoded iOS app id) -->
+					<string>app-1-182229138750-ios-57ee1fd42801caf19a806f</string>
+				</array>
+			</dict>
 		</array>
 	</dict>
 </plist>

@@ -3,9 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>182229138750-r1krjq23t1mkqni52v15qm0tu2cch2mn.apps.googleusercontent.com</string>
+	<string>182229138750-svu7g9tma7pomljs49vlv5fqs49s1qqr.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.182229138750-r1krjq23t1mkqni52v15qm0tu2cch2mn</string>
+	<string>com.googleusercontent.apps.182229138750-svu7g9tma7pomljs49vlv5fqs49s1qqr</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>182229138750-0ftu6j61ebhilfi2o07uva7v0jv7j6mj.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
 	<string>AIzaSyDY0WIRYIE1BtElCEVTJBVTYKNqkfBxerQ</string>
 	<key>GCM_SENDER_ID</key>
@@ -13,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.betastechnologies.zippy</string>
+	<string>com.zyppi.one</string>
 	<key>PROJECT_ID</key>
 	<string>zippy-app-2024</string>
 	<key>STORAGE_BUCKET</key>
@@ -29,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:182229138750:ios:51cac6102abdbd949a806f</string>
+	<string>1:182229138750:ios:57ee1fd42801caf19a806f</string>
 </dict>
 </plist>
