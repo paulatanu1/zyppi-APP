@@ -89,3 +89,4 @@ ui-debug.log
 storage-debug.log
 functions/.env.*
 !functions/.env.example
+functions/.secret.local
