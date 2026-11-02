@@ -1,10 +1,10 @@
 # Zyppi Grocery App — Upgrade & Development Plan
 
-Approved plan for Claude Code. Repo: `paulatanu1/zyppi-APP`, base branch **`Development`**. Last updated 14 Oct 2026.
+Approved plan for Claude Code. Repo: `paulatanu1/zyppi-APP`, base branch **`Development`**. Last updated 3 Nov 2026 (backend moved from Supabase to Firebase — Phase 6).
 
 ## 1. Summary and audit
 
-The app already exists on `Development` (65 commits, Nov 2024 – Feb 2025): 17 feature screens on Riverpod, freezed and go_router, Firebase + Google sign-in, easy_localization in 4 languages. It runs on Flutter 3.24.3 and talks to an old REST backend over plain HTTP. The plan upgrades it in place, moves data and auth to Supabase, builds the missing grocery flow (product search, checkout, order placed, order tracking) and restyles screens to the approved mockup.
+The app already exists on `Development` (65 commits, Nov 2024 – Feb 2025): 17 feature screens on Riverpod, freezed and go_router, Firebase + Google sign-in, easy_localization in 4 languages. It runs on Flutter 3.24.3 and talks to an old REST backend over plain HTTP. The plan upgrades it in place, moves data and auth to Supabase (Phases 3–4; replaced by Firebase in Phase 6), builds the missing grocery flow (product search, checkout, order placed, order tracking) and restyles screens to the approved mockup.
 
 | Area | Current state (`Development` @ 2cfeb0c, 3 Feb 2025) | Action |
 | --- | --- | --- |
@@ -31,13 +31,13 @@ Flutter **3.47.x stable** (Dart 3.13) pinned with **FVM** (`.fvmrc`). Upgrade wi
 | State | `flutter_riverpod` 2.6, `riverpod_annotation`, `riverpod_generator` | Riverpod 3 + `riverpod_lint`, `custom_lint` | 0 |
 | Routing | `go_router` 14 | latest | 0 |
 | Models | `freezed` 2, `json_serializable` | `freezed` 3, latest | 0 |
-| Backend | `dio` + REST | `supabase_flutter`; Supabase CLI | 3 |
-| Auth | `firebase_auth`, `google_sign_in` 6 | Supabase Auth; `google_sign_in` latest for the ID token | 3 |
+| Backend | `dio` + REST | `cloud_firestore`, `cloud_functions`; Firebase CLI + Cloud Functions (TypeScript, `functions/`). Was `supabase_flutter` in Phases 3–5 | 6 |
+| Auth | `firebase_auth`, `google_sign_in` 6 | `firebase_auth` (phone OTP, Google, anonymous guest + linking); `google_sign_in` latest for the ID token. Was Supabase Auth in Phases 3–5 | 6 |
 | Local storage | `shared_preferences` | + `hive_ce`, `hive_ce_flutter` (cart, recent searches) | 2 |
 | UI kit | `flutter_screenutil`, `carousel_slider`, `smooth_page_indicator`, `curved_navigation_bar`, `flutter_bounce`, `fluttertoast` | Keep first four; SnackBar instead of `fluttertoast`; add `cached_network_image`, `skeletonizer` | 1–2 |
 | OTP input | `otp_text_field` + `flutter_otp_text_field` | `flutter_otp_text_field` only | 1 |
 | Localization | `easy_localization` | latest | 0 |
-| Location / maps | `geolocator`, `google_places_flutter` (client key) | `geolocator`, `geocoding`; Places via Edge Function. `google_maps_flutter` was added in Phase 4 then removed (2026-10-26): delivery here only needs `lat`/`lng` for the rider to navigate externally, not an embedded map in the customer app — see decisions table | 4 |
+| Location / maps | `geolocator`, `google_places_flutter` (client key) | `geolocator`, `geocoding`; Places via the `placesProxy` Cloud Function. `google_maps_flutter` was added in Phase 4 then removed (2026-10-26): delivery here only needs `lat`/`lng` for the rider to navigate externally, not an embedded map in the customer app — see decisions table | 4 |
 | Push / crash / analytics | `firebase_core` | + `firebase_messaging`, `firebase_crashlytics`, `firebase_analytics` | 4–5 |
 | Payments | — | `phonepe_payment_sdk` (Standard Checkout) + COD | 4 |
 | Testing | `flutter_test` | + `mocktail`, `integration_test` | all |
@@ -81,7 +81,7 @@ application (Riverpod notifiers + freezed state)
       ↓
 domain (entities + repository interfaces)   ← swap point
       ↓                        ↓
-data/mock (assets/mock)   data/supabase (supabase_flutter)
+data/mock (assets/mock)   data/firebase_* (cloud_firestore, cloud_functions)
 ```
 
 Target layout after the Phase 1 rename pass:
@@ -89,21 +89,23 @@ Target layout after the Phase 1 rename pass:
 ```text
 lib/
   main.dart                  # flavor → bootstrap()
-  bootstrap.dart             # EasyLocalization, Firebase, Supabase.initialize, ProviderScope
+  bootstrap.dart             # EasyLocalization, Firebase (+ emulators), ProviderScope
   app/
     app.dart                 # MaterialApp.router, theme, ScreenUtilInit(390x844)
     router.dart              # go_router + redirect/refreshListenable (onboarding, auth, location)
   core/
     config/env.dart          # String.fromEnvironment(...)
     theme/                   # tokens from docs/design-tokens.md (replaces constants/colors.dart)
-    supabase/                # client provider, error mapping (replaces infrastructure/ in Phase 3)
+    firebase/                # Functions region, emulator setup (firebase_setup.dart)
     storage/                 # shared_preferences, hive boxes
     location/                # from sharedProviders/Location
     utils/  widgets/         # money (paise), formatters; shared widgets (from commonWidgets/)
   features/<feature>/{data,domain,application,presentation,widgets}
     intro auth location home explore category product search cart checkout orders tracking account favourites addresses
 assets/mock/                 # categories.json, products.json, orders.json, addresses.json, slots.json, service_areas.json
-supabase/                    # migrations/, seed.sql, functions/ (Phase 3+)
+functions/                   # Cloud Functions (TypeScript), seed + set-admin scripts, emulator tests
+firestore.rules  firestore.indexes.json  storage.rules  firebase.json
+supabase/                    # legacy (Phases 3–5); delete once Phase 6 is verified end to end
 env/                         # *.example.json committed; real files gitignored
 ```
 
@@ -183,22 +185,36 @@ Done when: PhonePe test payment succeeds, background push arrives, tracking map 
 
 Done when: both store test tracks run a week of internal use with no crashes. ⚠️ Not reachable from here — needs real signing, store accounts, and a week of real usage.
 
+### Phase 6 — Move to Firebase · `feat/firebase-migration`
+Supabase (Postgres, Auth, Storage, Realtime, Edge Functions) is replaced by Firebase on the existing project `zippy-app-2024`.
+- [x] `firebase.json`, `.firebaserc`, `firestore.rules`, `firestore.indexes.json`, `storage.rules`. Catalog is public-read/admin-write; `users/{uid}` + `addresses`/`cart`/`favourites` are owner-only; `orders`, `paymentIntents`, `inventory` are written only by Cloud Functions. Admins = custom claim `admin: true` (`functions/scripts/set-admin.ts`)
+- [x] Cloud Functions (`functions/`, TypeScript, Node 22, `asia-south1`): `placeOrder` (COD), `createPhonePeOrder`, `verifyPhonePePayment` (idempotent paid orders, mismatches → `needs_review`), `placesProxy`, `deleteAccount`, `onOrderEventCreated` (FCM push), `adminUpdateOrderStatus`, `adminListUsers`. Ported from `quote_order` / `place_order_internal` / `place_paid_order`; stock now spills across an area's stores instead of failing when no single store has enough
+- [x] `functions/scripts/seed.ts` loads the old `seed.sql` catalog + images into Firestore/Storage; search uses a `keywords` prefix array
+- [x] App: one `firebase_*_repository_impl.dart` per interface; Firebase Auth for phone OTP, Google, guest and guest upgrade (`linkWithCredential`); order tracking listens to Firestore; `supabase_flutter` removed
+- [x] Admin panel (`zyppi-admin`): Firebase Auth email/password + admin claim, Firestore services, Storage uploads
+- [x] Tests: functions emulator suite (pricing, coupons, stock, rollback, idempotency, rules) in CI; Dart tests for distance and error mapping
+- [ ] Console: Blaze plan, Firestore (`asia-south1`), Storage, Auth providers (Phone, Google, Anonymous, Email/Password), SHA-1/SHA-256 fingerprints, APNs key; secrets `PHONEPE_*`, `GOOGLE_PLACES_API_KEY`
+- [ ] Deploy (`firebase deploy --only firestore,storage,functions`), seed, create the admin login + `set-admin`
+- [ ] Verify end to end on a device, then delete `supabase/` and `scripts/upload_catalog_images.sh`
+
+Done when: on a real phone against `zippy-app-2024` — OTP, Google and guest sign-in work; a COD order is placed and appears in the admin panel; an admin status change updates tracking live and sends a push; delete account works.
+
 ## 6. Decisions
 
 | Decision | Value |
 | --- | --- |
 | Repo / base branch | `paulatanu1/zyppi-APP`, `Development` |
 | App id / package | `com.zyppi.one` (changed from `com.betastechnologies.zippy` on 2026-10-17, pre-submission), Dart package `zippy` |
-| Scope | Customer app first; rider + admin later |
-| Backend | Supabase from scratch (project ref `dcgjsspymailbciqkhvq` = dev); old REST API retired |
+| Scope | Customer app first, admin panel (`zyppi-admin`, Angular) alongside; rider later |
+| Backend | Firebase project `zippy-app-2024` for every flavor (Firestore + Cloud Functions in `asia-south1`, Auth, Storage) — Phase 6, 2026-11-03. Supabase (`dcgjsspymailbciqkhvq`) retired; started fresh, catalog re-seeded, no user data copied |
 | Launch areas | Purulia, Raghunathpur, Chelyama |
 | Delivery model | Dark store per area; express + scheduled slots |
 | Payments | PhonePe (Standard Checkout) + COD |
-| SMS / OTP | Dev: Supabase test numbers. Prod: MSG91 via Send SMS Hook |
+| SMS / OTP | Firebase Phone Auth (sends the SMS itself). Dev: Firebase test phone numbers |
 | Brand | Existing Zyppi brand (pink, blue, Poppins/Montserrat) — mockup re-themed |
 | Navigation | Home, Explore, Cart, Favourite, Account |
 | Localization | easy_localization: en, bn, hi, pa |
 | Platforms | Android, iOS |
 | State | Riverpod 3 + codegen |
 
-Open: production SMS provider sign-up; realistic express ETA per town; PhonePe Business Dashboard credentials (`PHONEPE_CLIENT_ID`/`SECRET`/`VERSION`/`MERCHANT_ID`) still need setting as Edge Function secrets on both Supabase projects; `zyppi-admin` (sibling repo) should surface a per-order "Navigate" link (e.g. `https://www.google.com/maps/dir/?api=1&destination=lat,lng`) built from the `orders`/`addresses` data this app already writes, for whoever is handling deliveries until a rider app exists — not implemented here, this repo's data model already supports it.
+Open: production SMS provider sign-up; realistic express ETA per town; PhonePe Business Dashboard credentials (`PHONEPE_CLIENT_ID`/`SECRET`/`VERSION`/`MERCHANT_ID`) still need setting as Cloud Functions secrets (`firebase functions:secrets:set`); `zyppi-admin` (sibling repo) should surface a per-order "Navigate" link (e.g. `https://www.google.com/maps/dir/?api=1&destination=lat,lng`) built from the `orders`/`addresses` data this app already writes, for whoever is handling deliveries until a rider app exists — not implemented here, this repo's data model already supports it.

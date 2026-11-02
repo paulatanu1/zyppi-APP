@@ -19,7 +19,7 @@ The repo is public and `lib/core/constants/googleApiKey.dart` contains a Google 
 
 ## 3. One-time setup
 
-1. Tools: Git, Android Studio (SDK + emulator), Xcode + CocoaPods, Node 18+, [FVM](https://fvm.app), [Supabase CLI](https://supabase.com/docs/guides/cli), Claude Code.
+1. Tools: Git, Android Studio (SDK + emulator), Xcode + CocoaPods, Node 22, Java 21+ (for the Firebase emulators; Android Studio's bundled JBR works), [FVM](https://fvm.app), [Firebase CLI](https://firebase.google.com/docs/cli) (`firebase login`), Claude Code.
 2. Add the pack on top of `Development`:
    ```bash
    git clone git@github.com:paulatanu1/zyppi-APP.git && cd zyppi-APP
@@ -33,9 +33,15 @@ The repo is public and `lib/core/constants/googleApiKey.dart` contains a Google 
 3. Local env (not committed):
    ```bash
    cp env/dev.example.json env/dev.json
-   # paste the Supabase publishable key and the restricted Maps key
+   # set DATA_SOURCE to "firebase" (or keep "mock"); USE_FIREBASE_EMULATOR=true for a local backend
    ```
-4. Supabase dashboard (project `dcgjsspymailbciqkhvq`): Auth → Providers → Phone → enable and add 2–3 test numbers with fixed OTPs. Auth → Providers → Google → enable (Phase 3 uses it).
+4. Firebase console (project `zippy-app-2024`, Blaze plan):
+   - Firestore (region `asia-south1`) and Storage enabled.
+   - Authentication → Sign-in method: Phone (add 2–3 test numbers with fixed codes), Google, Anonymous, Email/Password (admin logins).
+   - Project settings → Android app `com.zyppi.one`: add the debug and release SHA-1 and SHA-256 fingerprints. iOS app `com.zyppi.one`: upload the APNs key.
+   - Secrets: `firebase functions:secrets:set PHONEPE_CLIENT_ID` (and `PHONEPE_CLIENT_SECRET`, `PHONEPE_CLIENT_VERSION`, `PHONEPE_MERCHANT_ID`, `GOOGLE_PLACES_API_KEY`).
+   - Deploy: `firebase deploy --only firestore,storage,functions`; seed: `gcloud auth application-default login && npm --prefix functions run seed -- --project zippy-app-2024`.
+   - Admin: create an Email/Password user in the console, then `npm --prefix functions run set-admin -- <email> --project zippy-app-2024`.
 
 ## 4. Run the phases
 
@@ -49,6 +55,7 @@ Open Claude Code at the repo root (`claude`) on an up-to-date `Development`. One
 | Phase 3 | `npx skills add supabase/agent-skills`, then `/phase 3` | Review migrations + RLS policies; real order on staging |
 | Phase 4 | `/phase 4` | Razorpay test payment, push, live tracking; MSG91 + DLT ready |
 | Phase 5 | `/phase 5` | Internal tracks on Play Console + TestFlight |
+| Phase 6 | Firebase migration (done on `feat/firebase-migration`) | Console setup + deploy above; OTP/Google/guest sign-in, COD order, live status + push on a real phone |
 
 Plain prompt alternative: *"Execute Phase N from docs/PLAN.md on a branch from Development. Follow CLAUDE.md. Stop when the Done-when checks pass."*
 
@@ -59,7 +66,7 @@ Tips: fresh session per phase · use plan mode (Shift+Tab) for Phases 1–3 · t
 | When | Task |
 | --- | --- |
 | Now | Restrict/rotate the Google Maps key; restrict the API keys in the committed Firebase config files |
-| Before Phase 3 | Confirm the Supabase plan tier; plan a prod project for release |
+| Before Phase 6 | Firebase Blaze plan; console setup in §3 step 4 (Supabase is retired) |
 | Before Phase 4 | Razorpay account (test keys → `env/dev.json`); Firebase Cloud Messaging + Crashlytics on the existing Firebase project |
 | Before Phase 4 | MSG91 account + **DLT** registration (sender ID, OTP template) — takes a few days |
 | Before Phase 5 | Play Console + Apple Developer accounts, signing keys, store listings |
