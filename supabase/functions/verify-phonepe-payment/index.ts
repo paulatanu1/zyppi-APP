@@ -1,44 +1,31 @@
-// Confirms a PhonePe order's status server-side (PHONEPE_CLIENT_SECRET
-// never reaches the client, mirrors the old verify-razorpay-payment). The
-// client calls this after the SDK's startTransaction returns SUCCESS, and
-// only proceeds to place_order() if {"verified": true} comes back.
+// Confirms a PhonePe payment server-side and, once it has COMPLETED for the
+// quoted amount, creates the order (place_paid_order, service role). The
+// app only reports what happened; it can't create a prepaid order itself.
+//
+// Safe to call repeatedly: a completed intent returns the same order id.
+// If the app dies after paying, calling this again (e.g. on next launch)
+// still creates the order.
 //
 // Request body: {"merchantOrderId": string}
+// Response: {verified, pending, orderId, needsReview}
+//   verified    – PhonePe says COMPLETED for the right amount
+//   pending     – not settled yet; poll again shortly
+//   orderId     – the created order (null if not created)
+//   needsReview – paid, but the order couldn't be created (stock ran out,
+//                 amount mismatch…); support must refund or fulfil it
 
-const SANDBOX_BASE = "https://api-preprod.phonepe.com/apis/pg-sandbox";
-const SANDBOX_OAUTH = "https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token";
-const PROD_BASE = "https://api.phonepe.com/apis/pg";
-const PROD_OAUTH = "https://api.phonepe.com/apis/identity-manager/v1/oauth/token";
-
-async function getAccessToken(env: string): Promise<string> {
-  const clientId = Deno.env.get("PHONEPE_CLIENT_ID")!;
-  const clientSecret = Deno.env.get("PHONEPE_CLIENT_SECRET")!;
-  const clientVersion = Deno.env.get("PHONEPE_CLIENT_VERSION")!;
-
-  const response = await fetch(env === "PRODUCTION" ? PROD_OAUTH : SANDBOX_OAUTH, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      client_version: clientVersion,
-      grant_type: "client_credentials",
-    }),
-  });
-
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(`PhonePe auth failed: ${JSON.stringify(data)}`);
-  }
-  return data.access_token as string;
-}
+import { adminClient, requireUser } from "../_shared/auth.ts";
+import { getPhonePeAccessToken, phonePeBase } from "../_shared/phonepe.ts";
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
 
-  const env = Deno.env.get("PHONEPE_ENV") ?? "SANDBOX";
+  const userId = await requireUser(req);
+  if (!userId) {
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
+  }
 
   let body: { merchantOrderId?: string };
   try {
@@ -46,33 +33,79 @@ Deno.serve(async (req) => {
   } catch {
     return Response.json({ error: "Invalid request" }, { status: 400 });
   }
-
   const { merchantOrderId } = body;
   if (!merchantOrderId) {
     return Response.json({ error: "Invalid request" }, { status: 400 });
   }
 
+  const db = adminClient();
+
+  // Only the payer may check (and complete) their own payment.
+  const { data: intent } = await db
+    .from("payment_intents")
+    .select("user_id, status, order_id")
+    .eq("merchant_order_id", merchantOrderId)
+    .maybeSingle();
+  if (!intent || intent.user_id !== userId) {
+    return Response.json({ error: "Unknown payment" }, { status: 404 });
+  }
+
+  if (intent.order_id) {
+    return Response.json({
+      verified: true,
+      pending: false,
+      orderId: intent.order_id,
+      needsReview: false,
+    });
+  }
+  if (intent.status === "needs_review") {
+    return Response.json({ verified: true, pending: false, orderId: null, needsReview: true });
+  }
+
   let accessToken: string;
   try {
-    accessToken = await getAccessToken(env);
+    accessToken = await getPhonePeAccessToken();
   } catch (error) {
     return Response.json({ error: String(error) }, { status: 502 });
   }
 
   const response = await fetch(
-    `${env === "PRODUCTION" ? PROD_BASE : SANDBOX_BASE}/checkout/v2/order/${merchantOrderId}/status?details=true`,
-    {
-      headers: { Authorization: `O-Bearer ${accessToken}` },
-    },
+    `${phonePeBase()}/checkout/v2/order/${encodeURIComponent(merchantOrderId)}/status?details=true`,
+    { headers: { Authorization: `O-Bearer ${accessToken}` } },
   );
-
   const data = await response.json();
   if (!response.ok) {
     return Response.json(data, { status: response.status });
   }
 
-  return Response.json({
-    verified: data.state === "COMPLETED",
-    transactionId: data.paymentDetails?.[0]?.transactionId ?? null,
+  if (data.state === "PENDING") {
+    return Response.json({ verified: false, pending: true, orderId: null, needsReview: false });
+  }
+  if (data.state !== "COMPLETED") {
+    await db
+      .from("payment_intents")
+      .update({ status: "failed", failure_reason: data.state, updated_at: new Date().toISOString() })
+      .eq("merchant_order_id", merchantOrderId)
+      .eq("status", "created");
+    return Response.json({ verified: false, pending: false, orderId: null, needsReview: false });
+  }
+
+  // COMPLETED can briefly come back without its transaction details.
+  const transactionId = data.paymentDetails?.[0]?.transactionId;
+  if (!transactionId) {
+    return Response.json({ verified: false, pending: true, orderId: null, needsReview: false });
+  }
+
+  const { data: orderId, error } = await db.rpc("place_paid_order", {
+    p_merchant_order_id: merchantOrderId,
+    p_transaction_id: transactionId,
+    p_paid_amount_paise: data.amount,
   });
+
+  if (error || !orderId) {
+    // Paid but not placed: the intent is now `needs_review` with the reason.
+    return Response.json({ verified: true, pending: false, orderId: null, needsReview: true });
+  }
+
+  return Response.json({ verified: true, pending: false, orderId, needsReview: false });
 });

@@ -39,6 +39,8 @@ Deno.serve(async (req) => {
     url.searchParams.set("input", body.input);
     url.searchParams.set("language", "en");
     url.searchParams.set("types", "geocode");
+    // Delivery is India-only; keep suggestions there.
+    url.searchParams.set("components", "country:in");
   } else if (body.action === "details" && body.placeId) {
     url = new URL(`${GOOGLE_PLACES_BASE}/details/json`);
     url.searchParams.set("placeid", body.placeId);

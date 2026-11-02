@@ -42,6 +42,20 @@ insert into public.products (id, category_id, name, image) values
   ('44444444-0000-0000-0000-000000000007', '33333333-0000-0000-0000-000000000008', 'Toned Milk', 'products/milk.png'),
   ('44444444-0000-0000-0000-000000000008', '33333333-0000-0000-0000-000000000007', 'Butter Cookies', 'products/item.png');
 
+-- Product details' "About this item" (hidden when empty).
+update public.products p set description = d.description
+from (values
+  ('44444444-0000-0000-0000-000000000001'::uuid, 'Farm-fresh red tomatoes, picked ripe for curries, salads and chutneys.'),
+  ('44444444-0000-0000-0000-000000000002'::uuid, 'Crisp, sweet apples — a ready snack and great in salads.'),
+  ('44444444-0000-0000-0000-000000000003'::uuid, 'Soft whole-wheat brown bread, baked fresh for sandwiches and toast.'),
+  ('44444444-0000-0000-0000-000000000004'::uuid, 'Long-grain aged basmati rice that cooks up fluffy and fragrant.'),
+  ('44444444-0000-0000-0000-000000000005'::uuid, 'Light sunflower oil for everyday frying and cooking.'),
+  ('44444444-0000-0000-0000-000000000006'::uuid, 'Fresh, cleaned chicken curry cut, bone-in, ready to cook.'),
+  ('44444444-0000-0000-0000-000000000007'::uuid, 'Pasteurised toned milk, delivered chilled.'),
+  ('44444444-0000-0000-0000-000000000008'::uuid, 'Crunchy, buttery cookies — perfect with tea.')
+) as d(id, description)
+where p.id = d.id;
+
 insert into public.product_variants (id, product_id, label, price_paise, mrp_paise) values
   ('55555555-0000-0000-0000-000000000001', '44444444-0000-0000-0000-000000000001', '500 g', 2500, 3000),
   ('55555555-0000-0000-0000-000000000002', '44444444-0000-0000-0000-000000000002', '1 kg', 18000, 20000),

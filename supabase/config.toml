@@ -55,6 +55,10 @@ verify_jwt = true
 [functions.verify-phonepe-payment]
 verify_jwt = true
 
+[functions.delete-account]
+# The signed-in user deleting their own account (Play Store requirement).
+verify_jwt = true
+
 [functions.push-on-order-event]
 # Called by the on_order_event_notify trigger with the service role key
 # as a bearer token, not an end-user session.

@@ -122,11 +122,15 @@ Deno.serve(async (req) => {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("fcm_token")
+    .select("fcm_token, notify_order_updates")
     .eq("id", order.user_id)
     .single();
   if (!profile?.fcm_token) {
     return Response.json({ skipped: "No fcm_token for user" });
+  }
+  // Account → Notification preferences.
+  if (profile.notify_order_updates === false) {
+    return Response.json({ skipped: "Order updates turned off by user" });
   }
 
   const copy = STATUS_COPY[body.status] ?? {
