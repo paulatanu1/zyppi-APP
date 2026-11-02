@@ -7,7 +7,11 @@ final favouriteProductsProvider = FutureProvider.autoDispose<List<Product>>((
   ref,
 ) async {
   final favouriteIds = ref.watch(favouritesProvider);
-  final products = await ref.read(catalogRepositoryProvider).fetchProducts();
+  if (favouriteIds.isEmpty) return const [];
 
-  return products.where((p) => favouriteIds.contains(p.id)).toList();
+  // Only the favourited products, not the whole catalog (which the
+  // backend would cap at its row limit as it grows).
+  return ref
+      .read(catalogRepositoryProvider)
+      .fetchProductsByIds(favouriteIds.toList());
 });

@@ -19,6 +19,13 @@ extension SectionData on Map<String, dynamic> {
     return null;
   }
 
+  bool? boolean(String key) {
+    final value = this[key];
+    if (value == null || value is bool) return value as bool?;
+    _logMismatch(key, 'bool', value);
+    return null;
+  }
+
   void _logMismatch(String key, String expected, Object value) {
     if (kDebugMode) {
       debugPrint(

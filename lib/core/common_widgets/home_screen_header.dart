@@ -1,12 +1,13 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
+import 'package:zippy/core/utils/address_label.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/nav_bar/provider/nav_bar_provider.dart';
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
-import 'package:zippy/core/theme/zyppi_colors.dart';
 import 'package:zippy/features/home_screen/widgets/address_sheet.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
 
@@ -44,7 +45,7 @@ class HomeScreenHeader extends ConsumerWidget {
               ),
               InkWell(
                 onTap: () => ref.read(navBarProvider.notifier).updateIndex(4),
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: BorderRadius.circular(ZSize.touch / 2),
                 child: CircleAvatar(
                   radius: 22,
                   backgroundColor: context.colors.primaryDark,
@@ -59,11 +60,17 @@ class HomeScreenHeader extends ConsumerWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  '${'home'.tr()} · ',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: context.z.onBrand,
-                    fontWeight: FontWeight.w700,
+                // Capped so a long label never squeezes out the address.
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 120),
+                  child: Text(
+                    '${getCurrentLocation.label == null ? 'currentLocation'.tr() : addressLabelText(getCurrentLocation.label!)} · ',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: context.z.onBrand,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
                 Expanded(
@@ -87,12 +94,14 @@ class HomeScreenHeader extends ConsumerWidget {
                                 ),
                                 const SizedBox(width: 6),
                               ],
-                              Text(
-                                'detectingLocation'.tr(),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: context.colors.onPrimaryMuted,
+                              Flexible(
+                                child: Text(
+                                  'detectingLocation'.tr(),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: context.colors.onPrimaryMuted,
+                                  ),
                                 ),
                               ),
                             ],

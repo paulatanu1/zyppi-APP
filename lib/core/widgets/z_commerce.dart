@@ -36,8 +36,11 @@ class ZOffBadge extends StatelessWidget {
       ),
       child: Text(
         '$percent% OFF',
-        style: Theme.of(context).textTheme.labelSmall!
-            .copyWith(color: Colors.white, fontSize: 10.5, letterSpacing: 0.2),
+        style: Theme.of(context).textTheme.labelSmall!.copyWith(
+          color: context.z.onBrand,
+          fontSize: 10.5,
+          letterSpacing: 0.2,
+        ),
       ),
     );
   }

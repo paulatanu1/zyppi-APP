@@ -15,6 +15,15 @@ abstract class Profile with _$Profile {
     String? email,
     DateTime? dob,
     String? gender,
+
+    /// 'UPI', 'Credit or debit card' or 'Cash on delivery'; checkout
+    /// starts with this method selected.
+    String? preferredPaymentMethod,
+    @Default(true) bool notifyOrderUpdates,
+    @Default(false) bool notifyOffers,
+
+    /// Signed in anonymously ("Continue as guest").
+    @Default(false) bool isGuest,
   }) = _Profile;
 
   factory Profile.fromJson(Map<String, dynamic> json) =>

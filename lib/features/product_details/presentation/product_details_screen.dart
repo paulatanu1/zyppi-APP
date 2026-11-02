@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
@@ -8,7 +9,6 @@ import 'package:zippy/core/common_widgets/price_tag.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/common_widgets/quantity_stepper.dart';
 import 'package:zippy/core/domain/product_variant.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
@@ -50,6 +50,41 @@ class ProductDetailsScreen extends ConsumerWidget {
       );
     }
 
+    // Loaded, but no such (active) product — e.g. an old link or a
+    // product taken off sale.
+    if (!state.loading && product == null) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xxl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.search_off_rounded,
+                  size: 48,
+                  color: context.colors.muted,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Text(
+                  'productNotFound'.tr(),
+                  style: AppTypography.titleMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                TextButton(
+                  onPressed: () =>
+                      context.canPop() ? context.pop() : context.go('/navBar'),
+                  child: Text('back'.tr()),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     final variants = product?.variants ?? const <ProductVariant>[];
     final variant = variants.isEmpty
         ? null
@@ -72,9 +107,19 @@ class ProductDetailsScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          product?.name ?? 'Product name',
+                          // Placeholder text only shapes the loading skeleton.
+                          product?.name ?? 'productNamePlaceholder'.tr(),
                           style: AppTypography.titleLarge,
                         ),
+                        if (!state.loading && variants.isEmpty) ...[
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            'productUnavailable'.tr(),
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: context.colors.danger,
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: AppSpacing.sm),
                         if (variant != null)
                           PriceTag(
@@ -106,7 +151,7 @@ class ProductDetailsScreen extends ConsumerWidget {
                                     style: AppTypography.bodySmall.copyWith(
                                       fontWeight: FontWeight.w700,
                                       color: selected
-                                          ? AppColors.white
+                                          ? context.z.onBrand
                                           : context.colors.ink,
                                     ),
                                   ),
@@ -114,7 +159,7 @@ class ProductDetailsScreen extends ConsumerWidget {
                                     PriceTag.format(v.pricePaise),
                                     style: AppTypography.bodySmall.copyWith(
                                       color: selected
-                                          ? AppColors.white
+                                          ? context.z.onBrand
                                           : context.colors.muted,
                                     ),
                                   ),
@@ -128,20 +173,23 @@ class ProductDetailsScreen extends ConsumerWidget {
                             );
                           }),
                         ),
-                        const SizedBox(height: AppSpacing.xxl),
-                        Text(
-                          'aboutThisItem'.tr(),
-                          style: AppTypography.bodyMedium.copyWith(
-                            fontWeight: FontWeight.w700,
+                        if (product?.description?.trim().isNotEmpty ??
+                            false) ...[
+                          const SizedBox(height: AppSpacing.xxl),
+                          Text(
+                            'aboutThisItem'.tr(),
+                            style: AppTypography.bodyMedium.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        Text(
-                          'aboutThisItemPlaceholder'.tr(),
-                          style: AppTypography.bodySmall.copyWith(
-                            color: context.colors.muted,
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            product!.description!.trim(),
+                            style: AppTypography.bodySmall.copyWith(
+                              color: context.colors.muted,
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),
@@ -174,15 +222,18 @@ class ProductDetailsScreen extends ConsumerWidget {
                   const SizedBox(width: AppSpacing.lg),
                   Expanded(
                     child: PrimaryButton(
-                      buttonTitle: 'addToBasket'.tr(),
+                      buttonTitle: variant == null && !state.loading
+                          ? 'productUnavailable'.tr()
+                          : 'addToBasket'.tr(),
+                      buttonColor: variant == null ? context.colors.line : null,
                       action: variant == null
                           ? () {}
                           : () {
                               ref
                                   .read(cartProvider.notifier)
                                   .addItem(
-                                    productId: product!.id,
-                                    variantId: variant.id,
+                                    product: product!,
+                                    variant: variant,
                                     quantity: state.quantity,
                                   );
                               showSuccessToast(message: 'addedToCart'.tr());

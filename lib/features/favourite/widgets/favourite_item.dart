@@ -1,4 +1,7 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:zippy/core/favourites/application/favourites_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/common_widgets/price_tag.dart';
@@ -7,13 +10,13 @@ import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
 
-class FavouriteItem extends StatelessWidget {
+class FavouriteItem extends ConsumerWidget {
   final Product product;
 
   const FavouriteItem({super.key, required this.product});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final variant = product.variants.isNotEmpty ? product.variants.first : null;
 
     return InkWell(
@@ -54,10 +57,12 @@ class FavouriteItem extends StatelessWidget {
                     ),
                   ),
                   if (variant != null) PriceTag(pricePaise: variant.pricePaise),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
-                    color: context.colors.muted,
+                  IconButton(
+                    tooltip: 'removeFromFavourites'.tr(),
+                    onPressed: () => ref
+                        .read(favouritesProvider.notifier)
+                        .toggle(product.id),
+                    icon: Icon(Icons.favorite, color: context.colors.danger),
                   ),
                 ],
               ),

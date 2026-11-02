@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
+import 'package:zippy/core/push/data/push_token_repository_impl.dart';
 import 'package:zippy/core/push/push_notification_service.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
 import 'package:zippy/features/auth/google_sign_in/data/google_auth_repository_impl.dart';
@@ -28,13 +29,19 @@ class GoogleLogin extends StateNotifier<GoogleState> {
         return;
       }
 
+      // Read before logging in: the redirect that follows disposes this
+      // provider, and its ref with it.
+      final pushTokens = ref.read(pushTokenRepositoryProvider);
       await ref
           .read(sharedPreferenceProvider.notifier)
           .setLocalStorage(authToken: accessToken);
-      await PushNotificationService.registerTokenAfterLogin(ref.read);
+      PushNotificationService.registerTokenAfterLogin(pushTokens);
       // The router's redirect (watching sharedPreferenceProvider) takes
       // it from here — no manual navigation needed.
+    } on GoogleSignInCancelled {
+      if (mounted) state = state.copyWith(loading: false);
     } catch (error) {
+      if (!mounted) return;
       state = state.copyWith(loading: false);
 
       showError(error);

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/zyppi_tokens.dart';
 
 const _heroImages = [
   'assets/images/Splash-1.png',
@@ -76,7 +77,7 @@ class _SliderScreenState extends State<SliderScreen> {
                         child: Container(
                           decoration: BoxDecoration(
                             color: context.colors.blueSoft,
-                            borderRadius: BorderRadius.circular(28),
+                            borderRadius: ZRadius.all(ZRadius.illo),
                           ),
                           child: Center(
                             child: Image.asset(
@@ -141,7 +142,7 @@ class _SliderScreenState extends State<SliderScreen> {
                         color: i == _currentPage
                             ? context.colors.primary
                             : context.colors.lineAlt,
-                        borderRadius: BorderRadius.circular(3),
+                        borderRadius: BorderRadius.circular(ZRadius.chip),
                       ),
                     ),
                   ],

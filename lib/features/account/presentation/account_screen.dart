@@ -1,15 +1,19 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/constants/constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/common_widgets/nav_bar/provider/nav_bar_provider.dart';
 import 'package:zippy/core/data/provider/profile_provider.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/theme/theme_mode_provider.dart';
-import 'package:zippy/core/utils/snack_bar.dart';
+import 'package:zippy/core/common_widgets/help_sheet.dart';
+import 'package:zippy/core/widgets/z_motion.dart';
+import 'package:zippy/features/account/widgets/language_sheet.dart';
 
 /// docs/mockups/Profile.dc.html.
 class AccountScreen extends ConsumerWidget {
@@ -18,9 +22,15 @@ class AccountScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(profileProvider);
-    final name = profileAsync.value?.fullName?.trim();
-    final displayName = (name == null || name.isEmpty) ? 'Zyppi user' : name;
-    final phone = profileAsync.value?.phone ?? '';
+    final profile = profileAsync.value;
+    final isGuest = profile?.isGuest ?? false;
+    final name = profile?.fullName?.trim();
+    final displayName = isGuest
+        ? 'guestUser'.tr()
+        : (name == null || name.isEmpty)
+        ? 'zyppiUser'.tr()
+        : name;
+    final phone = profile?.phone ?? '';
     final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'Z';
 
     return Scaffold(
@@ -51,8 +61,32 @@ class AccountScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(displayName, style: AppTypography.titleLarge),
-                          if (phone.isNotEmpty)
+                          if (profileAsync.isLoading && profile == null)
+                            const ZSkeleton(
+                              width: 140,
+                              height: 18,
+                              radius: ZRadius.badge,
+                            )
+                          else
+                            Text(displayName, style: AppTypography.titleLarge),
+                          if (profileAsync.hasError && profile == null)
+                            GestureDetector(
+                              onTap: () => ref.invalidate(profileProvider),
+                              child: Text(
+                                'profileLoadFailed'.tr(),
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: context.colors.danger,
+                                ),
+                              ),
+                            )
+                          else if (isGuest)
+                            Text(
+                              'guestHint'.tr(),
+                              style: AppTypography.bodySmall.copyWith(
+                                color: context.colors.muted,
+                              ),
+                            )
+                          else if (phone.isNotEmpty)
                             Text(
                               phone,
                               style: AppTypography.bodySmall.copyWith(
@@ -62,10 +96,17 @@ class AccountScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    TextButton(
-                      onPressed: () => context.pushNamed('EditProfileScreen'),
-                      child: Text('editProfile'.tr()),
-                    ),
+                    if (isGuest)
+                      TextButton(
+                        onPressed: () =>
+                            context.pushNamed('GuestUpgradeScreen'),
+                        child: Text('saveAccount'.tr()),
+                      )
+                    else if (profile != null)
+                      TextButton(
+                        onPressed: () => context.pushNamed('EditProfileScreen'),
+                        child: Text('editProfile'.tr()),
+                      ),
                   ],
                 ),
               ),
@@ -88,7 +129,9 @@ class AccountScreen extends ConsumerWidget {
                           child: _QuickAction(
                             icon: Icons.favorite_border,
                             label: 'favourite'.tr(),
-                            onTap: () => context.go('/navBar?index=3'),
+                            onTap: () => ref
+                                .read(navBarProvider.notifier)
+                                .updateIndex(3),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.md),
@@ -96,8 +139,7 @@ class AccountScreen extends ConsumerWidget {
                           child: _QuickAction(
                             icon: Icons.help_outline,
                             label: 'help'.tr(),
-                            onTap: () =>
-                                showSuccessToast(message: 'comingSoon'.tr()),
+                            onTap: () => showHelpSheet(context),
                           ),
                         ),
                       ],
@@ -116,13 +158,19 @@ class AccountScreen extends ConsumerWidget {
                           icon: Icons.credit_card_outlined,
                           label: 'paymentSettings'.tr(),
                           onTap: () =>
-                              showSuccessToast(message: 'comingSoon'.tr()),
+                              context.pushNamed('PaymentSettingsScreen'),
                         ),
                         _GroupItem(
                           icon: Icons.notifications_none,
                           label: 'notificationPref'.tr(),
                           onTap: () =>
-                              showSuccessToast(message: 'comingSoon'.tr()),
+                              context.pushNamed('NotificationSettingsScreen'),
+                        ),
+                        _GroupItem(
+                          icon: Icons.translate_rounded,
+                          label: 'language'.tr(),
+                          trailingText: currentLanguageName(context),
+                          onTap: () => showLanguageSheet(context),
                         ),
                       ],
                     ),
@@ -133,17 +181,13 @@ class AccountScreen extends ConsumerWidget {
                           icon: Icons.description_outlined,
                           label: 'accountPrivacy'.tr(),
                           onTap: () =>
-                              showSuccessToast(message: 'comingSoon'.tr()),
+                              context.pushNamed('AccountPrivacyScreen'),
                         ),
                         _GroupItem(
                           icon: Icons.logout,
                           label: 'logOut'.tr(),
                           color: context.colors.danger,
-                          onTap: () async {
-                            await ref
-                                .read(sharedPreferenceProvider.notifier)
-                                .logOut();
-                          },
+                          onTap: () => _confirmLogOut(context, ref, isGuest),
                         ),
                       ],
                     ),
@@ -164,6 +208,39 @@ class AccountScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+/// Logging out of a guest account loses its orders and addresses for
+/// good (there's no credential to sign back in with), so say so.
+Future<void> _confirmLogOut(
+  BuildContext context,
+  WidgetRef ref,
+  bool isGuest,
+) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(
+        isGuest ? 'guestLogOutTitle'.tr() : 'logOutConfirmTitle'.tr(),
+      ),
+      content: Text(
+        isGuest ? 'guestLogOutBody'.tr() : 'logOutConfirmBody'.tr(),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext, false),
+          child: Text('cancel'.tr()),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext, true),
+          child: Text(isGuest ? 'continueLabel'.tr() : 'logOut'.tr()),
+        ),
+      ],
+    ),
+  );
+  if (confirmed == true) {
+    await ref.read(sharedPreferenceProvider.notifier).logOut();
   }
 }
 
@@ -211,12 +288,14 @@ class _GroupItem {
   final String label;
   final VoidCallback onTap;
   final Color? color;
+  final String? trailingText;
 
   _GroupItem({
     required this.icon,
     required this.label,
     required this.onTap,
     this.color,
+    this.trailingText,
   });
 }
 
@@ -251,10 +330,25 @@ class _Group extends StatelessWidget {
                     color: item.color ?? context.colors.ink,
                   ),
                 ),
-                trailing: Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
-                  color: context.colors.muted,
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (item.trailingText != null)
+                      Padding(
+                        padding: const EdgeInsets.only(right: AppSpacing.sm),
+                        child: Text(
+                          item.trailingText!,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: context.colors.muted,
+                          ),
+                        ),
+                      ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: context.colors.muted,
+                    ),
+                  ],
                 ),
               ),
               if (index != items.length - 1)

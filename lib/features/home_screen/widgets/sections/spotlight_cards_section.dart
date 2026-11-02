@@ -22,20 +22,24 @@ class SpotlightCardsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (section.items.isEmpty) return const SizedBox.shrink();
+    // Skip items whose product is missing or inactive, rather than
+    // leaving an empty slot in the row.
+    final items = [
+      for (final item in section.items)
+        if (productsById[item.data['product_id']] case final product?)
+          (product: product, badge: item.data.string('badge')),
+    ];
+    if (items.isEmpty) return const SizedBox.shrink();
 
     return SizedBox(
       height: 140,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
-        itemCount: section.items.length,
+        itemCount: items.length,
         separatorBuilder: (context, index) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
-          final item = section.items[index];
-          final product = productsById[item.data['product_id']];
-          final badge = item.data.string('badge');
-          if (product == null) return const SizedBox.shrink();
+          final (:product, :badge) = items[index];
 
           return InkWell(
             onTap: () =>

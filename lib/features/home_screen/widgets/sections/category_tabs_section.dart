@@ -9,8 +9,14 @@ import 'package:zippy/features/home_screen/widgets/sections/section_data.dart';
 
 /// Blinkit-referenced horizontal icon+label tabs strip, directly under
 /// search. Admin-configured via `home_sections.type == 'category_tabs'`;
-/// `config.sticky` pins it while the rest of the Home screen scrolls.
+/// `config.sticky` pins it while the rest of the Home screen scrolls (see
+/// [StickyCategoryTabsDelegate]).
 class CategoryTabsSection extends StatelessWidget {
+  static const _stripHeight = 64.0;
+
+  /// The strip's full height, padding included.
+  static const height = _stripHeight + 2 * AppSpacing.base;
+
   final HomeSection section;
 
   const CategoryTabsSection({super.key, required this.section});
@@ -21,7 +27,7 @@ class CategoryTabsSection extends StatelessWidget {
       color: context.colors.surface,
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.base),
       child: SizedBox(
-        height: 64,
+        height: _stripHeight,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
@@ -64,4 +70,29 @@ class CategoryTabsSection extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Pins a `config.sticky` [CategoryTabsSection] to the top of the Home
+/// screen's scroll view.
+class StickyCategoryTabsDelegate extends SliverPersistentHeaderDelegate {
+  final HomeSection section;
+
+  const StickyCategoryTabsDelegate(this.section);
+
+  @override
+  double get minExtent => CategoryTabsSection.height;
+
+  @override
+  double get maxExtent => CategoryTabsSection.height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) => CategoryTabsSection(section: section);
+
+  @override
+  bool shouldRebuild(StickyCategoryTabsDelegate oldDelegate) =>
+      oldDelegate.section != section;
 }

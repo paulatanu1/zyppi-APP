@@ -12,17 +12,18 @@ import 'package:zippy/core/payments/domain/payment_repository.dart';
 /// isn't initialized in mock mode).
 class MockPaymentRepository implements PaymentRepository {
   @override
-  Future<PaymentOrder> createOrder(
-    int amountPaise, {
+  Future<PaymentOrder> createOrder({
     required String paymentMethod,
+    required String addressId,
+    required String deliverySlotId,
+    String? couponCode,
+    int tipPaise = 0,
   }) async {
     throw UnsupportedError('No PhonePe gateway in the mock flavor');
   }
 
   @override
-  Future<({bool verified, String? transactionId})> verifyPayment(
-    String merchantOrderId,
-  ) async {
+  Future<PaymentVerification> verifyPayment(String merchantOrderId) async {
     throw UnsupportedError('No PhonePe gateway in the mock flavor');
   }
 }

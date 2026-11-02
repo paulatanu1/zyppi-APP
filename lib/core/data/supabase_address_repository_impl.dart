@@ -26,26 +26,18 @@ class SupabaseAddressRepository implements AddressRepository {
   }
 
   @override
-  Future<void> addAddress(Address address) async {
+  Future<void> addAddress(
+    Address address, {
+    required String serviceAreaId,
+  }) async {
     final userId = client.auth.currentUser?.id;
     if (userId == null) {
       throw StateError('Cannot add an address while signed out');
     }
 
-    // place_order() rejects an address with no service_area_id. There's
-    // no real serviceability check yet (Phase 4: point-in-polygon/
-    // nearest-store against lat/lng) — picking any active area is a
-    // stand-in so checkout isn't permanently blocked until then.
-    final serviceArea = await client
-        .from('service_areas')
-        .select('id')
-        .eq('is_active', true)
-        .limit(1)
-        .maybeSingle();
-
     await client.from('addresses').insert({
       'user_id': userId,
-      'service_area_id': serviceArea?['id'],
+      'service_area_id': serviceAreaId,
       'label': address.label,
       'line1': address.line1,
       'area': address.area,
@@ -57,5 +49,27 @@ class SupabaseAddressRepository implements AddressRepository {
       'lng': address.lng,
       'is_default': address.isDefault,
     });
+  }
+
+  @override
+  Future<void> updateAddress(Address address) async {
+    await client
+        .from('addresses')
+        .update({
+          'label': address.label,
+          'line1': address.line1,
+          'landmark': address.landmark,
+        })
+        .eq('id', address.id);
+  }
+
+  @override
+  Future<void> deleteAddress(String id) async {
+    await client.from('addresses').delete().eq('id', id);
+  }
+
+  @override
+  Future<void> setDefault(String id) async {
+    await client.rpc('set_default_address', params: {'p_address_id': id});
   }
 }

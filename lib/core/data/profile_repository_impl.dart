@@ -24,6 +24,12 @@ class MockProfileRepository implements ProfileRepository {
     await MockDataSource.simulateLatency();
     _override = profile;
   }
+
+  @override
+  Future<void> updatePreferences(Profile profile) async {
+    await MockDataSource.simulateLatency();
+    _override = profile;
+  }
 }
 
 final profileRepositoryProvider = Provider<ProfileRepository>(

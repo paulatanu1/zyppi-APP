@@ -24,17 +24,44 @@ class GetCurrentLocationProvider
     getCurrentLocation();
   }
 
-  Future<void> getCurrentLocation() async {
+  Future<void>? _inFlight;
+
+  /// Detects the device's position. Pass [requestPermission] when the user
+  /// asked for it (the "use current location" button): a denied
+  /// permission is then requested again, and a permanently denied one
+  /// opens the app's settings. Automatic calls never prompt.
+  ///
+  /// Concurrent callers share one lookup — startup and the permission
+  /// grant listener below can otherwise both fire at once.
+  Future<void> getCurrentLocation({bool requestPermission = false}) =>
+      _inFlight ??= _detect(requestPermission)
+          .whenComplete(() => _inFlight = null);
+
+  Future<void> _detect(bool requestPermission) async {
     state = state.copyWith(isDetecting: true, error: null);
 
     try {
-      // Don't prompt from here — CheckAndRequestLocationProvider owns the
-      // permission request; without a grant there's nothing to detect.
+      // CheckAndRequestLocationProvider owns the permission request, so the
+      // whole app sees the new grant.
+      if (requestPermission) {
+        await ref
+            .read(checkAndRequestLocation.notifier)
+            .checkAndRequestLocationPermission();
+      }
       final permission = await Geolocator.checkPermission();
       if (!mounted) return;
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
-        state = state.copyWith(isDetecting: false);
+        state = state.copyWith(
+          isDetecting: false,
+          checkingServiceability: false,
+          serviceabilityChecked: false,
+          serviceArea: null,
+        );
+        if (requestPermission &&
+            permission == LocationPermission.deniedForever) {
+          await Geolocator.openAppSettings();
+        }
         return;
       }
 
@@ -56,7 +83,11 @@ class GetCurrentLocationProvider
       isDetecting: true,
       latitude: lat,
       longitude: lng,
+      landmark: null, // belonged to the previous location
+      label: null,
       checkingServiceability: true,
+      serviceabilityError: false,
+      serviceabilityChecked: false,
       error: null,
     );
 
@@ -93,7 +124,18 @@ class GetCurrentLocationProvider
       );
     } catch (error) {
       if (!mounted) return;
-      state = state.copyWith(isDetecting: false, error: error.toString());
+      // The coordinates changed; the old address text no longer describes
+      // them. Leave the fields empty for the user to type instead.
+      state = state.copyWith(
+        isDetecting: false,
+        address: 'addressNotFound'.tr(),
+        line1: '',
+        area: '',
+        city: '',
+        state: '',
+        postalCode: '',
+        error: error.toString(),
+      );
     }
 
     if (!mounted) return;
@@ -119,7 +161,11 @@ class GetCurrentLocationProvider
       city: parsed.city,
       state: parsed.state,
       postalCode: parsed.postalCode,
+      landmark: null,
+      label: null,
       checkingServiceability: true,
+      serviceabilityError: false,
+      serviceabilityChecked: false,
       error: null,
     );
 
@@ -139,11 +185,33 @@ class GetCurrentLocationProvider
       city: address.city,
       state: address.state,
       postalCode: address.postalCode,
+      landmark: address.landmark,
+      label: address.label,
       checkingServiceability: true,
+      serviceabilityError: false,
+      serviceabilityChecked: false,
       error: null,
     );
 
     return _checkServiceability(address.lat, address.lng);
+  }
+
+  /// Puts back a location captured earlier — the add-address flow uses
+  /// this so picking a new address to save doesn't also move the home
+  /// screen's delivery location.
+  void restore(GetCurrentLocationState snapshot) {
+    _checkSeq++; // ignore any check still running for the discarded point
+    state = snapshot;
+  }
+
+  /// Retries a serviceability check that failed (e.g. offline).
+  Future<void> retryServiceability() {
+    state = state.copyWith(
+      checkingServiceability: true,
+      serviceabilityError: false,
+      serviceabilityChecked: false,
+    );
+    return _checkServiceability(state.latitude, state.longitude);
   }
 
   /// Applies user-edited `line1`/`landmark` text (typed in the confirm
@@ -153,17 +221,30 @@ class GetCurrentLocationProvider
     state = state.copyWith(line1: line1, landmark: landmark);
   }
 
+  /// Only the latest check may write its result: checks for an earlier
+  /// point can finish after a newer one.
+  int _checkSeq = 0;
+
   Future<void> _checkServiceability(double lat, double lng) async {
+    final seq = ++_checkSeq;
     try {
       final area = await ref
           .read(serviceAreaRepositoryProvider)
           .findServiceableArea(lat, lng);
 
-      if (!mounted) return;
-      state = state.copyWith(checkingServiceability: false, serviceArea: area);
+      if (!mounted || seq != _checkSeq) return;
+      state = state.copyWith(
+        checkingServiceability: false,
+        serviceArea: area,
+        serviceabilityChecked: true,
+      );
     } catch (_) {
-      if (!mounted) return;
-      state = state.copyWith(checkingServiceability: false, serviceArea: null);
+      if (!mounted || seq != _checkSeq) return;
+      state = state.copyWith(
+        checkingServiceability: false,
+        serviceArea: null,
+        serviceabilityError: true,
+      );
     }
   }
 }

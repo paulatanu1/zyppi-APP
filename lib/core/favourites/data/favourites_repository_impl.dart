@@ -1,5 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:zippy/core/config/env.dart';
+import 'package:zippy/core/favourites/data/supabase_favourites_repository_impl.dart';
+import 'package:zippy/core/favourites/domain/favourites_repository.dart';
 
 /// Opened once in bootstrap() and provided via [favouritesBoxProvider]'s
 /// override, same pattern as core/cart's cartBoxProvider.
@@ -9,23 +13,33 @@ final favouritesBoxProvider = Provider<Box>(
   ),
 );
 
-class FavouritesRepository {
+class HiveFavouritesRepository implements FavouritesRepository {
   static const _idsKey = 'ids';
 
   final Box box;
 
-  FavouritesRepository(this.box);
+  HiveFavouritesRepository(this.box);
 
-  Set<String> getIds() {
+  @override
+  Future<Set<String>> getIds() async {
     final raw = box.get(_idsKey) as List<dynamic>? ?? const [];
     return raw.cast<String>().toSet();
   }
 
-  Future<void> saveIds(Set<String> ids) => box.put(_idsKey, ids.toList());
+  @override
+  Future<void> add(String productId) async =>
+      box.put(_idsKey, {...await getIds(), productId}.toList());
 
+  @override
+  Future<void> remove(String productId) async =>
+      box.put(_idsKey, ((await getIds())..remove(productId)).toList());
+
+  @override
   Stream<void> watch() => box.watch(key: _idsKey).map((_) {});
 }
 
 final favouritesRepositoryProvider = Provider<FavouritesRepository>(
-  (ref) => FavouritesRepository(ref.read(favouritesBoxProvider)),
+  (ref) => Env.isMockDataSource
+      ? HiveFavouritesRepository(ref.read(favouritesBoxProvider))
+      : SupabaseFavouritesRepository(Supabase.instance.client),
 );

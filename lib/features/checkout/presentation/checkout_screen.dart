@@ -3,17 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
-import 'package:zippy/core/common_widgets/app_skeleton.dart';
 import 'package:zippy/core/common_widgets/price_tag.dart';
-import 'package:zippy/core/common_widgets/primary_button.dart';
-import 'package:zippy/core/domain/delivery_slot.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
-import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
+import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/checkout/application/checkout_provider.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
+import 'package:zippy/features/checkout/application/checkout_state.dart';
+import 'package:zippy/features/checkout/widgets/address_card.dart';
+import 'package:zippy/core/common_widgets/section_card.dart';
+import 'package:zippy/features/checkout/widgets/checkout_steps.dart';
+import 'package:zippy/features/checkout/widgets/delivery_time_card.dart';
+import 'package:zippy/core/payments/presentation/payment_options.dart';
 
-const _paymentMethods = ['UPI', codPaymentMethod, 'Credit or debit card'];
-
+/// docs/screens/{light,dark}/10-checkout.png. Payment and the bill footer
+/// need no network data and render at once; only the address and delivery
+/// time cards show shaped skeletons while they load.
 class CheckoutScreen extends ConsumerWidget {
   const CheckoutScreen({super.key});
 
@@ -21,7 +24,8 @@ class CheckoutScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(checkoutProvider);
     final notifier = ref.read(checkoutProvider.notifier);
-    final cart = ref.watch(cartProvider);
+    final z = context.z;
+    final text = Theme.of(context).textTheme;
 
     ref.listen(checkoutProvider, (previous, next) {
       if (next.placedOrderId != null &&
@@ -35,292 +39,228 @@ class CheckoutScreen extends ConsumerWidget {
       }
     });
 
-    if (state.error != null) {
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('somethingWentWrong'.tr(), style: AppTypography.bodyMedium),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: 160,
-                child: PrimaryButton(
-                  buttonTitle: 'retry'.tr(),
-                  action: notifier.retry,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+    Future<void> addAddress() async {
+      // extra: true = "save as a new address" mode (add_new_address_row.dart).
+      await context.pushNamed('SearchAddressScreen', extra: true);
+      await notifier.retry();
     }
 
-    final itemCount = cart.lines.fold<int>(0, (sum, l) => sum + l.quantity);
-
-    return Scaffold(
-      backgroundColor: context.colors.background,
-      appBar: AppBar(title: Text('checkout'.tr())),
-      body: AppSkeleton(
-        enabled: state.loading,
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _section(
-                      context,
-                      title: 'deliverTo'.tr(),
-                      child: RadioGroup<String>(
-                        groupValue: state.selectedAddress?.id,
-                        onChanged: (value) => notifier.selectAddress(value!),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: state.addresses.map((address) {
-                            final selected =
-                                address.id == state.selectedAddress?.id;
-
-                            return RadioListTile<String>(
-                              value: address.id,
-                              activeColor: context.colors.primary,
-                              title: Text(
-                                address.label,
-                                style: AppTypography.bodyLarge.copyWith(
-                                  fontWeight: selected ? FontWeight.w700 : null,
-                                ),
-                              ),
-                              subtitle: Text(
-                                '${address.line1}, ${address.area}, ${address.city}',
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: context.colors.muted,
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                    ),
-                    _section(
-                      context,
-                      title: 'deliveryTime'.tr(),
-                      child: _DeliverySlotPicker(
-                        slots: state.slots,
-                        selectedSlot: state.selectedSlot,
-                        onSelect: notifier.selectSlot,
-                      ),
-                    ),
-                    _section(
-                      context,
-                      title: 'paymentMethod'.tr(),
-                      child: RadioGroup<String>(
-                        groupValue: state.paymentMethod,
-                        onChanged: (value) =>
-                            notifier.selectPaymentMethod(value!),
-                        child: Column(
-                          children: _paymentMethods.map((method) {
-                            return RadioListTile<String>(
-                              value: method,
-                              activeColor: context.colors.primary,
-                              title: Text(
-                                method,
-                                style: AppTypography.bodyLarge,
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.xxl,
-                AppSpacing.lg,
-                AppSpacing.xxl,
-                AppSpacing.xxxl,
-              ),
-              decoration: BoxDecoration(
-                color: context.colors.surface,
-                border: Border(top: BorderSide(color: context.colors.line)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+    // While a payment is being confirmed, leaving would only hide the
+    // outcome (the payment itself is safe — see PendingPaymentStore).
+    return PopScope(
+      canPop: !state.placingOrder,
+      child: Scaffold(
+        backgroundColor: z.bg,
+        appBar: AppBar(
+          title: Text('checkout'.tr()),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: ZSpace.screen),
+              child: Row(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '$itemCount items${cart.bill.savingsPaise > 0 ? ' · ${'youSave'.tr(args: [PriceTag.format(cart.bill.savingsPaise)])}' : ''}',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: context.colors.muted,
-                        ),
-                      ),
-                      Text(
-                        '${'toPay'.tr()} ${PriceTag.format(cart.bill.totalPaise)}',
-                        style: AppTypography.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.base),
-                  PrimaryButton(
-                    buttonTitle: state.placingOrder
-                        ? '…'
-                        : 'payWithAmount'.tr(
-                            args: [
-                              PriceTag.format(cart.bill.totalPaise),
-                              state.paymentMethod,
-                            ],
-                          ),
-                    action: state.placingOrder ? () {} : notifier.placeOrder,
+                  Icon(Icons.lock_outline_rounded, size: 18, color: z.ok),
+                  const SizedBox(width: ZSpace.x1),
+                  Text(
+                    'secure'.tr(),
+                    style: text.labelMedium?.copyWith(color: z.ok),
                   ),
                 ],
               ),
             ),
           ],
         ),
+        body: Column(
+          children: [
+            const CheckoutSteps(),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(ZSpace.screen),
+                children: [
+                  ContentFade(
+                    child: _addressSection(state, notifier, addAddress),
+                  ),
+                  const SizedBox(height: ZSpace.x3),
+                  ContentFade(child: _timeSection(state, notifier)),
+                  const SizedBox(height: ZSpace.x3),
+                  ZEntrance(
+                    index: 2,
+                    child: PaymentOptions(
+                      selected: state.paymentMethod,
+                      onSelect: notifier.selectPaymentMethod,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            _CheckoutFooter(state: state, onPay: notifier.placeOrder),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _section(
-    BuildContext context, {
-    required String title,
-    required Widget child,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _addressSection(
+    CheckoutState state,
+    CheckoutProvider notifier,
+    VoidCallback onAddNew,
+  ) {
+    if (state.loading) {
+      return const AddressCardSkeleton(key: ValueKey('address-loading'));
+    }
+    if (state.error != null) {
+      return _LoadError(key: const ValueKey('error'), onRetry: notifier.retry);
+    }
+    final address = state.selectedAddress;
+    if (address == null) {
+      return AddressEmptyCard(
+        key: const ValueKey('address-empty'),
+        onAddNew: onAddNew,
+      );
+    }
+    return AddressCard(
+      key: const ValueKey('address'),
+      address: address,
+      addresses: state.addresses,
+      onSelect: notifier.selectAddress,
+      onAddNew: onAddNew,
+    );
+  }
+
+  Widget _timeSection(CheckoutState state, CheckoutProvider notifier) {
+    if (state.loading) {
+      return const DeliveryTimeCardSkeleton(key: ValueKey('time-loading'));
+    }
+    // The error card above already offers retry.
+    if (state.error != null || state.slots.isEmpty) {
+      return const SizedBox.shrink(key: ValueKey('time-none'));
+    }
+    return DeliveryTimeCard(
+      key: const ValueKey('time'),
+      slots: state.slots,
+      selectedSlot: state.selectedSlot,
+      onSelect: notifier.selectSlot,
+    );
+  }
+}
+
+class _LoadError extends StatelessWidget {
+  final VoidCallback onRetry;
+
+  const _LoadError({super.key, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return SectionCard(
+      child: Row(
         children: [
-          Text(title, style: AppTypography.titleMedium),
-          child,
-          Divider(height: 1, color: context.colors.divider),
+          Expanded(
+            child: Text(
+              'somethingWentWrong'.tr(),
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+          TextButton(onPressed: onRetry, child: Text('retry'.tr())),
         ],
       ),
     );
   }
 }
 
-/// docs/mockups/Checkout.dc.html's two-button Express/Schedule toggle;
-/// tapping "Schedule" reveals the concrete scheduled windows below it.
-class _DeliverySlotPicker extends StatelessWidget {
-  final List<DeliverySlot> slots;
-  final DeliverySlot? selectedSlot;
-  final ValueChanged<String> onSelect;
+class _CheckoutFooter extends ConsumerWidget {
+  final CheckoutState state;
+  final VoidCallback onPay;
 
-  const _DeliverySlotPicker({
-    required this.slots,
-    required this.selectedSlot,
-    required this.onSelect,
-  });
+  const _CheckoutFooter({required this.state, required this.onPay});
 
   @override
-  Widget build(BuildContext context) {
-    final expressSlot = slots.where((s) => s.isExpress).firstOrNull;
-    final scheduledSlots = slots.where((s) => !s.isExpress).toList();
-    final isScheduleSelected = selectedSlot != null && !selectedSlot!.isExpress;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cart = ref.watch(cartProvider);
+    final z = context.z;
+    final text = Theme.of(context).textTheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            if (expressSlot != null)
-              Expanded(
-                child: _SlotCategoryCard(
-                  title: 'express'.tr(),
-                  subtitle: expressSlot.label,
-                  selected: selectedSlot?.id == expressSlot.id,
-                  onTap: () => onSelect(expressSlot.id),
-                ),
-              ),
-            if (expressSlot != null && scheduledSlots.isNotEmpty)
-              const SizedBox(width: AppSpacing.base),
-            if (scheduledSlots.isNotEmpty)
-              Expanded(
-                child: _SlotCategoryCard(
-                  title: 'scheduleLabel'.tr(),
-                  subtitle: 'pickASlot'.tr(),
-                  selected: isScheduleSelected,
-                  onTap: () => onSelect(scheduledSlots.first.id),
-                ),
-              ),
+    final itemCount = cart.lines.fold<int>(0, (sum, l) => sum + l.quantity);
+    final total = PriceTag.format(cart.bill.totalPaise);
+    final canPay =
+        !state.loading &&
+        !state.placingOrder &&
+        state.selectedAddress != null &&
+        state.selectedSlot != null &&
+        cart.lines.isNotEmpty;
+
+    // Why Pay is disabled, when it isn't obvious from the cards above.
+    final blocker = state.loading || state.placingOrder || state.error != null
+        ? null
+        : cart.lines.isEmpty
+        ? 'errorCartEmpty'.tr()
+        : state.slots.isEmpty
+        ? 'noDeliverySlots'.tr()
+        : null;
+
+    final summary = [
+      'itemCount'.plural(itemCount),
+      if (cart.bill.savingsPaise > 0)
+        'youSave'.tr(args: [PriceTag.format(cart.bill.savingsPaise)]),
+    ].join(' · ');
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        ZSpace.screen,
+        ZSpace.x3,
+        ZSpace.screen,
+        ZSpace.x3 + MediaQuery.paddingOf(context).bottom,
+      ),
+      decoration: BoxDecoration(
+        color: z.surface,
+        border: Border(top: BorderSide(color: z.line)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(child: Text(summary, style: text.bodySmall)),
+              Text('${'toPay'.tr()} ', style: text.bodyMedium),
+              Text(total, style: text.titleMedium),
+            ],
+          ),
+          if (blocker != null) ...[
+            const SizedBox(height: ZSpace.x2),
+            Text(
+              blocker,
+              textAlign: TextAlign.center,
+              style: text.bodySmall?.copyWith(color: z.danger),
+            ),
           ],
-        ),
-        if (isScheduleSelected) ...[
-          const SizedBox(height: AppSpacing.base),
-          Wrap(
-            spacing: AppSpacing.base,
-            runSpacing: AppSpacing.base,
-            children: scheduledSlots.map((slot) {
-              final selected = selectedSlot?.id == slot.id;
-
-              return ChoiceChip(
-                label: Text(slot.label),
-                selected: selected,
-                onSelected: (_) => onSelect(slot.id),
-              );
-            }).toList(),
+          const SizedBox(height: ZSpace.x3),
+          FilledButton(
+            onPressed: canPay ? onPay : null,
+            child: state.placingOrder
+                ? SizedBox.square(
+                    dimension: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: z.onBrand,
+                    ),
+                  )
+                : Text(
+                    state.paymentMethod == codPaymentMethod
+                        ? 'placeOrderWithAmount'.tr(args: [total])
+                        : 'payWithAmount'.tr(
+                            args: [
+                              total,
+                              paymentMethodTitle(state.paymentMethod),
+                            ],
+                          ),
+                  ),
+          ),
+          const SizedBox(height: ZSpace.x2),
+          Text(
+            'paymentsSecuredBy'.tr(),
+            textAlign: TextAlign.center,
+            style: text.bodySmall,
           ),
         ],
-      ],
-    );
-  }
-}
-
-class _SlotCategoryCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _SlotCategoryCard({
-    required this.title,
-    required this.subtitle,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(AppRadius.input),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: selected ? context.colors.primary : context.colors.line,
-            width: selected ? 1.5 : 1,
-          ),
-          borderRadius: BorderRadius.circular(AppRadius.input),
-          color: selected
-              ? context.colors.primarySurface
-              : context.colors.surface,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: AppTypography.bodyMedium.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            Text(
-              subtitle,
-              style: AppTypography.bodySmall.copyWith(
-                color: context.colors.muted,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -32,33 +32,49 @@ const _tabs = [
   (icon: Icons.person_outline, activeIcon: Icons.person, labelKey: 'profile'),
 ];
 
-class NavBar extends ConsumerWidget {
+class NavBar extends ConsumerStatefulWidget {
+  /// Tab to show when opened via `/navBar?index=`.
   final int initialIndex;
 
   const NavBar({super.key, this.initialIndex = 0});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NavBar> createState() => _NavBarState();
+}
+
+class _NavBarState extends ConsumerState<NavBar> {
+  @override
+  void initState() {
+    super.initState();
+    _applyIndex();
+  }
+
+  @override
+  void didUpdateWidget(NavBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialIndex != widget.initialIndex) _applyIndex();
+  }
+
+  void _applyIndex() {
+    final index = widget.initialIndex.clamp(0, _tabs.length - 1);
+    // After this frame: providers can't be modified during build.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ref.read(navBarProvider.notifier).updateIndex(index);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final currentIndex = ref.watch(navBarProvider);
     final changeIndex = ref.read(navBarProvider.notifier);
 
     final screens = [
-      HomeScreen(),
-      ExploreScreen(),
+      const HomeScreen(),
+      const ExploreScreen(),
       const MyCartScreen(),
       const FavouriteScreen(),
       const AccountScreen(),
     ];
-
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-        systemNavigationBarColor: context.colors.surface,
-        systemNavigationBarIconBrightness:
-            Theme.of(context).brightness == Brightness.dark
-            ? Brightness.light
-            : Brightness.dark,
-      ),
-    );
 
     return PopScope(
       canPop: false,

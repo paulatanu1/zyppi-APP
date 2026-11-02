@@ -9,7 +9,7 @@ import 'package:zippy/core/domain/product.dart';
 /// docs/PLAN.md's typed-section/flexible-item note) — fetched once
 /// alongside the sections themselves so every section widget can resolve
 /// references via a plain map lookup instead of each re-fetching the
-/// catalog.
+/// catalog. Only the products the sections reference are fetched.
 typedef HomeSectionsData = ({
   List<HomeSection> sections,
   Map<String, Category> categoriesById,
@@ -19,15 +19,21 @@ typedef HomeSectionsData = ({
 final homeSectionsProvider = FutureProvider.autoDispose<HomeSectionsData>((
   ref,
 ) async {
-  final results = await Future.wait([
+  // Switching bottom-nav tabs shouldn't re-fetch home; retry still
+  // invalidates it explicitly.
+  ref.keepAlive();
+  final catalog = ref.read(catalogRepositoryProvider);
+  final (sections, categories) = await (
     ref.read(homeSectionRepositoryProvider).fetchHomeSections(),
-    ref.read(catalogRepositoryProvider).fetchCategories(),
-    ref.read(catalogRepositoryProvider).fetchProducts(),
-  ]);
+    catalog.fetchCategories(),
+  ).wait;
 
-  final sections = results[0] as List<HomeSection>;
-  final categories = results[1] as List<Category>;
-  final products = results[2] as List<Product>;
+  final productIds = {
+    for (final section in sections)
+      for (final item in section.items)
+        if (item.data['product_id'] case final String id) id,
+  };
+  final products = await catalog.fetchProductsByIds(productIds.toList());
 
   return (
     sections: sections,

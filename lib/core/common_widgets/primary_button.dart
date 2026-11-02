@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
@@ -38,7 +38,7 @@ class PrimaryButton extends StatelessWidget {
           child: Text(
             buttonTitle,
             style: AppTypography.labelLarge.copyWith(
-              color: AppColors.white,
+              color: context.z.onBrand,
               fontSize: fontSize ?? AppTypography.labelLarge.fontSize?.sp,
             ),
           ),

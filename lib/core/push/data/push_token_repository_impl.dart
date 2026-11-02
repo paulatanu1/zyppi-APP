@@ -8,6 +8,9 @@ import 'package:zippy/core/push/domain/push_token_repository.dart';
 class MockPushTokenRepository implements PushTokenRepository {
   @override
   Future<void> registerToken(String token) async {}
+
+  @override
+  Future<void> clearToken() async {}
 }
 
 class SupabasePushTokenRepository implements PushTokenRepository {
@@ -21,6 +24,14 @@ class SupabasePushTokenRepository implements PushTokenRepository {
     if (userId == null) return;
 
     await client.from('profiles').update({'fcm_token': token}).eq('id', userId);
+  }
+
+  @override
+  Future<void> clearToken() async {
+    final userId = client.auth.currentUser?.id;
+    if (userId == null) return;
+
+    await client.from('profiles').update({'fcm_token': null}).eq('id', userId);
   }
 }
 

@@ -110,11 +110,11 @@ class ZSearchBar extends StatelessWidget {
         decoration: BoxDecoration(
           color: z.surface,
           borderRadius: ZRadius.all(15),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
-              color: Color(0x14000000),
+              color: z.shadow,
               blurRadius: 8,
-              offset: Offset(0, 2),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -372,7 +372,7 @@ class ZNavBar extends StatelessWidget {
                                   child: Text(
                                     '$cartCount',
                                     style: t.labelSmall!.copyWith(
-                                      color: Colors.white,
+                                      color: z.onBrand,
                                       fontSize: 10,
                                       letterSpacing: 0,
                                     ),

@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
+import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
@@ -13,16 +15,34 @@ import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// docs/mockups/Search.dc.html, minus the recent/trending-search chips
 /// (no search-history persistence yet).
-class SearchScreen extends ConsumerWidget {
-  SearchScreen({super.key});
-
-  final TextEditingController searchController = TextEditingController();
+class SearchScreen extends ConsumerStatefulWidget {
+  const SearchScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SearchScreen> createState() => _SearchScreenState();
+}
+
+class _SearchScreenState extends ConsumerState<SearchScreen> {
+  // Owned by the State so it survives rebuilds and is disposed; starts
+  // from the provider's query so the box and the results always agree.
+  late final searchController = TextEditingController(
+    text: ref.read(searchProvider).query,
+  );
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(searchProvider);
     final notifier = ref.read(searchProvider.notifier);
     final cart = ref.watch(cartProvider);
+    // A product with no variant can't be shown or added; dropping it here
+    // (not in the list builder) keeps the dividers even.
+    final results = state.results.where((p) => p.variants.isNotEmpty).toList();
 
     return Scaffold(
       body: SafeArea(
@@ -71,11 +91,44 @@ class SearchScreen extends ConsumerWidget {
                     ),
                   ),
                 )
-              else if (state.loading && state.results.isEmpty)
-                const Expanded(
-                  child: Center(child: CircularProgressIndicator()),
+              else if (state.loading && results.isEmpty)
+                Expanded(
+                  child: ListView(
+                    children: [
+                      for (var i = 0; i < 5; i++)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: AppSpacing.sm,
+                          ),
+                          child: ZSkeleton(height: 56, radius: ZRadius.control),
+                        ),
+                    ],
+                  ),
                 )
-              else if (state.query.isNotEmpty && state.results.isEmpty)
+              else if (state.query.trim().isEmpty)
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.search_rounded,
+                          size: 48,
+                          color: context.colors.muted,
+                        ),
+                        const SizedBox(height: AppSpacing.base),
+                        Text(
+                          'searchIdleHint'.tr(),
+                          textAlign: TextAlign.center,
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: context.colors.muted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else if (results.isEmpty)
                 Expanded(
                   child: Center(
                     child: Text(
@@ -84,18 +137,15 @@ class SearchScreen extends ConsumerWidget {
                     ),
                   ),
                 )
-              else if (state.query.isNotEmpty)
+              else
                 Expanded(
                   child: ListView.separated(
-                    itemCount: state.results.length,
+                    itemCount: results.length,
                     separatorBuilder: (context, index) =>
                         Divider(height: 1, color: context.colors.divider),
                     itemBuilder: (context, index) {
-                      final product = state.results[index];
-                      final variant = product.variants.isNotEmpty
-                          ? product.variants.first
-                          : null;
-                      if (variant == null) return const SizedBox.shrink();
+                      final product = results[index];
+                      final variant = product.variants.first;
 
                       final cartLine = cart.lines.where(
                         (l) =>
@@ -117,22 +167,19 @@ class SearchScreen extends ConsumerWidget {
                         ),
                         onAddClicked: () => ref
                             .read(cartProvider.notifier)
-                            .addItem(
-                              productId: product.id,
-                              variantId: variant.id,
-                            ),
+                            .addItem(product: product, variant: variant),
                         onIncrement: () => ref
                             .read(cartProvider.notifier)
                             .setQuantity(
-                              productId: product.id,
-                              variantId: variant.id,
+                              product: product,
+                              variant: variant,
                               quantity: cartQuantity + 1,
                             ),
                         onDecrement: () => ref
                             .read(cartProvider.notifier)
                             .setQuantity(
-                              productId: product.id,
-                              variantId: variant.id,
+                              product: product,
+                              variant: variant,
                               quantity: cartQuantity - 1,
                             ),
                       );

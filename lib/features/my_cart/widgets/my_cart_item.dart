@@ -23,8 +23,8 @@ class MyCartItem extends ConsumerWidget {
       ref
           .read(cartProvider.notifier)
           .setQuantity(
-            productId: line.product.id,
-            variantId: line.variant.id,
+            product: line.product,
+            variant: line.variant,
             quantity: quantity,
           );
     }

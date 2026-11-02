@@ -4,8 +4,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
 
 /// Requests location permission once at app start (see bootstrap.dart);
-/// the map-pin picker re-checks and re-requests on its own if the user
-/// denied it here and later wants "use current location".
+/// "use current location" calls [checkAndRequestLocationPermission] again
+/// (via GetCurrentLocationProvider) if the user denied it here.
 class CheckAndRequestLocationProvider
     extends StateNotifier<LocationPermission> {
   CheckAndRequestLocationProvider()

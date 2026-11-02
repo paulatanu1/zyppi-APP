@@ -18,17 +18,19 @@ class CategoryDetailsProvider extends StateNotifier<CategoryDetailsState> {
     try {
       final (categories, products) = await (
         repository.fetchCategories(),
-        repository.fetchProducts(),
+        repository.fetchProductsByCategory(categoryId),
       ).wait;
+      if (!mounted) return;
 
       final category = categories.where((c) => c.id == categoryId);
 
       state = state.copyWith(
         category: category.isEmpty ? null : category.first,
-        products: products.where((p) => p.categoryId == categoryId).toList(),
+        products: products,
         loading: false,
       );
     } catch (error) {
+      if (!mounted) return;
       state = state.copyWith(loading: false, error: error.toString());
     }
   }

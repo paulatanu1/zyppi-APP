@@ -7,6 +7,7 @@ import 'package:zippy/core/domain/home_section.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/utils/launch.dart';
 import 'package:zippy/features/home_screen/widgets/sections/section_data.dart';
 
 /// Blinkit-referenced swipeable promo banner strip — replaces the old
@@ -29,7 +30,10 @@ class _BannerCarouselSectionState extends State<BannerCarouselSection> {
     final items = widget.section.items;
     if (items.isEmpty) return const SizedBox.shrink();
 
-    final autoplay = widget.section.config['autoplay'] == true;
+    // Auto-advancing content is motion; respect the OS setting.
+    final autoplay =
+        widget.section.config['autoplay'] == true &&
+        !MediaQuery.disableAnimationsOf(context);
 
     return Column(
       children: [
@@ -54,11 +58,18 @@ class _BannerCarouselSectionState extends State<BannerCarouselSection> {
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
               child: InkWell(
-                onTap: linkType == 'category' && linkTarget != null
-                    ? () => context.push(
-                        '/categoryDetailsScreen?categoryId=$linkTarget',
-                      )
-                    : null,
+                onTap: switch ((linkType, linkTarget)) {
+                  ('category', final String id) => () => context.push(
+                    '/categoryDetailsScreen?categoryId=$id',
+                  ),
+                  ('product', final String id) => () => context.push(
+                    '/productDetailsScreen?productId=$id',
+                  ),
+                  ('url', final String url) => () => openExternal(
+                    Uri.parse(url),
+                  ),
+                  _ => null,
+                },
                 borderRadius: BorderRadius.circular(AppRadius.banner),
                 child: Container(
                   width: double.infinity,

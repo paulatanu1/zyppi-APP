@@ -2,10 +2,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zippy/core/cart/domain/cart_repository.dart';
 import 'package:zippy/core/domain/cart_item.dart';
 
-/// Phase 3: live Supabase-backed cart, selected by `cartRepositoryProvider`
-/// (cart_repository_impl.dart) instead of `HiveCartRepository` when
-/// Env.dataSource != 'mock'. RLS scopes every read/write to the caller's
-/// own cart, so there's no explicit user filter needed for reads.
+/// Server copy of the cart, selected by `cartRepositoryProvider`
+/// (cart_repository_impl.dart) when Env.dataSource != 'mock'. CartNotifier
+/// pushes local changes here in the background. RLS scopes every
+/// read/write to the caller's own cart, so reads need no user filter.
 class SupabaseCartRepository implements CartRepository {
   final SupabaseClient client;
 
@@ -30,41 +30,38 @@ class SupabaseCartRepository implements CartRepository {
   }
 
   @override
-  Future<void> saveItems(List<CartItem> items) async {
+  Future<void> setQuantity(CartItem item) async {
     final cartId = await _cartId();
 
-    if (items.isEmpty) {
-      await client.from('cart_items').delete().eq('cart_id', cartId);
+    if (item.quantity <= 0) {
+      await client
+          .from('cart_items')
+          .delete()
+          .eq('cart_id', cartId)
+          .eq('product_variant_id', item.variantId);
       return;
     }
 
-    await client.from('cart_items').upsert([
-      for (final item in items)
-        {
-          'cart_id': cartId,
-          'product_variant_id': item.variantId,
-          'quantity': item.quantity,
-        },
-    ], onConflict: 'cart_id,product_variant_id');
-
-    await client
-        .from('cart_items')
-        .delete()
-        .eq('cart_id', cartId)
-        .not(
-          'product_variant_id',
-          'in',
-          items.map((i) => i.variantId).toList(),
-        );
+    await client.from('cart_items').upsert({
+      'cart_id': cartId,
+      'product_variant_id': item.variantId,
+      'quantity': item.quantity,
+    }, onConflict: 'cart_id,product_variant_id');
   }
+
+  // Cached per signed-in user: saves a round trip on every cart write,
+  // and a different login never reuses another account's cart id.
+  String? _cachedCartId;
+  String? _cachedForUserId;
 
   Future<String> _cartId() async {
-    final row = await client.from('carts').select('id').single();
-    return row['id'] as String;
-  }
+    final userId = client.auth.currentUser?.id;
+    if (_cachedCartId != null && _cachedForUserId == userId) {
+      return _cachedCartId!;
+    }
 
-  // No Realtime subscription yet (Phase 4): this flavor relies on each
-  // screen's own fresh fetch rather than a live cross-device refresh.
-  @override
-  Stream<void> watch() => const Stream.empty();
+    final row = await client.from('carts').select('id').single();
+    _cachedForUserId = userId;
+    return _cachedCartId = row['id'] as String;
+  }
 }

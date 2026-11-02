@@ -1,8 +1,8 @@
 import 'package:zippy/core/domain/product.dart';
 import 'package:zippy/core/domain/product_variant.dart';
 
-/// In-memory view model joining a persisted [CartItem] with its catalog
-/// [Product]/[ProductVariant] — never persisted itself.
+/// A cart row with its catalog [Product]/[ProductVariant]. Persisted whole
+/// by LocalCartStore so the cart renders on launch without a catalog fetch.
 class CartLine {
   final Product product;
   final ProductVariant variant;
@@ -13,6 +13,24 @@ class CartLine {
     required this.variant,
     required this.quantity,
   });
+
+  factory CartLine.fromJson(Map<String, dynamic> json) => CartLine(
+    product: Product.fromJson(json['product'] as Map<String, dynamic>),
+    variant: ProductVariant.fromJson(json['variant'] as Map<String, dynamic>),
+    quantity: json['quantity'] as int,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'product': product.toJson(),
+    'variant': variant.toJson(),
+    'quantity': quantity,
+  };
+
+  CartLine copyWith({int? quantity}) => CartLine(
+    product: product,
+    variant: variant,
+    quantity: quantity ?? this.quantity,
+  );
 
   int get lineTotalPaise => variant.pricePaise * quantity;
 

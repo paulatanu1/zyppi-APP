@@ -2,12 +2,13 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/domain/address.dart';
+import 'package:zippy/core/shared_providers/location/application/get_current_location_state.dart';
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
-import 'package:zippy/features/my_address/application/addresses_provider.dart';
+import 'package:zippy/core/utils/address_label.dart';
+import 'package:zippy/core/data/provider/addresses_provider.dart';
 import 'package:zippy/features/search_address/application/place_prediction_provider.dart';
 import 'package:zippy/features/search_address/domain/place_prediction.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
@@ -36,6 +37,26 @@ class _SearchAddressScreenState extends ConsumerState<SearchAddressScreen> {
   final _landmarkController = TextEditingController();
   String _label = 'Home';
   String? _syncedForAddress;
+  bool _saving = false;
+
+  /// The home screen's delivery location when this screen opened. Adding
+  /// a new address resolves locations through the same provider, so it's
+  /// put back on the way out — saving an address shouldn't silently move
+  /// where the current order is delivered.
+  GetCurrentLocationState? _homeLocation;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.addLocation) _homeLocation = ref.read(currentLocation);
+  }
+
+  void _restoreHomeLocation() {
+    final snapshot = _homeLocation;
+    if (snapshot == null) return;
+    _homeLocation = null;
+    ref.read(currentLocation.notifier).restore(snapshot);
+  }
 
   @override
   void dispose() {
@@ -63,92 +84,106 @@ class _SearchAddressScreenState extends ConsumerState<SearchAddressScreen> {
       _landmarkController.text = location.landmark ?? '';
     }
 
-    return Scaffold(
-      backgroundColor: context.colors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.xxl,
-                vertical: AppSpacing.lg,
-              ),
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: () => context.pop(),
-                    icon: Icon(Icons.arrow_back, color: context.colors.muted),
-                    tooltip: 'back'.tr(),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: _SearchBar(
-                      controller: _searchController,
-                      onChanged: (value) {
-                        setState(() {});
-                        ref
-                            .read(placePredictionProvider.notifier)
-                            .placePrediction(input: value);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (predictions.isNotEmpty && _searchController.text.isNotEmpty)
+    return PopScope(
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) _restoreHomeLocation();
+      },
+      child: Scaffold(
+        backgroundColor: context.colors.background,
+        body: SafeArea(
+          child: Column(
+            children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
-                child: _PredictionsList(
-                  predictions: predictions,
-                  onSelected: (prediction) async {
-                    _searchController.clear();
-                    await ref
-                        .read(placePredictionProvider.notifier)
-                        .placeDetails(
-                          placeId: prediction.placeId,
-                          selectedAddress: prediction.description,
-                        );
-                    setState(() {});
-                  },
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xxl,
+                  vertical: AppSpacing.lg,
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => context.pop(),
+                      icon: Icon(Icons.arrow_back, color: context.colors.muted),
+                      tooltip: 'back'.tr(),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: _SearchBar(
+                        controller: _searchController,
+                        onChanged: (value) {
+                          setState(() {});
+                          ref
+                              .read(placePredictionProvider.notifier)
+                              .placePrediction(input: value);
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.xxl),
-                child: _ConfirmSheet(
-                  addLocation: widget.addLocation,
-                  label: _label,
-                  onLabelChanged: (value) => setState(() => _label = value),
-                  line1Controller: _line1Controller,
-                  landmarkController: _landmarkController,
-                  onUseCurrentLocation: () =>
-                      ref.read(currentLocation.notifier).getCurrentLocation(),
-                  onConfirm: () async {
-                    ref
-                        .read(currentLocation.notifier)
-                        .applyEditedText(
-                          line1: _line1Controller.text,
-                          landmark: _landmarkController.text.isEmpty
-                              ? null
-                              : _landmarkController.text,
-                        );
-                    if (widget.addLocation) {
+              if (predictions.isNotEmpty && _searchController.text.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xxl,
+                  ),
+                  child: _PredictionsList(
+                    predictions: predictions,
+                    onSelected: (prediction) async {
+                      _searchController.clear();
                       await ref
                           .read(placePredictionProvider.notifier)
-                          .addAddress(label: _label);
-                    }
-                    if (context.mounted) context.pop();
-                  },
-                  onSavedAddressTap: (address) async {
-                    await ref
+                          .placeDetails(
+                            placeId: prediction.placeId,
+                            selectedAddress: prediction.description,
+                          );
+                      if (mounted) setState(() {});
+                    },
+                  ),
+                ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.xxl),
+                  child: _ConfirmSheet(
+                    addLocation: widget.addLocation,
+                    label: _label,
+                    onLabelChanged: (value) => setState(() => _label = value),
+                    line1Controller: _line1Controller,
+                    landmarkController: _landmarkController,
+                    onUseCurrentLocation: () => ref
                         .read(currentLocation.notifier)
-                        .selectSavedAddress(address);
-                    if (context.mounted) context.pop();
-                  },
+                        .getCurrentLocation(requestPermission: true),
+                    saving: _saving,
+                    onConfirm: () async {
+                      ref
+                          .read(currentLocation.notifier)
+                          .applyEditedText(
+                            line1: _line1Controller.text.trim(),
+                            landmark: _landmarkController.text.trim().isEmpty
+                                ? null
+                                : _landmarkController.text.trim(),
+                          );
+                      if (widget.addLocation) {
+                        setState(() => _saving = true);
+                        final saved = await ref
+                            .read(placePredictionProvider.notifier)
+                            .addAddress(label: _label);
+                        if (!mounted) return;
+                        setState(() => _saving = false);
+                        // Stay (with the user's input) if it didn't save.
+                        if (!saved) return;
+                      }
+                      if (context.mounted) context.pop();
+                    },
+                    onSavedAddressTap: (address) async {
+                      await ref
+                          .read(currentLocation.notifier)
+                          .selectSavedAddress(address);
+                      if (context.mounted) context.pop();
+                    },
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -245,8 +280,6 @@ class _PredictionsList extends StatelessWidget {
   }
 }
 
-const _addressLabels = ['Home', 'Work', 'Other'];
-
 class _ConfirmSheet extends ConsumerWidget {
   final bool addLocation;
   final String label;
@@ -266,7 +299,10 @@ class _ConfirmSheet extends ConsumerWidget {
     required this.onUseCurrentLocation,
     required this.onConfirm,
     required this.onSavedAddressTap,
+    this.saving = false,
   });
+
+  final bool saving;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -307,6 +343,15 @@ class _ConfirmSheet extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
               child: LinearProgressIndicator(color: context.colors.primary),
             )
+          else if (location.serviceabilityError)
+            _ServiceabilityError(
+              onRetry: () =>
+                  ref.read(currentLocation.notifier).retryServiceability(),
+            )
+          else if (!location.serviceabilityChecked)
+            // No point checked yet (permission off, nothing picked): ask
+            // for a location rather than claiming we don't deliver.
+            const _PickLocationHint()
           else
             _ServiceabilityBanner(serviceable: location.serviceArea != null),
           const SizedBox(height: AppSpacing.lg),
@@ -323,10 +368,10 @@ class _ConfirmSheet extends ConsumerWidget {
             const SizedBox(height: AppSpacing.lg),
             Wrap(
               spacing: AppSpacing.base,
-              children: _addressLabels
+              children: addressLabels
                   .map(
                     (value) => ChoiceChip(
-                      label: Text(value),
+                      label: Text(addressLabelText(value)),
                       selected: label == value,
                       onSelected: (_) => onLabelChanged(value),
                     ),
@@ -338,14 +383,19 @@ class _ConfirmSheet extends ConsumerWidget {
           Builder(
             builder: (context) {
               final canConfirm =
+                  !saving &&
                   !location.isDetecting &&
                   !location.checkingServiceability &&
                   location.serviceArea != null;
 
-              return PrimaryButton(
-                buttonTitle: 'confirmLocation'.tr(),
-                buttonColor: canConfirm ? null : context.colors.line,
-                action: canConfirm ? onConfirm : () {},
+              return FilledButton(
+                onPressed: canConfirm ? onConfirm : null,
+                child: saving
+                    ? const SizedBox.square(
+                        dimension: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2.5),
+                      )
+                    : Text('confirmLocation'.tr()),
               );
             },
           ),
@@ -373,7 +423,7 @@ class _ConfirmSheet extends ConsumerWidget {
                                 vertical: AppSpacing.base,
                               ),
                               child: Text(
-                                '${address.label} · ${address.line1}, ${address.area}',
+                                '${addressLabelText(address.label)} · ${address.line1}, ${address.area}',
                                 style: AppTypography.bodyMedium,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -420,13 +470,82 @@ class _ServiceabilityBanner extends StatelessWidget {
           Expanded(
             child: Text(
               serviceable
-                  ? 'weDeliverHere'.tr(args: ['12'])
+                  ? 'weDeliverHereShort'.tr()
                   : 'notServiceableYet'.tr(),
               style: AppTypography.bodySmall.copyWith(
                 fontWeight: FontWeight.w600,
                 color: serviceable
                     ? context.colors.primaryDark
                     : context.colors.danger,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ServiceabilityError extends StatelessWidget {
+  final VoidCallback onRetry;
+
+  const _ServiceabilityError({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: context.colors.dangerTint,
+        borderRadius: BorderRadius.circular(AppRadius.input),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.wifi_off_rounded, size: 16, color: context.colors.danger),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              'serviceabilityCheckFailed'.tr(),
+              style: AppTypography.bodySmall.copyWith(
+                fontWeight: FontWeight.w600,
+                color: context.colors.danger,
+              ),
+            ),
+          ),
+          TextButton(onPressed: onRetry, child: Text('retry'.tr())),
+        ],
+      ),
+    );
+  }
+}
+
+class _PickLocationHint extends StatelessWidget {
+  const _PickLocationHint();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.base,
+      ),
+      decoration: BoxDecoration(
+        color: context.colors.surfaceAlt,
+        borderRadius: BorderRadius.circular(AppRadius.input),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.my_location, size: 16, color: context.colors.muted),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              'pickLocationToCheck'.tr(),
+              style: AppTypography.bodySmall.copyWith(
+                fontWeight: FontWeight.w600,
+                color: context.colors.muted,
               ),
             ),
           ),

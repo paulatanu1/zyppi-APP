@@ -1,11 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/config/env.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
 import 'package:zippy/routes/router_refresh_listenable.dart';
 import 'package:zippy/features/edit_profile/presentation/edit_profile_screen.dart';
 import 'package:zippy/features/my_address/presentation/my_address_screen.dart';
+import 'package:zippy/features/your_order/presentation/order_details_screen.dart';
 import 'package:zippy/features/your_order/presentation/your_order_screen.dart';
+import 'package:zippy/features/account/presentation/account_privacy_screen.dart';
 import 'package:zippy/features/account/presentation/account_screen.dart';
+import 'package:zippy/features/account/presentation/notification_settings_screen.dart';
+import 'package:zippy/features/account/presentation/payment_settings_screen.dart';
+import 'package:zippy/features/auth/guest/presentation/guest_upgrade_screen.dart';
 import 'package:zippy/features/auth/login/presentation/login_screen.dart';
 import 'package:zippy/features/auth/otp_verification/presentation/otp_verification_screen.dart';
 import 'package:zippy/features/category_details/presentation/category_details_screen.dart';
@@ -39,7 +45,10 @@ class Routes {
       GoRouterRefreshListenable(container);
 
   String? _redirect(GoRouterState state) {
-    if (state.matchedLocation == '/design-v2') return null;
+    // Design playground: dev builds only, never an auth bypass elsewhere.
+    if (state.matchedLocation == '/design-v2' && Env.flavor == 'dev') {
+      return null;
+    }
 
     final token = container.read(sharedPreferenceProvider).authToken;
     final isLoggedIn = token != null && token.isNotEmpty;
@@ -74,18 +83,21 @@ class Routes {
         GoRoute(
           path: '/otpVerificationScreen',
           name: 'OtpVerificationScreen',
-          builder: (context, state) {
-            final phoneNumber = state.uri.queryParameters['phoneNumber'];
-            return OtpVerificationScreen(phoneNumber: phoneNumber);
-          },
+          // Without a number there's nothing to verify; start over.
+          redirect: (context, state) =>
+              (state.uri.queryParameters['phoneNumber'] ?? '').isEmpty
+              ? '/loginScreen'
+              : null,
+          builder: (context, state) => OtpVerificationScreen(
+            phoneNumber: state.uri.queryParameters['phoneNumber']!,
+          ),
         ),
         GoRoute(
           path: '/navBar',
           name: 'NavigationBar',
           builder: (context, state) {
-            final index = state.uri.queryParameters['index'] != null
-                ? int.parse(state.uri.queryParameters['index']!)
-                : 0;
+            final index =
+                int.tryParse(state.uri.queryParameters['index'] ?? '') ?? 0;
             return NavBar(initialIndex: index);
           },
         ),
@@ -118,7 +130,9 @@ class Routes {
         GoRoute(
           path: '/filterScreen',
           name: 'FilterScreen',
-          builder: (context, state) => FilterScreen(),
+          builder: (context, state) => FilterScreen(
+            categoryId: state.uri.queryParameters['categoryId'] ?? '',
+          ),
         ),
         GoRoute(
           path: '/favouriteScreen',
@@ -139,9 +153,31 @@ class Routes {
           path: '/searchAddressScreen',
           name: 'SearchAddressScreen',
           builder: (context, state) {
-            final bool addLocation = state.extra as bool;
+            // Missing extra (e.g. a deep link or a caller that forgot it)
+            // must not crash the screen; default to "save a new address".
+            final addLocation = state.extra as bool? ?? true;
             return SearchAddressScreen(addLocation: addLocation);
           },
+        ),
+        GoRoute(
+          path: '/guestUpgradeScreen',
+          name: 'GuestUpgradeScreen',
+          builder: (context, state) => const GuestUpgradeScreen(),
+        ),
+        GoRoute(
+          path: '/paymentSettingsScreen',
+          name: 'PaymentSettingsScreen',
+          builder: (context, state) => const PaymentSettingsScreen(),
+        ),
+        GoRoute(
+          path: '/notificationSettingsScreen',
+          name: 'NotificationSettingsScreen',
+          builder: (context, state) => const NotificationSettingsScreen(),
+        ),
+        GoRoute(
+          path: '/accountPrivacyScreen',
+          name: 'AccountPrivacyScreen',
+          builder: (context, state) => const AccountPrivacyScreen(),
         ),
         GoRoute(
           path: '/myAddressScreen',
@@ -177,6 +213,13 @@ class Routes {
           },
         ),
         GoRoute(
+          path: '/orderDetailsScreen',
+          name: 'OrderDetailsScreen',
+          builder: (context, state) => OrderDetailsScreen(
+            orderId: state.uri.queryParameters['orderId'] ?? '',
+          ),
+        ),
+        GoRoute(
           path: '/orderTrackingScreen',
           name: 'OrderTrackingScreen',
           builder: (context, state) {
@@ -184,11 +227,12 @@ class Routes {
             return OrderTrackingScreen(orderId: orderId);
           },
         ),
-        GoRoute(
-          path: '/design-v2',
-          name: 'DesignV2Home',
-          builder: (context, state) => const HomeV2Screen(),
-        ),
+        if (Env.flavor == 'dev')
+          GoRoute(
+            path: '/design-v2',
+            name: 'DesignV2Home',
+            builder: (context, state) => const HomeV2Screen(),
+          ),
       ],
     );
   }

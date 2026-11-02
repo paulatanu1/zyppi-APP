@@ -36,11 +36,18 @@ class HiveOrderRepository implements OrderRepository {
   }
 
   @override
+  Future<Order?> getOrderById(String id) async {
+    for (final order in await getOrders()) {
+      if (order.id == id) return order;
+    }
+    return null;
+  }
+
+  @override
   Future<String> placeOrder(
     Order order, {
     required String deliverySlotId,
-    String? phonePeMerchantOrderId,
-    String? phonePeTransactionId,
+    String? couponCode,
   }) async {
     final orders = await getOrders();
     orders.insert(0, order);

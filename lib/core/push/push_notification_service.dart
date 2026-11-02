@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -21,18 +23,11 @@ class PushNotificationService {
     if (Env.isMockDataSource) return; // no backend to deliver tokens to
 
     final messaging = FirebaseMessaging.instance;
-    await messaging.requestPermission();
+    final repository = container.read(pushTokenRepositoryProvider);
 
-    Future<void> registerCurrentToken() async {
-      final token = await messaging.getToken();
-      if (token != null) {
-        await container.read(pushTokenRepositoryProvider).registerToken(token);
-      }
-    }
-
-    await registerCurrentToken();
-    messaging.onTokenRefresh.listen((_) => registerCurrentToken());
-
+    // Handlers first: a token or permission failure (offline, no APNs
+    // token on iOS…) must never leave taps and foreground messages
+    // unhandled.
     FirebaseMessaging.onMessage.listen((message) {
       final body = message.notification?.body;
       if (body != null) showSuccessToast(message: body);
@@ -42,22 +37,35 @@ class PushNotificationService {
       (message) => _openTracking(router, message),
     );
 
-    final initialMessage = await messaging.getInitialMessage();
-    if (initialMessage != null) _openTracking(router, initialMessage);
+    try {
+      final initialMessage = await messaging.getInitialMessage();
+      if (initialMessage != null) _openTracking(router, initialMessage);
+    } catch (_) {}
+
+    try {
+      await messaging.requestPermission();
+    } catch (_) {}
+
+    await _register(repository);
+    messaging.onTokenRefresh.listen((_) => _register(repository));
   }
 
   /// Call right after login, in case the device token was already fetched
   /// before the user signed in (so it was skipped - no user id yet).
-  /// Takes a bare `.read` tear-off so it works from both a `Ref` (login
-  /// notifiers) and the bootstrap `ProviderContainer`.
-  static Future<void> registerTokenAfterLogin(
-    PushTokenRepository Function(Provider<PushTokenRepository>) read,
-  ) async {
+  /// Takes the repository itself (read it *before* the login flow
+  /// navigates away and disposes its provider). Never throws: a push
+  /// failure must not make a successful login look failed.
+  static void registerTokenAfterLogin(PushTokenRepository repository) {
     if (Env.isMockDataSource) return;
+    unawaited(_register(repository));
+  }
 
-    final token = await FirebaseMessaging.instance.getToken();
-    if (token != null) {
-      await read(pushTokenRepositoryProvider).registerToken(token);
+  static Future<void> _register(PushTokenRepository repository) async {
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token != null) await repository.registerToken(token);
+    } catch (_) {
+      // Retried on the next token refresh / login.
     }
   }
 

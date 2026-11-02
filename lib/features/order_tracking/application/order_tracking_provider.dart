@@ -38,15 +38,25 @@ class OrderTrackingProvider extends StateNotifier<OrderTrackingState> {
   }
 
   Future<void> _load() async {
-    final orders = await repository.getOrders();
-    final match = orders.where((o) => o.id == orderId);
+    state = state.copyWith(error: null);
+    try {
+      final order = await repository.getOrderById(orderId);
+      if (!mounted) return;
 
-    state = state.copyWith(
-      order: match.isEmpty ? null : match.first,
-      loading: false,
-    );
+      state = state.copyWith(order: order, loading: false);
+    } catch (error) {
+      if (!mounted) return;
+      // Keep showing the last known order if a Realtime refresh fails.
+      state = state.copyWith(loading: false, error: error.toString());
+      return;
+    }
 
     _scheduleNextStep();
+  }
+
+  Future<void> retry() {
+    state = state.copyWith(loading: state.order == null);
+    return _load();
   }
 
   void _scheduleNextStep() {
@@ -61,10 +71,12 @@ class OrderTrackingProvider extends StateNotifier<OrderTrackingState> {
     final currentIndex = _sequence.indexOf(order.status);
     if (currentIndex == -1 || currentIndex >= _sequence.length - 1) return;
 
+    _timer?.cancel();
     _timer = Timer(_stepDuration, () async {
       final nextStatus = _sequence[currentIndex + 1];
 
       await repository.updateStatus(orderId, nextStatus);
+      if (!mounted) return;
 
       state = state.copyWith(order: order.copyWith(status: nextStatus));
 

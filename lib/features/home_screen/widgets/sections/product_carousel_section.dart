@@ -65,14 +65,14 @@ class ProductCarouselSection extends ConsumerWidget {
                   ? null
                   : () => ref
                         .read(cartProvider.notifier)
-                        .addItem(productId: product.id, variantId: variant.id),
+                        .addItem(product: product, variant: variant),
               onIncrement: variant == null
                   ? null
                   : () => ref
                         .read(cartProvider.notifier)
                         .setQuantity(
-                          productId: product.id,
-                          variantId: variant.id,
+                          product: product,
+                          variant: variant,
                           quantity: cartQuantity + 1,
                         ),
               onDecrement: variant == null
@@ -80,8 +80,8 @@ class ProductCarouselSection extends ConsumerWidget {
                   : () => ref
                         .read(cartProvider.notifier)
                         .setQuantity(
-                          productId: product.id,
-                          variantId: variant.id,
+                          product: product,
+                          variant: variant,
                           quantity: cartQuantity - 1,
                         ),
             ),

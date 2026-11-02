@@ -1,8 +1,10 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/your_order/application/orders_provider.dart';
 import 'package:zippy/features/your_order/widgets/your_order_widget.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
@@ -25,11 +27,30 @@ class YourOrderScreen extends ConsumerWidget {
           children: [
             Expanded(
               child: ordersAsync.when(
-                loading: () => const SizedBox.shrink(),
+                skipLoadingOnRefresh: true,
+                loading: () => ListView(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  children: [
+                    for (var i = 0; i < 3; i++)
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: AppSpacing.base),
+                        child: ZSkeleton(height: 132, radius: ZRadius.card),
+                      ),
+                  ],
+                ),
                 error: (error, stackTrace) => Center(
-                  child: Text(
-                    'somethingWentWrong'.tr(),
-                    style: AppTypography.bodyMedium,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'somethingWentWrong'.tr(),
+                        style: AppTypography.bodyMedium,
+                      ),
+                      TextButton(
+                        onPressed: () => ref.invalidate(ordersProvider),
+                        child: Text('retry'.tr()),
+                      ),
+                    ],
                   ),
                 ),
                 data: (orders) => orders.isEmpty
@@ -39,13 +60,17 @@ class YourOrderScreen extends ConsumerWidget {
                           style: AppTypography.bodyMedium,
                         ),
                       )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AppSpacing.base,
+                    : RefreshIndicator(
+                        onRefresh: () => ref.refresh(ordersProvider.future),
+                        child: ListView.builder(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.base,
+                          ),
+                          itemCount: orders.length,
+                          itemBuilder: (context, index) =>
+                              YourOrderWidget(order: orders[index]),
                         ),
-                        itemCount: orders.length,
-                        itemBuilder: (context, index) =>
-                            YourOrderWidget(order: orders[index]),
                       ),
               ),
             ),

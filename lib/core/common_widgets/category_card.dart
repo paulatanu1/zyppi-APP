@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
@@ -32,7 +33,7 @@ class CategoryCard extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(36),
+      borderRadius: BorderRadius.circular(ZSize.categoryTile / 2),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

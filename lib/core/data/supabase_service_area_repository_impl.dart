@@ -13,11 +13,20 @@ class SupabaseServiceAreaRepository implements ServiceAreaRepository {
 
   @override
   Future<ServiceArea?> findServiceableArea(double lat, double lng) async {
-    final row = await client.rpc(
+    final result = await client.rpc(
       'serviceable_area',
       params: {'lat': lat, 'lng': lng},
-    ) as Map<String, dynamic>?;
-    if (row == null) return null;
+    );
+    // The RPC returns a single composite row: outside every area that's
+    // a row of nulls (not null), so check the id rather than relying on a
+    // cast failing. Tolerate a list shape too.
+    final row = switch (result) {
+      final List<dynamic> list when list.isNotEmpty =>
+        list.first as Map<String, dynamic>,
+      final Map<String, dynamic> map => map,
+      _ => null,
+    };
+    if (row == null || row['id'] == null) return null;
 
     return ServiceArea(
       id: row['id'] as String,

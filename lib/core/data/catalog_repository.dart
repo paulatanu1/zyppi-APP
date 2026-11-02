@@ -10,7 +10,15 @@ abstract class CatalogRepository {
 
   Future<List<Product>> fetchProducts();
 
+  /// Active products in one category, queried server-side (not by
+  /// filtering the whole catalog on the client).
+  Future<List<Product>> fetchProductsByCategory(String categoryId);
+
   Future<Product?> fetchProductById(String id);
+
+  /// Active products among [ids], in no particular order; ids that don't
+  /// match an active product are skipped.
+  Future<List<Product>> fetchProductsByIds(List<String> ids);
 
   /// Supabase: Postgres full-text search (`products.search_vector`).
   /// Mock: substring match on product name. Callers should skip calling

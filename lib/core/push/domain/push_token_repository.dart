@@ -4,4 +4,9 @@ abstract class PushTokenRepository {
   /// it. push_notification_service.dart calls this on token
   /// refresh/first-fetch and right after login.
   Future<void> registerToken(String token);
+
+  /// Removes this device's token from the signed-in user's profile, so
+  /// the next person to use the device doesn't receive their order
+  /// notifications. Called on logout, before the session ends.
+  Future<void> clearToken();
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/domain/category.dart';
@@ -72,7 +73,9 @@ class CategoryClusterSection extends StatelessWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: context.colors.ink,
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BorderRadius.circular(
+                                  ZRadius.badge,
+                                ),
                               ),
                               child: Text(
                                 '+$count',

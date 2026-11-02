@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
@@ -37,7 +37,7 @@ class QuantityStepper extends StatelessWidget {
               '$quantity',
               textAlign: TextAlign.center,
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.white,
+                color: context.z.onBrand,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -62,7 +62,7 @@ class _StepperButton extends StatelessWidget {
       child: SizedBox(
         width: AppSizes.stepper.w,
         height: AppSizes.stepper.h,
-        child: Icon(icon, size: 18.sp, color: AppColors.white),
+        child: Icon(icon, size: 18.sp, color: context.z.onBrand),
       ),
     );
   }

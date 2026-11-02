@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
 import 'package:zippy/core/theme/theme_mode_provider.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
@@ -29,18 +30,26 @@ class Zyppi extends ConsumerWidget {
         supportedLocales: context.supportedLocales,
         locale: context.locale,
         debugShowCheckedModeBanner: false,
-        // Status-bar icons follow the active theme (bootstrap only sets the
-        // initial light-theme style).
-        builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
-          value: Theme.of(context).brightness == Brightness.dark
-              ? SystemUiOverlayStyle.light.copyWith(
-                  statusBarColor: Colors.transparent,
-                )
-              : SystemUiOverlayStyle.dark.copyWith(
-                  statusBarColor: Colors.transparent,
-                ),
-          child: child!,
-        ),
+        // Status- and navigation-bar styling follow the active theme
+        // (bootstrap only sets the initial light-theme style). This region
+        // spans the whole screen, so it also owns the Android nav bar —
+        // the .light/.dark presets would otherwise force it black.
+        builder: (context, child) {
+          final dark = Theme.of(context).brightness == Brightness.dark;
+
+          return AnnotatedRegion<SystemUiOverlayStyle>(
+            value:
+                (dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark)
+                    .copyWith(
+                      statusBarColor: Colors.transparent,
+                      systemNavigationBarColor: context.colors.surface,
+                      systemNavigationBarIconBrightness: dark
+                          ? Brightness.light
+                          : Brightness.dark,
+                    ),
+            child: child!,
+          );
+        },
       ),
     );
   }

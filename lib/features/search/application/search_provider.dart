@@ -22,6 +22,7 @@ class SearchNotifier extends StateNotifier<SearchState> {
 
     final normalized = query.trim();
     if (normalized.isEmpty) {
+      _requestId++; // a search still in flight must not refill the list
       state = state.copyWith(results: [], loading: false, error: null);
       return;
     }
@@ -35,11 +36,12 @@ class SearchNotifier extends StateNotifier<SearchState> {
 
     try {
       final results = await repository.searchProducts(normalized);
-      if (requestId != _requestId) return; // superseded by a newer keystroke
+      // Superseded by a newer keystroke, or the screen closed.
+      if (!mounted || requestId != _requestId) return;
 
       state = state.copyWith(results: results, loading: false);
     } catch (error) {
-      if (requestId != _requestId) return;
+      if (!mounted || requestId != _requestId) return;
 
       state = state.copyWith(loading: false, error: error.toString());
     }

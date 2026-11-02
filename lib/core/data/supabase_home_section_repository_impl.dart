@@ -32,11 +32,28 @@ class SupabaseHomeSectionRepository implements HomeSectionRepository {
             .map(
               (item) => {
                 'id': item['id'],
-                'data': item['data'] as Map<String, dynamic>,
+                'data': _resolveImages(item['data'] as Map<String, dynamic>),
               },
             )
             .toList(),
       });
     }).toList();
+  }
+
+  static const _imagesBucket = 'catalog-images';
+
+  /// Section items store images as object paths in the catalog bucket
+  /// (supabase/seed.sql), like products do — resolve them to public URLs
+  /// so CatalogImage gets something it can load (a bare path is treated as
+  /// a bundled asset and silently falls back).
+  Map<String, dynamic> _resolveImages(Map<String, dynamic> data) {
+    final resolved = {...data};
+    for (final key in const ['image_url', 'image']) {
+      final value = data[key];
+      if (value is String && value.isNotEmpty && !value.startsWith('http')) {
+        resolved[key] = client.storage.from(_imagesBucket).getPublicUrl(value);
+      }
+    }
+    return resolved;
   }
 }

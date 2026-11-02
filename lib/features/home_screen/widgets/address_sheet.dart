@@ -1,12 +1,14 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/home_screen/widgets/add_new_address_row.dart';
 import 'package:zippy/features/home_screen/widgets/search_places_widget.dart';
-import 'package:zippy/features/my_address/application/addresses_provider.dart';
+import 'package:zippy/core/data/provider/addresses_provider.dart';
 import 'package:zippy/features/my_address/widgets/saved_address_row.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
 
@@ -47,8 +49,14 @@ void bottomSheet(BuildContext context, WidgetRef ref) {
                 final addressesAsync = ref.watch(addressesProvider);
 
                 return addressesAsync.when(
-                  loading: () => const SizedBox.shrink(),
-                  error: (error, stackTrace) => const SizedBox.shrink(),
+                  loading: () => const Padding(
+                    padding: EdgeInsets.symmetric(vertical: AppSpacing.base),
+                    child: ZSkeleton(height: 44, radius: ZRadius.control),
+                  ),
+                  error: (error, stackTrace) => TextButton(
+                    onPressed: () => ref.invalidate(addressesProvider),
+                    child: Text('retry'.tr()),
+                  ),
                   data: (addresses) => Column(
                     children: addresses
                         .map(

@@ -14,31 +14,58 @@ class SupabaseOrderRepository implements OrderRepository {
 
   SupabaseOrderRepository(this.client);
 
+  static const _columns = '''
+    id, status, placedAt:placed_at, itemTotalPaise:item_total_paise,
+    deliveryFeePaise:delivery_fee_paise, handlingFeePaise:handling_fee_paise,
+    tipPaise:tip_paise, discountPaise:discount_paise, totalPaise:total_paise,
+    addressId:address_id, paymentMethod:payment_method,
+    addressLabel:address_label, addressText:address_text,
+    riderName:rider_name, riderPhone:rider_phone,
+    slot:delivery_slots(etaMinutes:eta_minutes),
+    items:order_items(
+      variantId:product_variant_id, name, unit, quantity, pricePaise:price_paise,
+      variant:product_variants(productId:product_id, product:products(image))
+    )
+  ''';
+  static const _imagesBucket = 'catalog-images';
+
   @override
   Future<List<Order>> getOrders() async {
+    final userId = client.auth.currentUser?.id;
+    if (userId == null) return const [];
+
     final rows = await client
         .from('orders')
-        .select('''
-          id, status, placedAt:placed_at, itemTotalPaise:item_total_paise,
-          deliveryFeePaise:delivery_fee_paise, handlingFeePaise:handling_fee_paise,
-          tipPaise:tip_paise, discountPaise:discount_paise, totalPaise:total_paise,
-          addressId:address_id, paymentMethod:payment_method,
-          items:order_items(
-            variantId:product_variant_id, name, unit, quantity, pricePaise:price_paise,
-            variant:product_variants(productId:product_id)
-          )
-        ''')
+        .select(_columns)
+        // Explicit, not just RLS: an admin account would otherwise see
+        // every customer's orders here (admins can read all orders).
+        .eq('user_id', userId)
         .order('placed_at', ascending: false);
 
     return rows.map(_orderFromRow).toList();
+  }
+
+  @override
+  Future<Order?> getOrderById(String id) async {
+    final row = await client
+        .from('orders')
+        .select(_columns)
+        .eq('id', id)
+        .maybeSingle();
+    return row == null ? null : _orderFromRow(row);
   }
 
   Order _orderFromRow(Map<String, dynamic> row) {
     final items = (row['items'] as List<dynamic>).map((itemRow) {
       final item = itemRow as Map<String, dynamic>;
       final variant = item['variant'] as Map<String, dynamic>?;
+      final imagePath =
+          (variant?['product'] as Map<String, dynamic>?)?['image'] as String?;
 
       return OrderItem(
+        image: imagePath == null || imagePath.isEmpty
+            ? null
+            : client.storage.from(_imagesBucket).getPublicUrl(imagePath),
         productId: variant?['productId'] as String? ?? '',
         variantId: item['variantId'] as String,
         name: item['name'] as String,
@@ -58,8 +85,13 @@ class SupabaseOrderRepository implements OrderRepository {
       handlingFeePaise: row['handlingFeePaise'] as int,
       tipPaise: row['tipPaise'] as int,
       discountPaise: row['discountPaise'] as int,
+      addressLabel: row['addressLabel'] as String?,
+      addressText: row['addressText'] as String?,
+      riderName: row['riderName'] as String?,
+      riderPhone: row['riderPhone'] as String?,
+      etaMinutes: (row['slot'] as Map<String, dynamic>?)?['etaMinutes'] as int?,
       totalPaise: row['totalPaise'] as int,
-      addressId: row['addressId'] as String,
+      addressId: row['addressId'] as String?,
       paymentMethod: row['paymentMethod'] as String,
     );
   }
@@ -68,8 +100,7 @@ class SupabaseOrderRepository implements OrderRepository {
   Future<String> placeOrder(
     Order order, {
     required String deliverySlotId,
-    String? phonePeMerchantOrderId,
-    String? phonePeTransactionId,
+    String? couponCode,
   }) async {
     final orderId = await client.rpc(
       'place_order',
@@ -78,8 +109,10 @@ class SupabaseOrderRepository implements OrderRepository {
         'p_delivery_slot_id': deliverySlotId,
         'p_payment_method': order.paymentMethod,
         'p_tip_paise': order.tipPaise,
-        'p_phonepe_merchant_order_id': phonePeMerchantOrderId,
-        'p_phonepe_transaction_id': phonePeTransactionId,
+        // place_order() re-validates it; without this the server recorded
+        // orders at the undiscounted total while the app charged the
+        // discounted one.
+        'p_coupon_code': couponCode,
       },
     );
 
@@ -102,7 +135,10 @@ class SupabaseOrderRepository implements OrderRepository {
   Stream<void> watch() {
     final controller = StreamController<void>.broadcast();
     final channel = client
-        .channel('orders-changes')
+        // A unique topic per subscriber: the orders list and the tracking
+        // screen both watch, and two joins on one topic would close each
+        // other's subscription.
+        .channel('orders-changes-${{DateTime.now().microsecondsSinceEpoch}}')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
           schema: 'public',
@@ -123,5 +159,6 @@ OrderStatus _parseStatus(String value) => switch (value) {
   'out_for_delivery' => OrderStatus.outForDelivery,
   'delivered' => OrderStatus.delivered,
   'cancelled' => OrderStatus.cancelled,
-  _ => throw ArgumentError('Unknown order status: $value'),
+  // A status added server-side later mustn't break the whole list.
+  _ => OrderStatus.placed,
 };

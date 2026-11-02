@@ -14,6 +14,9 @@ abstract class OrderItem with _$OrderItem {
     required String unit,
     required int quantity,
     required int pricePaise,
+
+    /// Product image (current catalog image; display only).
+    String? image,
   }) = _OrderItem;
 
   factory OrderItem.fromJson(Map<String, dynamic> json) =>

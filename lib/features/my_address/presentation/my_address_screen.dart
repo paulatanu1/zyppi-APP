@@ -1,10 +1,13 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/home_screen/widgets/add_new_address_row.dart';
-import 'package:zippy/features/my_address/application/addresses_provider.dart';
+import 'package:zippy/core/data/provider/addresses_provider.dart';
+import 'package:zippy/core/widgets/z_motion.dart';
+import 'package:zippy/features/my_address/widgets/address_actions.dart';
 import 'package:zippy/features/my_address/widgets/saved_address_row.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
 
@@ -53,18 +56,63 @@ class MyAddressScreen extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.base),
                     Expanded(
                       child: addressesAsync.when(
-                        loading: () => const SizedBox.shrink(),
-                        error: (error, stackTrace) => Text(
-                          'somethingWentWrong'.tr(),
-                          style: AppTypography.bodyMedium,
+                        // Keep the list on screen while an edit refreshes it.
+                        skipLoadingOnRefresh: true,
+                        skipLoadingOnReload: true,
+                        loading: () => ListView(
+                          children: [
+                            for (var i = 0; i < 3; i++)
+                              const Padding(
+                                padding: EdgeInsets.symmetric(
+                                  vertical: AppSpacing.sm,
+                                ),
+                                child: ZSkeleton(
+                                  height: 48,
+                                  radius: ZRadius.control,
+                                ),
+                              ),
+                          ],
                         ),
-                        data: (addresses) => ListView.separated(
-                          itemCount: addresses.length,
-                          separatorBuilder: (context, index) =>
-                              Divider(height: 1, color: context.colors.divider),
-                          itemBuilder: (context, index) =>
-                              SavedAddressRow(address: addresses[index]),
+                        error: (error, stackTrace) => Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'somethingWentWrong'.tr(),
+                              style: AppTypography.bodyMedium,
+                            ),
+                            TextButton(
+                              onPressed: () =>
+                                  ref.invalidate(addressesProvider),
+                              child: Text('retry'.tr()),
+                            ),
+                          ],
                         ),
+                        data: (addresses) => addresses.isEmpty
+                            ? Padding(
+                                padding: const EdgeInsets.only(
+                                  top: AppSpacing.xxl,
+                                ),
+                                child: Text(
+                                  'noSavedAddresses'.tr(),
+                                  style: AppTypography.bodyMedium.copyWith(
+                                    color: context.colors.muted,
+                                  ),
+                                ),
+                              )
+                            : ListView.separated(
+                                itemCount: addresses.length,
+                                separatorBuilder: (context, index) => Divider(
+                                  height: 1,
+                                  color: context.colors.divider,
+                                ),
+                                itemBuilder: (context, index) =>
+                                    SavedAddressRow(
+                                      address: addresses[index],
+                                      trailing: AddressActions(
+                                        address: addresses[index],
+                                      ),
+                                    ),
+                              ),
                       ),
                     ),
                   ],

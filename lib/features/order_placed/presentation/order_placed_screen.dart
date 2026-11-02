@@ -1,12 +1,15 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/price_tag.dart';
-import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/payments/presentation/payment_options.dart';
+import 'package:zippy/core/utils/address_label.dart';
+import 'package:zippy/core/utils/order_id.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
-import 'package:zippy/features/order_placed/application/order_by_id_provider.dart';
+import 'package:zippy/core/order/application/order_by_id_provider.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// docs/mockups/Placed.dc.html — full-bleed pink confirmation.
@@ -17,7 +20,8 @@ class OrderPlacedScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final order = ref.watch(orderByIdProvider(orderId)).value;
+    final orderAsync = ref.watch(orderByIdProvider(orderId));
+    final order = orderAsync.value;
 
     return Scaffold(
       backgroundColor: context.colors.primary,
@@ -60,7 +64,7 @@ class OrderPlacedScreen extends ConsumerWidget {
                     Text(
                       'orderPlaced'.tr(),
                       style: AppTypography.headlineMedium.copyWith(
-                        color: AppColors.white,
+                        color: context.z.onBrand,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
@@ -71,19 +75,46 @@ class OrderPlacedScreen extends ConsumerWidget {
                         color: context.colors.onPrimaryMuted,
                       ),
                     ),
-                    if (order != null) ...[
-                      const SizedBox(height: AppSpacing.xxl),
+                    const SizedBox(height: AppSpacing.xxl),
+                    if (orderAsync.isLoading && order == null)
+                      SizedBox.square(
+                        dimension: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: context.colors.onPrimaryMuted,
+                        ),
+                      )
+                    else if (order == null)
+                      // The order exists (we just placed it); only its
+                      // details failed to load. Offer a retry, not an error.
+                      TextButton(
+                        onPressed: () =>
+                            ref.invalidate(orderByIdProvider(orderId)),
+                        child: Text(
+                          'loadOrderDetails'.tr(),
+                          style: AppTypography.labelLarge.copyWith(
+                            color: context.z.onBrand,
+                          ),
+                        ),
+                      )
+                    else ...[
                       _KeyValueRow(
                         label: 'orderId'.tr(),
-                        value: '#${order.id}',
+                        value: '#${shortOrderId(order.id)}',
                       ),
                       _KeyValueRow(
-                        label: '${'paidVia'.tr()} ${order.paymentMethod}',
+                        label: order.paymentMethod == codPaymentMethod
+                            ? 'payOnDelivery'.tr()
+                            : 'paidVia'.tr(
+                                args: [paymentMethodTitle(order.paymentMethod)],
+                              ),
                         value: PriceTag.format(order.totalPaise),
                       ),
                       _KeyValueRow(
                         label: 'deliverTo'.tr(),
-                        value: 'home'.tr(),
+                        value: order.addressLabel != null
+                            ? addressLabelText(order.addressLabel!)
+                            : (order.addressText ?? ''),
                         showDivider: false,
                       ),
                     ],
@@ -118,7 +149,7 @@ class OrderPlacedScreen extends ConsumerWidget {
                     child: Text(
                       'backToHome'.tr(),
                       style: AppTypography.labelLarge.copyWith(
-                        color: AppColors.white,
+                        color: context.z.onBrand,
                       ),
                     ),
                   ),
@@ -164,7 +195,7 @@ class _KeyValueRow extends StatelessWidget {
           Text(
             value,
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.white,
+              color: context.z.onBrand,
               fontWeight: FontWeight.w700,
             ),
           ),

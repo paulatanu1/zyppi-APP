@@ -1,6 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
+import 'package:zippy/core/common_widgets/price_tag.dart';
+import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
@@ -49,7 +51,7 @@ class TipSelector extends StatelessWidget {
                   selectedColor: context.colors.primary,
                   labelStyle: AppTypography.bodySmall.copyWith(
                     color: tipPaise == preset
-                        ? AppColors.white
+                        ? context.z.onBrand
                         : context.colors.ink,
                   ),
                 ),
@@ -60,7 +62,7 @@ class TipSelector extends StatelessWidget {
                 onSelected: (_) => _showCustomTipDialog(context),
                 selectedColor: context.colors.primary,
                 labelStyle: AppTypography.bodySmall.copyWith(
-                  color: isCustom ? AppColors.white : context.colors.ink,
+                  color: isCustom ? context.z.onBrand : context.colors.ink,
                 ),
               ),
             ],
@@ -80,7 +82,12 @@ class TipSelector extends StatelessWidget {
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(prefixText: '₹'),
+          decoration: InputDecoration(
+            prefixText: '₹',
+            helperText: 'tipMax'.tr(
+              args: [PriceTag.format(CartNotifier.maxTipPaise)],
+            ),
+          ),
         ),
         actions: [
           TextButton(
@@ -92,6 +99,8 @@ class TipSelector extends StatelessWidget {
       ),
     );
 
-    if (rupees != null && rupees > 0) onChanged(rupees * 100);
+    if (rupees == null || rupees <= 0) return;
+    // Capped to match the server (CartNotifier.maxTipPaise).
+    onChanged((rupees * 100).clamp(0, CartNotifier.maxTipPaise));
   }
 }

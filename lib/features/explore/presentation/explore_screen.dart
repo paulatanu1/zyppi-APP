@@ -1,12 +1,13 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:zippy/core/theme/app_colors_ext.dart';
+import 'package:zippy/core/widgets/z_chrome.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/app_skeleton.dart';
 import 'package:zippy/core/common_widgets/category_card.dart';
 import 'package:zippy/core/common_widgets/common_header.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
-import 'package:zippy/core/common_widgets/text_form_field.dart';
 import 'package:zippy/core/domain/category.dart';
 import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
@@ -14,9 +15,7 @@ import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/explore/application/explore_provider.dart';
 
 class ExploreScreen extends ConsumerWidget {
-  ExploreScreen({super.key});
-
-  final TextEditingController searchController = TextEditingController();
+  const ExploreScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,15 +30,10 @@ class ExploreScreen extends ConsumerWidget {
             children: [
               CommonHeader(),
               const SizedBox(height: AppSpacing.lg),
-              GestureDetector(
+              // Opens the real search screen; nothing is typed here.
+              ZSearchBar(
+                hint: 'searchStore'.tr(),
                 onTap: () => context.push('/searchScreen'),
-                child: AbsorbPointer(
-                  child: TextformField(
-                    prefixIcon: true,
-                    textFormFieldController: searchController,
-                    labelText: 'searchStore'.tr(),
-                  ),
-                ),
               ),
               const SizedBox(height: AppSpacing.lg),
               if (exploreState.error != null)
@@ -65,6 +59,17 @@ class ExploreScreen extends ConsumerWidget {
                     ),
                   ),
                 )
+              else if (!exploreState.loading && exploreState.categories.isEmpty)
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      'noCategories'.tr(),
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: context.colors.muted,
+                      ),
+                    ),
+                  ),
+                )
               else
                 Expanded(
                   child: AppSkeleton(
@@ -85,7 +90,7 @@ class ExploreScreen extends ConsumerWidget {
                         final category = exploreState.loading
                             ? Category(
                                 id: '',
-                                name: 'Category',
+                                name: 'productNamePlaceholder'.tr(),
                                 image: 'assets/images/category.png',
                                 colorHex: 'FFEDF7FD',
                                 borderColorHex: 'FF52BAF4',

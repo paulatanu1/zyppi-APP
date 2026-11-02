@@ -7,13 +7,19 @@ import 'package:zippy/core/theme/app_colors_ext.dart';
 /// docs/mockups/Category.dc.html's header: back, title + item count,
 /// search.
 class CategoryDetailsHeader extends StatelessWidget {
+  final String categoryId;
   final String title;
   final int itemCount;
+  final bool loading;
+  final int activeFilters;
 
   const CategoryDetailsHeader({
     super.key,
+    required this.categoryId,
     required this.title,
     required this.itemCount,
+    this.loading = false,
+    this.activeFilters = 0,
   });
 
   @override
@@ -30,18 +36,24 @@ class CategoryDetailsHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title, style: AppTypography.titleLarge),
-              Text(
-                'itemCount'.plural(itemCount),
-                style: AppTypography.bodySmall.copyWith(
-                  color: context.colors.muted,
+              // No "0 items" flash while loading.
+              if (!loading)
+                Text(
+                  'itemCount'.plural(itemCount),
+                  style: AppTypography.bodySmall.copyWith(
+                    color: context.colors.muted,
+                  ),
                 ),
-              ),
             ],
           ),
         ),
         IconButton(
-          onPressed: () => context.push('/filterScreen'),
-          icon: const Icon(Icons.filter_list),
+          onPressed: () => context.push('/filterScreen?categoryId=$categoryId'),
+          icon: Badge(
+            isLabelVisible: activeFilters > 0,
+            label: Text('$activeFilters'),
+            child: const Icon(Icons.filter_list),
+          ),
           tooltip: 'filters'.tr(),
         ),
         IconButton(

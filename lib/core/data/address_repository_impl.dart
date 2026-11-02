@@ -6,29 +6,57 @@ import 'package:zippy/core/data/mock/mock_data_source.dart';
 import 'package:zippy/core/data/supabase_address_repository_impl.dart';
 import 'package:zippy/core/domain/address.dart';
 
+/// Loads the bundled sample addresses once, then keeps every change
+/// in-memory for the session (the mock flavor has no backend).
 class MockAddressRepository implements AddressRepository {
-  final List<Address> _added = [];
+  List<Address>? _addresses;
+
+  Future<List<Address>> _all() async {
+    if (_addresses != null) return _addresses!;
+    final json = await MockDataSource.loadJsonList(
+      'assets/mock/addresses.json',
+    );
+    return _addresses = json
+        .map((e) => Address.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
 
   @override
   Future<List<Address>> fetchAddresses() async {
     await MockDataSource.simulateLatency();
-
-    final json = await MockDataSource.loadJsonList(
-      'assets/mock/addresses.json',
-    );
-
-    final addresses = json
-        .map((e) => Address.fromJson(e as Map<String, dynamic>))
-        .toList();
-
-    return [..._added, ...addresses];
+    return List.of(await _all());
   }
 
   @override
-  Future<void> addAddress(Address address) async {
+  Future<void> addAddress(
+    Address address, {
+    required String serviceAreaId,
+  }) async {
     await MockDataSource.simulateLatency();
+    (await _all()).insert(0, address);
+  }
 
-    _added.add(address);
+  @override
+  Future<void> updateAddress(Address address) async {
+    await MockDataSource.simulateLatency();
+    final all = await _all();
+    final index = all.indexWhere((a) => a.id == address.id);
+    if (index >= 0) all[index] = address;
+  }
+
+  @override
+  Future<void> deleteAddress(String id) async {
+    await MockDataSource.simulateLatency();
+    (await _all()).removeWhere((a) => a.id == id);
+  }
+
+  @override
+  Future<void> setDefault(String id) async {
+    await MockDataSource.simulateLatency();
+    final all = await _all();
+    for (var i = 0; i < all.length; i++) {
+      all[i] = all[i].copyWith(isDefault: all[i].id == id);
+    }
   }
 }
 

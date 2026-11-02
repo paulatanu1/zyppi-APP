@@ -6,6 +6,7 @@ import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/common_widgets/app_skeleton.dart';
 import 'package:zippy/core/common_widgets/item_card.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
+import 'package:zippy/core/domain/product_filter.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
@@ -24,6 +25,8 @@ class CategoryDetailsScreen extends ConsumerWidget {
     final state = ref.watch(categoryDetailsProvider(categoryId));
     final notifier = ref.read(categoryDetailsProvider(categoryId).notifier);
     final cart = ref.watch(cartProvider);
+    final filter = ref.watch(productFilterProvider(categoryId));
+    final products = filter.apply(state.products);
 
     return Scaffold(
       body: SafeArea(
@@ -33,8 +36,11 @@ class CategoryDetailsScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CategoryDetailsHeader(
+                categoryId: categoryId,
                 title: state.category?.name ?? '',
-                itemCount: state.products.length,
+                itemCount: products.length,
+                loading: state.loading,
+                activeFilters: filter.activeCount,
               ),
               const SizedBox(height: AppSpacing.base),
               if (state.error != null)
@@ -59,14 +65,44 @@ class CategoryDetailsScreen extends ConsumerWidget {
                     ),
                   ),
                 )
-              else if (!state.loading && state.products.isEmpty)
+              else if (!state.loading && state.category == null)
                 Expanded(
                   child: Center(
                     child: Text(
-                      'noProductsFound'.tr(),
+                      'categoryNotFound'.tr(),
                       style: AppTypography.bodyMedium.copyWith(
                         color: context.colors.muted,
                       ),
+                    ),
+                  ),
+                )
+              else if (!state.loading && products.isEmpty)
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          filter.isActive
+                              ? 'noProductsMatchFilter'.tr()
+                              : 'noProductsFound'.tr(),
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: context.colors.muted,
+                          ),
+                        ),
+                        if (filter.isActive)
+                          TextButton(
+                            onPressed: () =>
+                                ref
+                                        .read(
+                                          productFilterProvider(categoryId)
+                                              .notifier,
+                                        )
+                                        .state =
+                                    ProductFilter.none,
+                            child: Text('clearFilters'.tr()),
+                          ),
+                      ],
                     ),
                   ),
                 )
@@ -83,13 +119,15 @@ class CategoryDetailsScreen extends ConsumerWidget {
                             mainAxisSpacing: AppSpacing.base,
                             childAspectRatio: 0.72,
                           ),
-                      itemCount: state.loading ? 6 : state.products.length,
+                      itemCount: state.loading ? 6 : products.length,
                       itemBuilder: (context, index) {
                         if (state.loading) {
-                          return const ItemCard(productName: 'Product');
+                          return ItemCard(
+                            productName: 'productNamePlaceholder'.tr(),
+                          );
                         }
 
-                        final product = state.products[index];
+                        final product = products[index];
                         final variant = product.variants.isNotEmpty
                             ? product.variants.first
                             : null;
@@ -118,16 +156,16 @@ class CategoryDetailsScreen extends ConsumerWidget {
                               : () => ref
                                     .read(cartProvider.notifier)
                                     .addItem(
-                                      productId: product.id,
-                                      variantId: variant.id,
+                                      product: product,
+                                      variant: variant,
                                     ),
                           onIncrement: variant == null
                               ? null
                               : () => ref
                                     .read(cartProvider.notifier)
                                     .setQuantity(
-                                      productId: product.id,
-                                      variantId: variant.id,
+                                      product: product,
+                                      variant: variant,
                                       quantity: cartQuantity + 1,
                                     ),
                           onDecrement: variant == null
@@ -135,8 +173,8 @@ class CategoryDetailsScreen extends ConsumerWidget {
                               : () => ref
                                     .read(cartProvider.notifier)
                                     .setQuantity(
-                                      productId: product.id,
-                                      variantId: variant.id,
+                                      product: product,
+                                      variant: variant,
                                       quantity: cartQuantity - 1,
                                     ),
                         );
