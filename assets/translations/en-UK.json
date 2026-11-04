@@ -320,5 +320,9 @@
   "zyppiExpress": "ZYPPI EXPRESS",
   "etaHeadline": "12 minutes",
   "offersChip": "Offers",
-  "deliveredInEta": "delivered in 12 min"
+  "deliveredInEta": "delivered in 12 min",
+  "mrpPrice": "MRP {}",
+  "inclusiveOfTaxes": "Inclusive of all taxes",
+  "packSize": "Pack size",
+  "variantInclTaxes": "{} · inclusive of taxes"
 }

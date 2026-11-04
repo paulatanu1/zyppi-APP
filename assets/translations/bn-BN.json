@@ -328,5 +328,9 @@
   "zyppiExpress": "জিপি এক্সপ্রেস",
   "etaHeadline": "১২ মিনিট",
   "offersChip": "অফার",
-  "deliveredInEta": "১২ মিনিটে ডেলিভারি"
+  "deliveredInEta": "১২ মিনিটে ডেলিভারি",
+  "mrpPrice": "MRP {}",
+  "inclusiveOfTaxes": "সব কর সহ",
+  "packSize": "প্যাকের আকার",
+  "variantInclTaxes": "{} · কর সহ"
 }

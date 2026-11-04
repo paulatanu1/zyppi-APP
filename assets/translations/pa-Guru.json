@@ -328,5 +328,9 @@
   "zyppiExpress": "ਜ਼ਿੱਪੀ ਐਕਸਪ੍ਰੈਸ",
   "etaHeadline": "12 ਮਿੰਟ",
   "offersChip": "ਆਫ਼ਰ",
-  "deliveredInEta": "12 ਮਿੰਟਾਂ ਵਿੱਚ ਡਿਲਿਵਰੀ"
+  "deliveredInEta": "12 ਮਿੰਟਾਂ ਵਿੱਚ ਡਿਲਿਵਰੀ",
+  "mrpPrice": "MRP {}",
+  "inclusiveOfTaxes": "ਸਾਰੇ ਟੈਕਸਾਂ ਸਮੇਤ",
+  "packSize": "ਪੈਕ ਦਾ ਆਕਾਰ",
+  "variantInclTaxes": "{} · ਟੈਕਸਾਂ ਸਮੇਤ"
 }
