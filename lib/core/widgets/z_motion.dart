@@ -202,7 +202,18 @@ class _ZSkeletonState extends State<ZSkeleton>
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1200),
-  )..repeat();
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Static block when the user has turned animations off.
+    if (_reduceMotion(context)) {
+      _c.stop();
+    } else if (!_c.isAnimating) {
+      _c.repeat();
+    }
+  }
 
   @override
   void dispose() {

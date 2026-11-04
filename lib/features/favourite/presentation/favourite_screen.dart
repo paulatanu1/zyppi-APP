@@ -7,9 +7,9 @@ import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
-import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/favourite/application/favourite_products_provider.dart';
-import 'package:zippy/features/favourite/widgets/favourite_item.dart';
+import 'package:zippy/core/cart/presentation/catalog_product_card.dart';
+import 'package:zippy/core/widgets/z_product_card.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
 
 class FavouriteScreen extends ConsumerWidget {
@@ -33,15 +33,9 @@ class FavouriteScreen extends ConsumerWidget {
                 // Removing a heart refreshes the list; keep it on screen.
                 skipLoadingOnRefresh: true,
                 skipLoadingOnReload: true,
-                loading: () => ListView(
-                  padding: const EdgeInsets.all(AppSpacing.xxl),
-                  children: [
-                    for (var i = 0; i < 4; i++)
-                      const Padding(
-                        padding: EdgeInsets.only(bottom: AppSpacing.lg),
-                        child: ZSkeleton(height: 56, radius: ZRadius.control),
-                      ),
-                  ],
+                loading: () => _ProductGrid(
+                  itemCount: 4,
+                  itemBuilder: (context, index) => const ZProductCardSkeleton(),
                 ),
                 error: (error, stackTrace) => Center(
                   child: Column(
@@ -66,11 +60,11 @@ class FavouriteScreen extends ConsumerWidget {
                           style: AppTypography.bodyMedium,
                         ),
                       )
-                    : ListView.builder(
-                        physics: const BouncingScrollPhysics(),
+                    // Tapping a card's heart removes it from this list.
+                    : _ProductGrid(
                         itemCount: products.length,
                         itemBuilder: (context, index) =>
-                            FavouriteItem(product: products[index]),
+                            CatalogProductCard(product: products[index]),
                       ),
               ),
             ),
@@ -110,4 +104,26 @@ class FavouriteScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Two-column grid of product cards, as on the Category screen.
+class _ProductGrid extends StatelessWidget {
+  const _ProductGrid({required this.itemCount, required this.itemBuilder});
+
+  final int itemCount;
+  final IndexedWidgetBuilder itemBuilder;
+
+  @override
+  Widget build(BuildContext context) => GridView.builder(
+    physics: const BouncingScrollPhysics(),
+    padding: const EdgeInsets.all(ZSpace.screen),
+    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: 2,
+      crossAxisSpacing: ZSpace.x3,
+      mainAxisSpacing: ZSpace.x3,
+      mainAxisExtent: ZProductCard.height(context),
+    ),
+    itemCount: itemCount,
+    itemBuilder: itemBuilder,
+  );
 }

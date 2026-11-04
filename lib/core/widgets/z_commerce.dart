@@ -54,12 +54,21 @@ class ZEtaBadge extends StatelessWidget {
   final String? label;
   final Color? background, foreground;
 
+  static const double iconSize = 12, verticalPadding = 3;
+
+  static TextStyle textStyle(BuildContext context) =>
+      Theme.of(context).textTheme.labelSmall!
+          .copyWith(fontSize: 10.5, letterSpacing: 0.4);
+
   @override
   Widget build(BuildContext context) {
     final z = context.z;
     final fg = foreground ?? z.ink2;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 6,
+        vertical: verticalPadding,
+      ),
       decoration: BoxDecoration(
         color: background ?? z.surface2,
         borderRadius: ZRadius.all(6),
@@ -67,12 +76,15 @@ class ZEtaBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.bolt_rounded, size: 12, color: fg),
+          Icon(Icons.bolt_rounded, size: iconSize, color: fg),
           const SizedBox(width: 2),
-          Text(
-            label ?? 'etaBadge'.tr(),
-            style: Theme.of(context).textTheme.labelSmall!
-                .copyWith(color: fg, fontSize: 10.5, letterSpacing: 0.4),
+          Flexible(
+            child: Text(
+              label ?? 'etaBadge'.tr(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: textStyle(context).copyWith(color: fg),
+            ),
           ),
         ],
       ),

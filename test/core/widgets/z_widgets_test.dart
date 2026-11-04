@@ -104,9 +104,73 @@ void main() {
       expect(taps, 1);
     });
 
-    testWidgets('lays out without overflow at 1.5× text', (tester) async {
-      await tester.pumpWidget(_wrap(_card(mrp: 19900), textScale: 1.5));
-      expect(tester.takeException(), isNull);
+    for (final scale in [1.0, 1.3, 2.0]) {
+      testWidgets('height() matches the rendered card at $scale× text', (
+        tester,
+      ) async {
+        for (final card in [
+          _card(mrp: 19900, onFavourite: () {}),
+          _card(),
+          const ZProductCard(
+            name: 'Unavailable',
+            weight: '',
+            image: SizedBox(),
+            price: null,
+          ),
+        ]) {
+          late double expected;
+          await tester.pumpWidget(
+            _wrap(
+              Builder(
+                builder: (context) {
+                  expected = ZProductCard.height(context);
+                  return card;
+                },
+              ),
+              textScale: scale,
+              width: 173,
+            ),
+          );
+          expect(tester.takeException(), isNull);
+          expect(
+            tester.getSize(find.byType(ZProductCard)).height,
+            moreOrLessEquals(expected, epsilon: 0.5),
+          );
+        }
+      });
+    }
+
+    testWidgets('no price: shows unavailable and no ADD', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          const ZProductCard(
+            name: 'Atta',
+            weight: '5 kg',
+            image: SizedBox(),
+            price: null,
+          ),
+        ),
+      );
+      expect(find.text('productUnavailable'), findsOneWidget);
+      expect(find.text('add'), findsNothing);
+    });
+
+    testWidgets('skeleton matches the card height', (tester) async {
+      late double expected;
+      await tester.pumpWidget(
+        _wrap(
+          Builder(
+            builder: (context) {
+              expected = ZProductCard.height(context);
+              return const ZProductCardSkeleton();
+            },
+          ),
+        ),
+      );
+      expect(
+        tester.getSize(find.byType(ZProductCardSkeleton)).height,
+        expected,
+      );
     });
   });
 
