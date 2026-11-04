@@ -5,11 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/data/provider/profile_provider.dart';
 import 'package:zippy/core/data/profile_repository_impl.dart';
 import 'package:zippy/core/domain/profile.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
 import 'package:zippy/features/edit_profile/widgets/text_input_field_container.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -130,7 +129,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     profileAsync.whenData(_prefillIfNeeded);
 
     return Scaffold(
-      backgroundColor: context.colors.background,
+      backgroundColor: context.z.bg,
       appBar: AppBar(title: Text('editProfile'.tr())),
       body: SafeArea(
         child: profileAsync.isLoading && _loadedProfile == null
@@ -155,7 +154,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 children: [
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(AppSpacing.xxl),
+                      padding: const EdgeInsets.all(ZSpace.x4),
                       child: Column(
                         children: [
                           TextInputFieldContainer(
@@ -168,7 +167,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               }
                             },
                           ),
-                          const SizedBox(height: AppSpacing.base),
+                          const SizedBox(height: ZSpace.x3),
                           TextInputFieldContainer(
                             controller: emailController,
                             inputFieldName: 'emailAddress'.tr(),
@@ -180,19 +179,19 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               }
                             },
                           ),
-                          const SizedBox(height: AppSpacing.base),
+                          const SizedBox(height: ZSpace.x3),
                           TextInputFieldContainer(
                             controller: phController,
                             inputFieldName: 'phoneNumber'.tr(),
                             enabled: false,
                           ),
-                          const SizedBox(height: AppSpacing.base),
+                          const SizedBox(height: ZSpace.x3),
                           TextInputFieldContainer(
                             controller: dobController,
                             inputFieldName: 'dateOfBirth'.tr(),
                             onTap: _pickDob,
                           ),
-                          const SizedBox(height: AppSpacing.base),
+                          const SizedBox(height: ZSpace.x3),
                           DropdownButtonFormField<String>(
                             initialValue: _gender,
                             decoration: InputDecoration(
@@ -214,10 +213,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.xxl,
+                      ZSpace.x4,
                       0,
-                      AppSpacing.xxl,
-                      AppSpacing.xxl,
+                      ZSpace.x4,
+                      ZSpace.x4,
                     ),
                     child: FilledButton(
                       onPressed: _saving || _loadedProfile == null
@@ -234,14 +233,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     ),
                   ),
                   Image.asset('assets/images/prof_logo.png', height: 32),
-                  const SizedBox(height: AppSpacing.sm),
+                  const SizedBox(height: ZSpace.x2),
                   Text(
                     'appVersion'.tr(args: [Constants.appVersion]),
                     style: AppTypography.bodySmall.copyWith(
-                      color: context.colors.muted,
+                      color: context.z.ink2,
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.base),
+                  const SizedBox(height: ZSpace.x3),
                 ],
               ),
       ),

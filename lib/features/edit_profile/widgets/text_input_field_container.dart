@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 
 class TextInputFieldContainer extends StatelessWidget {
   final String inputFieldName;
@@ -34,12 +33,10 @@ class TextInputFieldContainer extends StatelessWidget {
       children: [
         Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.input),
-            color: enabled ? context.colors.surface : context.colors.surfaceAlt,
+            borderRadius: BorderRadius.circular(ZRadius.input),
+            color: enabled ? context.z.surface : context.z.surface2,
             border: Border.all(
-              color: errorText != null
-                  ? context.colors.danger
-                  : context.colors.line,
+              color: errorText != null ? context.z.danger : context.z.line,
             ),
           ),
           child: TextField(
@@ -49,22 +46,22 @@ class TextInputFieldContainer extends StatelessWidget {
             onTap: onTap,
             keyboardType: keyboardType,
             onChanged: onChanged,
-            style: AppTypography.bodyLarge.copyWith(color: context.colors.ink),
+            style: AppTypography.bodyLarge.copyWith(color: context.z.ink),
             decoration: InputDecoration(
               contentPadding: const EdgeInsets.symmetric(
-                vertical: AppSpacing.lg,
-                horizontal: AppSpacing.base,
+                vertical: ZSpace.x3,
+                horizontal: ZSpace.x3,
               ),
               suffixIcon: enabled
                   ? IconButton(
-                      icon: Icon(Icons.clear, color: context.colors.muted),
+                      icon: Icon(Icons.clear, color: context.z.ink2),
                       onPressed: controller.clear,
                     )
                   : null,
               // A label, not a hint: it stays visible once the field has text.
               labelText: inputFieldName,
               labelStyle: AppTypography.bodyLarge.copyWith(
-                color: context.colors.muted,
+                color: context.z.ink2,
               ),
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
@@ -77,15 +74,10 @@ class TextInputFieldContainer extends StatelessWidget {
         ),
         if (errorText != null)
           Padding(
-            padding: const EdgeInsets.only(
-              left: AppSpacing.base,
-              top: AppSpacing.xs,
-            ),
+            padding: const EdgeInsets.only(left: ZSpace.x3, top: ZSpace.x1),
             child: Text(
               errorText!,
-              style: AppTypography.bodySmall.copyWith(
-                color: context.colors.danger,
-              ),
+              style: AppTypography.bodySmall.copyWith(color: context.z.danger),
             ),
           ),
       ],

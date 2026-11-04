@@ -4,7 +4,6 @@ import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
 import 'package:zippy/features/favourite/application/favourite_products_provider.dart';
@@ -24,7 +23,7 @@ class FavouriteScreen extends ConsumerWidget {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(AppSpacing.xxl),
+              padding: const EdgeInsets.all(ZSpace.x4),
               child: Text('favourite'.tr(), style: AppTypography.headlineSmall),
             ),
             Divider(height: 1, color: context.colors.divider),
@@ -72,7 +71,7 @@ class FavouriteScreen extends ConsumerWidget {
               data: (products) => products.isEmpty
                   ? const SizedBox.shrink()
                   : Padding(
-                      padding: const EdgeInsets.all(AppSpacing.xxl),
+                      padding: const EdgeInsets.all(ZSpace.x4),
                       child: PrimaryButton(
                         buttonTitle: 'addAllToCart'.tr(),
                         action: () {

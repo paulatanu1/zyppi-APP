@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zippy/core/theme/app_typography.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 
 /// Formats money (always `int` paise, per CLAUDE.md) as ₹ with an
 /// optional struck-through MRP, e.g. "₹120  ₹150".
@@ -43,7 +43,7 @@ class PriceTag extends StatelessWidget {
             style:
                 priceStyle ??
                 AppTypography.bodyMedium.copyWith(
-                  color: context.colors.ink,
+                  color: context.z.ink,
                   fontWeight: FontWeight.w700,
                 ),
           ),
@@ -55,7 +55,7 @@ class PriceTag extends StatelessWidget {
               style:
                   mrpStyle ??
                   AppTypography.bodySmall.copyWith(
-                    color: context.colors.muted,
+                    color: context.z.ink2,
                     decoration: TextDecoration.lineThrough,
                   ),
             ),

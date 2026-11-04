@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 
 /// Loading skeleton for async screens (CLAUDE.md: every async screen has
 /// loading/empty/error/data states). Wrap the screen's real layout with
@@ -17,7 +18,7 @@ class AppSkeleton extends StatelessWidget {
       enabled: enabled,
       effect: ShimmerEffect(
         baseColor: context.colors.divider,
-        highlightColor: context.colors.surface,
+        highlightColor: context.z.surface,
       ),
       child: child,
     );

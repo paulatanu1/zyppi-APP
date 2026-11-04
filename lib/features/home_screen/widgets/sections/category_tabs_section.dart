@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/domain/home_section.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/home_screen/widgets/sections/section_icons.dart';
 import 'package:zippy/features/home_screen/widgets/sections/section_data.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 
 /// Blinkit-referenced horizontal icon+label tabs strip, directly under
 /// search. Admin-configured via `home_sections.type == 'category_tabs'`;
@@ -15,7 +14,7 @@ class CategoryTabsSection extends StatelessWidget {
   static const _stripHeight = 64.0;
 
   /// The strip's full height, padding included.
-  static const height = _stripHeight + 2 * AppSpacing.base;
+  static const height = _stripHeight + 2 * ZSpace.x3;
 
   final HomeSection section;
 
@@ -24,16 +23,16 @@ class CategoryTabsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: context.colors.surface,
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.base),
+      color: context.z.surface,
+      padding: const EdgeInsets.symmetric(vertical: ZSpace.x3),
       child: SizedBox(
         height: _stripHeight,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+          padding: const EdgeInsets.symmetric(horizontal: ZSpace.x4),
           itemCount: section.items.length,
           separatorBuilder: (context, index) =>
-              const SizedBox(width: AppSpacing.xl),
+              const SizedBox(width: ZSpace.x4),
           itemBuilder: (context, index) {
             final item = section.items[index];
             final label = item.data.string('label') ?? '';
@@ -51,16 +50,14 @@ class CategoryTabsSection extends StatelessWidget {
                   Icon(
                     resolveSectionIcon(item.data.string('icon')),
                     size: 22,
-                    color: context.colors.ink,
+                    color: context.z.ink,
                   ),
-                  const SizedBox(height: AppSpacing.xs),
+                  const SizedBox(height: ZSpace.x1),
                   Text(
                     label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTypography.caption.copyWith(
-                      color: context.colors.ink,
-                    ),
+                    style: AppTypography.caption.copyWith(color: context.z.ink),
                   ),
                 ],
               ),

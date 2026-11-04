@@ -2,12 +2,10 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/your_order/application/orders_provider.dart';
 import 'package:zippy/features/your_order/widgets/your_order_widget.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// docs/mockups/Orders.dc.html.
 class YourOrderScreen extends ConsumerWidget {
@@ -18,7 +16,7 @@ class YourOrderScreen extends ConsumerWidget {
     final ordersAsync = ref.watch(ordersProvider);
 
     return Scaffold(
-      backgroundColor: context.colors.backgroundAlt,
+      backgroundColor: context.z.surface2,
       appBar: AppBar(title: Text('yourOrder'.tr())),
       body: SafeArea(
         top: false,
@@ -29,11 +27,11 @@ class YourOrderScreen extends ConsumerWidget {
               child: ordersAsync.when(
                 skipLoadingOnRefresh: true,
                 loading: () => ListView(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  padding: const EdgeInsets.all(ZSpace.x3),
                   children: [
                     for (var i = 0; i < 3; i++)
                       const Padding(
-                        padding: EdgeInsets.only(bottom: AppSpacing.base),
+                        padding: EdgeInsets.only(bottom: ZSpace.x3),
                         child: ZSkeleton(height: 132, radius: ZRadius.card),
                       ),
                   ],
@@ -65,7 +63,7 @@ class YourOrderScreen extends ConsumerWidget {
                         child: ListView.builder(
                           physics: const AlwaysScrollableScrollPhysics(),
                           padding: const EdgeInsets.symmetric(
-                            vertical: AppSpacing.base,
+                            vertical: ZSpace.x3,
                           ),
                           itemCount: orders.length,
                           itemBuilder: (context, index) =>

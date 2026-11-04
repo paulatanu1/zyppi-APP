@@ -4,11 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/domain/home_section.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/utils/launch.dart';
 import 'package:zippy/features/home_screen/widgets/sections/section_data.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 
 /// Blinkit-referenced swipeable promo banner strip — replaces the old
 /// single static PromoBanner. `config.autoplay` toggles auto-advance.
@@ -56,7 +56,7 @@ class _BannerCarouselSectionState extends State<BannerCarouselSection> {
             // The carousel hands each slide loose constraints; without an
             // explicit width the card shrinks to its content.
             return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+              padding: const EdgeInsets.symmetric(horizontal: ZSpace.x4),
               child: InkWell(
                 onTap: switch ((linkType, linkTarget)) {
                   ('category', final String id) => () => context.push(
@@ -75,7 +75,7 @@ class _BannerCarouselSectionState extends State<BannerCarouselSection> {
                   width: double.infinity,
                   height: double.infinity,
                   decoration: BoxDecoration(
-                    color: context.colors.accent,
+                    color: context.z.deal,
                     borderRadius: BorderRadius.circular(AppRadius.banner),
                   ),
                   // Image owns the right ~42%, text the rest, so they never
@@ -103,10 +103,10 @@ class _BannerCarouselSectionState extends State<BannerCarouselSection> {
                           ),
                           Padding(
                             padding: EdgeInsets.fromLTRB(
-                              AppSpacing.xxl,
-                              AppSpacing.xxl,
+                              ZSpace.x4,
+                              ZSpace.x4,
                               imageWidth,
-                              AppSpacing.xxl,
+                              ZSpace.x4,
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -119,17 +119,17 @@ class _BannerCarouselSectionState extends State<BannerCarouselSection> {
                                   // Accent yellow in both themes, so use its
                                   // fixed dark ink rather than the theme ink.
                                   style: AppTypography.titleL.copyWith(
-                                    color: context.colors.accentInk,
+                                    color: context.z.dealInk,
                                   ),
                                 ),
                                 if (ctaText != null) ...[
-                                  const SizedBox(height: AppSpacing.xs),
+                                  const SizedBox(height: ZSpace.x1),
                                   Text(
                                     ctaText,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: AppTypography.label.copyWith(
-                                      color: context.colors.accentInk,
+                                      color: context.z.dealInk,
                                       fontWeight: FontWeight.w800,
                                     ),
                                   ),
@@ -147,15 +147,15 @@ class _BannerCarouselSectionState extends State<BannerCarouselSection> {
           }).toList(),
         ),
         if (items.length > 1) ...[
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: ZSpace.x2),
           AnimatedSmoothIndicator(
             activeIndex: _page,
             count: items.length,
             effect: ExpandingDotsEffect(
               dotHeight: 6,
               dotWidth: 6,
-              activeDotColor: context.colors.primary,
-              dotColor: context.colors.lineAlt,
+              activeDotColor: context.z.brand,
+              dotColor: context.z.line2,
             ),
           ),
         ],

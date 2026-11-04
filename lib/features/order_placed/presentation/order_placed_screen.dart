@@ -7,7 +7,6 @@ import 'package:zippy/core/common_widgets/price_tag.dart';
 import 'package:zippy/core/payments/presentation/payment_options.dart';
 import 'package:zippy/core/utils/address_label.dart';
 import 'package:zippy/core/utils/order_id.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/order/application/order_by_id_provider.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
@@ -24,12 +23,12 @@ class OrderPlacedScreen extends ConsumerWidget {
     final order = orderAsync.value;
 
     return Scaffold(
-      backgroundColor: context.colors.primary,
+      backgroundColor: context.z.brand,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.huge,
-            vertical: AppSpacing.giant,
+            horizontal: ZSpace.x6,
+            vertical: ZSpace.x8,
           ),
           child: Column(
             children: [
@@ -41,7 +40,7 @@ class OrderPlacedScreen extends ConsumerWidget {
                       width: 132,
                       height: 132,
                       decoration: BoxDecoration(
-                        color: context.colors.primaryDark,
+                        color: context.z.brandPress,
                         shape: BoxShape.circle,
                       ),
                       child: Center(
@@ -49,39 +48,39 @@ class OrderPlacedScreen extends ConsumerWidget {
                           width: 92,
                           height: 92,
                           decoration: BoxDecoration(
-                            color: context.colors.accent,
+                            color: context.z.deal,
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             Icons.check,
-                            color: context.colors.primaryDark,
+                            color: context.z.brandPress,
                             size: 50,
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.huge),
+                    const SizedBox(height: ZSpace.x6),
                     Text(
                       'orderPlaced'.tr(),
                       style: AppTypography.headlineMedium.copyWith(
                         color: context.z.onBrand,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: ZSpace.x3),
                     Text(
                       'orderPlacedDescription'.tr(),
                       textAlign: TextAlign.center,
                       style: AppTypography.bodyLarge.copyWith(
-                        color: context.colors.onPrimaryMuted,
+                        color: context.z.headerInk2,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.xxl),
+                    const SizedBox(height: ZSpace.x4),
                     if (orderAsync.isLoading && order == null)
                       SizedBox.square(
                         dimension: 24,
                         child: CircularProgressIndicator(
                           strokeWidth: 2.5,
-                          color: context.colors.onPrimaryMuted,
+                          color: context.z.headerInk2,
                         ),
                       )
                     else if (order == null)
@@ -125,13 +124,13 @@ class OrderPlacedScreen extends ConsumerWidget {
                 children: [
                   SizedBox(
                     width: double.infinity,
-                    height: AppSizes.button,
+                    height: ZSize.button,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: context.colors.accent,
-                        foregroundColor: context.colors.ink,
+                        backgroundColor: context.z.deal,
+                        foregroundColor: context.z.ink,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppRadius.input),
+                          borderRadius: BorderRadius.circular(ZRadius.input),
                         ),
                       ),
                       onPressed: () =>
@@ -139,7 +138,7 @@ class OrderPlacedScreen extends ConsumerWidget {
                       child: Text(
                         'trackOrder'.tr(),
                         style: AppTypography.labelLarge.copyWith(
-                          color: context.colors.ink,
+                          color: context.z.ink,
                         ),
                       ),
                     ),
@@ -177,7 +176,7 @@ class _KeyValueRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.base),
+      padding: const EdgeInsets.symmetric(vertical: ZSpace.x3),
       decoration: BoxDecoration(
         border: showDivider
             ? Border(bottom: BorderSide(color: context.colors.dividerOnPrimary))
@@ -189,7 +188,7 @@ class _KeyValueRow extends StatelessWidget {
           Text(
             label,
             style: AppTypography.bodyMedium.copyWith(
-              color: context.colors.onPrimaryMuted,
+              color: context.z.headerInk2,
             ),
           ),
           Text(

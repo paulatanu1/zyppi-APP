@@ -1,10 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:zippy/core/domain/address.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/utils/address_label.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 
 /// docs/mockups/Location.dc.html's `.saved` row.
 class SavedAddressRow extends StatelessWidget {
@@ -18,24 +17,24 @@ class SavedAddressRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(vertical: ZSpace.x2),
       child: Row(
         children: [
           Container(
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: context.colors.primaryTint,
-              borderRadius: BorderRadius.circular(AppRadius.input),
+              color: context.z.brandSoft,
+              borderRadius: BorderRadius.circular(ZRadius.input),
             ),
             child: Icon(
               address.label.toLowerCase() == 'work'
                   ? Icons.work_outline
                   : Icons.home_outlined,
-              color: context.colors.primary,
+              color: context.z.brand,
             ),
           ),
-          const SizedBox(width: AppSpacing.lg),
+          const SizedBox(width: ZSpace.x3),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,20 +48,20 @@ class SavedAddressRow extends StatelessWidget {
                       ),
                     ),
                     if (address.isDefault) ...[
-                      const SizedBox(width: AppSpacing.sm),
+                      const SizedBox(width: ZSpace.x2),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.sm,
+                          horizontal: ZSpace.x2,
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: context.colors.primaryTint,
-                          borderRadius: BorderRadius.circular(AppRadius.input),
+                          color: context.z.brandSoft,
+                          borderRadius: BorderRadius.circular(ZRadius.input),
                         ),
                         child: Text(
                           'defaultAddress'.tr(),
                           style: AppTypography.bodySmall.copyWith(
-                            color: context.colors.primary,
+                            color: context.z.brand,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -76,7 +75,7 @@ class SavedAddressRow extends StatelessWidget {
                     address.area,
                   ].where((s) => s.isNotEmpty).join(', '),
                   style: AppTypography.bodySmall.copyWith(
-                    color: context.colors.muted,
+                    color: context.z.ink2,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,

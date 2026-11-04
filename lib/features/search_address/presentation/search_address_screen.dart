@@ -5,13 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:zippy/core/domain/address.dart';
 import 'package:zippy/core/shared_providers/location/application/get_current_location_state.dart';
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/utils/address_label.dart';
 import 'package:zippy/core/data/provider/addresses_provider.dart';
 import 'package:zippy/features/search_address/application/place_prediction_provider.dart';
 import 'package:zippy/features/search_address/domain/place_prediction.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 
 /// docs/mockups/Location.dc.html, minus the embedded Google Maps pin-picker:
 /// delivery here only ever needs a GPS `lat`/`lng` (the rider navigates with
@@ -89,23 +89,23 @@ class _SearchAddressScreenState extends ConsumerState<SearchAddressScreen> {
         if (didPop) _restoreHomeLocation();
       },
       child: Scaffold(
-        backgroundColor: context.colors.background,
+        backgroundColor: context.z.bg,
         body: SafeArea(
           child: Column(
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.xxl,
-                  vertical: AppSpacing.lg,
+                  horizontal: ZSpace.x4,
+                  vertical: ZSpace.x3,
                 ),
                 child: Row(
                   children: [
                     IconButton(
                       onPressed: () => context.pop(),
-                      icon: Icon(Icons.arrow_back, color: context.colors.muted),
+                      icon: Icon(Icons.arrow_back, color: context.z.ink2),
                       tooltip: 'back'.tr(),
                     ),
-                    const SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: ZSpace.x2),
                     Expanded(
                       child: _SearchBar(
                         controller: _searchController,
@@ -122,9 +122,7 @@ class _SearchAddressScreenState extends ConsumerState<SearchAddressScreen> {
               ),
               if (predictions.isNotEmpty && _searchController.text.isNotEmpty)
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xxl,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: ZSpace.x4),
                   child: _PredictionsList(
                     predictions: predictions,
                     onSelected: (prediction) async {
@@ -141,7 +139,7 @@ class _SearchAddressScreenState extends ConsumerState<SearchAddressScreen> {
                 ),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppSpacing.xxl),
+                  padding: const EdgeInsets.all(ZSpace.x4),
                   child: _ConfirmSheet(
                     addLocation: widget.addLocation,
                     label: _label,
@@ -199,11 +197,11 @@ class _SearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: AppSizes.inputMin,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
+      height: ZSize.input,
+      padding: const EdgeInsets.symmetric(horizontal: ZSpace.x3),
       decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.input),
+        color: context.z.surface,
+        borderRadius: BorderRadius.circular(ZRadius.input),
         boxShadow: [
           BoxShadow(
             color: context.colors.shadow,
@@ -223,9 +221,7 @@ class _SearchBar extends StatelessWidget {
           errorBorder: InputBorder.none,
           focusedErrorBorder: InputBorder.none,
           hintText: 'searchAreaPlaceholder'.tr(),
-          hintStyle: AppTypography.bodyMedium.copyWith(
-            color: context.colors.muted,
-          ),
+          hintStyle: AppTypography.bodyMedium.copyWith(color: context.z.ink2),
         ),
         style: AppTypography.bodyMedium,
       ),
@@ -242,10 +238,10 @@ class _PredictionsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(top: AppSpacing.sm),
+      margin: const EdgeInsets.only(top: ZSpace.x2),
       decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
+        color: context.z.surface,
+        borderRadius: BorderRadius.circular(ZRadius.card),
         boxShadow: [
           BoxShadow(
             color: context.colors.shadow,
@@ -258,7 +254,7 @@ class _PredictionsList extends StatelessWidget {
         type: MaterialType.transparency,
         child: ListView.separated(
           shrinkWrap: true,
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+          padding: const EdgeInsets.symmetric(vertical: ZSpace.x2),
           itemCount: predictions.length,
           separatorBuilder: (context, index) =>
               Divider(height: 1, color: context.colors.divider),
@@ -266,7 +262,7 @@ class _PredictionsList extends StatelessWidget {
             final prediction = predictions[index];
 
             return ListTile(
-              leading: Icon(Icons.location_pin, color: context.colors.primary),
+              leading: Icon(Icons.location_pin, color: context.z.brand),
               title: Text(
                 prediction.description ?? '',
                 style: AppTypography.bodyMedium,
@@ -310,10 +306,10 @@ class _ConfirmSheet extends ConsumerWidget {
     final savedAddresses = ref.watch(addressesProvider);
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.xxl),
+      padding: const EdgeInsets.all(ZSpace.x4),
       decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
+        color: context.z.surface,
+        borderRadius: BorderRadius.circular(ZRadius.card),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,21 +323,21 @@ class _ConfirmSheet extends ConsumerWidget {
                 ),
               ),
               Material(
-                color: context.colors.primaryTint,
+                color: context.z.brandSoft,
                 shape: const CircleBorder(),
                 child: IconButton(
                   onPressed: onUseCurrentLocation,
-                  icon: Icon(Icons.my_location, color: context.colors.primary),
+                  icon: Icon(Icons.my_location, color: context.z.brand),
                   tooltip: 'useCurrentLocation'.tr(),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: ZSpace.x3),
           if (location.isDetecting || location.checkingServiceability)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-              child: LinearProgressIndicator(color: context.colors.primary),
+              padding: const EdgeInsets.symmetric(vertical: ZSpace.x2),
+              child: LinearProgressIndicator(color: context.z.brand),
             )
           else if (location.serviceabilityError)
             _ServiceabilityError(
@@ -354,20 +350,20 @@ class _ConfirmSheet extends ConsumerWidget {
             const _PickLocationHint()
           else
             _ServiceabilityBanner(serviceable: location.serviceArea != null),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: ZSpace.x3),
           TextField(
             controller: line1Controller,
             decoration: InputDecoration(labelText: 'addressLine'.tr()),
           ),
-          const SizedBox(height: AppSpacing.base),
+          const SizedBox(height: ZSpace.x3),
           TextField(
             controller: landmarkController,
             decoration: InputDecoration(labelText: 'landmarkOptional'.tr()),
           ),
           if (addLocation) ...[
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: ZSpace.x3),
             Wrap(
-              spacing: AppSpacing.base,
+              spacing: ZSpace.x3,
               children: addressLabels
                   .map(
                     (value) => ChoiceChip(
@@ -379,7 +375,7 @@ class _ConfirmSheet extends ConsumerWidget {
                   .toList(),
             ),
           ],
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: ZSpace.x3),
           Builder(
             builder: (context) {
               final canConfirm =
@@ -408,11 +404,11 @@ class _ConfirmSheet extends ConsumerWidget {
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: AppSpacing.lg),
+                        const SizedBox(height: ZSpace.x3),
                         Text(
                           'yourSavedAddress'.tr(),
                           style: AppTypography.labelSmall.copyWith(
-                            color: context.colors.muted,
+                            color: context.z.ink2,
                           ),
                         ),
                         for (final address in addresses)
@@ -420,7 +416,7 @@ class _ConfirmSheet extends ConsumerWidget {
                             onTap: () => onSavedAddressTap(address),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                vertical: AppSpacing.base,
+                                vertical: ZSpace.x3,
                               ),
                               child: Text(
                                 '${addressLabelText(address.label)} · ${address.line1}, ${address.area}',
@@ -448,25 +444,21 @@ class _ServiceabilityBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.base,
+        horizontal: ZSpace.x3,
+        vertical: ZSpace.x3,
       ),
       decoration: BoxDecoration(
-        color: serviceable
-            ? context.colors.primaryTint
-            : context.colors.dangerTint,
-        borderRadius: BorderRadius.circular(AppRadius.input),
+        color: serviceable ? context.z.brandSoft : context.z.dangerSoft,
+        borderRadius: BorderRadius.circular(ZRadius.input),
       ),
       child: Row(
         children: [
           Icon(
             serviceable ? Icons.check_circle : Icons.error_outline,
             size: 16,
-            color: serviceable
-                ? context.colors.primaryDark
-                : context.colors.danger,
+            color: serviceable ? context.z.brandPress : context.z.danger,
           ),
-          const SizedBox(width: AppSpacing.md),
+          const SizedBox(width: ZSpace.x2),
           Expanded(
             child: Text(
               serviceable
@@ -474,9 +466,7 @@ class _ServiceabilityBanner extends StatelessWidget {
                   : 'notServiceableYet'.tr(),
               style: AppTypography.bodySmall.copyWith(
                 fontWeight: FontWeight.w600,
-                color: serviceable
-                    ? context.colors.primaryDark
-                    : context.colors.danger,
+                color: serviceable ? context.z.brandPress : context.z.danger,
               ),
             ),
           ),
@@ -495,23 +485,23 @@ class _ServiceabilityError extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.sm,
+        horizontal: ZSpace.x3,
+        vertical: ZSpace.x2,
       ),
       decoration: BoxDecoration(
-        color: context.colors.dangerTint,
-        borderRadius: BorderRadius.circular(AppRadius.input),
+        color: context.z.dangerSoft,
+        borderRadius: BorderRadius.circular(ZRadius.input),
       ),
       child: Row(
         children: [
-          Icon(Icons.wifi_off_rounded, size: 16, color: context.colors.danger),
-          const SizedBox(width: AppSpacing.md),
+          Icon(Icons.wifi_off_rounded, size: 16, color: context.z.danger),
+          const SizedBox(width: ZSpace.x2),
           Expanded(
             child: Text(
               'serviceabilityCheckFailed'.tr(),
               style: AppTypography.bodySmall.copyWith(
                 fontWeight: FontWeight.w600,
-                color: context.colors.danger,
+                color: context.z.danger,
               ),
             ),
           ),
@@ -529,23 +519,23 @@ class _PickLocationHint extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.base,
+        horizontal: ZSpace.x3,
+        vertical: ZSpace.x3,
       ),
       decoration: BoxDecoration(
-        color: context.colors.surfaceAlt,
-        borderRadius: BorderRadius.circular(AppRadius.input),
+        color: context.z.surface2,
+        borderRadius: BorderRadius.circular(ZRadius.input),
       ),
       child: Row(
         children: [
-          Icon(Icons.my_location, size: 16, color: context.colors.muted),
-          const SizedBox(width: AppSpacing.md),
+          Icon(Icons.my_location, size: 16, color: context.z.ink2),
+          const SizedBox(width: ZSpace.x2),
           Expanded(
             child: Text(
               'pickLocationToCheck'.tr(),
               style: AppTypography.bodySmall.copyWith(
                 fontWeight: FontWeight.w600,
-                color: context.colors.muted,
+                color: context.z.ink2,
               ),
             ),
           ),

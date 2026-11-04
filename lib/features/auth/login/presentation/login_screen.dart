@@ -4,12 +4,11 @@ import 'package:flutter/services.dart';
 import 'package:zippy/core/utils/phone.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/common_widgets/google_sign_in_button.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/auth/google_sign_in/application/google_provider.dart';
 import 'package:zippy/features/auth/guest/application/guest_provider.dart';
 import 'package:zippy/features/auth/otp_verification/application/otp_provider.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 
 /// docs/mockups/Login.dc.html.
 class LoginScreen extends ConsumerStatefulWidget {
@@ -58,15 +57,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Container(
                 width: double.infinity,
                 height: 220,
-                color: context.colors.primaryTint,
+                color: context.z.brandSoft,
                 child: Icon(
                   Icons.shopping_bag_outlined,
                   size: 72,
-                  color: context.colors.primary,
+                  color: context.z.brand,
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(AppSpacing.xxl),
+                padding: const EdgeInsets.all(ZSpace.x4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -74,46 +73,46 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       'logInOrSignUp'.tr(),
                       style: AppTypography.headlineSmall,
                     ),
-                    const SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: ZSpace.x2),
                     Text(
                       'otpSentDescription'.tr(),
                       style: AppTypography.bodyMedium.copyWith(
-                        color: context.colors.muted,
+                        color: context.z.ink2,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.xxl),
+                    const SizedBox(height: ZSpace.x4),
                     Text(
                       'mobileNumber'.tr(),
                       style: AppTypography.bodySmall.copyWith(
-                        color: context.colors.muted,
+                        color: context.z.ink2,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: ZSpace.x2),
                     Container(
-                      height: AppSizes.inputMax,
+                      height: ZSize.input,
                       padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.lg,
+                        horizontal: ZSpace.x3,
                       ),
                       decoration: BoxDecoration(
                         border: Border.all(
                           color: _phoneError != null
-                              ? context.colors.danger
-                              : context.colors.primary,
+                              ? context.z.danger
+                              : context.z.brand,
                           width: 1.5,
                         ),
-                        borderRadius: BorderRadius.circular(AppRadius.input),
+                        borderRadius: BorderRadius.circular(ZRadius.input),
                       ),
                       child: Row(
                         children: [
                           Text('+91', style: AppTypography.bodyLarge),
-                          const SizedBox(width: AppSpacing.base),
+                          const SizedBox(width: ZSpace.x3),
                           Container(
                             width: 1,
                             height: 24,
-                            color: context.colors.line,
+                            color: context.z.line,
                           ),
-                          const SizedBox(width: AppSpacing.base),
+                          const SizedBox(width: ZSpace.x3),
                           Expanded(
                             child: TextField(
                               controller: _phoneController,
@@ -146,15 +145,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                     if (_phoneError != null) ...[
-                      const SizedBox(height: AppSpacing.sm),
+                      const SizedBox(height: ZSpace.x2),
                       Text(
                         _phoneError!,
                         style: AppTypography.bodySmall.copyWith(
-                          color: context.colors.danger,
+                          color: context.z.danger,
                         ),
                       ),
                     ],
-                    const SizedBox(height: AppSpacing.xxl),
+                    const SizedBox(height: ZSpace.x4),
                     FilledButton(
                       onPressed: otpState.loading ? null : _continue,
                       child: otpState.loading
@@ -166,16 +165,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             )
                           : Text('continueLabel'.tr()),
                     ),
-                    const SizedBox(height: AppSpacing.xxl),
+                    const SizedBox(height: ZSpace.x4),
                     Center(
                       child: Text(
                         'continueWith'.tr(),
                         style: AppTypography.bodySmall.copyWith(
-                          color: context.colors.muted,
+                          color: context.z.ink2,
                         ),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: ZSpace.x3),
                     Center(
                       child: googleToken.loading == true
                           ? const CircularProgressIndicator()
@@ -185,7 +184,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   .generateGoogleToken(context),
                             ),
                     ),
-                    const SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: ZSpace.x2),
                     Center(
                       child: guestLoading
                           ? const CircularProgressIndicator()
@@ -195,12 +194,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               child: Text('continueAsGuest'.tr()),
                             ),
                     ),
-                    const SizedBox(height: AppSpacing.xl),
+                    const SizedBox(height: ZSpace.x4),
                     Text(
                       'termsAndPrivacy'.tr(),
                       textAlign: TextAlign.center,
                       style: AppTypography.bodySmall.copyWith(
-                        color: context.colors.muted,
+                        color: context.z.ink2,
                       ),
                     ),
                   ],

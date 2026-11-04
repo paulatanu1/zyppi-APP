@@ -10,38 +10,33 @@ import 'package:zippy/core/domain/order.dart';
 import 'package:zippy/core/domain/order_status.dart';
 import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
 
 (Color, Color, String) _badge(BuildContext context, OrderStatus status) {
   switch (status) {
     case OrderStatus.outForDelivery:
       return (
-        context.colors.outForDeliveryBg,
-        context.colors.outForDeliveryFg,
+        context.z.warnSoft,
+        context.z.warn,
         'orderStatusOutForDelivery'.tr(),
       );
     case OrderStatus.delivered:
-      return (
-        context.colors.deliveredBg,
-        context.colors.deliveredFg,
-        'orderStatusDelivered'.tr(),
-      );
+      return (context.z.okSoft, context.z.ok, 'orderStatusDelivered'.tr());
     case OrderStatus.cancelled:
       return (
-        context.colors.cancelledBg,
-        context.colors.cancelledFg,
+        context.z.dangerSoft,
+        context.z.danger,
         'orderStatusCancelled'.tr(),
       );
     case OrderStatus.placed:
       return (
-        context.colors.primaryTint,
-        context.colors.primaryDark,
+        context.z.brandSoft,
+        context.z.brandPress,
         'orderStatusPlaced'.tr(),
       );
     case OrderStatus.packed:
       return (
-        context.colors.primaryTint,
-        context.colors.primaryDark,
+        context.z.brandSoft,
+        context.z.brandPress,
         'orderStatusPacked'.tr(),
       );
   }
@@ -64,21 +59,21 @@ class YourOrderWidget extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.sm,
+        horizontal: ZSpace.x3,
+        vertical: ZSpace.x2,
       ),
       child: InkWell(
         onTap: () => context.push('/orderDetailsScreen?orderId=${order.id}'),
-        borderRadius: BorderRadius.circular(AppRadius.card),
+        borderRadius: BorderRadius.circular(ZRadius.card),
         child: Container(
           decoration: BoxDecoration(
             border: Border.all(
-              color: isActive ? context.colors.primary : context.colors.line,
+              color: isActive ? context.z.brand : context.z.line,
               width: isActive ? 1.5 : 1,
             ),
-            borderRadius: BorderRadius.circular(AppRadius.card),
+            borderRadius: BorderRadius.circular(ZRadius.card),
           ),
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(ZSpace.x3),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -87,7 +82,7 @@ class YourOrderWidget extends ConsumerWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
+                      horizontal: ZSpace.x2,
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
@@ -104,34 +99,32 @@ class YourOrderWidget extends ConsumerWidget {
                         .add_jm()
                         .format(order.placedAt.toLocal()),
                     style: AppTypography.bodySmall.copyWith(
-                      color: context.colors.muted,
+                      color: context.z.ink2,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.base),
+              const SizedBox(height: ZSpace.x3),
               Row(
                 children: [
                   ...order.items
                       .take(3)
                       .map(
                         (item) => Padding(
-                          padding: const EdgeInsets.only(right: AppSpacing.xs),
+                          padding: const EdgeInsets.only(right: ZSpace.x1),
                           child: Container(
                             width: 32,
                             height: 32,
                             clipBehavior: Clip.antiAlias,
                             decoration: BoxDecoration(
-                              color: context.colors.primaryTint,
-                              borderRadius: BorderRadius.circular(
-                                AppRadius.chip,
-                              ),
+                              color: context.z.brandSoft,
+                              borderRadius: BorderRadius.circular(ZRadius.chip),
                             ),
                             child: item.image == null
                                 ? Icon(
                                     Icons.shopping_basket_outlined,
                                     size: 16,
-                                    color: context.colors.primaryDark,
+                                    color: context.z.brandPress,
                                   )
                                 : CatalogImage(
                                     image: item.image,
@@ -153,26 +146,24 @@ class YourOrderWidget extends ConsumerWidget {
                       Text(
                         'itemCount'.plural(itemCount),
                         style: AppTypography.bodySmall.copyWith(
-                          color: context.colors.muted,
+                          color: context.z.ink2,
                         ),
                       ),
                     ],
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.base),
+              const SizedBox(height: ZSpace.x3),
               if (isActive)
                 InkWell(
                   onTap: () =>
                       context.push('/orderTrackingScreen?orderId=${order.id}'),
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.md,
-                    ),
+                    padding: const EdgeInsets.symmetric(vertical: ZSpace.x2),
                     decoration: BoxDecoration(
-                      color: context.colors.primary,
-                      borderRadius: BorderRadius.circular(AppRadius.chip),
+                      color: context.z.brand,
+                      borderRadius: BorderRadius.circular(ZRadius.chip),
                     ),
                     child: Text(
                       'trackOrder'.tr(),
@@ -190,7 +181,7 @@ class YourOrderWidget extends ConsumerWidget {
                       label: 'reOrder'.tr(),
                       onTap: () => reorder(context, ref, order),
                     ),
-                    const SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: ZSpace.x2),
                     _ActionChip(
                       label: 'orderInfo'.tr(),
                       onTap: () => context.push(
@@ -217,19 +208,19 @@ class _ActionChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadius.chip),
+      borderRadius: BorderRadius.circular(ZRadius.chip),
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.md,
+          horizontal: ZSpace.x3,
+          vertical: ZSpace.x2,
         ),
         decoration: BoxDecoration(
-          border: Border.all(color: context.colors.line),
-          borderRadius: BorderRadius.circular(AppRadius.chip),
+          border: Border.all(color: context.z.line),
+          borderRadius: BorderRadius.circular(ZRadius.chip),
         ),
         child: Text(
           label,
-          style: AppTypography.labelSmall.copyWith(color: context.colors.muted),
+          style: AppTypography.labelSmall.copyWith(color: context.z.ink2),
         ),
       ),
     );

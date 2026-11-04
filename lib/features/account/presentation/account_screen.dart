@@ -8,7 +8,6 @@ import 'package:zippy/core/common_widgets/nav_bar/provider/nav_bar_provider.dart
 import 'package:zippy/core/data/provider/profile_provider.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/theme/theme_mode_provider.dart';
 import 'package:zippy/core/common_widgets/help_sheet.dart';
@@ -34,7 +33,7 @@ class AccountScreen extends ConsumerWidget {
     final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'Z';
 
     return Scaffold(
-      backgroundColor: context.colors.backgroundAlt,
+      backgroundColor: context.z.surface2,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -42,21 +41,21 @@ class AccountScreen extends ConsumerWidget {
             children: [
               Container(
                 width: double.infinity,
-                color: context.colors.surface,
-                padding: const EdgeInsets.all(AppSpacing.xxl),
+                color: context.z.surface,
+                padding: const EdgeInsets.all(ZSpace.x4),
                 child: Row(
                   children: [
                     CircleAvatar(
                       radius: 28,
-                      backgroundColor: context.colors.primary,
+                      backgroundColor: context.z.brand,
                       child: Text(
                         initial,
                         style: AppTypography.headlineSmall.copyWith(
-                          color: context.colors.surface,
+                          color: context.z.surface,
                         ),
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.lg),
+                    const SizedBox(width: ZSpace.x3),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,7 +74,7 @@ class AccountScreen extends ConsumerWidget {
                               child: Text(
                                 'profileLoadFailed'.tr(),
                                 style: AppTypography.bodySmall.copyWith(
-                                  color: context.colors.danger,
+                                  color: context.z.danger,
                                 ),
                               ),
                             )
@@ -83,14 +82,14 @@ class AccountScreen extends ConsumerWidget {
                             Text(
                               'guestHint'.tr(),
                               style: AppTypography.bodySmall.copyWith(
-                                color: context.colors.muted,
+                                color: context.z.ink2,
                               ),
                             )
                           else if (phone.isNotEmpty)
                             Text(
                               phone,
                               style: AppTypography.bodySmall.copyWith(
-                                color: context.colors.muted,
+                                color: context.z.ink2,
                               ),
                             ),
                         ],
@@ -111,7 +110,7 @@ class AccountScreen extends ConsumerWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
+                padding: const EdgeInsets.all(ZSpace.x3),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -124,7 +123,7 @@ class AccountScreen extends ConsumerWidget {
                             onTap: () => context.pushNamed('YourOrderScreen'),
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.md),
+                        const SizedBox(width: ZSpace.x2),
                         Expanded(
                           child: _QuickAction(
                             icon: Icons.favorite_border,
@@ -134,7 +133,7 @@ class AccountScreen extends ConsumerWidget {
                                 .updateIndex(3),
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.md),
+                        const SizedBox(width: ZSpace.x2),
                         Expanded(
                           child: _QuickAction(
                             icon: Icons.help_outline,
@@ -144,9 +143,9 @@ class AccountScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: ZSpace.x3),
                     const _AppearanceCard(),
-                    const SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: ZSpace.x3),
                     _Group(
                       items: [
                         _GroupItem(
@@ -174,7 +173,7 @@ class AccountScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: ZSpace.x3),
                     _Group(
                       items: [
                         _GroupItem(
@@ -186,17 +185,17 @@ class AccountScreen extends ConsumerWidget {
                         _GroupItem(
                           icon: Icons.logout,
                           label: 'logOut'.tr(),
-                          color: context.colors.danger,
+                          color: context.z.danger,
                           onTap: () => _confirmLogOut(context, ref, isGuest),
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.xl),
+                    const SizedBox(height: ZSpace.x4),
                     Center(
                       child: Text(
                         'appVersion'.tr(args: [Constants.appVersion]),
                         style: AppTypography.bodySmall.copyWith(
-                          color: context.colors.muted,
+                          color: context.z.ink2,
                         ),
                       ),
                     ),
@@ -259,22 +258,20 @@ class _QuickAction extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadius.card),
+      borderRadius: BorderRadius.circular(ZRadius.card),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+        padding: const EdgeInsets.symmetric(vertical: ZSpace.x3),
         decoration: BoxDecoration(
-          color: context.colors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.card),
+          color: context.z.surface,
+          borderRadius: BorderRadius.circular(ZRadius.card),
         ),
         child: Column(
           children: [
-            Icon(icon, color: context.colors.primary),
-            const SizedBox(height: AppSpacing.xs),
+            Icon(icon, color: context.z.brand),
+            const SizedBox(height: ZSpace.x1),
             Text(
               label,
-              style: AppTypography.bodySmall.copyWith(
-                color: context.colors.muted,
-              ),
+              style: AppTypography.bodySmall.copyWith(color: context.z.ink2),
             ),
           ],
         ),
@@ -309,8 +306,8 @@ class _Group extends StatelessWidget {
     // A Material (not a coloured box) so the ListTiles' ink splashes paint
     // on it and are clipped to the rounded corners.
     return Material(
-      color: context.colors.surface,
-      borderRadius: BorderRadius.circular(AppRadius.card),
+      color: context.z.surface,
+      borderRadius: BorderRadius.circular(ZRadius.card),
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: List.generate(items.length, (index) {
@@ -320,14 +317,11 @@ class _Group extends StatelessWidget {
             children: [
               ListTile(
                 onTap: item.onTap,
-                leading: Icon(
-                  item.icon,
-                  color: item.color ?? context.colors.ink,
-                ),
+                leading: Icon(item.icon, color: item.color ?? context.z.ink),
                 title: Text(
                   item.label,
                   style: AppTypography.bodyMedium.copyWith(
-                    color: item.color ?? context.colors.ink,
+                    color: item.color ?? context.z.ink,
                   ),
                 ),
                 trailing: Row(
@@ -335,18 +329,18 @@ class _Group extends StatelessWidget {
                   children: [
                     if (item.trailingText != null)
                       Padding(
-                        padding: const EdgeInsets.only(right: AppSpacing.sm),
+                        padding: const EdgeInsets.only(right: ZSpace.x2),
                         child: Text(
                           item.trailingText!,
                           style: AppTypography.bodySmall.copyWith(
-                            color: context.colors.muted,
+                            color: context.z.ink2,
                           ),
                         ),
                       ),
                     Icon(
                       Icons.arrow_forward_ios,
                       size: 16,
-                      color: context.colors.muted,
+                      color: context.z.ink2,
                     ),
                   ],
                 ),
@@ -370,20 +364,20 @@ class _AppearanceCard extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
+        color: context.z.surface,
+        borderRadius: BorderRadius.circular(ZRadius.card),
       ),
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(ZSpace.x3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('appearance'.tr(), style: AppTypography.titleMedium),
-          const SizedBox(height: AppSpacing.base),
+          const SizedBox(height: ZSpace.x3),
           Container(
-            padding: const EdgeInsets.all(AppSpacing.xs),
+            padding: const EdgeInsets.all(ZSpace.x1),
             decoration: BoxDecoration(
-              color: context.colors.surfaceAlt,
-              borderRadius: BorderRadius.circular(AppRadius.input),
+              color: context.z.surface2,
+              borderRadius: BorderRadius.circular(ZRadius.input),
             ),
             child: Row(
               children: [
@@ -438,12 +432,12 @@ class _AppearanceOption extends StatelessWidget {
     return Expanded(
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.stepper),
+        borderRadius: BorderRadius.circular(ZRadius.control),
         child: Container(
-          height: AppSizes.stepper,
+          height: ZSize.addButton,
           decoration: BoxDecoration(
-            color: selected ? context.colors.surface : Colors.transparent,
-            borderRadius: BorderRadius.circular(AppRadius.stepper),
+            color: selected ? context.z.surface : Colors.transparent,
+            borderRadius: BorderRadius.circular(ZRadius.control),
             boxShadow: selected
                 ? [BoxShadow(color: context.colors.shadow, blurRadius: 4)]
                 : null,
@@ -454,13 +448,13 @@ class _AppearanceOption extends StatelessWidget {
               Icon(
                 icon,
                 size: 16,
-                color: selected ? context.colors.ink : context.colors.muted,
+                color: selected ? context.z.ink : context.z.ink2,
               ),
-              const SizedBox(width: AppSpacing.xs),
+              const SizedBox(width: ZSpace.x1),
               Text(
                 label,
                 style: AppTypography.label.copyWith(
-                  color: selected ? context.colors.ink : context.colors.muted,
+                  color: selected ? context.z.ink : context.z.ink2,
                 ),
               ),
             ],

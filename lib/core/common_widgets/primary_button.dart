@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String buttonTitle;
@@ -26,13 +24,11 @@ class PrimaryButton extends StatelessWidget {
     return GestureDetector(
       onTap: action,
       child: Container(
-        height: AppSizes.button.h,
+        height: ZSize.button.h,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: buttonColor ?? context.colors.primary,
-          borderRadius: BorderRadius.circular(
-            borderRadius ?? AppRadius.input.r,
-          ),
+          color: buttonColor ?? context.z.brand,
+          borderRadius: BorderRadius.circular(borderRadius ?? ZRadius.input.r),
         ),
         child: Center(
           child: Text(

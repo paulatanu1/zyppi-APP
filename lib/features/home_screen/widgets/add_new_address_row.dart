@@ -1,9 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 
 /// Opens the map-pin picker in "save a new address" mode.
 class AddNewAddressRow extends StatelessWidget {
@@ -12,34 +11,30 @@ class AddNewAddressRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(AppRadius.input),
+      borderRadius: BorderRadius.circular(ZRadius.input),
       onTap: () => context.pushNamed('SearchAddressScreen', extra: true),
       child: Container(
-        height: AppSizes.inputMin,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+        height: ZSize.input,
+        padding: const EdgeInsets.symmetric(horizontal: ZSpace.x3),
         decoration: BoxDecoration(
-          color: context.colors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.input),
-          border: Border.all(color: context.colors.line),
+          color: context.z.surface,
+          borderRadius: BorderRadius.circular(ZRadius.input),
+          border: Border.all(color: context.z.line),
         ),
         child: Row(
           children: [
-            Icon(Icons.add, color: context.colors.primary),
-            const SizedBox(width: AppSpacing.base),
+            Icon(Icons.add, color: context.z.brand),
+            const SizedBox(width: ZSpace.x3),
             Expanded(
               child: Text(
                 'addNewAddress'.tr(),
                 style: AppTypography.bodyMedium.copyWith(
-                  color: context.colors.primary,
+                  color: context.z.brand,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 14,
-              color: context.colors.primary,
-            ),
+            Icon(Icons.arrow_forward_ios, size: 14, color: context.z.brand),
           ],
         ),
       ),

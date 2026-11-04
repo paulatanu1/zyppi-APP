@@ -2,7 +2,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/home_screen/widgets/add_new_address_row.dart';
 import 'package:zippy/core/data/provider/addresses_provider.dart';
@@ -26,7 +25,7 @@ class MyAddressScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
+              padding: const EdgeInsets.all(ZSpace.x3),
               child: Row(
                 children: [
                   IconButton(
@@ -41,19 +40,19 @@ class MyAddressScreen extends ConsumerWidget {
             Divider(height: 1, color: context.colors.divider),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.xxl),
+                padding: const EdgeInsets.all(ZSpace.x4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const AddNewAddressRow(),
-                    const SizedBox(height: AppSpacing.xxl),
+                    const SizedBox(height: ZSpace.x4),
                     Text(
                       'yourSavedAddress'.tr(),
                       style: AppTypography.labelSmall.copyWith(
-                        color: context.colors.muted,
+                        color: context.z.ink2,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.base),
+                    const SizedBox(height: ZSpace.x3),
                     Expanded(
                       child: addressesAsync.when(
                         // Keep the list on screen while an edit refreshes it.
@@ -64,7 +63,7 @@ class MyAddressScreen extends ConsumerWidget {
                             for (var i = 0; i < 3; i++)
                               const Padding(
                                 padding: EdgeInsets.symmetric(
-                                  vertical: AppSpacing.sm,
+                                  vertical: ZSpace.x2,
                                 ),
                                 child: ZSkeleton(
                                   height: 48,
@@ -89,13 +88,11 @@ class MyAddressScreen extends ConsumerWidget {
                         ),
                         data: (addresses) => addresses.isEmpty
                             ? Padding(
-                                padding: const EdgeInsets.only(
-                                  top: AppSpacing.xxl,
-                                ),
+                                padding: const EdgeInsets.only(top: ZSpace.x4),
                                 child: Text(
                                   'noSavedAddresses'.tr(),
                                   style: AppTypography.bodyMedium.copyWith(
-                                    color: context.colors.muted,
+                                    color: context.z.ink2,
                                   ),
                                 ),
                               )

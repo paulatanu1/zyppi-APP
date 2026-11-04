@@ -8,10 +8,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/app_skeleton.dart';
 import 'package:zippy/core/domain/order_status.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/order_tracking/application/order_tracking_provider.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 
 const _timeline = [
   OrderStatus.placed,
@@ -64,12 +64,12 @@ class OrderTrackingScreen extends ConsumerWidget {
     final order = state.order;
 
     return Scaffold(
-      backgroundColor: context.colors.primaryTint,
+      backgroundColor: context.z.brandSoft,
       body: SafeArea(
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: const EdgeInsets.all(ZSpace.x2),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -90,10 +90,10 @@ class OrderTrackingScreen extends ConsumerWidget {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: context.colors.surface,
+                  color: context.z.surface,
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(AppRadius.sheetTop),
-                    topRight: Radius.circular(AppRadius.sheetTop),
+                    topLeft: Radius.circular(ZRadius.sheet),
+                    topRight: Radius.circular(ZRadius.sheet),
                   ),
                 ),
                 child: AppSkeleton(
@@ -122,7 +122,7 @@ class OrderTrackingScreen extends ConsumerWidget {
                           ),
                         )
                       : SingleChildScrollView(
-                          padding: const EdgeInsets.all(AppSpacing.xxl),
+                          padding: const EdgeInsets.all(ZSpace.x4),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -138,9 +138,7 @@ class OrderTrackingScreen extends ConsumerWidget {
                                         Text(
                                           'arrivingIn'.tr(),
                                           style: AppTypography.labelSmall
-                                              .copyWith(
-                                                color: context.colors.muted,
-                                              ),
+                                              .copyWith(color: context.z.ink2),
                                         ),
                                         Text(
                                           eta,
@@ -155,33 +153,31 @@ class OrderTrackingScreen extends ConsumerWidget {
                                   ),
                                   Container(
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: AppSpacing.lg,
-                                      vertical: AppSpacing.sm,
+                                      horizontal: ZSpace.x3,
+                                      vertical: ZSpace.x2,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: context.colors.primaryTint,
+                                      color: context.z.brandSoft,
                                       borderRadius: BorderRadius.circular(
-                                        AppRadius.chip,
+                                        ZRadius.chip,
                                       ),
                                     ),
                                     child: Text(
                                       _statusLabel(order.status),
                                       style: AppTypography.labelSmall.copyWith(
-                                        color: context.colors.primaryDark,
+                                        color: context.z.brandPress,
                                       ),
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: AppSpacing.xxl),
+                              const SizedBox(height: ZSpace.x4),
                               Container(
-                                padding: const EdgeInsets.all(AppSpacing.lg),
+                                padding: const EdgeInsets.all(ZSpace.x3),
                                 decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: context.colors.line,
-                                  ),
+                                  border: Border.all(color: context.z.line),
                                   borderRadius: BorderRadius.circular(
-                                    AppRadius.card,
+                                    ZRadius.card,
                                   ),
                                 ),
                                 child: Row(
@@ -191,10 +187,10 @@ class OrderTrackingScreen extends ConsumerWidget {
                                       backgroundColor: context.colors.divider,
                                       child: Icon(
                                         Icons.person_outline,
-                                        color: context.colors.muted,
+                                        color: context.z.ink2,
                                       ),
                                     ),
-                                    const SizedBox(width: AppSpacing.lg),
+                                    const SizedBox(width: ZSpace.x3),
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment:
@@ -212,7 +208,7 @@ class OrderTrackingScreen extends ConsumerWidget {
                                             'yourDeliveryPartner'.tr(),
                                             style: AppTypography.bodySmall
                                                 .copyWith(
-                                                  color: context.colors.muted,
+                                                  color: context.z.ink2,
                                                 ),
                                           ),
                                         ],
@@ -229,21 +225,21 @@ class OrderTrackingScreen extends ConsumerWidget {
                                   ],
                                 ),
                               ),
-                              const SizedBox(height: AppSpacing.xxl),
+                              const SizedBox(height: ZSpace.x4),
                               if (order.status == OrderStatus.cancelled)
                                 Container(
                                   width: double.infinity,
-                                  padding: const EdgeInsets.all(AppSpacing.lg),
+                                  padding: const EdgeInsets.all(ZSpace.x3),
                                   decoration: BoxDecoration(
-                                    color: context.colors.dangerTint,
+                                    color: context.z.dangerSoft,
                                     borderRadius: BorderRadius.circular(
-                                      AppRadius.card,
+                                      ZRadius.card,
                                     ),
                                   ),
                                   child: Text(
                                     'orderCancelledInfo'.tr(),
                                     style: AppTypography.bodyMedium.copyWith(
-                                      color: context.colors.danger,
+                                      color: context.z.danger,
                                     ),
                                   ),
                                 )
@@ -257,7 +253,7 @@ class OrderTrackingScreen extends ConsumerWidget {
 
                                   return Padding(
                                     padding: const EdgeInsets.symmetric(
-                                      vertical: AppSpacing.sm,
+                                      vertical: ZSpace.x2,
                                     ),
                                     child: Row(
                                       children: [
@@ -266,17 +262,17 @@ class OrderTrackingScreen extends ConsumerWidget {
                                               ? Icons.check_circle
                                               : Icons.radio_button_unchecked,
                                           color: isDone
-                                              ? context.colors.primary
-                                              : context.colors.faint,
+                                              ? context.z.brand
+                                              : context.z.ink3,
                                         ),
-                                        const SizedBox(width: AppSpacing.lg),
+                                        const SizedBox(width: ZSpace.x3),
                                         Text(
                                           _statusLabel(status),
                                           style: AppTypography.bodyLarge
                                               .copyWith(
                                                 color: isDone
-                                                    ? context.colors.ink
-                                                    : context.colors.muted,
+                                                    ? context.z.ink
+                                                    : context.z.ink2,
                                                 fontWeight: isDone
                                                     ? FontWeight.w700
                                                     : FontWeight.w400,

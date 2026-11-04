@@ -3,11 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/domain/home_section.dart';
 import 'package:zippy/core/domain/product.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
-import 'package:zippy/core/theme/zyppi_colors.dart';
 import 'package:zippy/features/home_screen/widgets/sections/section_data.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 
 /// Blinkit-referenced "Featured this week" ribbon-badge spotlight cards.
 class SpotlightCardsSection extends StatelessWidget {
@@ -35,7 +33,7 @@ class SpotlightCardsSection extends StatelessWidget {
       height: 140,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+        padding: const EdgeInsets.symmetric(horizontal: ZSpace.x4),
         itemCount: items.length,
         separatorBuilder: (context, index) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
@@ -44,18 +42,18 @@ class SpotlightCardsSection extends StatelessWidget {
           return InkWell(
             onTap: () =>
                 context.push('/productDetailsScreen?productId=${product.id}'),
-            borderRadius: BorderRadius.circular(AppRadius.card),
+            borderRadius: BorderRadius.circular(ZRadius.card),
             child: Container(
               width: 120,
               decoration: BoxDecoration(
-                border: Border.all(color: context.colors.line),
-                borderRadius: BorderRadius.circular(AppRadius.card),
+                border: Border.all(color: context.z.line),
+                borderRadius: BorderRadius.circular(ZRadius.card),
               ),
               child: Stack(
                 children: [
                   Positioned.fill(
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(AppRadius.card),
+                      borderRadius: BorderRadius.circular(ZRadius.card),
                       child: CatalogImage(
                         image: product.image,
                         fit: BoxFit.contain,
@@ -70,13 +68,13 @@ class SpotlightCardsSection extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           vertical: 4,
-                          horizontal: AppSpacing.sm,
+                          horizontal: ZSpace.x2,
                         ),
                         decoration: BoxDecoration(
-                          color: context.colors.primary,
+                          color: context.z.brand,
                           borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(AppRadius.card),
-                            topRight: Radius.circular(AppRadius.card),
+                            topLeft: Radius.circular(ZRadius.card),
+                            topRight: Radius.circular(ZRadius.card),
                           ),
                         ),
                         // Scale long labels ("Customer favourite") down to

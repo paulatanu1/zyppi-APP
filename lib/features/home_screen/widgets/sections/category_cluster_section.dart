@@ -4,8 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/domain/category.dart';
 import 'package:zippy/core/domain/home_section.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/home_screen/widgets/sections/section_data.dart';
 
@@ -30,7 +28,7 @@ class CategoryClusterSection extends StatelessWidget {
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: AppSpacing.base,
+        spacing: ZSpace.x3,
         children: section.items.map((item) {
           final category = categoriesById[item.data['category_id']];
           final label = item.data.string('label') ?? category?.name ?? '';
@@ -43,12 +41,12 @@ class CategoryClusterSection extends StatelessWidget {
                   : () => context.push(
                       '/categoryDetailsScreen?categoryId=${category.id}',
                     ),
-              borderRadius: BorderRadius.circular(AppRadius.card),
+              borderRadius: BorderRadius.circular(ZRadius.card),
               child: Container(
-                padding: const EdgeInsets.all(AppSpacing.base),
+                padding: const EdgeInsets.all(ZSpace.x3),
                 decoration: BoxDecoration(
-                  color: context.colors.surfaceAlt,
-                  borderRadius: BorderRadius.circular(AppRadius.card),
+                  color: context.z.surface2,
+                  borderRadius: BorderRadius.circular(ZRadius.card),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,7 +54,7 @@ class CategoryClusterSection extends StatelessWidget {
                     Stack(
                       children: [
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(AppRadius.chip),
+                          borderRadius: BorderRadius.circular(ZRadius.chip),
                           child: SizedBox(
                             width: 56,
                             height: 56,
@@ -72,7 +70,7 @@ class CategoryClusterSection extends StatelessWidget {
                                 horizontal: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: context.colors.ink,
+                                color: context.z.ink,
                                 borderRadius: BorderRadius.circular(
                                   ZRadius.badge,
                                 ),
@@ -80,21 +78,19 @@ class CategoryClusterSection extends StatelessWidget {
                               child: Text(
                                 '+$count',
                                 style: AppTypography.caption.copyWith(
-                                  color: context.colors.surface,
+                                  color: context.z.surface,
                                 ),
                               ),
                             ),
                           ),
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.xs),
+                    const SizedBox(height: ZSpace.x1),
                     Text(
                       label,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTypography.label.copyWith(
-                        color: context.colors.ink,
-                      ),
+                      style: AppTypography.label.copyWith(color: context.z.ink),
                     ),
                   ],
                 ),

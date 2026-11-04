@@ -2,9 +2,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/theme/app_colors_ext.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
-import 'package:zippy/core/theme/zyppi_tokens.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 
 const _heroImages = [
   'assets/images/Splash-1.png',
@@ -37,14 +36,14 @@ class _SliderScreenState extends State<SliderScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.background,
+      backgroundColor: context.z.bg,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
-            AppSpacing.xxl,
-            AppSpacing.xxl,
-            AppSpacing.xxl,
-            AppSpacing.huge,
+            ZSpace.x4,
+            ZSpace.x4,
+            ZSpace.x4,
+            ZSpace.x6,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,13 +57,13 @@ class _SliderScreenState extends State<SliderScreen> {
                     child: Text(
                       'skip'.tr(),
                       style: AppTypography.label.copyWith(
-                        color: context.colors.muted,
+                        color: context.z.ink2,
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.base),
+              const SizedBox(height: ZSpace.x3),
               Expanded(
                 child: PageView.builder(
                   controller: _pageController,
@@ -76,7 +75,7 @@ class _SliderScreenState extends State<SliderScreen> {
                       Positioned.fill(
                         child: Container(
                           decoration: BoxDecoration(
-                            color: context.colors.blueSoft,
+                            color: context.z.blueSoft,
                             borderRadius: ZRadius.all(ZRadius.illo),
                           ),
                           child: Center(
@@ -93,7 +92,7 @@ class _SliderScreenState extends State<SliderScreen> {
                         top: 20,
                         child: _FloatChip(
                           icon: Icons.bolt,
-                          iconColor: context.colors.accent,
+                          iconColor: context.z.deal,
                           label: 'deliveryChipLabel'.tr(),
                         ),
                       ),
@@ -102,7 +101,7 @@ class _SliderScreenState extends State<SliderScreen> {
                         bottom: 24,
                         child: _FloatChip(
                           icon: Icons.check_circle,
-                          iconColor: context.colors.green,
+                          iconColor: context.z.ok,
                           label: 'qualityChipLabel'.tr(),
                         ),
                       ),
@@ -110,54 +109,52 @@ class _SliderScreenState extends State<SliderScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.huge),
+              const SizedBox(height: ZSpace.x6),
               RichText(
                 text: TextSpan(
-                  style: AppTypography.display.copyWith(
-                    color: context.colors.ink,
-                  ),
+                  style: AppTypography.display.copyWith(color: context.z.ink),
                   children: [
                     TextSpan(text: '${'onboardingHeadlinePrefix'.tr()} '),
                     TextSpan(
                       text: 'onboardingHeadlineHighlight'.tr(),
-                      style: TextStyle(color: context.colors.primaryText),
+                      style: TextStyle(color: context.z.brandText),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: ZSpace.x2),
               Text(
                 'onboardingSubtext'.tr(),
-                style: AppTypography.body.copyWith(color: context.colors.muted),
+                style: AppTypography.body.copyWith(color: context.z.ink2),
               ),
               const Spacer(),
               Row(
                 children: [
                   for (var i = 0; i < _heroImages.length; i++) ...[
-                    if (i > 0) const SizedBox(width: AppSpacing.xs),
+                    if (i > 0) const SizedBox(width: ZSpace.x1),
                     Container(
                       width: i == _currentPage ? 26 : 6,
                       height: 6,
                       decoration: BoxDecoration(
                         color: i == _currentPage
-                            ? context.colors.primary
-                            : context.colors.lineAlt,
+                            ? context.z.brand
+                            : context.z.line2,
                         borderRadius: BorderRadius.circular(ZRadius.chip),
                       ),
                     ),
                   ],
                 ],
               ),
-              const SizedBox(height: AppSpacing.xxl),
+              const SizedBox(height: ZSpace.x4),
               SizedBox(
                 width: double.infinity,
-                height: AppSizes.button,
+                height: ZSize.button,
                 child: ElevatedButton(
                   onPressed: () => context.push('/loginScreen'),
                   child: Text('getStart'.tr()),
                 ),
               ),
-              const SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: ZSpace.x2),
               Center(
                 child: TextButton(
                   onPressed: () => context.push('/loginScreen'),
@@ -165,12 +162,12 @@ class _SliderScreenState extends State<SliderScreen> {
                     TextSpan(
                       text: '${'alreadyHaveAccount'.tr()} ',
                       style: AppTypography.label.copyWith(
-                        color: context.colors.muted,
+                        color: context.z.ink2,
                       ),
                       children: [
                         TextSpan(
                           text: 'login'.tr(),
-                          style: TextStyle(color: context.colors.primaryText),
+                          style: TextStyle(color: context.z.brandText),
                         ),
                       ],
                     ),
@@ -200,22 +197,22 @@ class _FloatChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.base,
-        vertical: AppSpacing.sm,
+        horizontal: ZSpace.x3,
+        vertical: ZSpace.x2,
       ),
       decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.input),
+        color: context.z.surface,
+        borderRadius: BorderRadius.circular(ZRadius.input),
         boxShadow: [BoxShadow(color: context.colors.shadow, blurRadius: 8)],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 16, color: iconColor),
-          const SizedBox(width: AppSpacing.xs),
+          const SizedBox(width: ZSpace.x1),
           Text(
             label,
-            style: AppTypography.label.copyWith(color: context.colors.ink),
+            style: AppTypography.label.copyWith(color: context.z.ink),
           ),
         ],
       ),
