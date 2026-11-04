@@ -336,5 +336,9 @@
   "yourCart": "ਤੁਹਾਡੀ ਕਾਰਟ",
   "tipNone": "ਕੋਈ ਨਹੀਂ",
   "resultsFor": "“{}” ਦੇ ਨਤੀਜੇ",
-  "clearSearch": "ਖੋਜ ਸਾਫ਼ ਕਰੋ"
+  "clearSearch": "ਖੋਜ ਸਾਫ਼ ਕਰੋ",
+  "ordersAll": "ਸਾਰੇ",
+  "ordersActive": "ਸਰਗਰਮ",
+  "noOrdersInFilter": "ਇੱਥੇ ਅਜੇ ਕੋਈ ਆਰਡਰ ਨਹੀਂ",
+  "trackOrderEta": "ਆਰਡਰ ਟ੍ਰੈਕ ਕਰੋ · {} ਮਿੰਟ ਵਿੱਚ ਪਹੁੰਚੇਗਾ"
 }

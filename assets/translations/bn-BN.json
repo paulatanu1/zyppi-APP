@@ -336,5 +336,9 @@
   "yourCart": "আপনার কার্ট",
   "tipNone": "কিছু না",
   "resultsFor": "“{}”-এর ফলাফল",
-  "clearSearch": "খোঁজ মুছুন"
+  "clearSearch": "খোঁজ মুছুন",
+  "ordersAll": "সব",
+  "ordersActive": "চলমান",
+  "noOrdersInFilter": "এখানে এখনও কোনো অর্ডার নেই",
+  "trackOrderEta": "অর্ডার ট্র্যাক করুন · {} মিনিটে পৌঁছাবে"
 }

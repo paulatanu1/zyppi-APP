@@ -336,5 +336,9 @@
   "yourCart": "आपकी कार्ट",
   "tipNone": "कोई नहीं",
   "resultsFor": "“{}” के नतीजे",
-  "clearSearch": "खोज साफ़ करें"
+  "clearSearch": "खोज साफ़ करें",
+  "ordersAll": "सभी",
+  "ordersActive": "सक्रिय",
+  "noOrdersInFilter": "यहाँ अभी कोई ऑर्डर नहीं है",
+  "trackOrderEta": "ऑर्डर ट्रैक करें · {} मिनट में पहुँचेगा"
 }

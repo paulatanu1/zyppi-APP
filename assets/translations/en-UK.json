@@ -328,5 +328,9 @@
   "yourCart": "Your cart",
   "tipNone": "None",
   "resultsFor": "Results for “{}”",
-  "clearSearch": "Clear search"
+  "clearSearch": "Clear search",
+  "ordersAll": "All",
+  "ordersActive": "Active",
+  "noOrdersInFilter": "No orders here yet",
+  "trackOrderEta": "Track order · arriving in {} min"
 }

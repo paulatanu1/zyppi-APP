@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/cart/presentation/floating_cart_bar.dart';
 import 'package:zippy/core/common_widgets/home_screen_header.dart';
@@ -130,19 +129,7 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
           ),
-          // Status-bar strip in the header colour, with light icons.
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: MediaQuery.paddingOf(context).top,
-            child: AnnotatedRegion<SystemUiOverlayStyle>(
-              value: SystemUiOverlayStyle.light.copyWith(
-                statusBarColor: Colors.transparent,
-              ),
-              child: ColoredBox(color: context.z.header),
-            ),
-          ),
+          const ZStatusBarStrip(),
           Positioned(
             left: ZSpace.screen,
             right: ZSpace.screen,
