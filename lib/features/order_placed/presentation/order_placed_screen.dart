@@ -1,17 +1,18 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zippy/core/common_widgets/price_tag.dart';
+import 'package:zippy/core/order/application/order_by_id_provider.dart';
 import 'package:zippy/core/payments/presentation/payment_options.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/utils/address_label.dart';
 import 'package:zippy/core/utils/order_id.dart';
-import 'package:zippy/core/theme/app_typography.dart';
-import 'package:zippy/core/order/application/order_by_id_provider.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
+import 'package:zippy/core/widgets/z_commerce.dart';
+import 'package:zippy/core/widgets/z_motion.dart';
 
-/// docs/mockups/Placed.dc.html — full-bleed pink confirmation.
+/// docs/screens/light/11-order-placed.png: green check, "Order placed!",
+/// illustration, order ID / payment / address card, Track order and
+/// Continue shopping.
 class OrderPlacedScreen extends ConsumerWidget {
   final String orderId;
 
@@ -19,187 +20,241 @@ class OrderPlacedScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final z = context.z;
+    final t = Theme.of(context).textTheme;
     final orderAsync = ref.watch(orderByIdProvider(orderId));
     final order = orderAsync.value;
 
     return Scaffold(
-      backgroundColor: context.z.brand,
+      backgroundColor: z.bg,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: ZSpace.x6,
-            vertical: ZSpace.x8,
-          ),
-          child: Column(
-            children: [
-              Expanded(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  ZSpace.x5,
+                  ZSpace.x6,
+                  ZSpace.x5,
+                  ZSpace.x4,
+                ),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Container(
-                      width: 132,
-                      height: 132,
-                      decoration: BoxDecoration(
-                        color: context.z.brandPress,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
+                    ZEntrance(
+                      index: 0,
+                      child: Container(
+                        width: 128,
+                        height: 128,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: z.okSoft,
+                          shape: BoxShape.circle,
+                        ),
                         child: Container(
-                          width: 92,
-                          height: 92,
+                          width: 88,
+                          height: 88,
                           decoration: BoxDecoration(
-                            color: context.z.deal,
+                            color: z.ok,
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
-                            Icons.check,
-                            color: context.z.brandPress,
-                            size: 50,
+                            Icons.check_rounded,
+                            color: z.onBrand,
+                            size: 48,
                           ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: ZSpace.x6),
-                    Text(
-                      'orderPlaced'.tr(),
-                      style: AppTypography.headlineMedium.copyWith(
-                        color: context.z.onBrand,
-                      ),
-                    ),
-                    const SizedBox(height: ZSpace.x3),
-                    Text(
-                      'orderPlacedDescription'.tr(),
-                      textAlign: TextAlign.center,
-                      style: AppTypography.bodyLarge.copyWith(
-                        color: context.z.headerInk2,
                       ),
                     ),
                     const SizedBox(height: ZSpace.x4),
-                    if (orderAsync.isLoading && order == null)
-                      SizedBox.square(
-                        dimension: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          color: context.z.headerInk2,
+                    ZEntrance(
+                      index: 1,
+                      child: Column(
+                        children: [
+                          Text(
+                            'orderPlaced'.tr(),
+                            textAlign: TextAlign.center,
+                            style: t.headlineMedium,
+                          ),
+                          const SizedBox(height: ZSpace.x2),
+                          Text(
+                            order?.etaMinutes == null
+                                ? 'orderPlacedDescription'.tr()
+                                : 'orderPlacedArriving'.tr(
+                                    args: ['${order!.etaMinutes}'],
+                                  ),
+                            textAlign: TextAlign.center,
+                            style: t.bodyLarge!.copyWith(color: z.ink2),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: ZSpace.x5),
+                    ZEntrance(
+                      index: 2,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(ZSpace.x4),
+                        decoration: BoxDecoration(
+                          color: z.blueSoft,
+                          borderRadius: ZRadius.all(ZRadius.sheet),
                         ),
-                      )
-                    else if (order == null)
-                      // The order exists (we just placed it); only its
-                      // details failed to load. Offer a retry, not an error.
-                      TextButton(
-                        onPressed: () =>
-                            ref.invalidate(orderByIdProvider(orderId)),
-                        child: Text(
-                          'loadOrderDetails'.tr(),
-                          style: AppTypography.labelLarge.copyWith(
-                            color: context.z.onBrand,
+                        child: ZLoop(
+                          kind: ZLoopKind.bob,
+                          child: Image.asset(
+                            'assets/images/Splash-3.png',
+                            height: 180,
+                            fit: BoxFit.contain,
+                            excludeFromSemantics: true,
                           ),
                         ),
-                      )
-                    else ...[
-                      _KeyValueRow(
-                        label: 'orderId'.tr(),
-                        value: '#${shortOrderId(order.id)}',
                       ),
-                      _KeyValueRow(
-                        label: order.paymentMethod == codPaymentMethod
-                            ? 'payOnDelivery'.tr()
-                            : 'paidVia'.tr(
-                                args: [paymentMethodTitle(order.paymentMethod)],
-                              ),
-                        value: PriceTag.format(order.totalPaise),
+                    ),
+                    const SizedBox(height: ZSpace.x4),
+                    ZEntrance(
+                      index: 3,
+                      child: _Details(
+                        orderId: orderId,
+                        loading: orderAsync.isLoading && order == null,
+                        rows: order == null
+                            ? null
+                            : [
+                                ('orderId'.tr(), '#${shortOrderId(order.id)}'),
+                                (
+                                  order.paymentMethod == codPaymentMethod
+                                      ? 'payOnDelivery'.tr()
+                                      : 'paidVia'.tr(
+                                          args: [
+                                            paymentMethodTitle(
+                                              order.paymentMethod,
+                                            ),
+                                          ],
+                                        ),
+                                  rupees(order.totalPaise),
+                                ),
+                                (
+                                  'deliverTo'.tr(),
+                                  order.addressLabel != null
+                                      ? addressLabelText(order.addressLabel!)
+                                      : (order.addressText ?? ''),
+                                ),
+                              ],
                       ),
-                      _KeyValueRow(
-                        label: 'deliverTo'.tr(),
-                        value: order.addressLabel != null
-                            ? addressLabelText(order.addressLabel!)
-                            : (order.addressText ?? ''),
-                        showDivider: false,
-                      ),
-                    ],
+                    ),
                   ],
                 ),
               ),
-              Column(
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                ZSpace.x5,
+                0,
+                ZSpace.x5,
+                ZSpace.x4,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SizedBox(
-                    width: double.infinity,
-                    height: ZSize.button,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: context.z.deal,
-                        foregroundColor: context.z.ink,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(ZRadius.input),
-                        ),
-                      ),
-                      onPressed: () =>
-                          context.go('/orderTrackingScreen?orderId=$orderId'),
-                      child: Text(
-                        'trackOrder'.tr(),
-                        style: AppTypography.labelLarge.copyWith(
-                          color: context.z.ink,
-                        ),
-                      ),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(0, ZSize.button),
                     ),
+                    onPressed: () =>
+                        context.go('/orderTrackingScreen?orderId=$orderId'),
+                    child: Text('trackOrder'.tr()),
                   ),
-                  TextButton(
-                    onPressed: () => context.go('/navBar'),
-                    child: Text(
-                      'backToHome'.tr(),
-                      style: AppTypography.labelLarge.copyWith(
-                        color: context.z.onBrand,
-                      ),
+                  const SizedBox(height: ZSpace.x3),
+                  OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(0, ZSize.button),
                     ),
+                    onPressed: () => context.go('/navBar'),
+                    child: Text('continueShopping'.tr()),
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _KeyValueRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final bool showDivider;
-
-  const _KeyValueRow({
-    required this.label,
-    required this.value,
-    this.showDivider = true,
+/// Order ID · payment · address card. While loading: skeleton rows; if the
+/// details failed to load: a retry (the order itself was placed).
+class _Details extends ConsumerWidget {
+  const _Details({
+    required this.orderId,
+    required this.loading,
+    required this.rows,
   });
 
+  final String orderId;
+  final bool loading;
+  final List<(String, String)>? rows;
+
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: ZSpace.x3),
-      decoration: BoxDecoration(
-        border: showDivider
-            ? Border(bottom: BorderSide(color: context.colors.dividerOnPrimary))
-            : null,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final z = context.z;
+    final t = Theme.of(context).textTheme;
+    final rows = this.rows;
+
+    Widget child;
+    if (loading) {
+      child = const Column(
         children: [
-          Text(
-            label,
-            style: AppTypography.bodyMedium.copyWith(
-              color: context.z.headerInk2,
-            ),
-          ),
-          Text(
-            value,
-            style: AppTypography.bodyMedium.copyWith(
-              color: context.z.onBrand,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+          ZSkeleton(height: 18),
+          SizedBox(height: ZSpace.x4),
+          ZSkeleton(height: 18),
+          SizedBox(height: ZSpace.x4),
+          ZSkeleton(height: 18),
         ],
+      );
+    } else if (rows == null) {
+      child = Center(
+        child: TextButton(
+          onPressed: () => ref.invalidate(orderByIdProvider(orderId)),
+          child: Text('loadOrderDetails'.tr()),
+        ),
+      );
+    } else {
+      child = Column(
+        children: [
+          for (var i = 0; i < rows.length; i++) ...[
+            if (i > 0) Divider(height: ZSpace.x6, color: z.line),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Flexible(
+                  child: Text(
+                    rows[i].$1,
+                    style: t.bodyMedium!.copyWith(color: z.ink2),
+                  ),
+                ),
+                const SizedBox(width: ZSpace.x3),
+                Expanded(
+                  child: Text(
+                    rows[i].$2,
+                    textAlign: TextAlign.end,
+                    style: t.labelLarge,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(ZSpace.x4),
+      decoration: BoxDecoration(
+        color: z.surface,
+        borderRadius: ZRadius.all(ZRadius.card),
+        border: Border.all(color: z.line),
       ),
+      child: child,
     );
   }
 }

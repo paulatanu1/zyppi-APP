@@ -332,5 +332,7 @@
   "ordersAll": "All",
   "ordersActive": "Active",
   "noOrdersInFilter": "No orders here yet",
-  "trackOrderEta": "Track order · arriving in {} min"
+  "trackOrderEta": "Track order · arriving in {} min",
+  "continueShopping": "Continue shopping",
+  "orderPlacedArriving": "We're packing your groceries. Arriving in about {} minutes."
 }

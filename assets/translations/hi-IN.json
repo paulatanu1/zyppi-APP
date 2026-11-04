@@ -340,5 +340,7 @@
   "ordersAll": "सभी",
   "ordersActive": "सक्रिय",
   "noOrdersInFilter": "यहाँ अभी कोई ऑर्डर नहीं है",
-  "trackOrderEta": "ऑर्डर ट्रैक करें · {} मिनट में पहुँचेगा"
+  "trackOrderEta": "ऑर्डर ट्रैक करें · {} मिनट में पहुँचेगा",
+  "continueShopping": "खरीदारी जारी रखें",
+  "orderPlacedArriving": "हम आपका सामान पैक कर रहे हैं। लगभग {} मिनट में पहुँचेगा।"
 }

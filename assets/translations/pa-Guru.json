@@ -340,5 +340,7 @@
   "ordersAll": "ਸਾਰੇ",
   "ordersActive": "ਸਰਗਰਮ",
   "noOrdersInFilter": "ਇੱਥੇ ਅਜੇ ਕੋਈ ਆਰਡਰ ਨਹੀਂ",
-  "trackOrderEta": "ਆਰਡਰ ਟ੍ਰੈਕ ਕਰੋ · {} ਮਿੰਟ ਵਿੱਚ ਪਹੁੰਚੇਗਾ"
+  "trackOrderEta": "ਆਰਡਰ ਟ੍ਰੈਕ ਕਰੋ · {} ਮਿੰਟ ਵਿੱਚ ਪਹੁੰਚੇਗਾ",
+  "continueShopping": "ਖ਼ਰੀਦਦਾਰੀ ਜਾਰੀ ਰੱਖੋ",
+  "orderPlacedArriving": "ਅਸੀਂ ਤੁਹਾਡਾ ਸਾਮਾਨ ਪੈਕ ਕਰ ਰਹੇ ਹਾਂ। ਲਗਭਗ {} ਮਿੰਟ ਵਿੱਚ ਪਹੁੰਚੇਗਾ।"
 }

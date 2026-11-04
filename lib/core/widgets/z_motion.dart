@@ -142,7 +142,18 @@ class _ZLoopState extends State<ZLoop> with SingleTickerProviderStateMixin {
       ZLoopKind.float => const Duration(milliseconds: 4000),
     },
     value: widget.phase,
-  )..repeat(reverse: true);
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // No ticking at all when the user has turned animations off.
+    if (_reduceMotion(context)) {
+      _c.stop();
+    } else if (!_c.isAnimating) {
+      _c.repeat(reverse: true);
+    }
+  }
 
   @override
   void dispose() {

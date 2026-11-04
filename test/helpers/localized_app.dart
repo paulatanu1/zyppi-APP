@@ -15,6 +15,7 @@ Future<void> pumpLocalizedApp(
   required Widget home,
   ThemeData? theme,
   double textScale = 1,
+  bool disableAnimations = false,
 }) async {
   tester.view.physicalSize = const Size(390, 844) * 3;
   tester.view.devicePixelRatio = 3;
@@ -38,8 +39,10 @@ Future<void> pumpLocalizedApp(
               supportedLocales: context.supportedLocales,
               locale: context.locale,
               builder: (context, child) => MediaQuery(
-                data: MediaQuery.of(context)
-                    .copyWith(textScaler: TextScaler.linear(textScale)),
+                data: MediaQuery.of(context).copyWith(
+                  textScaler: TextScaler.linear(textScale),
+                  disableAnimations: disableAnimations,
+                ),
                 child: child!,
               ),
               home: home,
