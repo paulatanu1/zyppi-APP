@@ -309,5 +309,12 @@
   "signInInstead": "Sign in instead",
   "searchIdleHint": "Search for groceries, fruits, milk and more",
   "noCategories": "No categories to show right now.",
-  "pickLocationToCheck": "Use your current location or search your area to check delivery"
+  "pickLocationToCheck": "Use your current location or search your area to check delivery",
+  "offPercent": "{}% OFF",
+  "etaBadge": "12 MINS",
+  "addOne": "Add one",
+  "removeOne": "Remove one",
+  "addToFavourites": "Add to favourites",
+  "navCart": "Cart",
+  "navAccount": "Account"
 }

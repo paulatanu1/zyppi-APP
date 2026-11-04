@@ -317,5 +317,12 @@
   "signInInstead": "ਉਸ ਵਿੱਚ ਸਾਈਨ ਇਨ ਕਰੋ",
   "searchIdleHint": "ਕਰਿਆਨਾ, ਫਲ, ਦੁੱਧ ਅਤੇ ਹੋਰ ਬਹੁਤ ਕੁਝ ਲੱਭੋ",
   "noCategories": "ਹੁਣ ਦਿਖਾਉਣ ਲਈ ਕੋਈ ਸ਼੍ਰੇਣੀ ਨਹੀਂ ਹੈ।",
-  "pickLocationToCheck": "ਡਿਲੀਵਰੀ ਜਾਂਚਣ ਲਈ ਮੌਜੂਦਾ ਟਿਕਾਣਾ ਵਰਤੋ ਜਾਂ ਆਪਣਾ ਇਲਾਕਾ ਲੱਭੋ"
+  "pickLocationToCheck": "ਡਿਲੀਵਰੀ ਜਾਂਚਣ ਲਈ ਮੌਜੂਦਾ ਟਿਕਾਣਾ ਵਰਤੋ ਜਾਂ ਆਪਣਾ ਇਲਾਕਾ ਲੱਭੋ",
+  "offPercent": "{}% ਛੋਟ",
+  "etaBadge": "12 ਮਿੰਟ",
+  "addOne": "ਇੱਕ ਹੋਰ ਸ਼ਾਮਲ ਕਰੋ",
+  "removeOne": "ਇੱਕ ਘਟਾਓ",
+  "addToFavourites": "ਮਨਪਸੰਦ ਵਿੱਚ ਸ਼ਾਮਲ ਕਰੋ",
+  "navCart": "ਕਾਰਟ",
+  "navAccount": "ਖਾਤਾ"
 }

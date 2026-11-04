@@ -93,17 +93,20 @@ class _ZPressableState extends State<ZPressable> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: widget.onTap,
-      onTapDown: (_) => _set(true),
-      onTapUp: (_) => _set(false),
-      onTapCancel: () => _set(false),
-      child: AnimatedScale(
-        scale: _down && !_reduceMotion(context) ? widget.scale : 1,
-        duration: ZMotion.press,
-        curve: ZMotion.standard,
-        child: widget.child,
+    return Semantics(
+      button: widget.onTap != null,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onTap,
+        onTapDown: (_) => _set(true),
+        onTapUp: (_) => _set(false),
+        onTapCancel: () => _set(false),
+        child: AnimatedScale(
+          scale: _down && !_reduceMotion(context) ? widget.scale : 1,
+          duration: ZMotion.press,
+          curve: ZMotion.standard,
+          child: widget.child,
+        ),
       ),
     );
   }

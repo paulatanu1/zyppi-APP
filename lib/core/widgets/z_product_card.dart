@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/zyppi_theme.dart';
@@ -25,17 +26,25 @@ class ZProductCard extends StatelessWidget {
     required this.onRemove,
     this.onFavourite,
     this.width,
-    this.eta = '12 MINS',
+    this.eta,
   });
 
-  final String name, weight, eta;
-  final ImageProvider image;
+  final String name, weight;
+
+  /// ETA chip label; defaults to the store-wide `etaBadge`.
+  final String? eta;
+
+  /// Usually `CatalogImage(image: url, fit: BoxFit.contain)`.
+  final Widget image;
   final int price;
   final int? mrp;
   final Color? tileColor;
   final int quantity;
   final bool favourite;
-  final VoidCallback? onTap, onFavourite;
+  final VoidCallback? onTap;
+
+  /// Heart button; hidden when null.
+  final VoidCallback? onFavourite;
   final VoidCallback onAdd, onRemove;
   final double? width;
 
@@ -66,37 +75,52 @@ class ZProductCard extends StatelessWidget {
                 ZImageTile(image: image, color: tileColor ?? z.surface2),
                 if (_offPercent != null)
                   Positioned(left: 6, top: 6, child: ZOffBadge(_offPercent!)),
-                Positioned(
-                  right: 4,
-                  top: 4,
-                  child: Material(
-                    color: z.surface,
-                    shape: const CircleBorder(),
-                    elevation: 1,
-                    shadowColor: z.shadow,
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      onTap: onFavourite,
-                      child: SizedBox.square(
-                        dimension: 30,
-                        child: Icon(
-                          favourite
-                              ? Icons.favorite_rounded
-                              : Icons.favorite_border_rounded,
-                          size: 16,
-                          color: favourite ? z.brandText : z.ink2,
+                if (onFavourite != null)
+                  // 44 pt tap target around the 30 pt visible circle.
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Semantics(
+                      button: true,
+                      label: favourite
+                          ? 'removeFromFavourites'.tr()
+                          : 'addToFavourites'.tr(),
+                      excludeSemantics: true,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: onFavourite,
+                        child: SizedBox.square(
+                          dimension: ZSize.touch,
+                          child: Center(
+                            child: Material(
+                              color: z.surface,
+                              shape: const CircleBorder(),
+                              elevation: 1,
+                              shadowColor: z.shadow,
+                              child: SizedBox.square(
+                                dimension: 30,
+                                child: Icon(
+                                  favourite
+                                      ? Icons.favorite_rounded
+                                      : Icons.favorite_border_rounded,
+                                  size: 16,
+                                  color: favourite ? z.brandText : z.ink2,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
               ],
             ),
             const SizedBox(height: 6),
             ZEtaBadge(label: eta),
             const SizedBox(height: 6),
+            // Two lines of name at any text size, so cards in a row align.
             SizedBox(
-              height: 34,
+              height: MediaQuery.textScalerOf(context).scale(34),
               child: Text(
                 name,
                 maxLines: 2,
@@ -105,7 +129,12 @@ class ZProductCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 2),
-            Text(weight, style: t.bodySmall),
+            Text(
+              weight,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: t.bodySmall,
+            ),
             const SizedBox(height: 6),
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,

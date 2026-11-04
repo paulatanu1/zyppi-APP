@@ -11,9 +11,12 @@ class ZSectionHeader extends StatelessWidget {
     this.title, {
     super.key,
     this.onSeeAll,
-    this.actionLabel = 'See all',
+    this.actionLabel,
   });
-  final String title, actionLabel;
+  final String title;
+
+  /// Defaults to `seeAll`.
+  final String? actionLabel;
   final VoidCallback? onSeeAll;
 
   @override
@@ -25,13 +28,17 @@ class ZSectionHeader extends StatelessWidget {
       children: [
         Expanded(child: Text(title, style: t.titleMedium)),
         if (onSeeAll != null)
-          GestureDetector(
-            onTap: onSeeAll,
-            child: Text(
-              actionLabel,
-              style: t.labelMedium!.copyWith(
-                color: context.z.brandText,
-                fontWeight: FontWeight.w800,
+          Semantics(
+            button: true,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onSeeAll,
+              child: Text(
+                actionLabel ?? 'seeAll'.tr(),
+                style: t.labelMedium!.copyWith(
+                  color: context.z.brandText,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ),
@@ -50,7 +57,11 @@ class ZCategoryTile extends StatelessWidget {
     this.onTap,
   });
   final String label;
-  final ImageProvider image;
+
+  /// Usually `CatalogImage(image: url, fit: BoxFit.contain)`.
+  final Widget image;
+
+  /// Catalog tint; muted automatically in dark mode.
   final Color color;
   final VoidCallback? onTap;
 
@@ -63,7 +74,7 @@ class ZCategoryTile extends StatelessWidget {
         children: [
           ZImageTile(
             image: image,
-            color: color,
+            color: zTileTint(context, color),
             width: 76,
             height: ZSize.categoryTile,
           ),
@@ -87,15 +98,13 @@ class ZCategoryTile extends StatelessWidget {
   }
 }
 
-/// White search field used in the home header ("Search “paneer”" + mic).
+/// White search field used in the home header. The mic button only shows
+/// when [onMic] is set (there is no voice search yet).
 class ZSearchBar extends StatelessWidget {
-  const ZSearchBar({
-    super.key,
-    this.hint = 'Search “paneer”',
-    this.onTap,
-    this.onMic,
-  });
-  final String hint;
+  const ZSearchBar({super.key, this.hint, this.onTap, this.onMic});
+
+  /// Defaults to `homeSearchHint`.
+  final String? hint;
   final VoidCallback? onTap, onMic;
 
   @override
@@ -124,23 +133,30 @@ class ZSearchBar extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                hint,
+                hint ?? 'homeSearchHint'.tr(),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodyMedium!
                     .copyWith(color: z.ink3, fontSize: 14.5),
               ),
             ),
-            Material(
-              color: z.surface2,
-              borderRadius: ZRadius.all(11),
-              child: InkWell(
+            if (onMic != null)
+              Material(
+                color: z.surface2,
                 borderRadius: ZRadius.all(11),
-                onTap: onMic,
-                child: SizedBox.square(
-                  dimension: 38,
-                  child: Icon(Icons.mic_none_rounded, size: 20, color: z.ink2),
+                child: InkWell(
+                  borderRadius: ZRadius.all(11),
+                  onTap: onMic,
+                  child: SizedBox.square(
+                    dimension: 38,
+                    child: Icon(
+                      Icons.mic_none_rounded,
+                      size: 20,
+                      color: z.ink2,
+                    ),
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -299,11 +315,11 @@ class ZNavBar extends StatelessWidget {
   final ValueChanged<int> onTap;
 
   static const _items = [
-    (Icons.home_outlined, Icons.home_rounded, 'Home'),
-    (Icons.explore_outlined, Icons.explore_rounded, 'Explore'),
-    (Icons.shopping_bag_outlined, Icons.shopping_bag_rounded, 'Cart'),
-    (Icons.favorite_border_rounded, Icons.favorite_rounded, 'Favourite'),
-    (Icons.person_outline_rounded, Icons.person_rounded, 'Account'),
+    (Icons.home_outlined, Icons.home_rounded, 'home'),
+    (Icons.explore_outlined, Icons.explore_rounded, 'explore'),
+    (Icons.shopping_bag_outlined, Icons.shopping_bag_rounded, 'navCart'),
+    (Icons.favorite_border_rounded, Icons.favorite_rounded, 'favourite'),
+    (Icons.person_outline_rounded, Icons.person_rounded, 'navAccount'),
   ];
 
   @override
@@ -317,85 +333,102 @@ class ZNavBar extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        child: SizedBox(
-          height: 66,
-          child: Row(
-            children: [
-              for (var i = 0; i < _items.length; i++)
-                Expanded(
-                  child: InkWell(
-                    onTap: () => onTap(i),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Stack(
-                          clipBehavior: Clip.none,
+        // The bar has a fixed height, so labels stop growing at 1.2×.
+        child: MediaQuery.withClampedTextScaling(
+          maxScaleFactor: 1.2,
+          child: SizedBox(
+            height: 66,
+            child: Row(
+              children: [
+                for (var i = 0; i < _items.length; i++)
+                  Expanded(
+                    child: Semantics(
+                      selected: i == index,
+                      button: true,
+                      label: i == 2 && cartCount > 0
+                          ? '${_items[i].$3.tr()}, $cartCount'
+                          : null,
+                      excludeSemantics: i == 2 && cartCount > 0,
+                      child: InkWell(
+                        onTap: () => onTap(i),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            AnimatedContainer(
-                              duration: ZMotion.ui,
-                              curve: ZMotion.standard,
-                              width: 52,
-                              height: 30,
-                              decoration: BoxDecoration(
-                                color: i == index
-                                    ? z.brandSoft
-                                    : Colors.transparent,
-                                borderRadius: ZRadius.all(15),
-                              ),
-                              child: Icon(
-                                i == index ? _items[i].$2 : _items[i].$1,
-                                size: 22,
-                                color: i == index ? z.brandText : z.ink3,
-                              ),
-                            ),
-                            if (i == 2 && cartCount > 0)
-                              Positioned(
-                                right: 2,
-                                top: -4,
-                                child: Container(
-                                  constraints: const BoxConstraints(
-                                    minWidth: 18,
-                                  ),
-                                  height: 18,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 4,
-                                  ),
-                                  alignment: Alignment.center,
+                            Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                AnimatedContainer(
+                                  duration:
+                                      MediaQuery.disableAnimationsOf(context)
+                                      ? Duration.zero
+                                      : ZMotion.ui,
+                                  curve: ZMotion.standard,
+                                  width: 52,
+                                  height: 30,
                                   decoration: BoxDecoration(
-                                    color: z.brand,
-                                    borderRadius: ZRadius.all(9),
-                                    border: Border.all(
-                                      color: z.surface,
-                                      width: 2,
-                                    ),
+                                    color: i == index
+                                        ? z.brandSoft
+                                        : Colors.transparent,
+                                    borderRadius: ZRadius.all(15),
                                   ),
-                                  child: Text(
-                                    '$cartCount',
-                                    style: t.labelSmall!.copyWith(
-                                      color: z.onBrand,
-                                      fontSize: 10,
-                                      letterSpacing: 0,
-                                    ),
+                                  child: Icon(
+                                    i == index ? _items[i].$2 : _items[i].$1,
+                                    size: 22,
+                                    color: i == index ? z.brandText : z.ink3,
                                   ),
                                 ),
+                                if (i == 2 && cartCount > 0)
+                                  Positioned(
+                                    right: 2,
+                                    top: -4,
+                                    child: Container(
+                                      constraints: const BoxConstraints(
+                                        minWidth: 18,
+                                      ),
+                                      height: 18,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 4,
+                                      ),
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                        color: z.brand,
+                                        borderRadius: ZRadius.all(9),
+                                        border: Border.all(
+                                          color: z.surface,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        cartCount > 99 ? '99+' : '$cartCount',
+                                        style: t.labelSmall!.copyWith(
+                                          color: z.onBrand,
+                                          fontSize: 10,
+                                          letterSpacing: 0,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _items[i].$3.tr(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: t.labelSmall!.copyWith(
+                                fontSize: 11,
+                                letterSpacing: 0,
+                                fontWeight: FontWeight.w700,
+                                color: i == index ? z.ink : z.ink3,
                               ),
+                            ),
                           ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _items[i].$3,
-                          style: t.labelSmall!.copyWith(
-                            fontSize: 11,
-                            letterSpacing: 0,
-                            fontWeight: FontWeight.w700,
-                            color: i == index ? z.ink : z.ink3,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
