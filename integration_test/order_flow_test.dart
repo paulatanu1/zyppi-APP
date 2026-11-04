@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:zippy/core/common_widgets/add_button.dart';
 import 'package:zippy/core/data/data_source/key_names.dart';
 import 'package:zippy/main.dart' as app;
 
@@ -52,30 +51,17 @@ void main() {
     );
     expect(find.text('Deals for you'), findsOneWidget);
 
-    // The product grid shows a non-interactive skeleton (AddButton with a
-    // null onTap, under an AbsorbPointer) until the mock catalog call
-    // resolves (300-800ms) - wait for a real, tappable one.
-    AddButton? addButton;
-    await _waitUntil(tester, () {
-      final tappable = find
-          .byType(AddButton)
-          .evaluate()
-          .map((e) => e.widget as AddButton)
-          .where((w) => w.onTap != null);
-      if (tappable.isEmpty) return false;
-      addButton = tappable.first;
-      return true;
-    });
-    expect(addButton, isNotNull, reason: 'product grid never finished loading');
-
-    // Home: add the first product to the cart. warnIfMissed: false - the
-    // tap target is correct (verified via onTap != null above); the
-    // warning is just AppSkeleton's always-present IgnorePointer showing
-    // up in the hit-test chain even once it's not actually absorbing.
-    await tester.tap(
-      find.byWidgetPredicate((w) => w == addButton),
-      warnIfMissed: false,
+    // Product cards show skeletons (no ADD button) until the mock
+    // catalog call resolves (300-800ms) - wait for a real ADD.
+    await _waitUntil(tester, () => find.text('ADD').evaluate().isNotEmpty);
+    expect(
+      find.text('ADD'),
+      findsWidgets,
+      reason: 'product carousel never finished loading',
     );
+
+    // Home: add the first product to the cart.
+    await tester.tap(find.text('ADD').first);
     await _waitUntil(
       tester,
       () => find.text('View cart').evaluate().isNotEmpty,
@@ -84,14 +70,11 @@ void main() {
     // Floating cart bar -> cart screen.
     expect(find.text('View cart'), findsOneWidget);
     await tester.tap(find.text('View cart'));
-    await _waitUntil(
-      tester,
-      () => find.text('Proceed to checkout →').evaluate().isNotEmpty,
-    );
+    await _waitUntil(tester, () => find.text('Checkout').evaluate().isNotEmpty);
 
-    // Cart -> checkout.
-    expect(find.text('Proceed to checkout →'), findsOneWidget);
-    await tester.tap(find.text('Proceed to checkout →'));
+    // Cart -> checkout (the bottom bar's "₹… TOTAL · Checkout" button).
+    expect(find.text('Checkout'), findsOneWidget);
+    await tester.tap(find.text('Checkout'));
     await _waitUntil(
       tester,
       // The Pay button enables once the address + slot have loaded.

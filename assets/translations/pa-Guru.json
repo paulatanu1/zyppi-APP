@@ -334,5 +334,7 @@
   "packSize": "ਪੈਕ ਦਾ ਆਕਾਰ",
   "variantInclTaxes": "{} · ਟੈਕਸਾਂ ਸਮੇਤ",
   "yourCart": "ਤੁਹਾਡੀ ਕਾਰਟ",
-  "tipNone": "ਕੋਈ ਨਹੀਂ"
+  "tipNone": "ਕੋਈ ਨਹੀਂ",
+  "resultsFor": "“{}” ਦੇ ਨਤੀਜੇ",
+  "clearSearch": "ਖੋਜ ਸਾਫ਼ ਕਰੋ"
 }

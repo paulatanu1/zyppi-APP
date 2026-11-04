@@ -326,5 +326,7 @@
   "packSize": "Pack size",
   "variantInclTaxes": "{} · inclusive of taxes",
   "yourCart": "Your cart",
-  "tipNone": "None"
+  "tipNone": "None",
+  "resultsFor": "Results for “{}”",
+  "clearSearch": "Clear search"
 }
