@@ -8,7 +8,8 @@ import 'package:zippy/features/search_address/domain/place_repository.dart';
 const devicePlacePrefix = 'geo:';
 
 /// Places autocomplete/details go through the `placesProxy` Cloud Function
-/// (no Google key in the app; functions/src/places.ts).
+/// (Google Places API (New); no Google key in the app; functions/src/places.ts),
+/// which already returns the camelCase shape PlacePrediction/PlaceDetails read.
 ///
 /// If Places is unavailable — key not configured, quota, offline — search
 /// falls back to the phone's own geocoder (the same keyless one "use
@@ -43,7 +44,8 @@ class FirebasePlaceRepository implements PlaceRepository {
   Future<Map<String, dynamic>> fetchPlaceDetails(String? placeId) =>
       _call({'action': 'details', 'placeId': placeId});
 
-  /// Google-shaped predictions from the platform geocoder.
+  /// Predictions in the same shape as placesProxy's, from the platform
+  /// geocoder.
   Future<Map<String, dynamic>> _devicePredictions(String query) async {
     final geocoder = geocoding.Geocoding();
     final List<geocoding.Location> locations;
@@ -76,7 +78,7 @@ class FirebasePlaceRepository implements PlaceRepository {
 
       predictions.add({
         'description': description,
-        'place_id':
+        'placeId':
             '$devicePlacePrefix${location.latitude},${location.longitude}',
       });
     }

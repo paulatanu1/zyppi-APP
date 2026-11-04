@@ -37,7 +37,7 @@ Flutter **3.47.x stable** (Dart 3.13) pinned with **FVM** (`.fvmrc`). Upgrade wi
 | UI kit | `flutter_screenutil`, `carousel_slider`, `smooth_page_indicator`, `curved_navigation_bar`, `flutter_bounce`, `fluttertoast` | Keep first four; SnackBar instead of `fluttertoast`; add `cached_network_image`, `skeletonizer` | 1–2 |
 | OTP input | `otp_text_field` + `flutter_otp_text_field` | `flutter_otp_text_field` only | 1 |
 | Localization | `easy_localization` | latest | 0 |
-| Location / maps | `geolocator`, `google_places_flutter` (client key) | `geolocator`, `geocoding`; Places via the `placesProxy` Cloud Function. `google_maps_flutter` was added in Phase 4 then removed (2026-10-26): delivery here only needs `lat`/`lng` for the rider to navigate externally, not an embedded map in the customer app — see decisions table | 4 |
+| Location / maps | `geolocator`, `google_places_flutter` (client key) | `geolocator`, `geocoding`; Places API (New) via the `placesProxy` Cloud Function. `google_maps_flutter` was added in Phase 4 then removed (2026-10-26): delivery here only needs `lat`/`lng` for the rider to navigate externally, not an embedded map in the customer app — see decisions table | 4 |
 | Push / crash / analytics | `firebase_core` | + `firebase_messaging`, `firebase_crashlytics`, `firebase_analytics` | 4–5 |
 | Payments | — | `phonepe_payment_sdk` (Standard Checkout) + COD | 4 |
 | Testing | `flutter_test` | + `mocktail`, `integration_test` | all |
