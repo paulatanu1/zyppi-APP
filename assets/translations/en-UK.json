@@ -324,5 +324,7 @@
   "mrpPrice": "MRP {}",
   "inclusiveOfTaxes": "Inclusive of all taxes",
   "packSize": "Pack size",
-  "variantInclTaxes": "{} · inclusive of taxes"
+  "variantInclTaxes": "{} · inclusive of taxes",
+  "yourCart": "Your cart",
+  "tipNone": "None"
 }

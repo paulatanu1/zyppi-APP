@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bounce/flutter_bounce.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/cart/domain/cart_line.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
-import 'package:zippy/core/common_widgets/price_tag.dart';
-import 'package:zippy/core/common_widgets/quantity_stepper.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
-import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
+import 'package:zippy/core/widgets/z_commerce.dart';
 
+/// One cart line (docs/screens/light/09-cart.png): photo tile, name and
+/// pack size; stepper above the line total. − at 1 removes the line.
 class MyCartItem extends ConsumerWidget {
   final CartLine line;
 
@@ -16,82 +15,63 @@ class MyCartItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    double height = MediaQuery.of(context).size.height;
-    double width = MediaQuery.of(context).size.width;
-
-    void updateQuantity(int quantity) {
-      ref
-          .read(cartProvider.notifier)
-          .setQuantity(
-            product: line.product,
-            variant: line.variant,
-            quantity: quantity,
-          );
+    final z = context.z;
+    final t = Theme.of(context).textTheme;
+    // Live quantity at tap time, so quick taps all count.
+    void step(int delta) {
+      final cart = ref.read(cartProvider.notifier);
+      cart.setQuantity(
+        product: line.product,
+        variant: line.variant,
+        quantity: cart.quantityOf(line.product.id, line.variant.id) + delta,
+      );
     }
 
     return Padding(
-      padding: EdgeInsets.only(left: height * 0.02, right: height * 0.02),
-      child: Column(
+      padding: const EdgeInsets.symmetric(vertical: ZSpace.x2),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: EdgeInsets.only(top: height * 0.02, bottom: height * 0.02),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                CatalogImage(
-                  image: line.product.image,
-                  height: height * 0.08,
-                  width: width * 0.15,
-                  fit: BoxFit.contain,
-                ),
-                SizedBox(width: height * 0.025),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(line.product.name, style: AppTypography.bodyLarge),
-                      Text(
-                        line.variant.label,
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: context.colors.muted,
-                        ),
-                      ),
-                      SizedBox(height: height * 0.02),
-                      QuantityStepper(
-                        quantity: line.quantity,
-                        onDecrement: () => updateQuantity(line.quantity - 1),
-                        onIncrement: () => updateQuantity(line.quantity + 1),
-                      ),
-                    ],
+          ZImageTile(
+            image: CatalogImage(image: line.product.image, fit: BoxFit.contain),
+            color: z.surface2,
+            width: ZSize.input,
+            height: ZSize.input,
+          ),
+          const SizedBox(width: ZSpace.x3),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: ZSpace.x2),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    line.product.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: t.labelLarge,
                   ),
-                ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Bounce(
-                      duration: Duration(milliseconds: 300),
-                      onPressed: () => updateQuantity(0),
-                      child: Icon(
-                        Icons.close,
-                        size: 30,
-                        color: context.colors.muted,
-                      ),
-                    ),
-                    SizedBox(height: height * 0.04),
-                    PriceTag(
-                      pricePaise: line.lineTotalPaise,
-                      mrpPaise: line.lineMrpPaise,
-                    ),
-                  ],
-                ),
-              ],
+                  Text(line.variant.label, style: t.bodySmall),
+                ],
+              ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Divider(height: 1, color: context.colors.divider),
+          const SizedBox(width: ZSpace.x3),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              ZAddStepper(
+                quantity: line.quantity,
+                onAdd: () => step(1),
+                onRemove: () => step(-1),
+              ),
+              const SizedBox(height: ZSpace.x2),
+              ZPrice(
+                price: line.lineTotalPaise,
+                mrp: line.lineMrpPaise,
+                horizontal: true,
+              ),
+            ],
           ),
         ],
       ),

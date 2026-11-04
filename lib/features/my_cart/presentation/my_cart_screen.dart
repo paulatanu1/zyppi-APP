@@ -4,122 +4,298 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/cart/application/cart_state.dart';
-import 'package:zippy/core/common_widgets/app_skeleton.dart';
-import 'package:zippy/core/common_widgets/price_tag.dart';
-import 'package:zippy/core/common_widgets/primary_button.dart';
-import 'package:zippy/core/common_widgets/text_form_field.dart';
 import 'package:zippy/core/domain/coupon.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
-import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
+import 'package:zippy/core/utils/address_label.dart';
+import 'package:zippy/core/widgets/z_commerce.dart';
+import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/my_cart/widgets/bill_details.dart';
 import 'package:zippy/features/my_cart/widgets/my_cart_item.dart';
 import 'package:zippy/features/my_cart/widgets/tip_selector.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
 
+/// docs/screens/light/09-cart.png. Both a tab and a pushed route
+/// (`/myCartScreen`); the back arrow only shows when pushed. Left out
+/// until the data exists: Share, and the free-delivery progress bar (no
+/// threshold in the bill).
 class MyCartScreen extends ConsumerWidget {
   const MyCartScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    double height = MediaQuery.of(context).size.height;
     final cart = ref.watch(cartProvider);
+    final hasLines =
+        !cart.loading && cart.error == null && cart.lines.isNotEmpty;
 
     return Scaffold(
-      backgroundColor: context.colors.surface,
-      appBar: AppBar(title: Text('myCart'.tr())),
-      body: SafeArea(top: false, child: _buildBody(context, ref, cart, height)),
+      backgroundColor: context.z.bg,
+      appBar: AppBar(title: Text('yourCart'.tr())),
+      body: _body(context, ref, cart),
+      bottomNavigationBar: hasLines ? _CheckoutBar(cart: cart) : null,
     );
   }
 
-  Widget _buildBody(
-    BuildContext context,
-    WidgetRef ref,
-    CartState cart,
-    double height,
-  ) {
+  Widget _body(BuildContext context, WidgetRef ref, CartState cart) {
+    final z = context.z;
+    final t = Theme.of(context).textTheme;
+
     if (cart.error != null) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('somethingWentWrong'.tr(), style: AppTypography.bodyMedium),
-            SizedBox(height: height * 0.015),
-            SizedBox(
-              width: 160,
-              child: PrimaryButton(
-                buttonTitle: 'retry'.tr(),
-                action: () => ref.read(cartProvider.notifier).retry(),
-              ),
+            Text('somethingWentWrong'.tr(), style: t.bodyMedium),
+            const SizedBox(height: ZSpace.x3),
+            FilledButton(
+              onPressed: () => ref.read(cartProvider.notifier).retry(),
+              child: Text('retry'.tr()),
             ),
           ],
         ),
       );
     }
 
-    if (!cart.loading && cart.lines.isEmpty) {
+    if (cart.loading) return const _CartSkeleton();
+
+    if (cart.lines.isEmpty) {
       return Center(
-        child: Text('emptyCart'.tr(), style: AppTypography.bodyMedium),
+        child: Padding(
+          padding: const EdgeInsets.all(ZSpace.x6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.shopping_bag_outlined, size: 48, color: z.ink3),
+              const SizedBox(height: ZSpace.x3),
+              Text(
+                'emptyCart'.tr(),
+                textAlign: TextAlign.center,
+                style: t.titleMedium,
+              ),
+            ],
+          ),
+        ),
       );
     }
 
-    return AppSkeleton(
-      enabled: cart.loading,
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            if (cart.bill.savingsPaise > 0)
-              Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xl,
-                    vertical: AppSpacing.base,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.colors.primaryTint,
-                    borderRadius: BorderRadius.circular(AppRadius.input),
-                  ),
+    final itemCount = cart.lines.fold<int>(0, (sum, l) => sum + l.quantity);
+
+    return ListView(
+      padding: const EdgeInsets.all(ZSpace.screen),
+      children: [
+        if (cart.bill.savingsPaise > 0) ...[
+          _Card(
+            color: z.okSoft,
+            borderColor: z.okSoft,
+            child: Row(
+              children: [
+                Icon(Icons.savings_outlined, color: z.ok, size: 20),
+                const SizedBox(width: ZSpace.x3),
+                Expanded(
                   child: Text(
-                    'savingsBanner'.tr(
-                      args: [PriceTag.format(cart.bill.savingsPaise)],
-                    ),
-                    style: AppTypography.bodySmall.copyWith(
-                      color: context.colors.primaryDark,
-                      fontWeight: FontWeight.w700,
+                    'savingsBanner'.tr(args: [rupees(cart.bill.savingsPaise)]),
+                    style: t.labelMedium!.copyWith(color: z.ok),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: ZSpace.x3),
+        ],
+        _Card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text('deliveryEta'.tr(), style: t.titleMedium),
+                  ),
+                  Text('itemCount'.plural(itemCount), style: t.bodySmall),
+                ],
+              ),
+              const SizedBox(height: ZSpace.x2),
+              for (final line in cart.lines)
+                MyCartItem(key: ValueKey(line.variant.id), line: line),
+            ],
+          ),
+        ),
+        const SizedBox(height: ZSpace.x3),
+        _Card(child: _CouponField(appliedCoupon: cart.appliedCoupon)),
+        const SizedBox(height: ZSpace.x3),
+        _Card(
+          child: BillDetails(
+            bill: cart.bill,
+            tipSelector: TipSelector(
+              tipPaise: cart.tipPaise,
+              onChanged: (tip) => ref.read(cartProvider.notifier).setTip(tip),
+            ),
+          ),
+        ),
+        const SizedBox(height: ZSpace.x4),
+      ],
+    );
+  }
+}
+
+/// White rounded section card.
+class _Card extends StatelessWidget {
+  const _Card({required this.child, this.color, this.borderColor});
+
+  final Widget child;
+  final Color? color, borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final z = context.z;
+    return Container(
+      padding: const EdgeInsets.all(ZSpace.x4),
+      decoration: BoxDecoration(
+        color: color ?? z.surface,
+        borderRadius: ZRadius.all(ZRadius.card),
+        border: Border.all(color: borderColor ?? z.line),
+      ),
+      child: child,
+    );
+  }
+}
+
+/// "DELIVER TO · HOME / Ranchi Road, Purulia" and the "₹477 TOTAL ·
+/// Checkout ›" button.
+class _CheckoutBar extends ConsumerWidget {
+  const _CheckoutBar({required this.cart});
+
+  final CartState cart;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final z = context.z;
+    final t = Theme.of(context).textTheme;
+    final location = ref.watch(currentLocation);
+    final label = location.label == null
+        ? 'currentLocation'.tr()
+        : addressLabelText(location.label!);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: z.surface,
+        border: Border(top: BorderSide(color: z.line)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.all(ZSpace.x3),
+          child: Row(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: ZSpace.x1),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'deliverToLabel'.tr(args: [label]).toUpperCase(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: t.labelSmall!.copyWith(color: z.ink3),
+                      ),
+                      Text(
+                        location.address,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: t.labelLarge,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: ZSpace.x3),
+              // Up to two thirds of the bar; the label shrinks to fit at
+              // large text sizes.
+              Flexible(
+                flex: 2,
+                child: Semantics(
+                  button: true,
+                  child: ZPressable(
+                    onTap: () => context.push('/checkoutScreen'),
+                    child: Container(
+                      constraints: const BoxConstraints(
+                        minHeight: ZSize.button,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: ZSpace.x4,
+                        vertical: ZSpace.x2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: z.brand,
+                        borderRadius: ZRadius.all(ZRadius.button),
+                      ),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  rupees(cart.bill.totalPaise),
+                                  style: t.labelLarge!.copyWith(
+                                    color: z.onBrand,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                Text(
+                                  'total'.tr(),
+                                  style: t.labelSmall!.copyWith(
+                                    color: z.headerInk2,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: ZSpace.x4),
+                            Text(
+                              'checkout'.tr(),
+                              style: t.titleMedium!.copyWith(color: z.onBrand),
+                            ),
+                            Icon(Icons.chevron_right_rounded, color: z.onBrand),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ...cart.lines.map((line) => MyCartItem(line: line)),
-            BillDetails(bill: cart.bill),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: _CouponField(appliedCoupon: cart.appliedCoupon),
-            ),
-            TipSelector(
-              tipPaise: cart.tipPaise,
-              onChanged: (tip) => ref.read(cartProvider.notifier).setTip(tip),
-            ),
-            SizedBox(height: height * 0.02),
-            Padding(
-              padding: EdgeInsets.only(
-                left: height * 0.02,
-                right: height * 0.02,
-              ),
-              child: PrimaryButton(
-                buttonTitle: 'proceedToCheckout'.tr(),
-                action: () => context.push('/checkoutScreen'),
-              ),
-            ),
-            SizedBox(height: height * 0.04),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
+class _CartSkeleton extends StatelessWidget {
+  const _CartSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(ZSpace.screen),
+      physics: const NeverScrollableScrollPhysics(),
+      children: const [
+        ZSkeleton(height: 220, radius: ZRadius.card),
+        SizedBox(height: ZSpace.x3),
+        ZSkeleton(height: 72, radius: ZRadius.card),
+        SizedBox(height: ZSpace.x3),
+        ZSkeleton(height: 240, radius: ZRadius.card),
+      ],
+    );
+  }
+}
+
+/// Coupon entry (the bill reacts to it). Once applied: the code with
+/// "Remove", or how much more is needed for its minimum order.
 class _CouponField extends ConsumerStatefulWidget {
   final Coupon? appliedCoupon;
 
@@ -149,8 +325,20 @@ class _CouponFieldState extends ConsumerState<_CouponField> {
 
   @override
   Widget build(BuildContext context) {
+    final z = context.z;
+    final t = Theme.of(context).textTheme;
     final cart = ref.watch(cartProvider);
     final coupon = widget.appliedCoupon;
+
+    final icon = Container(
+      width: ZSize.touch,
+      height: ZSize.touch,
+      decoration: BoxDecoration(
+        color: z.okSoft,
+        borderRadius: ZRadius.all(ZRadius.control),
+      ),
+      child: Icon(Icons.local_offer_outlined, color: z.ok, size: 20),
+    );
 
     if (coupon != null) {
       // Applied, but the cart is below the coupon's minimum: say how much
@@ -159,21 +347,19 @@ class _CouponFieldState extends ConsumerState<_CouponField> {
 
       return Row(
         children: [
+          icon,
+          const SizedBox(width: ZSpace.x3),
           Expanded(
             child: Text(
               shortBy > 0
                   ? 'couponAddMore'.tr(
                       namedArgs: {
-                        'amount': PriceTag.format(shortBy),
+                        'amount': rupees(shortBy),
                         'code': coupon.code,
                       },
                     )
                   : '${coupon.code} · ${'couponApplied'.tr()}',
-              style: AppTypography.bodyMedium.copyWith(
-                color: shortBy > 0
-                    ? context.colors.muted
-                    : context.colors.green,
-              ),
+              style: t.labelLarge!.copyWith(color: shortBy > 0 ? z.ink2 : z.ok),
             ),
           ),
           TextButton(
@@ -190,14 +376,22 @@ class _CouponFieldState extends ConsumerState<_CouponField> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          spacing: AppSpacing.sm,
           children: [
+            icon,
+            const SizedBox(width: ZSpace.x3),
             Expanded(
-              child: TextformField(
-                textFormFieldController: _controller,
-                labelText: 'couponCode'.tr(),
+              child: TextField(
+                controller: _controller,
+                textCapitalization: TextCapitalization.characters,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _apply(),
+                decoration: InputDecoration(
+                  hintText: 'couponCode'.tr(),
+                  isDense: true,
+                ),
               ),
             ),
+            const SizedBox(width: ZSpace.x2),
             _applying
                 ? const SizedBox.square(
                     dimension: 22,
@@ -211,13 +405,11 @@ class _CouponFieldState extends ConsumerState<_CouponField> {
         ),
         if (error != null)
           Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.xs),
+            padding: const EdgeInsets.only(top: ZSpace.x2),
             child: Text(
               // couponError holds a translation key.
               error.tr(),
-              style: AppTypography.bodySmall.copyWith(
-                color: context.colors.danger,
-              ),
+              style: t.bodySmall!.copyWith(color: z.danger),
             ),
           ),
       ],

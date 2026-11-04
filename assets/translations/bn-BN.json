@@ -332,5 +332,7 @@
   "mrpPrice": "MRP {}",
   "inclusiveOfTaxes": "সব কর সহ",
   "packSize": "প্যাকের আকার",
-  "variantInclTaxes": "{} · কর সহ"
+  "variantInclTaxes": "{} · কর সহ",
+  "yourCart": "আপনার কার্ট",
+  "tipNone": "কিছু না"
 }
