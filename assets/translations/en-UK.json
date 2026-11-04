@@ -318,5 +318,7 @@
   "navCart": "Cart",
   "navAccount": "Account",
   "zyppiExpress": "ZYPPI EXPRESS",
-  "etaHeadline": "12 minutes"
+  "etaHeadline": "12 minutes",
+  "offersChip": "Offers",
+  "deliveredInEta": "delivered in 12 min"
 }

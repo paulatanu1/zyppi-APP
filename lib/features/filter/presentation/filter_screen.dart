@@ -8,6 +8,14 @@ import 'package:zippy/core/domain/product_filter.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/features/filter/widgets/filter_header.dart';
 
+/// Display name of a sort order (filter screen and the category sort sheet).
+String productSortLabel(ProductSort sort) => switch (sort) {
+  ProductSort.relevance => 'sortRelevance'.tr(),
+  ProductSort.priceLowToHigh => 'sortPriceLowHigh'.tr(),
+  ProductSort.priceHighToLow => 'sortPriceHighLow'.tr(),
+  ProductSort.discount => 'sortDiscount'.tr(),
+};
+
 /// Sort and narrow one category's listing. Opens with the filter that's
 /// currently applied; "Apply" writes it back to [productFilterProvider],
 /// which the category screen applies. (No brand facet — the catalog has
@@ -30,13 +38,6 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
     ref.read(productFilterProvider(widget.categoryId).notifier).state = _draft;
     context.pop();
   }
-
-  static String _sortLabel(ProductSort sort) => switch (sort) {
-    ProductSort.relevance => 'sortRelevance'.tr(),
-    ProductSort.priceLowToHigh => 'sortPriceLowHigh'.tr(),
-    ProductSort.priceHighToLow => 'sortPriceHighLow'.tr(),
-    ProductSort.discount => 'sortDiscount'.tr(),
-  };
 
   static String _bandLabel(PriceBand band) => switch (band) {
     PriceBand(:final minPaise, maxPaise: final max?) when minPaise == null =>
@@ -86,7 +87,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
                               contentPadding: EdgeInsets.zero,
                               activeColor: z.brand,
                               title: Text(
-                                _sortLabel(sort),
+                                productSortLabel(sort),
                                 style: text.bodyMedium,
                               ),
                             ),
