@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zippy/core/common_widgets/category_card.dart';
+import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/domain/category.dart';
 import 'package:zippy/core/domain/home_section.dart';
 import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/zyppi_tokens.dart';
+import 'package:zippy/core/widgets/z_chrome.dart';
 import 'package:zippy/features/home_screen/widgets/sections/section_data.dart';
 
 /// Blinkit-referenced "Shop by category" grid — looser spacing than the
@@ -33,20 +35,22 @@ class CategoryGridSection extends StatelessWidget {
     return GridView.builder(
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
+      padding: EdgeInsets.zero,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: columns,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 20,
-        childAspectRatio: 0.68,
+        crossAxisSpacing: ZSpace.x3,
+        mainAxisSpacing: ZSpace.x4,
+        // Two-line labels at any text size.
+        mainAxisExtent: ZCategoryTile.height(context),
       ),
       itemCount: categories.length,
       itemBuilder: (context, index) {
         final category = categories[index];
 
-        return CategoryCard(
-          categoryText: category.name,
-          imageUrl: category.image,
-          backgroundColor: AppColors.fromHex(category.colorHex),
+        return ZCategoryTile(
+          label: category.name,
+          image: CatalogImage(image: category.image, fit: BoxFit.contain),
+          color: AppColors.fromHex(category.colorHex),
           onTap: () =>
               context.push('/categoryDetailsScreen?categoryId=${category.id}'),
         );

@@ -1,164 +1,203 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:zippy/core/theme/zyppi_theme.dart';
-import 'package:zippy/core/utils/address_label.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/nav_bar/provider/nav_bar_provider.dart';
+import 'package:zippy/core/data/provider/profile_provider.dart';
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
-import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
+import 'package:zippy/core/utils/address_label.dart';
+import 'package:zippy/core/widgets/z_chrome.dart';
+import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/home_screen/widgets/address_sheet.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
 
-/// Matches docs/mockups/Main.dc.html's header: delivery ETA + profile
-/// avatar, address row, search bar.
+/// docs/screens/light/05-home.png's magenta header: "ZYPPI EXPRESS",
+/// ⚡ ETA, address row (opens the address sheet), avatar (Account tab) and
+/// the search bar (search screen). HomeScreen paints the status-bar strip
+/// above it in the same colour.
 class HomeScreenHeader extends ConsumerWidget {
   const HomeScreenHeader({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final getCurrentLocation = ref.watch(currentLocation);
+    final z = context.z;
+    final t = Theme.of(context).textTheme;
 
     return Container(
       width: double.infinity,
-      color: context.colors.primary,
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.xxxl,
-        AppSpacing.xxxl,
-        AppSpacing.xxxl,
-        AppSpacing.xxl,
+      color: z.header,
+      padding: EdgeInsets.fromLTRB(
+        ZSpace.screen,
+        MediaQuery.paddingOf(context).top + ZSpace.x4,
+        ZSpace.screen,
+        ZSpace.x5,
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Text(
-                  'deliveryEta'.tr(),
-                  style: AppTypography.headlineSmall.copyWith(
-                    color: context.z.onBrand,
-                  ),
-                ),
-              ),
-              InkWell(
-                onTap: () => ref.read(navBarProvider.notifier).updateIndex(4),
-                borderRadius: BorderRadius.circular(ZSize.touch / 2),
-                child: CircleAvatar(
-                  radius: 22,
-                  backgroundColor: context.colors.primaryDark,
-                  child: Icon(Icons.person_outline, color: context.z.onBrand),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          InkWell(
-            onTap: () => bottomSheet(context, ref),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Capped so a long label never squeezes out the address.
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 120),
-                  child: Text(
-                    '${getCurrentLocation.label == null ? 'currentLocation'.tr() : addressLabelText(getCurrentLocation.label!)} · ',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: context.z.onBrand,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child:
-                      getCurrentLocation.isDetecting ||
-                          getCurrentLocation.checkingServiceability
-                      // Aligned so Expanded can't stretch the spinner across
-                      // the row; same text style/height as the address.
-                      ? Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (!MediaQuery.disableAnimationsOf(context)) ...[
-                                SizedBox.square(
-                                  dimension: 12,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 1.5,
-                                    color: context.colors.onPrimaryMuted,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                              ],
-                              Flexible(
-                                child: Text(
-                                  'detectingLocation'.tr(),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: AppTypography.bodySmall.copyWith(
-                                    color: context.colors.onPrimaryMuted,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : Text(
-                          getCurrentLocation.address,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: context.colors.onPrimaryMuted,
-                          ),
-                        ),
-                ),
-                Icon(
-                  Icons.keyboard_arrow_down,
-                  size: 16,
-                  color: context.colors.onPrimaryMuted,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          InkWell(
-            onTap: () => context.push('/searchScreen'),
-            borderRadius: BorderRadius.circular(AppRadius.input),
-            child: Container(
-              height: AppSizes.inputMin,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              decoration: BoxDecoration(
-                color: context.colors.surface,
-                borderRadius: BorderRadius.circular(AppRadius.input),
-                boxShadow: [
-                  BoxShadow(
-                    color: context.colors.shadow,
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.search, size: 20, color: context.colors.muted),
-                  const SizedBox(width: AppSpacing.base),
-                  Expanded(
-                    child: Text(
-                      'homeSearchHint'.tr(),
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: context.colors.muted,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'zyppiExpress'.tr(),
+                      style: t.labelSmall!.copyWith(
+                        color: z.headerInk2,
+                        letterSpacing: 1.1,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: ZSpace.x1),
+                    Row(
+                      children: [
+                        ZLoop(
+                          child: Icon(
+                            Icons.bolt_rounded,
+                            color: z.deal,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: ZSpace.x1),
+                        Flexible(
+                          child: Text(
+                            'etaHeadline'.tr(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: t.headlineSmall!.copyWith(
+                              color: z.headerInk,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: ZSpace.x1),
+                    const _AddressRow(),
+                  ],
+                ),
+              ),
+              const SizedBox(width: ZSpace.x3),
+              const _Avatar(),
+            ],
+          ),
+          const SizedBox(height: ZSpace.x3),
+          ZSearchBar(onTap: () => context.push('/searchScreen')),
+        ],
+      ),
+    );
+  }
+}
+
+/// "Home · Ranchi Road, Purulia ⌄" — or a small spinner while the location
+/// is being detected / checked.
+class _AddressRow extends ConsumerWidget {
+  const _AddressRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final z = context.z;
+    final t = Theme.of(context).textTheme;
+    final location = ref.watch(currentLocation);
+    final label = location.label == null
+        ? 'currentLocation'.tr()
+        : addressLabelText(location.label!);
+    final busy = location.isDetecting || location.checkingServiceability;
+    final secondary = t.labelMedium!.copyWith(
+      color: z.headerInk2,
+      fontWeight: FontWeight.w600,
+    );
+
+    return InkWell(
+      onTap: () => bottomSheet(context, ref),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: ZSize.touch),
+        child: Row(
+          children: [
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 120),
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: t.labelMedium!.copyWith(
+                  color: z.headerInk,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
-          ),
-        ],
+            Text(' · ', style: secondary),
+            if (busy) ...[
+              if (!MediaQuery.disableAnimationsOf(context)) ...[
+                SizedBox.square(
+                  dimension: 12,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 1.5,
+                    color: z.headerInk2,
+                  ),
+                ),
+                const SizedBox(width: 6),
+              ],
+              Flexible(
+                child: Text(
+                  'detectingLocation'.tr(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: secondary,
+                ),
+              ),
+            ] else
+              Flexible(
+                child: Text(
+                  location.address,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: secondary,
+                ),
+              ),
+            Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 18,
+              color: z.headerInk2,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The user's initial (person icon until the profile loads, or for
+/// guests); opens the Account tab.
+class _Avatar extends ConsumerWidget {
+  const _Avatar();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final z = context.z;
+    final profile = ref.watch(profileProvider).value;
+    final name = profile?.fullName?.trim() ?? '';
+    final initial = profile == null || profile.isGuest || name.isEmpty
+        ? null
+        : name.characters.first.toUpperCase();
+
+    return Semantics(
+      button: true,
+      label: 'navAccount'.tr(),
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: () => ref.read(navBarProvider.notifier).updateIndex(4),
+        customBorder: const CircleBorder(),
+        child: CircleAvatar(
+          radius: ZSize.touch / 2,
+          backgroundColor: z.onBrand.withValues(alpha: .16),
+          child: initial == null
+              ? Icon(Icons.person_outline_rounded, color: z.onBrand)
+              : Text(
+                  initial,
+                  style: Theme.of(context).textTheme.titleMedium!
+                      .copyWith(color: z.onBrand, fontWeight: FontWeight.w800),
+                ),
+        ),
       ),
     );
   }

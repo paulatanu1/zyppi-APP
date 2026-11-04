@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:zippy/core/common_widgets/nav_bar/provider/nav_bar_provider.dart';
+import 'package:zippy/core/theme/zyppi_tokens.dart';
+import 'package:zippy/core/widgets/z_chrome.dart';
 import 'package:zippy/core/domain/category.dart';
 import 'package:zippy/core/domain/home_section.dart';
 import 'package:zippy/core/domain/product.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
-import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/home_screen/widgets/sections/banner_carousel_section.dart';
 import 'package:zippy/features/home_screen/widgets/sections/category_cluster_section.dart';
 import 'package:zippy/features/home_screen/widgets/sections/category_grid_section.dart';
@@ -16,7 +18,7 @@ import 'package:zippy/features/home_screen/widgets/sections/spotlight_cards_sect
 /// added here as a developer builds a widget for them (see docs/PLAN.md's
 /// typed-section/flexible-item note); an unrecognized type renders
 /// nothing rather than crashing, since this content is admin-edited.
-class HomeSectionWidget extends StatelessWidget {
+class HomeSectionWidget extends ConsumerWidget {
   final HomeSection section;
   final Map<String, Category> categoriesById;
   final Map<String, Product> productsById;
@@ -29,7 +31,7 @@ class HomeSectionWidget extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final body = switch (section.type) {
       'category_tabs' => CategoryTabsSection(section: section),
       'banner_carousel' => BannerCarouselSection(section: section),
@@ -74,16 +76,26 @@ class HomeSectionWidget extends StatelessWidget {
       'product_carousel',
       'spotlight_cards',
     };
+    final header = section.title == null
+        ? null
+        : ZSectionHeader(
+            section.title!,
+            // "Shop by category" → every category, on the Explore tab.
+            onSeeAll: section.type == 'category_grid'
+                ? () => ref.read(navBarProvider.notifier).updateIndex(1)
+                : null,
+          );
+
     if (fullBleed.contains(section.type)) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (section.title != null) ...[
+          if (header != null) ...[
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
-              child: Text(section.title!, style: AppTypography.section),
+              padding: const EdgeInsets.symmetric(horizontal: ZSpace.screen),
+              child: header,
             ),
-            const SizedBox(height: AppSpacing.base),
+            const SizedBox(height: ZSpace.x3),
           ],
           body,
         ],
@@ -91,14 +103,11 @@ class HomeSectionWidget extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+      padding: const EdgeInsets.symmetric(horizontal: ZSpace.screen),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (section.title != null) ...[
-            Text(section.title!, style: AppTypography.section),
-            const SizedBox(height: AppSpacing.base),
-          ],
+          if (header != null) ...[header, const SizedBox(height: ZSpace.x3)],
           body,
         ],
       ),

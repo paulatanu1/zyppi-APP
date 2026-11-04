@@ -48,6 +48,8 @@ class ZSectionHeader extends StatelessWidget {
 }
 
 /// Category tile: 76×72 tinted rounded square with the full photo, label below (12/700, max 2 lines).
+/// Narrower in tight grids (up to 6 columns); [height] gives the grid row
+/// height at the current text scale.
 class ZCategoryTile extends StatelessWidget {
   const ZCategoryTile({
     super.key,
@@ -65,34 +67,51 @@ class ZCategoryTile extends StatelessWidget {
   final Color color;
   final VoidCallback? onTap;
 
+  static const double _tileWidth = 76, _gap = 6;
+
+  static TextStyle _labelStyle(BuildContext context) =>
+      Theme.of(context).textTheme.labelSmall!.copyWith(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0,
+        color: context.z.ink,
+        height: 1.2,
+      );
+
+  /// Tile + gap + two label lines at the current text scale.
+  static double height(BuildContext context) {
+    final style = _labelStyle(context);
+    final line = MediaQuery.textScalerOf(context)
+        .scale(style.fontSize! * style.height!);
+    return ZSize.categoryTile + _gap + 2 * line + 1;
+  }
+
   @override
   Widget build(BuildContext context) {
     return ZPressable(
       onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ZImageTile(
-            image: image,
-            color: zTileTint(context, color),
-            width: 76,
-            height: ZSize.categoryTile,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelSmall!.copyWith(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0,
-              color: context.z.ink,
-              height: 1.2,
+      child: LayoutBuilder(
+        builder: (context, constraints) => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ZImageTile(
+              image: image,
+              color: zTileTint(context, color),
+              width: constraints.maxWidth < _tileWidth
+                  ? constraints.maxWidth
+                  : _tileWidth,
+              height: ZSize.categoryTile,
             ),
-          ),
-        ],
+            const SizedBox(height: _gap),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: _labelStyle(context),
+            ),
+          ],
+        ),
       ),
     );
   }

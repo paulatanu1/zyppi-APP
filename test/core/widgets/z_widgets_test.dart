@@ -218,6 +218,43 @@ void main() {
     });
   });
 
+  group('ZCategoryTile', () {
+    for (final scale in [1.0, 2.0]) {
+      for (final width in [52.0, 80.0]) {
+        testWidgets('fits height() in a $width px cell at $scale× text', (
+          tester,
+        ) async {
+          late double extent;
+          await tester.pumpWidget(
+            _wrap(
+              Builder(
+                builder: (context) {
+                  extent = ZCategoryTile.height(context);
+                  return SizedBox(
+                    height: extent,
+                    child: ZCategoryTile(
+                      label: 'Dairy, Bread & Eggs and more',
+                      image: const SizedBox(),
+                      color: const Color(0xFFE8F0FF),
+                      onTap: () {},
+                    ),
+                  );
+                },
+              ),
+              textScale: scale,
+              width: width,
+            ),
+          );
+          expect(tester.takeException(), isNull);
+          expect(
+            tester.getSize(find.byType(Column).last).height,
+            lessThanOrEqualTo(extent),
+          );
+        });
+      }
+    }
+  });
+
   group('zTileTint', () {
     testWidgets('keeps catalog pastels in light, mutes them in dark', (
       tester,
