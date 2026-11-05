@@ -336,5 +336,6 @@
   "continueShopping": "Continue shopping",
   "orderPlacedArriving": "We're packing your groceries. Arriving in about {} minutes.",
   "orDivider": "OR",
-  "verifyAndContinue": "Verify and continue"
+  "verifyAndContinue": "Verify and continue",
+  "deliveredHereTip": "Your order will be delivered here"
 }

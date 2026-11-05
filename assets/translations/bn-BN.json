@@ -344,5 +344,6 @@
   "continueShopping": "কেনাকাটা চালিয়ে যান",
   "orderPlacedArriving": "আমরা আপনার জিনিস প্যাক করছি। প্রায় {} মিনিটে পৌঁছাবে।",
   "orDivider": "অথবা",
-  "verifyAndContinue": "যাচাই করে এগিয়ে যান"
+  "verifyAndContinue": "যাচাই করে এগিয়ে যান",
+  "deliveredHereTip": "আপনার অর্ডার এখানে পৌঁছাবে"
 }

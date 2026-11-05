@@ -344,5 +344,6 @@
   "continueShopping": "खरीदारी जारी रखें",
   "orderPlacedArriving": "हम आपका सामान पैक कर रहे हैं। लगभग {} मिनट में पहुँचेगा।",
   "orDivider": "या",
-  "verifyAndContinue": "सत्यापित करें और जारी रखें"
+  "verifyAndContinue": "सत्यापित करें और जारी रखें",
+  "deliveredHereTip": "आपका ऑर्डर यहाँ पहुँचेगा"
 }

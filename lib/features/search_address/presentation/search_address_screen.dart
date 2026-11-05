@@ -5,13 +5,14 @@ import 'package:go_router/go_router.dart';
 import 'package:zippy/core/domain/address.dart';
 import 'package:zippy/core/shared_providers/location/application/get_current_location_state.dart';
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
-import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/utils/address_label.dart';
 import 'package:zippy/core/data/provider/addresses_provider.dart';
 import 'package:zippy/features/search_address/application/place_prediction_provider.dart';
 import 'package:zippy/features/search_address/domain/place_prediction.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
+import 'package:zippy/core/widgets/z_chrome.dart';
+import 'package:zippy/core/widgets/z_map.dart';
+import 'package:zippy/core/widgets/z_motion.dart';
 
 /// docs/mockups/Location.dc.html, minus the embedded Google Maps pin-picker:
 /// delivery here only ever needs a GPS `lat`/`lng` (the rider navigates with
@@ -33,6 +34,8 @@ class SearchAddressScreen extends ConsumerStatefulWidget {
 
 class _SearchAddressScreenState extends ConsumerState<SearchAddressScreen> {
   final _searchController = TextEditingController();
+  final _searchFocus = FocusNode();
+  final _scroll = ScrollController();
   final _line1Controller = TextEditingController();
   final _landmarkController = TextEditingController();
   String _label = 'Home';
@@ -61,10 +64,14 @@ class _SearchAddressScreenState extends ConsumerState<SearchAddressScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocus.dispose();
+    _scroll.dispose();
     _line1Controller.dispose();
     _landmarkController.dispose();
     super.dispose();
   }
+
+  static const double _mapHeight = 320;
 
   @override
   Widget build(BuildContext context) {
@@ -84,99 +91,212 @@ class _SearchAddressScreenState extends ConsumerState<SearchAddressScreen> {
       _landmarkController.text = location.landmark ?? '';
     }
 
+    final z = context.z;
+    final t = Theme.of(context).textTheme;
+    final top = MediaQuery.paddingOf(context).top;
+    final showPredictions =
+        predictions.isNotEmpty && _searchController.text.isNotEmpty;
+
     return PopScope(
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) _restoreHomeLocation();
       },
       child: Scaffold(
-        backgroundColor: context.z.bg,
-        body: SafeArea(
+        backgroundColor: z.surface,
+        body: SingleChildScrollView(
+          controller: _scroll,
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: ZSpace.x4,
-                  vertical: ZSpace.x3,
-                ),
-                child: Row(
+              // 04-location.png's map header (decorative, see ZMapBackdrop):
+              // back + search on top, the delivery pin in the middle and
+              // "Use current location" bottom-right.
+              SizedBox(
+                height: top + _mapHeight,
+                child: Stack(
                   children: [
-                    IconButton(
-                      onPressed: () => context.pop(),
-                      icon: Icon(Icons.arrow_back, color: context.z.ink2),
-                      tooltip: 'back'.tr(),
+                    const Positioned.fill(child: ZMapBackdrop()),
+                    Align(
+                      alignment: const Alignment(0, .15),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: ZSpace.x3,
+                              vertical: ZSpace.x2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: z.ink,
+                              borderRadius: ZRadius.all(ZRadius.control),
+                            ),
+                            child: Text(
+                              'deliveredHereTip'.tr(),
+                              style: t.labelMedium!.copyWith(color: z.bg),
+                            ),
+                          ),
+                          const SizedBox(height: ZSpace.x2),
+                          Icon(
+                            Icons.location_on_rounded,
+                            size: 52,
+                            color: z.brand,
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(width: ZSpace.x2),
-                    Expanded(
-                      child: _SearchBar(
-                        controller: _searchController,
-                        onChanged: (value) {
-                          setState(() {});
-                          ref
-                              .read(placePredictionProvider.notifier)
-                              .placePrediction(input: value);
-                        },
+                    Positioned(
+                      right: ZSpace.screen,
+                      bottom: ZRadius.sheet + ZSpace.x3,
+                      child: _MapPill(
+                        icon: Icons.my_location_rounded,
+                        label: 'useCurrentLocation'.tr(),
+                        onTap: () => ref
+                            .read(currentLocation.notifier)
+                            .getCurrentLocation(requestPermission: true),
+                      ),
+                    ),
+                    Positioned(
+                      left: ZSpace.screen,
+                      right: ZSpace.screen,
+                      top: top + ZSpace.x2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            children: [
+                              Material(
+                                color: z.surface,
+                                borderRadius: ZRadius.all(ZRadius.input),
+                                elevation: 1,
+                                shadowColor: z.shadow,
+                                child: IconButton(
+                                  onPressed: () => context.pop(),
+                                  icon: Icon(
+                                    Icons.arrow_back_ios_new_rounded,
+                                    size: 20,
+                                    color: z.ink,
+                                  ),
+                                  tooltip: 'back'.tr(),
+                                ),
+                              ),
+                              const SizedBox(width: ZSpace.x2),
+                              Expanded(
+                                child: _SearchBar(
+                                  controller: _searchController,
+                                  focusNode: _searchFocus,
+                                  onChanged: (value) {
+                                    setState(() {});
+                                    ref
+                                        .read(placePredictionProvider.notifier)
+                                        .placePrediction(input: value);
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (showPredictions)
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                maxHeight: _mapHeight - 100,
+                              ),
+                              child: _PredictionsList(
+                                predictions: predictions,
+                                onSelected: (prediction) async {
+                                  _searchController.clear();
+                                  FocusScope.of(context).unfocus();
+                                  await ref
+                                      .read(placePredictionProvider.notifier)
+                                      .placeDetails(
+                                        placeId: prediction.placeId,
+                                        selectedAddress: prediction.description,
+                                      );
+                                  if (mounted) setState(() {});
+                                },
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-              if (predictions.isNotEmpty && _searchController.text.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: ZSpace.x4),
-                  child: _PredictionsList(
-                    predictions: predictions,
-                    onSelected: (prediction) async {
-                      _searchController.clear();
-                      await ref
-                          .read(placePredictionProvider.notifier)
-                          .placeDetails(
-                            placeId: prediction.placeId,
-                            selectedAddress: prediction.description,
-                          );
-                      if (mounted) setState(() {});
-                    },
-                  ),
-                ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(ZSpace.x4),
-                  child: _ConfirmSheet(
-                    addLocation: widget.addLocation,
-                    label: _label,
-                    onLabelChanged: (value) => setState(() => _label = value),
-                    line1Controller: _line1Controller,
-                    landmarkController: _landmarkController,
-                    onUseCurrentLocation: () => ref
-                        .read(currentLocation.notifier)
-                        .getCurrentLocation(requestPermission: true),
-                    saving: _saving,
-                    onConfirm: () async {
-                      ref
-                          .read(currentLocation.notifier)
-                          .applyEditedText(
-                            line1: _line1Controller.text.trim(),
-                            landmark: _landmarkController.text.trim().isEmpty
-                                ? null
-                                : _landmarkController.text.trim(),
-                          );
-                      if (widget.addLocation) {
-                        setState(() => _saving = true);
-                        final saved = await ref
-                            .read(placePredictionProvider.notifier)
-                            .addAddress(label: _label);
-                        if (!mounted) return;
-                        setState(() => _saving = false);
-                        // Stay (with the user's input) if it didn't save.
-                        if (!saved) return;
-                      }
-                      if (context.mounted) context.pop();
-                    },
-                    onSavedAddressTap: (address) async {
-                      await ref
-                          .read(currentLocation.notifier)
-                          .selectSavedAddress(address);
-                      if (context.mounted) context.pop();
-                    },
+              // The sheet overlaps the map by its corner radius.
+              Transform.translate(
+                offset: const Offset(0, -ZRadius.sheet),
+                // Material (not a coloured box) so the saved-address
+                // tiles' ink shows.
+                child: Material(
+                  color: z.surface,
+                  borderRadius: ZRadius.sheetTop,
+                  child: Container(
+                    padding: EdgeInsets.fromLTRB(
+                      ZSpace.x5,
+                      ZSpace.x3,
+                      ZSpace.x5,
+                      ZSpace.x5 + MediaQuery.paddingOf(context).bottom,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: z.line2,
+                              borderRadius: ZRadius.all(2),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: ZSpace.x4),
+                        _ConfirmSheet(
+                          addLocation: widget.addLocation,
+                          label: _label,
+                          onLabelChanged: (value) =>
+                              setState(() => _label = value),
+                          line1Controller: _line1Controller,
+                          landmarkController: _landmarkController,
+                          onChange: () {
+                            _scroll.animateTo(
+                              0,
+                              duration: ZMotion.ui,
+                              curve: ZMotion.standard,
+                            );
+                            _searchFocus.requestFocus();
+                          },
+                          saving: _saving,
+                          onConfirm: () async {
+                            ref
+                                .read(currentLocation.notifier)
+                                .applyEditedText(
+                                  line1: _line1Controller.text.trim(),
+                                  landmark:
+                                      _landmarkController.text.trim().isEmpty
+                                      ? null
+                                      : _landmarkController.text.trim(),
+                                );
+                            if (widget.addLocation) {
+                              setState(() => _saving = true);
+                              final saved = await ref
+                                  .read(placePredictionProvider.notifier)
+                                  .addAddress(label: _label);
+                              if (!mounted) return;
+                              setState(() => _saving = false);
+                              // Stay (with the user's input) if it didn't save.
+                              if (!saved) return;
+                            }
+                            if (context.mounted) context.pop();
+                          },
+                          onSavedAddressTap: (address) async {
+                            await ref
+                                .read(currentLocation.notifier)
+                                .selectSavedAddress(address);
+                            if (context.mounted) context.pop();
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -188,42 +308,114 @@ class _SearchAddressScreenState extends ConsumerState<SearchAddressScreen> {
   }
 }
 
-class _SearchBar extends StatelessWidget {
-  final TextEditingController controller;
-  final ValueChanged<String> onChanged;
+/// White pill over the map ("Use current location").
+class _MapPill extends StatelessWidget {
+  const _MapPill({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
-  const _SearchBar({required this.controller, required this.onChanged});
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final z = context.z;
+    return Semantics(
+      button: true,
+      child: ZPressable(
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: ZSize.touch),
+          padding: const EdgeInsets.symmetric(horizontal: ZSpace.x4),
+          decoration: BoxDecoration(
+            color: z.surface,
+            borderRadius: ZRadius.all(ZRadius.input),
+            border: Border.all(color: z.line),
+            boxShadow: [
+              BoxShadow(
+                color: z.shadow,
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 20, color: z.brandText),
+              const SizedBox(width: ZSpace.x2),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelLarge!
+                    .copyWith(color: z.brandText),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SearchBar extends StatelessWidget {
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final ValueChanged<String> onChanged;
+
+  const _SearchBar({
+    required this.controller,
+    required this.focusNode,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final z = context.z;
+    final t = Theme.of(context).textTheme;
     return Container(
-      height: ZSize.input,
+      constraints: const BoxConstraints(minHeight: ZSize.touch),
       padding: const EdgeInsets.symmetric(horizontal: ZSpace.x3),
       decoration: BoxDecoration(
-        color: context.z.surface,
-        borderRadius: BorderRadius.circular(ZRadius.input),
+        color: z.surface,
+        borderRadius: ZRadius.all(ZRadius.input),
+        border: Border.all(color: z.line),
         boxShadow: [
           BoxShadow(
-            color: context.colors.shadow,
+            color: z.shadow,
             blurRadius: 10,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: TextField(
-        controller: controller,
-        onChanged: onChanged,
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          disabledBorder: InputBorder.none,
-          errorBorder: InputBorder.none,
-          focusedErrorBorder: InputBorder.none,
-          hintText: 'searchAreaPlaceholder'.tr(),
-          hintStyle: AppTypography.bodyMedium.copyWith(color: context.z.ink2),
-        ),
-        style: AppTypography.bodyMedium,
+      child: Row(
+        children: [
+          Icon(Icons.search_rounded, color: z.ink3),
+          const SizedBox(width: ZSpace.x2),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              focusNode: focusNode,
+              onChanged: onChanged,
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                isDense: true,
+                filled: false,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                focusedErrorBorder: InputBorder.none,
+                hintText: 'searchAreaPlaceholder'.tr(),
+                hintStyle: t.bodyMedium!.copyWith(color: z.ink3),
+              ),
+              style: t.bodyMedium,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -237,16 +429,19 @@ class _PredictionsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final z = context.z;
     return Container(
       margin: const EdgeInsets.only(top: ZSpace.x2),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: context.z.surface,
-        borderRadius: BorderRadius.circular(ZRadius.card),
+        color: z.surface,
+        borderRadius: ZRadius.all(ZRadius.card),
+        border: Border.all(color: z.line),
         boxShadow: [
           BoxShadow(
-            color: context.colors.shadow,
-            blurRadius: 10,
-            offset: Offset(0, 2),
+            color: z.shadow,
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -254,18 +449,18 @@ class _PredictionsList extends StatelessWidget {
         type: MaterialType.transparency,
         child: ListView.separated(
           shrinkWrap: true,
-          padding: const EdgeInsets.symmetric(vertical: ZSpace.x2),
+          padding: const EdgeInsets.symmetric(vertical: ZSpace.x1),
           itemCount: predictions.length,
           separatorBuilder: (context, index) =>
-              Divider(height: 1, color: context.colors.divider),
+              Divider(height: 1, color: z.line),
           itemBuilder: (context, index) {
             final prediction = predictions[index];
 
             return ListTile(
-              leading: Icon(Icons.location_pin, color: context.z.brand),
+              leading: Icon(Icons.location_on_outlined, color: z.brandText),
               title: Text(
                 prediction.description ?? '',
-                style: AppTypography.bodyMedium,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
               onTap: () => onSelected(prediction),
             );
@@ -276,13 +471,16 @@ class _PredictionsList extends StatelessWidget {
   }
 }
 
+/// The sheet's content: the resolved address with "Change", the
+/// serviceability note, editable address line + landmark, label chips
+/// (when saving a new address), Confirm, then saved addresses.
 class _ConfirmSheet extends ConsumerWidget {
   final bool addLocation;
   final String label;
   final ValueChanged<String> onLabelChanged;
   final TextEditingController line1Controller;
   final TextEditingController landmarkController;
-  final VoidCallback onUseCurrentLocation;
+  final VoidCallback onChange;
   final VoidCallback onConfirm;
   final ValueChanged<Address> onSavedAddressTap;
 
@@ -292,7 +490,7 @@ class _ConfirmSheet extends ConsumerWidget {
     required this.onLabelChanged,
     required this.line1Controller,
     required this.landmarkController,
-    required this.onUseCurrentLocation,
+    required this.onChange,
     required this.onConfirm,
     required this.onSavedAddressTap,
     this.saving = false,
@@ -300,135 +498,207 @@ class _ConfirmSheet extends ConsumerWidget {
 
   final bool saving;
 
+  static IconData _labelIcon(String value) => switch (value) {
+    'Home' => Icons.home_outlined,
+    'Work' => Icons.work_outline_rounded,
+    _ => Icons.add_rounded,
+  };
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final z = context.z;
+    final t = Theme.of(context).textTheme;
     final location = ref.watch(currentLocation);
     final savedAddresses = ref.watch(addressesProvider);
+    final busy = location.isDetecting || location.checkingServiceability;
+    final title = location.line1.isNotEmpty
+        ? location.line1
+        : location.address.isNotEmpty
+        ? location.address.split(',').first
+        : 'yourDeliveryLocation'.tr();
 
-    return Container(
-      padding: const EdgeInsets.all(ZSpace.x4),
-      decoration: BoxDecoration(
-        color: context.z.surface,
-        borderRadius: BorderRadius.circular(ZRadius.card),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: ZSize.touch,
+              height: ZSize.touch,
+              decoration: BoxDecoration(
+                color: z.brandSoft,
+                borderRadius: ZRadius.all(ZRadius.input),
+              ),
+              child: Icon(Icons.location_on_outlined, color: z.brandText),
+            ),
+            const SizedBox(width: ZSpace.x3),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: t.titleLarge,
+                  ),
+                  if (location.address.isNotEmpty)
+                    Text(
+                      location.address,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: t.bodyMedium!.copyWith(color: z.ink2),
+                    ),
+                ],
+              ),
+            ),
+            TextButton(onPressed: onChange, child: Text('change'.tr())),
+          ],
+        ),
+        const SizedBox(height: ZSpace.x4),
+        if (busy)
+          ClipRRect(
+            borderRadius: ZRadius.all(ZRadius.badge),
+            child: LinearProgressIndicator(
+              color: z.brand,
+              backgroundColor: z.surface3,
+            ),
+          )
+        else if (location.serviceabilityError)
+          _ServiceabilityError(
+            onRetry: () =>
+                ref.read(currentLocation.notifier).retryServiceability(),
+          )
+        else if (!location.serviceabilityChecked)
+          // No point checked yet (permission off, nothing picked): ask
+          // for a location rather than claiming we don't deliver.
+          const _PickLocationHint()
+        else
+          _ServiceabilityBanner(serviceable: location.serviceArea != null),
+        const SizedBox(height: ZSpace.x4),
+        TextField(
+          controller: line1Controller,
+          decoration: InputDecoration(labelText: 'addressLine'.tr()),
+        ),
+        const SizedBox(height: ZSpace.x3),
+        TextField(
+          controller: landmarkController,
+          decoration: InputDecoration(labelText: 'landmarkOptional'.tr()),
+        ),
+        if (addLocation) ...[
+          const SizedBox(height: ZSpace.x3),
+          Wrap(
+            spacing: ZSpace.x2,
             children: [
-              Expanded(
-                child: Text(
-                  'yourDeliveryLocation'.tr(),
-                  style: AppTypography.titleMedium,
+              for (final value in addressLabels)
+                ZChip(
+                  icon: _labelIcon(value),
+                  label: addressLabelText(value),
+                  selected: label == value,
+                  onTap: () => onLabelChanged(value),
                 ),
-              ),
-              Material(
-                color: context.z.brandSoft,
-                shape: const CircleBorder(),
-                child: IconButton(
-                  onPressed: onUseCurrentLocation,
-                  icon: Icon(Icons.my_location, color: context.z.brand),
-                  tooltip: 'useCurrentLocation'.tr(),
-                ),
-              ),
             ],
           ),
-          const SizedBox(height: ZSpace.x3),
-          if (location.isDetecting || location.checkingServiceability)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: ZSpace.x2),
-              child: LinearProgressIndicator(color: context.z.brand),
-            )
-          else if (location.serviceabilityError)
-            _ServiceabilityError(
-              onRetry: () =>
-                  ref.read(currentLocation.notifier).retryServiceability(),
-            )
-          else if (!location.serviceabilityChecked)
-            // No point checked yet (permission off, nothing picked): ask
-            // for a location rather than claiming we don't deliver.
-            const _PickLocationHint()
-          else
-            _ServiceabilityBanner(serviceable: location.serviceArea != null),
-          const SizedBox(height: ZSpace.x3),
-          TextField(
-            controller: line1Controller,
-            decoration: InputDecoration(labelText: 'addressLine'.tr()),
+        ],
+        const SizedBox(height: ZSpace.x4),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(0, ZSize.button),
           ),
-          const SizedBox(height: ZSpace.x3),
-          TextField(
-            controller: landmarkController,
-            decoration: InputDecoration(labelText: 'landmarkOptional'.tr()),
-          ),
-          if (addLocation) ...[
-            const SizedBox(height: ZSpace.x3),
-            Wrap(
-              spacing: ZSpace.x3,
-              children: addressLabels
-                  .map(
-                    (value) => ChoiceChip(
-                      label: Text(addressLabelText(value)),
-                      selected: label == value,
-                      onSelected: (_) => onLabelChanged(value),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ],
-          const SizedBox(height: ZSpace.x3),
-          Builder(
-            builder: (context) {
-              final canConfirm =
-                  !saving &&
-                  !location.isDetecting &&
-                  !location.checkingServiceability &&
-                  location.serviceArea != null;
-
-              return FilledButton(
-                onPressed: canConfirm ? onConfirm : null,
-                child: saving
-                    ? const SizedBox.square(
-                        dimension: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2.5),
-                      )
-                    : Text('confirmLocation'.tr()),
-              );
-            },
-          ),
-          if (!addLocation)
-            savedAddresses.when(
-              loading: () => const SizedBox.shrink(),
-              error: (error, stackTrace) => const SizedBox.shrink(),
-              data: (addresses) => addresses.isEmpty
-                  ? const SizedBox.shrink()
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: ZSpace.x3),
-                        Text(
-                          'yourSavedAddress'.tr(),
-                          style: AppTypography.labelSmall.copyWith(
-                            color: context.z.ink2,
+          onPressed: !saving && !busy && location.serviceArea != null
+              ? onConfirm
+              : null,
+          child: saving
+              ? const SizedBox.square(
+                  dimension: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                )
+              : Text('confirmLocation'.tr()),
+        ),
+        if (!addLocation)
+          savedAddresses.maybeWhen(
+            orElse: () => const SizedBox.shrink(),
+            data: (addresses) => addresses.isEmpty
+                ? const SizedBox.shrink()
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: ZSpace.x5),
+                      Text(
+                        'yourSavedAddress'.tr().toUpperCase(),
+                        style: t.labelSmall!.copyWith(letterSpacing: 1.1),
+                      ),
+                      const SizedBox(height: ZSpace.x1),
+                      for (final address in addresses)
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          onTap: () => onSavedAddressTap(address),
+                          leading: Icon(
+                            _labelIcon(address.label),
+                            color: z.ink2,
+                          ),
+                          title: Text(
+                            addressLabelText(address.label),
+                            style: t.labelLarge,
+                          ),
+                          subtitle: Text(
+                            '${address.line1}, ${address.area}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: t.bodySmall,
+                          ),
+                          trailing: Icon(
+                            Icons.chevron_right_rounded,
+                            color: z.ink3,
                           ),
                         ),
-                        for (final address in addresses)
-                          InkWell(
-                            onTap: () => onSavedAddressTap(address),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: ZSpace.x3,
-                              ),
-                              child: Text(
-                                '${addressLabelText(address.label)} · ${address.line1}, ${address.area}',
-                                style: AppTypography.bodyMedium,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
+                    ],
+                  ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Coloured note under the address: icon + one line of text.
+class _Note extends StatelessWidget {
+  const _Note({
+    required this.icon,
+    required this.text,
+    required this.background,
+    required this.foreground,
+    this.action,
+  });
+
+  final IconData icon;
+  final String text;
+  final Color background, foreground;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: ZSpace.x4,
+        vertical: ZSpace.x3,
+      ),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: ZRadius.all(ZRadius.input),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: foreground),
+          const SizedBox(width: ZSpace.x2),
+          Expanded(
+            child: Text(
+              text,
+              style: Theme.of(context).textTheme.labelLarge!
+                  .copyWith(color: foreground),
             ),
+          ),
+          ?action,
         ],
       ),
     );
@@ -442,37 +712,20 @@ class _ServiceabilityBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: ZSpace.x3,
-        vertical: ZSpace.x3,
-      ),
-      decoration: BoxDecoration(
-        color: serviceable ? context.z.brandSoft : context.z.dangerSoft,
-        borderRadius: BorderRadius.circular(ZRadius.input),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            serviceable ? Icons.check_circle : Icons.error_outline,
-            size: 16,
-            color: serviceable ? context.z.brandPress : context.z.danger,
-          ),
-          const SizedBox(width: ZSpace.x2),
-          Expanded(
-            child: Text(
-              serviceable
-                  ? 'weDeliverHereShort'.tr()
-                  : 'notServiceableYet'.tr(),
-              style: AppTypography.bodySmall.copyWith(
-                fontWeight: FontWeight.w600,
-                color: serviceable ? context.z.brandPress : context.z.danger,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    final z = context.z;
+    return serviceable
+        ? _Note(
+            icon: Icons.bolt_rounded,
+            text: 'weDeliverHereShort'.tr(),
+            background: z.okSoft,
+            foreground: z.ok,
+          )
+        : _Note(
+            icon: Icons.error_outline_rounded,
+            text: 'notServiceableYet'.tr(),
+            background: z.dangerSoft,
+            foreground: z.danger,
+          );
   }
 }
 
@@ -483,31 +736,13 @@ class _ServiceabilityError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: ZSpace.x3,
-        vertical: ZSpace.x2,
-      ),
-      decoration: BoxDecoration(
-        color: context.z.dangerSoft,
-        borderRadius: BorderRadius.circular(ZRadius.input),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.wifi_off_rounded, size: 16, color: context.z.danger),
-          const SizedBox(width: ZSpace.x2),
-          Expanded(
-            child: Text(
-              'serviceabilityCheckFailed'.tr(),
-              style: AppTypography.bodySmall.copyWith(
-                fontWeight: FontWeight.w600,
-                color: context.z.danger,
-              ),
-            ),
-          ),
-          TextButton(onPressed: onRetry, child: Text('retry'.tr())),
-        ],
-      ),
+    final z = context.z;
+    return _Note(
+      icon: Icons.wifi_off_rounded,
+      text: 'serviceabilityCheckFailed'.tr(),
+      background: z.dangerSoft,
+      foreground: z.danger,
+      action: TextButton(onPressed: onRetry, child: Text('retry'.tr())),
     );
   }
 }
@@ -517,30 +752,12 @@ class _PickLocationHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: ZSpace.x3,
-        vertical: ZSpace.x3,
-      ),
-      decoration: BoxDecoration(
-        color: context.z.surface2,
-        borderRadius: BorderRadius.circular(ZRadius.input),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.my_location, size: 16, color: context.z.ink2),
-          const SizedBox(width: ZSpace.x2),
-          Expanded(
-            child: Text(
-              'pickLocationToCheck'.tr(),
-              style: AppTypography.bodySmall.copyWith(
-                fontWeight: FontWeight.w600,
-                color: context.z.ink2,
-              ),
-            ),
-          ),
-        ],
-      ),
+    final z = context.z;
+    return _Note(
+      icon: Icons.my_location_rounded,
+      text: 'pickLocationToCheck'.tr(),
+      background: z.surface2,
+      foreground: z.ink2,
     );
   }
 }
