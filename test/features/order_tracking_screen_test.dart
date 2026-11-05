@@ -92,6 +92,7 @@ void main() {
     expect(find.text('Ravi'), findsOneWidget);
     expect(find.text('R'), findsOneWidget);
     expect(find.byTooltip('Call delivery partner'), findsOneWidget);
+    expect(find.byTooltip('Message us about this order'), findsOneWidget);
     expect(find.textContaining('3 items'), findsOneWidget);
     await unmount(tester);
   });

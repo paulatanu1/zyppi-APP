@@ -213,6 +213,7 @@ Done when: on a real phone against `zippy-app-2024` — OTP, Google and guest si
 | SMS / OTP | Firebase Phone Auth (sends the SMS itself). Dev: Firebase test phone numbers |
 | Brand | Existing Zyppi brand (pink, blue, Poppins/Montserrat) — mockup re-themed |
 | Navigation | Home, Explore, Cart, Favourite, Account |
+| Support chat | Added 2026-11-06 (branch `feat/support-chat`). Customer ↔ support only — rider chat stays out of scope. A free retrieval bot (no LLM, no paid API) in `functions/src/support`: BM25 + `multilingual-e5-small` embeddings (open model, run in-process with transformers.js) fused with RRF over a curated 4-language knowledge base, plus live order status; refunds, cancellations, missing items and payment problems hand off to the team, with WhatsApp / call as the fallback. New collections `supportChats/{chatId}` (+ `/messages`) and `supportKb/{entryId}`; rules in `firestore.rules`. Phase 2: the `zyppi-admin` inbox (reply / close via the existing `adminReplySupport` / `adminCloseSupport` callables) and a KB editor; optionally an LLM "generate" step on top of the same retrieval |
 | Localization | easy_localization: en, bn, hi, pa |
 | Platforms | Android, iOS |
 | State | Riverpod 3 + codegen |

@@ -8,7 +8,6 @@ import 'package:zippy/core/domain/order.dart';
 import 'package:zippy/core/domain/order_status.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/utils/launch.dart';
-import 'package:zippy/core/utils/order_id.dart';
 import 'package:zippy/core/widgets/z_commerce.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/order_tracking/application/order_tracking_provider.dart';
@@ -145,10 +144,7 @@ class OrderTrackingScreen extends ConsumerWidget {
                     top: top + ZSpace.x2,
                     child: _MapButton(
                       label: 'help'.tr(),
-                      onTap: () => showHelpSheet(
-                        context,
-                        orderId: shortOrderId(orderId),
-                      ),
+                      onTap: () => showHelpSheet(context, orderId: orderId),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: ZSpace.x3,
@@ -414,7 +410,22 @@ class _SheetContent extends StatelessWidget {
                   ],
                 ),
               ),
-              if (order.riderPhone case final phone? when phone.isNotEmpty)
+              IconButton.outlined(
+                tooltip: 'messageSupport'.tr(),
+                style: IconButton.styleFrom(
+                  foregroundColor: z.ink,
+                  side: BorderSide(color: z.line2),
+                  minimumSize: const Size.square(ZSize.touch),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: ZRadius.all(ZRadius.input),
+                  ),
+                ),
+                onPressed: () =>
+                    context.push('/supportChat?orderId=${order.id}'),
+                icon: const Icon(Icons.chat_bubble_outline_rounded),
+              ),
+              if (order.riderPhone case final phone? when phone.isNotEmpty) ...[
+                const SizedBox(width: ZSpace.x2),
                 IconButton.filled(
                   tooltip: 'callRider'.tr(),
                   style: IconButton.styleFrom(
@@ -428,6 +439,7 @@ class _SheetContent extends StatelessWidget {
                   onPressed: () => openExternal(phoneUri(phone)),
                   icon: const Icon(Icons.call_outlined),
                 ),
+              ],
             ],
           ),
         ),

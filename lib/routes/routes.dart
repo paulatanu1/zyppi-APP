@@ -29,6 +29,7 @@ import 'package:zippy/features/order_tracking/presentation/order_tracking_screen
 import 'package:zippy/features/product_details/presentation/product_details_screen.dart';
 import 'package:zippy/features/search/presentation/search_screen.dart';
 import 'package:zippy/features/search_address/presentation/search_address_screen.dart';
+import 'package:zippy/features/support_chat/presentation/support_chat_screen.dart';
 
 const _unauthenticatedRoutes = {
   '/slider',
@@ -226,6 +227,12 @@ class Routes {
             final orderId = state.uri.queryParameters['orderId'] ?? '';
             return OrderTrackingScreen(orderId: orderId);
           },
+        ),
+        GoRoute(
+          path: '/supportChat',
+          name: 'SupportChatScreen',
+          builder: (context, state) =>
+              SupportChatScreen(orderId: state.uri.queryParameters['orderId']),
         ),
         if (Env.flavor == 'dev')
           GoRoute(

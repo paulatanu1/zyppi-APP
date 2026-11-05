@@ -100,7 +100,12 @@ export const requestSupportAgent = onCall(async (request) => {
   return { ok: true };
 });
 
-async function pushToCustomer(userId: string, lang: Lang, chatId: string, text: string) {
+async function pushToCustomer(
+  userId: string,
+  lang: Lang,
+  chat: { id: string; orderId: string | null },
+  text: string,
+) {
   const profile = await db.collection("users").doc(userId).get();
   const token = profile.get("fcmToken") as string | null | undefined;
   if (!token || profile.get("notifyOrderUpdates") === false) return;
@@ -108,7 +113,7 @@ async function pushToCustomer(userId: string, lang: Lang, chatId: string, text: 
     await messaging.send({
       token,
       notification: { title: COPY[lang].agentReplyPush, body: text.slice(0, 140) },
-      data: { chatId },
+      data: { chatId: chat.id, chatOrderId: chat.orderId ?? "" },
       android: { priority: "high" },
     });
   } catch (error) {
@@ -116,7 +121,7 @@ async function pushToCustomer(userId: string, lang: Lang, chatId: string, text: 
       await profile.ref.update({ fcmToken: null });
       return;
     }
-    logger.error("Support push failed", { chatId, error });
+    logger.error("Support push failed", { chatId: chat.id, error });
   }
 }
 
@@ -148,7 +153,12 @@ export const adminReplySupport = onCall(async (request) => {
     updatedAt: FieldValue.serverTimestamp(),
   });
   await batch.commit();
-  await pushToCustomer(chat.get("userId"), (chat.get("lang") as Lang) ?? "en", chatRef.id, text);
+  await pushToCustomer(
+    chat.get("userId"),
+    (chat.get("lang") as Lang) ?? "en",
+    { id: chatRef.id, orderId: (chat.get("orderId") as string | null) ?? null },
+    text,
+  );
   return { ok: true };
 });
 

@@ -70,6 +70,14 @@ class PushNotificationService {
   }
 
   static void _openTracking(GoRouter router, RemoteMessage message) {
+    // Support team replies (functions/src/support/chat.ts).
+    if (message.data['chatId'] != null) {
+      final orderId = message.data['chatOrderId'] as String? ?? '';
+      router.push(
+        orderId.isEmpty ? '/supportChat' : '/supportChat?orderId=$orderId',
+      );
+      return;
+    }
     final orderId = message.data['orderId'] as String?;
     if (orderId != null) {
       router.go('/orderTrackingScreen?orderId=$orderId');

@@ -42,12 +42,8 @@ class OrderDetailsScreen extends ConsumerWidget {
         title: Text('orderDetails'.tr()),
         actions: [
           TextButton(
-            onPressed: () => showHelpSheet(
-              context,
-              orderId: orderAsync.value == null
-                  ? null
-                  : shortOrderId(orderAsync.value!.id),
-            ),
+            onPressed: () =>
+                showHelpSheet(context, orderId: orderAsync.value?.id),
             child: Text('help'.tr()),
           ),
         ],

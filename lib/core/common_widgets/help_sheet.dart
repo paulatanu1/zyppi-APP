@@ -1,12 +1,15 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:zippy/core/config/env.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/utils/launch.dart';
+import 'package:zippy/core/utils/order_id.dart';
 
-/// "Help" from Account and from order tracking: chat on WhatsApp or call
-/// support. With an [orderId], the WhatsApp message is pre-filled with it
-/// so support can find the order straight away.
+/// "Help" from Account, order details and tracking: chat in the app
+/// (the Zyppi assistant, then the team), WhatsApp or call support. With an
+/// [orderId] the chat is about that order and the WhatsApp message quotes
+/// its short id, so support can find it straight away.
 Future<void> showHelpSheet(BuildContext context, {String? orderId}) {
   return showModalBottomSheet<void>(
     context: context,
@@ -59,6 +62,16 @@ Future<void> showHelpSheet(BuildContext context, {String? orderId}) {
               const SizedBox(height: ZSpace.x1),
               Text('helpSubtitle'.tr(), style: text.bodySmall),
               const SizedBox(height: ZSpace.x3),
+              option(
+                icon: Icons.forum_outlined,
+                title: 'helpChat'.tr(),
+                subtitle: 'helpChatSubtitle'.tr(),
+                onTap: () => context.push(
+                  orderId == null
+                      ? '/supportChat'
+                      : '/supportChat?orderId=$orderId',
+                ),
+              ),
               if (phone.isEmpty)
                 Text('helpUnavailable'.tr(), style: text.bodyMedium)
               else ...[
@@ -71,7 +84,9 @@ Future<void> showHelpSheet(BuildContext context, {String? orderId}) {
                       phone,
                       message: orderId == null
                           ? 'helpMessage'.tr()
-                          : 'helpMessageOrder'.tr(args: [orderId]),
+                          : 'helpMessageOrder'.tr(
+                              args: [shortOrderId(orderId)],
+                            ),
                     ),
                   ),
                 ),
