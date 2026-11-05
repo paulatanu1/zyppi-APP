@@ -6,7 +6,16 @@ import {
   assertSucceeds,
   initializeTestEnvironment,
 } from "@firebase/rules-unit-testing";
-import { doc, getDoc, setDoc, updateDoc, getDocs, collection } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
 import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
 
 let env: RulesTestEnvironment;
@@ -34,6 +43,9 @@ beforeEach(async () => {
     await setDoc(doc(db, "coupons/OFF"), { isActive: false, expiresAt: null });
     await setDoc(doc(db, "orders/o1"), { userId: "alice", totalPaise: 100 });
     await setDoc(doc(db, "inventory/s_v"), { quantity: 5 });
+    await setDoc(doc(db, "supportChats/c1"), { userId: "alice", status: "bot", unreadByUser: 2 });
+    await setDoc(doc(db, "supportChats/c2"), { userId: "alice", status: "closed", unreadByUser: 0 });
+    await setDoc(doc(db, "supportKb/k1"), { topic: "refund" });
   });
 });
 
@@ -77,5 +89,49 @@ describe("firestore.rules", () => {
   it("keeps stock levels admin-only", async () => {
     const alice = env.authenticatedContext("alice").firestore();
     await assertFails(getDoc(doc(alice, "inventory/s_v")));
+  });
+
+  describe("support chat", () => {
+    const userMessage = (text = "Where is my order?") => ({
+      from: "user",
+      text,
+      createdAt: serverTimestamp(),
+    });
+
+    it("lets only the owner read a chat and its messages", async () => {
+      const alice = env.authenticatedContext("alice").firestore();
+      const bob = env.authenticatedContext("bob").firestore();
+      await assertSucceeds(getDoc(doc(alice, "supportChats/c1")));
+      await assertSucceeds(getDocs(collection(alice, "supportChats/c1/messages")));
+      await assertFails(getDoc(doc(bob, "supportChats/c1")));
+      await assertFails(getDocs(collection(bob, "supportChats/c1/messages")));
+    });
+
+    it("lets the owner send text messages only as the user", async () => {
+      const alice = env.authenticatedContext("alice").firestore();
+      const bob = env.authenticatedContext("bob").firestore();
+      const messages = collection(alice, "supportChats/c1/messages");
+      await assertSucceeds(addDoc(messages, userMessage()));
+      await assertFails(addDoc(messages, { ...userMessage(), from: "agent" }));
+      await assertSucceeds(addDoc(messages, { ...userMessage(), quickReplyId: "kb:refund" }));
+      await assertFails(addDoc(messages, { ...userMessage(), quickReplies: [] }));
+      await assertFails(addDoc(messages, userMessage("")));
+      await assertFails(addDoc(messages, userMessage("x".repeat(1001))));
+      await assertFails(addDoc(collection(bob, "supportChats/c1/messages"), userMessage()));
+      await assertFails(addDoc(collection(alice, "supportChats/c2/messages"), userMessage()));
+    });
+
+    it("lets the owner clear unread but not change status or create chats", async () => {
+      const alice = env.authenticatedContext("alice").firestore();
+      await assertSucceeds(updateDoc(doc(alice, "supportChats/c1"), { unreadByUser: 0 }));
+      await assertFails(updateDoc(doc(alice, "supportChats/c1"), { status: "agent" }));
+      await assertFails(updateDoc(doc(alice, "supportChats/c1"), { unreadByUser: 5 }));
+      await assertFails(setDoc(doc(alice, "supportChats/c3"), { userId: "alice", status: "bot" }));
+    });
+
+    it("keeps the knowledge base server-only", async () => {
+      const alice = env.authenticatedContext("alice").firestore();
+      await assertFails(getDoc(doc(alice, "supportKb/k1")));
+    });
   });
 });

@@ -148,6 +148,51 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ---------------------------------------------------------------
+    // Support chat (functions/src/support). Chats are opened by the
+    // openSupportChat function; bot, agent and system messages and every
+    // status change come from Cloud Functions. The customer may only add
+    // their own text messages and clear their unread count.
+    // ---------------------------------------------------------------
+
+    match /supportChats/{chatId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid);
+      allow update: if signedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['unreadByUser'])
+        && request.resource.data.unreadByUser == 0;
+      allow create, delete: if false;
+
+      function chatOwner() {
+        return signedIn()
+          && get(/databases/$(database)/documents/supportChats/$(chatId)).data.userId
+             == request.auth.uid;
+      }
+
+      match /messages/{messageId} {
+        allow read: if isAdmin() || chatOwner();
+        allow create: if chatOwner()
+          && get(/databases/$(database)/documents/supportChats/$(chatId)).data.status != 'closed'
+          && request.resource.data.keys().hasOnly(['from', 'text', 'createdAt', 'quickReplyId'])
+          && request.resource.data.from == 'user'
+          && (!('quickReplyId' in request.resource.data)
+              || (request.resource.data.quickReplyId is string
+                  && request.resource.data.quickReplyId.size() <= 100))
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 1000
+          && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
+    }
+
+    // Bot knowledge base: written by functions/scripts/seed-support-kb.ts,
+    // read only by the bot.
+    match /supportKb/{entryId} {
+      allow read, write: if isAdmin();
+    }
+
     // Everything else is closed.
     match /{document=**} {
       allow read, write: if false;
