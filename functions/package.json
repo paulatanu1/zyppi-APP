@@ -11,10 +11,13 @@
     "test": "firebase emulators:exec --only auth,firestore --project demo-zyppi \"vitest run\"",
     "test:unit": "vitest run test/unit",
     "seed": "tsx scripts/seed.ts",
+    "seed:support": "tsx scripts/seed-support-kb.ts",
+    "smoke:support": "tsx scripts/support-smoke.ts",
     "set-admin": "tsx scripts/set-admin.ts",
     "deploy": "firebase deploy --only functions"
   },
   "dependencies": {
+    "@huggingface/transformers": "^4.3.2",
     "firebase-admin": "^14.5.0",
     "firebase-functions": "^7.4.0"
   },

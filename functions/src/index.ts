@@ -9,3 +9,10 @@ export { placesProxy } from "./places";
 export { deleteAccount } from "./account";
 export { onOrderEventCreated } from "./push";
 export { adminUpdateOrderStatus, adminListUsers } from "./admin/orders";
+export { onSupportMessageCreated } from "./support/bot";
+export {
+  openSupportChat,
+  requestSupportAgent,
+  adminReplySupport,
+  adminCloseSupport,
+} from "./support/chat";
