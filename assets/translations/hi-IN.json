@@ -342,5 +342,7 @@
   "noOrdersInFilter": "यहाँ अभी कोई ऑर्डर नहीं है",
   "trackOrderEta": "ऑर्डर ट्रैक करें · {} मिनट में पहुँचेगा",
   "continueShopping": "खरीदारी जारी रखें",
-  "orderPlacedArriving": "हम आपका सामान पैक कर रहे हैं। लगभग {} मिनट में पहुँचेगा।"
+  "orderPlacedArriving": "हम आपका सामान पैक कर रहे हैं। लगभग {} मिनट में पहुँचेगा।",
+  "orDivider": "या",
+  "verifyAndContinue": "सत्यापित करें और जारी रखें"
 }

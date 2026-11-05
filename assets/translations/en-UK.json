@@ -334,5 +334,7 @@
   "noOrdersInFilter": "No orders here yet",
   "trackOrderEta": "Track order · arriving in {} min",
   "continueShopping": "Continue shopping",
-  "orderPlacedArriving": "We're packing your groceries. Arriving in about {} minutes."
+  "orderPlacedArriving": "We're packing your groceries. Arriving in about {} minutes.",
+  "orDivider": "OR",
+  "verifyAndContinue": "Verify and continue"
 }

@@ -1,7 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:zippy/core/theme/app_colors.dart';
-import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 
 class GoogleSignInButton extends StatelessWidget {
@@ -19,16 +17,23 @@ class GoogleSignInButton extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: ZSpace.x4),
         decoration: BoxDecoration(
-          color: AppColors.googleSignInButtonColor,
+          color: context.z.surface,
           borderRadius: BorderRadius.circular(ZRadius.input),
-          border: Border.all(color: context.z.line),
+          border: Border.all(color: context.z.line2, width: 1.5),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset('assets/icons/googleIcon.png', width: 20, height: 20),
             const SizedBox(width: ZSpace.x3),
-            Text('signInWithGoogle'.tr(), style: AppTypography.labelLarge),
+            Flexible(
+              child: Text(
+                'signInWithGoogle'.tr(),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
           ],
         ),
       ),
