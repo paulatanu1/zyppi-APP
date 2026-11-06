@@ -1,4 +1,5 @@
 import { createHash, createHmac, randomInt } from "node:crypto";
+import { logger } from "firebase-functions";
 import { defineSecret, defineString } from "firebase-functions/params";
 
 // PayU CheckoutPro. The salt never reaches the client; the merchant key is
@@ -159,9 +160,9 @@ export type PayUOutcome =
 /**
  * Maps one `transaction_details[txnid]` entry of verify_payment. Only
  * `success` + `captured` is money in the bank; `auth` / `pending` /
- * `in progress` settle later. "Not Found" means the customer never
- * reached a payment attempt (closed the checkout) — failed, though
- * the intent stays re-checkable.
+ * `in progress` settle later. "Not Found" / `initiated` mean the
+ * checkout opened but no payment was submitted (verify only runs once
+ * the SDK has closed) — failed, though the intent stays re-checkable.
  */
 export function mapVerifyResult(detail: Record<string, unknown> | undefined): PayUOutcome {
   if (!detail) return { state: "pending" };
@@ -177,7 +178,7 @@ export function mapVerifyResult(detail: Record<string, unknown> | undefined): Pa
   if (status === "not found") return { state: "failed", reason: "NOT_FOUND" };
   if (
     status === "failure" ||
-    ["failed", "bounced", "dropped", "usercancelled", "cancelled"].includes(unmapped)
+    ["failed", "bounced", "dropped", "usercancelled", "cancelled", "initiated"].includes(unmapped)
   ) {
     return { state: "failed", reason: unmapped || status };
   }
@@ -200,7 +201,20 @@ export async function verifyPayUTxn(txnid: string): Promise<PayUOutcome> {
   });
   if (!response.ok) throw new Error(`PayU verify HTTP ${response.status}`);
   const data = (await response.json()) as {
+    status?: unknown;
+    msg?: unknown;
     transaction_details?: Record<string, Record<string, unknown>>;
   };
-  return mapVerifyResult(data.transaction_details?.[txnid]);
+  const detail = data.transaction_details?.[txnid];
+  const outcome = mapVerifyResult(detail);
+  // Statuses only — the detail also holds the payer's name/email/phone.
+  logger.info("PayU verify", {
+    txnid,
+    apiStatus: data.status,
+    msg: data.msg,
+    status: detail?.status,
+    unmappedstatus: detail?.unmappedstatus,
+    outcome: outcome.state,
+  });
+  return outcome;
 }

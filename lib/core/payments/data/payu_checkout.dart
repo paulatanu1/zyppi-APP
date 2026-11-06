@@ -79,21 +79,35 @@ class PayUCheckout implements PayUCheckoutProProtocol {
 
   @override
   void onPaymentSuccess(dynamic response) =>
-      _finish(PayUCheckoutResult.success);
+      _finish(PayUCheckoutResult.success, response);
 
   @override
   void onPaymentFailure(dynamic response) =>
-      _finish(PayUCheckoutResult.failure);
+      _finish(PayUCheckoutResult.failure, response);
 
   @override
-  void onPaymentCancel(Map? response) => _finish(PayUCheckoutResult.cancelled);
+  void onPaymentCancel(Map? response) =>
+      _finish(PayUCheckoutResult.cancelled, response);
 
+  /// Not terminal: CheckoutPro reports recoverable problems here (e.g. an
+  /// optional offers hash the server declined) while its screen stays
+  /// open, and still ends with success / failure / cancel.
   @override
-  void onError(Map? response) => _finish(PayUCheckoutResult.failure);
+  void onError(Map? response) => _log('onError', response);
 
-  void _finish(PayUCheckoutResult result) {
+  void _finish(PayUCheckoutResult result, dynamic response) {
+    _log(result.name, response);
     final completer = _result;
     if (completer != null && !completer.isCompleted) completer.complete(result);
+  }
+
+  /// Callback name plus PayU's error code/message — never the payment
+  /// response itself, which carries the payer's details.
+  static void _log(String event, dynamic response) {
+    final map = response is Map ? response : const {};
+    debugPrint(
+      'PayU $event errorCode=${map['errorCode']} errorMsg=${map['errorMsg']}',
+    );
   }
 
   static String _hex(Color color) =>

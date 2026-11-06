@@ -121,6 +121,7 @@ describe("mapVerifyResult", () => {
     expect(mapVerifyResult({ status: "failure", unmappedstatus: "failed" }).state).toBe("failed");
     expect(mapVerifyResult({ status: "pending", unmappedstatus: "userCancelled" }).state).toBe("failed");
     expect(mapVerifyResult({ status: "pending", unmappedstatus: "bounced" }).state).toBe("failed");
+    expect(mapVerifyResult({ status: "pending", unmappedstatus: "initiated" }).state).toBe("failed");
     expect(mapVerifyResult({ status: "Not Found", mihpayid: "Not Found" })).toEqual({
       state: "failed",
       reason: "NOT_FOUND",
