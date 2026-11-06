@@ -4,14 +4,16 @@ import { db } from "../shared/firebase";
 import { OrderError, placeOrderInTx } from "../orders/quote";
 
 /**
- * Turns a verified PhonePe payment into an order (port of
+ * Turns a verified PayU payment into an order (port of
  * `place_paid_order`). Idempotent: a repeat call returns the order already
  * created. Returns null — with the intent marked `needs_review` — when the
  * customer has paid but no order can be made (amount differs, stock ran
  * out, cart changed, payment reused), so support can refund or fulfil it.
  */
 export async function placePaidOrder(
+  /** The PayU txnid, which is also the paymentIntents doc id. */
   merchantOrderId: string,
+  /** PayU's mihpayid. */
   transactionId: string,
   paidAmountPaise: number,
 ): Promise<string | null> {

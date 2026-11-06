@@ -3,7 +3,7 @@ import type { KbEntry } from "./types";
 /**
  * Starter knowledge base for the support bot. Facts here must match the
  * app and functions (free delivery + ₹5 handling fee in orders/quote.ts,
- * launch towns in docs/PLAN.md, COD / UPI via PhonePe). Edit, then
+ * launch towns in docs/PLAN.md, COD / UPI / cards via PayU). Edit, then
  * re-run `npm --prefix functions run seed:support` to re-index.
  *
  * bn / hi / pa text needs review by native speakers before launch.
@@ -143,12 +143,12 @@ export const KB_SEED: KbEntry[] = [
       hi: ["मैं कैसे पेमेंट करूँ?", "क्या कैश ऑन डिलीवरी है?", "क्या UPI से पेमेंट कर सकते हैं?"],
       pa: ["ਮੈਂ ਭੁਗਤਾਨ ਕਿਵੇਂ ਕਰਾਂ?", "ਕੀ ਕੈਸ਼ ਆਨ ਡਿਲੀਵਰੀ ਹੈ?", "ਕੀ UPI ਨਾਲ ਭੁਗਤਾਨ ਹੋ ਸਕਦਾ ਹੈ?"],
     },
-    keywords: ["cod", "cash", "upi", "phonepe", "gpay", "paytm", "card"],
+    keywords: ["cod", "cash", "upi", "payu", "phonepe", "gpay", "paytm", "card"],
     answers: {
-      en: "You can pay cash on delivery, or online with UPI (GPay, PhonePe, Paytm or any UPI app) through PhonePe's secure checkout. We never store card details.",
-      bn: "ক্যাশ অন ডেলিভারি, অথবা PhonePe-র নিরাপদ চেকআউটে UPI (GPay, PhonePe, Paytm বা যেকোনো UPI অ্যাপ) দিয়ে অনলাইনে পেমেন্ট করতে পারেন। আমরা কার্ডের তথ্য কখনও রাখি না।",
-      hi: "आप कैश ऑन डिलीवरी से, या PhonePe के सुरक्षित चेकआउट पर UPI (GPay, PhonePe, Paytm या कोई भी UPI ऐप) से ऑनलाइन पेमेंट कर सकते हैं। हम कार्ड की जानकारी कभी सेव नहीं करते।",
-      pa: "ਤੁਸੀਂ ਕੈਸ਼ ਆਨ ਡਿਲੀਵਰੀ ਨਾਲ, ਜਾਂ PhonePe ਦੇ ਸੁਰੱਖਿਅਤ ਚੈੱਕਆਊਟ ’ਤੇ UPI (GPay, PhonePe, Paytm ਜਾਂ ਕੋਈ ਵੀ UPI ਐਪ) ਨਾਲ ਔਨਲਾਈਨ ਭੁਗਤਾਨ ਕਰ ਸਕਦੇ ਹੋ। ਅਸੀਂ ਕਾਰਡ ਦੀ ਜਾਣਕਾਰੀ ਕਦੇ ਸੇਵ ਨਹੀਂ ਕਰਦੇ।",
+      en: "You can pay cash on delivery, or online with UPI (GPay, PhonePe, Paytm or any UPI app) or card through PayU's secure checkout. We never store card details.",
+      bn: "ক্যাশ অন ডেলিভারি, অথবা PayU-র নিরাপদ চেকআউটে UPI (GPay, PhonePe, Paytm বা যেকোনো UPI অ্যাপ) বা কার্ড দিয়ে অনলাইনে পেমেন্ট করতে পারেন। আমরা কার্ডের তথ্য কখনও রাখি না।",
+      hi: "आप कैश ऑन डिलीवरी से, या PayU के सुरक्षित चेकआउट पर UPI (GPay, PhonePe, Paytm या कोई भी UPI ऐप) या कार्ड से ऑनलाइन पेमेंट कर सकते हैं। हम कार्ड की जानकारी कभी सेव नहीं करते।",
+      pa: "ਤੁਸੀਂ ਕੈਸ਼ ਆਨ ਡਿਲੀਵਰੀ ਨਾਲ, ਜਾਂ PayU ਦੇ ਸੁਰੱਖਿਅਤ ਚੈੱਕਆਊਟ ’ਤੇ UPI (GPay, PhonePe, Paytm ਜਾਂ ਕੋਈ ਵੀ UPI ਐਪ) ਜਾਂ ਕਾਰਡ ਨਾਲ ਔਨਲਾਈਨ ਭੁਗਤਾਨ ਕਰ ਸਕਦੇ ਹੋ। ਅਸੀਂ ਕਾਰਡ ਦੀ ਜਾਣਕਾਰੀ ਕਦੇ ਸੇਵ ਨਹੀਂ ਕਰਦੇ।",
     },
     related: ["payment_failed", "refund"],
   },

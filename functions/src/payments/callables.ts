@@ -1,28 +1,51 @@
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import { logger } from "firebase-functions";
 import { HttpsError, onCall } from "firebase-functions/https";
 import { db } from "../shared/firebase";
 import { requireString, requireUid, toHttpsError } from "../shared/callable";
 import { ONLINE_METHODS, quoteOrder } from "../orders/quote";
 import {
-  PHONEPE_MERCHANT_ID,
-  PHONEPE_SECRETS,
-  getPhonePeAccessToken,
-  paymentModeConfig,
-  phonePeBase,
-} from "./phonepe";
+  PAYU_MERCHANT_KEY,
+  PAYU_SALT,
+  PAYU_SECRETS,
+  amountString,
+  classifyHash,
+  newTxnId,
+  payUSdkEnvironment,
+  signHash,
+  verifyPayUTxn,
+} from "./payu";
 import { placePaidOrder } from "./place_paid_order";
 
+const PRODUCT_INFO = "Zyppi order";
+
+/** PayU wants a plain first name, a valid-looking email and 10 digits. */
+function payerDetails(user: Record<string, unknown>, authPhone: string | undefined) {
+  const name = String(user.fullName ?? "")
+    .replace(/[^A-Za-z ]/g, "")
+    .trim()
+    .split(/\s+/)[0];
+  const email = String(user.email ?? "").trim();
+  const digits = String(user.phone ?? authPhone ?? "").replace(/\D/g, "").slice(-10);
+  return {
+    firstName: name || "Customer",
+    email: /^[^\s@|]+@[^\s@|]+\.[^\s@|]+$/.test(email) ? email : "orders@zyppi.one",
+    phone: digits.length === 10 ? digits : "9999999999",
+  };
+}
+
 /**
- * Creates a PhonePe order for the caller's server cart. The amount is never
+ * Starts a PayU payment for the caller's server cart. The amount is never
  * taken from the client: quoteOrder validates address, slot, stock and
  * coupon and prices it from the live catalog, so an order that can't be
  * placed is rejected before the customer pays.
  *
  * Request: {paymentMethod: "UPI" | "Credit or debit card", addressId,
  *           deliverySlotId, couponCode?, tipPaise?}
- * Response: {merchantOrderId, orderId, token, merchantId, amountPaise}
+ * Response: {txnid, key, amount, productInfo, firstName, email, phone,
+ *            environment, amountPaise}
  */
-export const createPhonePeOrder = onCall({ secrets: PHONEPE_SECRETS }, async (request) => {
+export const createPayUOrder = onCall({ secrets: PAYU_SECRETS }, async (request) => {
   const uid = requireUid(request);
   const data = (request.data ?? {}) as Record<string, unknown>;
 
@@ -47,9 +70,11 @@ export const createPhonePeOrder = onCall({ secrets: PHONEPE_SECRETS }, async (re
     toHttpsError(error);
   }
 
-  const merchantOrderId = `zyppi-${crypto.randomUUID()}`;
-  const intentRef = db.collection("paymentIntents").doc(merchantOrderId);
-  await intentRef.create({
+  const user = (await db.collection("users").doc(uid).get()).data() ?? {};
+  const payer = payerDetails(user, request.auth?.token.phone_number);
+
+  const txnid = newTxnId();
+  await db.collection("paymentIntents").doc(txnid).create({
     userId: uid,
     amountPaise,
     paymentMethod,
@@ -65,50 +90,88 @@ export const createPhonePeOrder = onCall({ secrets: PHONEPE_SECRETS }, async (re
     updatedAt: FieldValue.serverTimestamp(),
   });
 
-  const accessToken = await getPhonePeAccessToken().catch((error) => {
-    throw new HttpsError("unavailable", String(error));
-  });
-  const response = await fetch(`${phonePeBase()}/checkout/v2/sdk/order`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `O-Bearer ${accessToken}` },
-    body: JSON.stringify({
-      merchantOrderId,
-      amount: amountPaise,
-      paymentFlow: { type: "PG_CHECKOUT", paymentModeConfig: paymentModeConfig(paymentMethod) },
-    }),
-  });
-  const result = (await response.json()) as { orderId?: string; token?: string };
-  if (!response.ok || !result.orderId || !result.token) {
-    await intentRef.update({
-      status: "failed",
-      failureReason: JSON.stringify(result),
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-    throw new HttpsError("unavailable", "Payment could not be started");
-  }
-
   return {
-    merchantOrderId,
-    orderId: result.orderId,
-    token: result.token,
-    merchantId: PHONEPE_MERCHANT_ID.value(),
+    txnid,
+    key: PAYU_MERCHANT_KEY.value(),
+    amount: amountString(amountPaise),
+    productInfo: PRODUCT_INFO,
+    ...payer,
+    environment: payUSdkEnvironment(),
     amountPaise,
   };
 });
 
+// A payment hash is only signed for an intent created recently.
+const SIGNABLE_INTENT_AGE_MS = 60 * 60 * 1000;
+
 /**
- * Confirms a PhonePe payment server-side and, once COMPLETED for the
- * quoted amount, creates the order. Safe to call repeatedly.
+ * Signs a hash CheckoutPro asks for (its `generateHash` callback). The
+ * salt stays here, and only safe strings are signed: allow-listed
+ * read-only commands, or a payment for one of the caller's own open
+ * intents at exactly the quoted amount.
  *
- * Request: {merchantOrderId}
+ * Request: {hashName, hashString, hashType?, postSalt?}
+ * Response: {[hashName]: hash}
+ */
+export const signPayUHash = onCall({ secrets: PAYU_SECRETS }, async (request) => {
+  const uid = requireUid(request);
+  const data = (request.data ?? {}) as Record<string, unknown>;
+  const hashRequest = {
+    hashName: requireString(data.hashName, "hashName"),
+    hashString: requireString(data.hashString, "hashString"),
+    hashType: typeof data.hashType === "string" ? data.hashType : null,
+    postSalt: typeof data.postSalt === "string" ? data.postSalt : null,
+  };
+
+  const decision = classifyHash(hashRequest, PAYU_MERCHANT_KEY.value());
+  const refuse = (reason: string): never => {
+    logger.warn("Refused PayU hash", { uid, hashName: hashRequest.hashName, reason });
+    throw new HttpsError("permission-denied", "Hash not allowed");
+  };
+
+  const ownOpenIntent = async (txnid: string) => {
+    const intent = (await db.collection("paymentIntents").doc(txnid).get()).data();
+    if (!intent || intent.userId !== uid || intent.status !== "created") return null;
+    const createdAt = intent.createdAt as Timestamp | undefined;
+    if (!createdAt || Date.now() - createdAt.toMillis() > SIGNABLE_INTENT_AGE_MS) return null;
+    return intent;
+  };
+
+  switch (decision.kind) {
+    case "reject":
+      return refuse(decision.reason);
+    case "payment": {
+      const intent = await ownOpenIntent(decision.txnid);
+      if (!intent) return refuse("unknown txnid");
+      if (intent.amountPaise !== decision.amountPaise) return refuse("amount differs");
+      break;
+    }
+    case "v2": {
+      const intents = await Promise.all(decision.txnids.map(ownOpenIntent));
+      if (!intents.some(Boolean)) return refuse("unknown txnid");
+      break;
+    }
+    case "command":
+      break;
+  }
+
+  return { [hashRequest.hashName]: signHash(hashRequest, PAYU_SALT.value()) };
+});
+
+/**
+ * Confirms a PayU payment server-side (verify_payment) and, once captured
+ * for the quoted amount, creates the order. Safe to call repeatedly.
+ *
+ * Request: {txnid}
  * Response: {verified, pending, orderId, needsReview}
  */
-export const verifyPhonePePayment = onCall({ secrets: PHONEPE_SECRETS }, async (request) => {
+export const verifyPayUPayment = onCall({ secrets: PAYU_SECRETS }, async (request) => {
   const uid = requireUid(request);
-  const merchantOrderId = requireString(request.data?.merchantOrderId, "merchantOrderId");
+  const txnid = requireString(request.data?.txnid, "txnid");
 
   // Only the payer may check (and complete) their own payment.
-  const intent = (await db.collection("paymentIntents").doc(merchantOrderId).get()).data();
+  const intentRef = db.collection("paymentIntents").doc(txnid);
+  const intent = (await intentRef.get()).data();
   if (!intent || intent.userId !== uid) {
     throw new HttpsError("not-found", "Unknown payment");
   }
@@ -119,44 +182,28 @@ export const verifyPhonePePayment = onCall({ secrets: PHONEPE_SECRETS }, async (
     return { verified: true, pending: false, orderId: null, needsReview: true };
   }
 
-  const accessToken = await getPhonePeAccessToken().catch((error) => {
-    throw new HttpsError("unavailable", String(error));
+  const outcome = await verifyPayUTxn(txnid).catch((error) => {
+    logger.error("PayU verify failed", { txnid, error: String(error) });
+    throw new HttpsError("unavailable", "Could not check payment");
   });
-  const response = await fetch(
-    `${phonePeBase()}/checkout/v2/order/${encodeURIComponent(merchantOrderId)}/status?details=true`,
-    { headers: { Authorization: `O-Bearer ${accessToken}` } },
-  );
-  const status = (await response.json()) as {
-    state?: string;
-    amount?: number;
-    paymentDetails?: { transactionId?: string }[];
-  };
-  if (!response.ok) throw new HttpsError("unavailable", "Could not check payment");
 
-  if (status.state === "PENDING") {
+  if (outcome.state === "pending") {
     return { verified: false, pending: true, orderId: null, needsReview: false };
   }
-  if (status.state !== "COMPLETED") {
+  if (outcome.state === "failed") {
     await db.runTransaction(async (tx) => {
-      const ref = db.collection("paymentIntents").doc(merchantOrderId);
-      const snap = await tx.get(ref);
+      const snap = await tx.get(intentRef);
       if (snap.get("status") !== "created") return;
-      tx.update(ref, {
+      tx.update(intentRef, {
         status: "failed",
-        failureReason: status.state ?? "UNKNOWN",
+        failureReason: outcome.reason,
         updatedAt: FieldValue.serverTimestamp(),
       });
     });
     return { verified: false, pending: false, orderId: null, needsReview: false };
   }
 
-  // COMPLETED can briefly come back without its transaction details.
-  const transactionId = status.paymentDetails?.[0]?.transactionId;
-  if (!transactionId || typeof status.amount !== "number") {
-    return { verified: false, pending: true, orderId: null, needsReview: false };
-  }
-
-  const orderId = await placePaidOrder(merchantOrderId, transactionId, status.amount);
+  const orderId = await placePaidOrder(txnid, outcome.mihpayid, outcome.amountPaise);
   return orderId
     ? { verified: true, pending: false, orderId, needsReview: false }
     : { verified: true, pending: false, orderId: null, needsReview: true };
