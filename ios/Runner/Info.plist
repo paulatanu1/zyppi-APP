@@ -56,24 +56,18 @@
 		<string>Zyppi uses your location to find your delivery address and show accurate delivery times.</string>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<!-- UPI apps PayU CheckoutPro can hand a UPI-intent payment to. -->
 		<key>LSApplicationQueriesSchemes</key>
 		<array>
-			<string>ppemerchantsdkv1</string>
-			<string>ppemerchantsdkv2</string>
-			<string>ppemerchantsdkv3</string>
-			<string>paytmmp</string>
+			<string>phonepe</string>
+			<string>tez</string>
 			<string>gpay</string>
+			<string>paytmmp</string>
+			<string>bhim</string>
+			<string>credpay</string>
 		</array>
 		<key>CFBundleURLTypes</key>
 		<array>
-			<dict>
-				<key>CFBundleURLName</key>
-				<string>com.zyppi.one.payments</string>
-				<key>CFBundleURLSchemes</key>
-				<array>
-					<string>com.zyppi.one.payments</string>
-				</array>
-			</dict>
 			<dict>
 				<key>CFBundleURLName</key>
 				<string>com.zyppi.one.auth</string>

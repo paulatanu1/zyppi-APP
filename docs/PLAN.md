@@ -39,7 +39,7 @@ Flutter **3.47.x stable** (Dart 3.13) pinned with **FVM** (`.fvmrc`). Upgrade wi
 | Localization | `easy_localization` | latest | 0 |
 | Location / maps | `geolocator`, `google_places_flutter` (client key) | `geolocator`, `geocoding`; Places API (New) via the `placesProxy` Cloud Function. `google_maps_flutter` was added in Phase 4 then removed (2026-10-26): delivery here only needs `lat`/`lng` for the rider to navigate externally, not an embedded map in the customer app — see decisions table | 4 |
 | Push / crash / analytics | `firebase_core` | + `firebase_messaging`, `firebase_crashlytics`, `firebase_analytics` | 4–5 |
-| Payments | — | `phonepe_payment_sdk` (Standard Checkout) + COD | 4 |
+| Payments | — | `payu_checkoutpro_flutter` (PayU CheckoutPro) + COD — replaced `phonepe_payment_sdk` 2026-11-07 | 4 |
 | Testing | `flutter_test` | + `mocktail`, `integration_test` | all |
 | Release assets | `flutter_launcher_icons` | + `flutter_native_splash` | 5 |
 
@@ -188,12 +188,12 @@ Done when: both store test tracks run a week of internal use with no crashes. �
 ### Phase 6 — Move to Firebase · `feat/firebase-migration`
 Supabase (Postgres, Auth, Storage, Realtime, Edge Functions) is replaced by Firebase on the existing project `zippy-app-2024`.
 - [x] `firebase.json`, `.firebaserc`, `firestore.rules`, `firestore.indexes.json`, `storage.rules`. Catalog is public-read/admin-write; `users/{uid}` + `addresses`/`cart`/`favourites` are owner-only; `orders`, `paymentIntents`, `inventory` are written only by Cloud Functions. Admins = custom claim `admin: true` (`functions/scripts/set-admin.ts`)
-- [x] Cloud Functions (`functions/`, TypeScript, Node 22, `asia-south1`): `placeOrder` (COD), `createPhonePeOrder`, `verifyPhonePePayment` (idempotent paid orders, mismatches → `needs_review`), `placesProxy`, `deleteAccount`, `onOrderEventCreated` (FCM push), `adminUpdateOrderStatus`, `adminListUsers`. Ported from `quote_order` / `place_order_internal` / `place_paid_order`; stock now spills across an area's stores instead of failing when no single store has enough
+- [x] Cloud Functions (`functions/`, TypeScript, Node 22, `asia-south1`): `placeOrder` (COD), `createPayUOrder`, `signPayUHash`, `verifyPayUPayment` (idempotent paid orders, mismatches → `needs_review`; PhonePe replaced by PayU 2026-11-07), `placesProxy`, `deleteAccount`, `onOrderEventCreated` (FCM push), `adminUpdateOrderStatus`, `adminListUsers`. Ported from `quote_order` / `place_order_internal` / `place_paid_order`; stock now spills across an area's stores instead of failing when no single store has enough
 - [x] `functions/scripts/seed.ts` loads the old `seed.sql` catalog + images into Firestore/Storage; search uses a `keywords` prefix array
 - [x] App: one `firebase_*_repository_impl.dart` per interface; Firebase Auth for phone OTP, Google, guest and guest upgrade (`linkWithCredential`); order tracking listens to Firestore; `supabase_flutter` removed
 - [x] Admin panel (`zyppi-admin`): Firebase Auth email/password + admin claim, Firestore services, Storage uploads
 - [x] Tests: functions emulator suite (pricing, coupons, stock, rollback, idempotency, rules) in CI; Dart tests for distance and error mapping
-- [ ] Console: Blaze plan, Firestore (`asia-south1`), Storage, Auth providers (Phone, Google, Anonymous, Email/Password), SHA-1/SHA-256 fingerprints, APNs key; secrets `PHONEPE_*`, `GOOGLE_PLACES_API_KEY`
+- [ ] Console: Blaze plan, Firestore (`asia-south1`), Storage, Auth providers (Phone, Google, Anonymous, Email/Password), SHA-1/SHA-256 fingerprints, APNs key; secrets `PAYU_MERCHANT_KEY`, `PAYU_SALT` (+ param `PAYU_ENV`), `GOOGLE_PLACES_API_KEY`
 - [ ] Deploy (`firebase deploy --only firestore,storage,functions`), seed, create the admin login + `set-admin`
 - [ ] Verify end to end on a device, then delete `supabase/` and `scripts/upload_catalog_images.sh`
 
@@ -209,7 +209,7 @@ Done when: on a real phone against `zippy-app-2024` — OTP, Google and guest si
 | Backend | Firebase project `zippy-app-2024` for every flavor (Firestore + Cloud Functions in `asia-south1`, Auth, Storage) — Phase 6, 2026-11-03. Supabase (`dcgjsspymailbciqkhvq`) retired; started fresh, catalog re-seeded, no user data copied |
 | Launch areas | Purulia, Raghunathpur, Chelyama |
 | Delivery model | Dark store per area; express + scheduled slots |
-| Payments | PhonePe (Standard Checkout) + COD |
+| Payments | PayU CheckoutPro + COD (PhonePe dropped 2026-11-07) |
 | SMS / OTP | Firebase Phone Auth (sends the SMS itself). Dev: Firebase test phone numbers |
 | Brand | Existing Zyppi brand (pink, blue, Poppins/Montserrat) — mockup re-themed |
 | Navigation | Home, Explore, Cart, Favourite, Account |
@@ -218,4 +218,4 @@ Done when: on a real phone against `zippy-app-2024` — OTP, Google and guest si
 | Platforms | Android, iOS |
 | State | Riverpod 3 + codegen |
 
-Open: production SMS provider sign-up; realistic express ETA per town; PhonePe Business Dashboard credentials (`PHONEPE_CLIENT_ID`/`SECRET`/`VERSION`/`MERCHANT_ID`) still need setting as Cloud Functions secrets (`firebase functions:secrets:set`); `zyppi-admin` (sibling repo) should surface a per-order "Navigate" link (e.g. `https://www.google.com/maps/dir/?api=1&destination=lat,lng`) built from the `orders`/`addresses` data this app already writes, for whoever is handling deliveries until a rider app exists — not implemented here, this repo's data model already supports it.
+Open: production SMS provider sign-up; realistic express ETA per town; PayU test Merchant Key + Salt still need setting as Cloud Functions secrets (`firebase functions:secrets:set PAYU_MERCHANT_KEY` / `PAYU_SALT`); then verify a sandbox payment on a real device; `zyppi-admin` (sibling repo) should surface a per-order "Navigate" link (e.g. `https://www.google.com/maps/dir/?api=1&destination=lat,lng`) built from the `orders`/`addresses` data this app already writes, for whoever is handling deliveries until a rider app exists — not implemented here, this repo's data model already supports it.

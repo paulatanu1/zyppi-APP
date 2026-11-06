@@ -39,7 +39,7 @@ The repo is public and `lib/core/constants/googleApiKey.dart` contains a Google 
    - Firestore (region `asia-south1`) and Storage enabled.
    - Authentication → Sign-in method: Phone (add 2–3 test numbers with fixed codes), Google, Anonymous, Email/Password (admin logins).
    - Project settings → Android app `com.zyppi.one`: add the debug and release SHA-1 and SHA-256 fingerprints. iOS app `com.zyppi.one`: upload the APNs key.
-   - Secrets: `firebase functions:secrets:set PHONEPE_CLIENT_ID` (and `PHONEPE_CLIENT_SECRET`, `PHONEPE_CLIENT_VERSION`, `PHONEPE_MERCHANT_ID`, `GOOGLE_PLACES_API_KEY`).
+   - Secrets: `firebase functions:secrets:set PAYU_MERCHANT_KEY` (and `PAYU_SALT`, `GOOGLE_PLACES_API_KEY`). `PAYU_ENV` is `TEST` by default; set `PRODUCTION` for live keys. Online payments use PayU CheckoutPro (PhonePe removed 2026-11-07).
    - Deploy: `firebase deploy --only firestore,storage,functions`; seed: `gcloud auth application-default login && npm --prefix functions run seed -- --project zippy-app-2024`.
    - Admin: create an Email/Password user in the console, then `npm --prefix functions run set-admin -- <email> --project zippy-app-2024`.
 

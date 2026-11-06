@@ -2,7 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:zippy/core/payments/domain/payment_repository.dart';
 
-/// Turns a placeOrder / createPhonePeOrder failure into a translated
+/// Turns a placeOrder / createPayUOrder failure into a translated
 /// message. The functions return fixed English sentences (OrderError in
 /// functions/src/orders/quote.ts) as the error message; anything
 /// unrecognised falls back to a generic message rather than a raw

@@ -5,7 +5,7 @@ import { COD, placeOrderInTx } from "./quote";
 
 /**
  * Client entry point for cash-on-delivery orders (port of `place_order`).
- * Prepaid orders are only created by verifyPhonePePayment.
+ * Prepaid orders are only created by verifyPayUPayment.
  *
  * Request: {addressId, deliverySlotId, paymentMethod, couponCode?, tipPaise?}
  * Response: {orderId}

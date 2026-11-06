@@ -6,7 +6,7 @@ import 'package:zippy/core/payments/data/payment_repository_impl.dart';
 import 'package:zippy/core/payments/data/pending_payment_store.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
 
-/// On app start: if a PhonePe payment was started but never confirmed as
+/// On app start: if a PayU payment was started but never confirmed as
 /// an order (the app was killed while paying), ask the server once. The
 /// server creates the order from a completed payment, so the customer
 /// isn't left charged without an order — or asked to pay again.
@@ -15,13 +15,13 @@ Future<void> resumePendingPayment(ProviderContainer container) async {
   if (Env.isMockDataSource) return;
 
   final store = container.read(pendingPaymentStoreProvider);
-  final merchantOrderId = store.read();
-  if (merchantOrderId == null) return;
+  final txnid = store.read();
+  if (txnid == null) return;
 
   try {
     final result = await container
         .read(paymentRepositoryProvider)
-        .verifyPayment(merchantOrderId);
+        .verifyPayment(txnid);
 
     if (result.orderId != null) {
       await store.clear();

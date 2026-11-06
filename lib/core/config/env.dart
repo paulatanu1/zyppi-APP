@@ -26,8 +26,8 @@ class Env {
     'FIREBASE_EMULATOR_HOST',
   );
 
-  /// Shows UPI and Card at checkout. Off until PhonePe credentials are set
-  /// as Cloud Functions secrets; until then only Cash on delivery is offered,
+  /// Shows UPI and Card at checkout. Off until the PayU key and salt are set
+  /// as Cloud Functions secrets (PAYU_MERCHANT_KEY / PAYU_SALT); until then only Cash on delivery is offered,
   /// so testers never reach a payment that can't work.
   static const onlinePaymentsEnabled = bool.fromEnvironment(
     'ONLINE_PAYMENTS_ENABLED',
@@ -42,7 +42,4 @@ class Env {
   /// (Play Store requires a privacy policy link). Empty hides the link.
   static const privacyPolicyUrl = String.fromEnvironment('PRIVACY_POLICY_URL');
   static const termsUrl = String.fromEnvironment('TERMS_URL');
-
-  static String get phonePeEnvironment =>
-      flavor == 'prod' ? 'PRODUCTION' : 'SANDBOX';
 }

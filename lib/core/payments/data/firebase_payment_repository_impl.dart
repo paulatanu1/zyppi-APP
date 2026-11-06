@@ -2,9 +2,9 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:zippy/core/payments/domain/payment_order.dart';
 import 'package:zippy/core/payments/domain/payment_repository.dart';
 
-/// Calls the createPhonePeOrder / verifyPhonePePayment Cloud Functions —
-/// PhonePe secrets never reach the app, and the server both prices the
-/// order and creates it once the payment is confirmed.
+/// Calls the createPayUOrder / signPayUHash / verifyPayUPayment Cloud
+/// Functions — the PayU salt never reaches the app, and the server both
+/// prices the order and creates it once the payment is confirmed.
 class FirebasePaymentRepository implements PaymentRepository {
   final FirebaseFunctions functions;
 
@@ -20,7 +20,7 @@ class FirebasePaymentRepository implements PaymentRepository {
   }) async {
     final Map<dynamic, dynamic> data;
     try {
-      final result = await functions.httpsCallable('createPhonePeOrder').call({
+      final result = await functions.httpsCallable('createPayUOrder').call({
         'paymentMethod': paymentMethod,
         'addressId': addressId,
         'deliverySlotId': deliverySlotId,
@@ -35,18 +35,36 @@ class FirebasePaymentRepository implements PaymentRepository {
     }
 
     return PaymentOrder(
-      merchantOrderId: data['merchantOrderId'] as String,
-      orderId: data['orderId'] as String,
-      token: data['token'] as String,
-      merchantId: data['merchantId'] as String,
+      txnid: data['txnid'] as String,
+      key: data['key'] as String,
+      amount: data['amount'] as String,
+      productInfo: data['productInfo'] as String,
+      firstName: data['firstName'] as String,
+      email: data['email'] as String,
+      phone: data['phone'] as String,
+      environment: data['environment'] as String,
+      userCredential: data['userCredential'] as String,
       amountPaise: data['amountPaise'] as int,
     );
   }
 
   @override
-  Future<PaymentVerification> verifyPayment(String merchantOrderId) async {
-    final result = await functions.httpsCallable('verifyPhonePePayment').call({
-      'merchantOrderId': merchantOrderId,
+  Future<Map<String, String>> signHash(Map<dynamic, dynamic> request) async {
+    final result = await functions.httpsCallable('signPayUHash').call({
+      'hashName': request['hashName'],
+      'hashString': request['hashString'],
+      'hashType': request['hashType'],
+      'postSalt': request['postSalt'],
+    });
+    return (result.data as Map<dynamic, dynamic>).map(
+      (name, hash) => MapEntry(name as String, hash as String),
+    );
+  }
+
+  @override
+  Future<PaymentVerification> verifyPayment(String txnid) async {
+    final result = await functions.httpsCallable('verifyPayUPayment').call({
+      'txnid': txnid,
     });
     final data = result.data as Map<dynamic, dynamic>;
 
