@@ -89,11 +89,31 @@ describe("SDK event hashes (offers / quick-pay)", () => {
 
   it("accepts a fresh body|date| string for the allow-listed names", () => {
     expect(
-      classifyHash({ hashName: "get_all_offer_details", hashString: `{"a":1,"b":2}|${date}|` }, KEY, now),
-    ).toEqual({ kind: "sdkEvent", bodyShape: "json{a,b}" });
+      classifyHash({ hashName: "get_all_offer_details", hashString: `{"amount":"30.00"}|${date}|` }, KEY, now),
+    ).toEqual({ kind: "sdkEvent", bodyShape: "json{amount}", amountPaise: 3000 });
+    expect(
+      classifyHash(
+        { hashName: "quickPayEvent", hashString: `{"amount":30,"phone":"9","deviceId":"d","requestId":"r","requestType":"t","userToken":"u"}|${date}|` },
+        KEY,
+        now,
+      ).kind,
+    ).toBe("sdkEvent");
+    // Fields not pinned yet: any object, no amount.
+    expect(
+      classifyHash({ hashName: "binBaseDetails", hashString: `{"bin":"512345"}|${date}|` }, KEY, now),
+    ).toEqual({ kind: "sdkEvent", bodyShape: "json{bin}", amountPaise: null });
+  });
+
+  it("refuses bodies with unexpected fields or that aren't JSON objects", () => {
+    expect(
+      classifyHash({ hashName: "get_all_offer_details", hashString: `{"amount":"1","refund":1}|${date}|` }, KEY, now).kind,
+    ).toBe("reject");
     expect(
       classifyHash({ hashName: "quickPayEvent", hashString: `x|${date}|` }, KEY, now).kind,
-    ).toBe("sdkEvent");
+    ).toBe("reject");
+    expect(
+      classifyHash({ hashName: "binBaseDetails", hashString: `[1]|${date}|` }, KEY, now).kind,
+    ).toBe("reject");
   });
 
   it("refuses stale or future dates", () => {

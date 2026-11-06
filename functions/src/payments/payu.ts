@@ -94,14 +94,25 @@ export interface OwnIntent {
  * to one command, so it's only given for these names, for a fresh date,
  * and (checked by the caller) during the user's own open checkout.
  */
-export const SDK_EVENT_HASHES = new Set(["get_all_offer_details", "quickPayEvent"]);
+export const SDK_EVENT_HASHES = new Set(["get_all_offer_details", "quickPayEvent", "binBaseDetails"]);
+
+/**
+ * The JSON fields each SDK event body may carry (as seen from CheckoutPro
+ * 1.5.0). null = not pinned down yet: any JSON object, logged by field
+ * names so the list can be filled in.
+ */
+const SDK_EVENT_FIELDS: Record<string, ReadonlySet<string> | null> = {
+  get_all_offer_details: new Set(["amount"]),
+  quickPayEvent: new Set(["amount", "deviceId", "phone", "requestId", "requestType", "userToken"]),
+  binBaseDetails: null,
+};
 
 /** How far an SDK event's date may be from the server clock. */
 export const SDK_EVENT_MAX_SKEW_MS = 5 * 60 * 1000;
 
 export type HashDecision =
   | { kind: "command" }
-  | { kind: "sdkEvent"; bodyShape: string }
+  | { kind: "sdkEvent"; bodyShape: string; amountPaise: number | null }
   | { kind: "payment"; txnid: string; amountPaise: number }
   | { kind: "v2"; txnids: string[] }
   | { kind: "reject"; reason: string };
@@ -125,7 +136,7 @@ export function classifyHash(
   if (hashName === "mcpLookup") return { kind: "reject", reason: "mcp not enabled" };
 
   if (SDK_EVENT_HASHES.has(hashName) && request.hashType !== "V2") {
-    return classifySdkEvent(hashString, now);
+    return classifySdkEvent(hashName, hashString, now);
   }
 
   if (request.hashType === "V2") {
@@ -156,7 +167,7 @@ export function classifyHash(
   return { kind: "reject", reason: `command ${field2} not allowed` };
 }
 
-function classifySdkEvent(hashString: string, now: number): HashDecision {
+function classifySdkEvent(hashName: string, hashString: string, now: number): HashDecision {
   const parts = hashString.split("|");
   if (parts.length !== 3 || parts[2] !== "" || parts[0].length > 4000) {
     return { kind: "reject", reason: `sdk event shape (parts=${parts.length})` };
@@ -167,7 +178,30 @@ function classifySdkEvent(hashString: string, now: number): HashDecision {
       Math.abs(now - date) > SDK_EVENT_MAX_SKEW_MS) {
     return { kind: "reject", reason: "sdk event date" };
   }
-  return { kind: "sdkEvent", bodyShape: describeBody(parts[0]) };
+
+  let body: unknown;
+  try {
+    body = JSON.parse(parts[0]);
+  } catch {
+    return { kind: "reject", reason: "sdk event body not json" };
+  }
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return { kind: "reject", reason: "sdk event body not an object" };
+  }
+  const fields = Object.keys(body);
+  const allowed = SDK_EVENT_FIELDS[hashName];
+  const extra = allowed ? fields.filter((field) => !allowed.has(field)) : [];
+  if (extra.length > 0) {
+    return { kind: "reject", reason: `sdk event fields ${extra.sort().join(",")}` };
+  }
+
+  // An amount must be the checkout's own (checked by the caller).
+  let amountPaise: number | null = null;
+  if ("amount" in body) {
+    amountPaise = amountToPaise((body as Record<string, unknown>).amount);
+    if (Number.isNaN(amountPaise)) return { kind: "reject", reason: "sdk event amount" };
+  }
+  return { kind: "sdkEvent", bodyShape: describeBody(parts[0]), amountPaise };
 }
 
 /** A body's field names (never values), for the audit log. */
