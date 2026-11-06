@@ -5,11 +5,11 @@ import { db } from "../shared/firebase";
 import { requireString, requireUid, toHttpsError } from "../shared/callable";
 import { ONLINE_METHODS, quoteOrder } from "../orders/quote";
 import {
-  PAYU_MERCHANT_KEY,
-  PAYU_SALT,
   PAYU_SECRETS,
   amountString,
   classifyHash,
+  merchantKey,
+  merchantSalt,
   newTxnId,
   payUSdkEnvironment,
   signHash,
@@ -92,7 +92,7 @@ export const createPayUOrder = onCall({ secrets: PAYU_SECRETS }, async (request)
 
   return {
     txnid,
-    key: PAYU_MERCHANT_KEY.value(),
+    key: merchantKey(),
     amount: amountString(amountPaise),
     productInfo: PRODUCT_INFO,
     ...payer,
@@ -123,7 +123,7 @@ export const signPayUHash = onCall({ secrets: PAYU_SECRETS }, async (request) =>
     postSalt: typeof data.postSalt === "string" ? data.postSalt : null,
   };
 
-  const decision = classifyHash(hashRequest, PAYU_MERCHANT_KEY.value());
+  const decision = classifyHash(hashRequest, merchantKey());
   const refuse = (reason: string): never => {
     logger.warn("Refused PayU hash", { uid, hashName: hashRequest.hashName, reason });
     throw new HttpsError("permission-denied", "Hash not allowed");
@@ -155,7 +155,7 @@ export const signPayUHash = onCall({ secrets: PAYU_SECRETS }, async (request) =>
       break;
   }
 
-  return { [hashRequest.hashName]: signHash(hashRequest, PAYU_SALT.value()) };
+  return { [hashRequest.hashName]: signHash(hashRequest, merchantSalt()) };
 });
 
 /**

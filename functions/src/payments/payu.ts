@@ -12,6 +12,11 @@ export const PAYU_ENV = defineString("PAYU_ENV", { default: "TEST" });
 
 export const PAYU_SECRETS = [PAYU_MERCHANT_KEY, PAYU_SALT];
 
+// Trimmed: a secret pasted or piped with a trailing newline would
+// otherwise never match the key the SDK puts in its hash strings.
+export const merchantKey = () => PAYU_MERCHANT_KEY.value().trim();
+export const merchantSalt = () => PAYU_SALT.value().trim();
+
 export const isPayUProd = () => PAYU_ENV.value() === "PRODUCTION";
 
 /** CheckoutPro's `environment` param: "0" production, "1" test. */
@@ -111,7 +116,14 @@ export function classifyHash(request: HashRequest, merchantKey: string): HashDec
 
   const parts = hashString.split("|");
   if (parts[0] !== merchantKey || parts.length < 3) {
-    return { kind: "reject", reason: "wrong key" };
+    // Shape only — never the string itself (it can hold the payer's
+    // email / phone).
+    return {
+      kind: "reject",
+      reason:
+        `wrong key (parts=${parts.length}, field1Len=${parts[0].length}, ` +
+        `keyAt=${hashString.indexOf(merchantKey)}, field2=${describeField(parts[1])})`,
+    };
   }
   const field2 = parts[1];
   if (SIGNABLE_COMMANDS.has(field2)) return { kind: "command" };
@@ -121,6 +133,14 @@ export function classifyHash(request: HashRequest, merchantKey: string): HashDec
     return { kind: "payment", txnid: field2, amountPaise };
   }
   return { kind: "reject", reason: `command ${field2} not allowed` };
+}
+
+/** A hash-string field for logs: command names as-is, anything else by shape. */
+function describeField(value: string | undefined): string {
+  if (value === undefined) return "none";
+  if (/^[A-Za-z_]{1,64}$/.test(value)) return value;
+  if (/^z[A-Za-z0-9]{24}$/.test(value)) return "txnid";
+  return `other(len=${value.length})`;
 }
 
 /** PayU's documented hash recipe for CheckoutPro's `generateHash`. */
@@ -166,7 +186,7 @@ export function mapVerifyResult(detail: Record<string, unknown> | undefined): Pa
 
 /** Server-to-server verify_payment for one txnid. */
 export async function verifyPayUTxn(txnid: string): Promise<PayUOutcome> {
-  const key = PAYU_MERCHANT_KEY.value();
+  const key = merchantKey();
   const command = "verify_payment";
   const response = await fetch(`${payUBase()}/merchant/postservice.php?form=2`, {
     method: "POST",
@@ -175,7 +195,7 @@ export async function verifyPayUTxn(txnid: string): Promise<PayUOutcome> {
       key,
       command,
       var1: txnid,
-      hash: sha512(`${key}|${command}|${txnid}|${PAYU_SALT.value()}`),
+      hash: sha512(`${key}|${command}|${txnid}|${merchantSalt()}`),
     }),
   });
   if (!response.ok) throw new Error(`PayU verify HTTP ${response.status}`);
