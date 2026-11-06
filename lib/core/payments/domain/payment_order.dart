@@ -17,6 +17,10 @@ class PaymentOrder {
   /// CheckoutPro environment: `"0"` production, `"1"` test.
   final String environment;
 
+  /// PayU user credential (`<key>:<uid>`); CheckoutPro needs one to take
+  /// a payment and scopes any card the customer saves to it.
+  final String userCredential;
+
   /// The server-computed amount the customer is charged.
   final int amountPaise;
 
@@ -29,6 +33,7 @@ class PaymentOrder {
     required this.email,
     required this.phone,
     required this.environment,
+    required this.userCredential,
     required this.amountPaise,
   });
 }

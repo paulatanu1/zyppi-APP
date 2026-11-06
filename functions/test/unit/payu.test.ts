@@ -56,6 +56,12 @@ describe("classifyHash", () => {
     expect(classifyHash({ hashName: "x", hashString }, KEY)).toEqual({ kind: "command" });
   });
 
+  it("returns saved-card commands with the credential they act on", () => {
+    expect(
+      classifyHash({ hashName: "x", hashString: `${KEY}|get_user_cards|${KEY}:uid1|` }, KEY),
+    ).toEqual({ kind: "userCommand", credential: `${KEY}:uid1` });
+  });
+
   it("refuses admin commands such as refunds", () => {
     for (const command of ["cancel_refund_transaction", "verify_payment", "capture_transaction"]) {
       const hashString = `${KEY}|${command}|123|`;

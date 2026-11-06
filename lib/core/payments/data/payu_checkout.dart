@@ -57,6 +57,7 @@ class PayUCheckout
           PayUPaymentParamKey.email: order.email,
           PayUPaymentParamKey.phone: order.phone,
           PayUPaymentParamKey.environment: order.environment,
+          PayUPaymentParamKey.userCredential: order.userCredential,
           PayUPaymentParamKey.android_surl: _successUrl,
           PayUPaymentParamKey.android_furl: _failureUrl,
           PayUPaymentParamKey.ios_surl: _successUrl,

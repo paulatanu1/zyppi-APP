@@ -13,6 +13,7 @@ import {
   newTxnId,
   payUSdkEnvironment,
   signHash,
+  userCredential,
   verifyPayUTxn,
 } from "./payu";
 import { placePaidOrder } from "./place_paid_order";
@@ -43,7 +44,7 @@ function payerDetails(user: Record<string, unknown>, authPhone: string | undefin
  * Request: {paymentMethod: "UPI" | "Credit or debit card", addressId,
  *           deliverySlotId, couponCode?, tipPaise?}
  * Response: {txnid, key, amount, productInfo, firstName, email, phone,
- *            environment, amountPaise}
+ *            environment, userCredential, amountPaise}
  */
 export const createPayUOrder = onCall({ secrets: PAYU_SECRETS }, async (request) => {
   const uid = requireUid(request);
@@ -97,6 +98,9 @@ export const createPayUOrder = onCall({ secrets: PAYU_SECRETS }, async (request)
     productInfo: PRODUCT_INFO,
     ...payer,
     environment: payUSdkEnvironment(),
+    // CheckoutPro refuses to take a payment without one, even with saved
+    // cards off; it scopes any card the customer chooses to save.
+    userCredential: userCredential(merchantKey(), uid),
     amountPaise,
   };
 });
@@ -155,6 +159,11 @@ export const signPayUHash = onCall({ secrets: PAYU_SECRETS }, async (request) =>
       break;
     }
     case "command":
+      break;
+    case "userCommand":
+      if (decision.credential !== userCredential(merchantKey(), uid)) {
+        return refuse("another user's credential");
+      }
       break;
     case "sdkEvent": {
       // Only during the caller's own checkout: an open intent from the

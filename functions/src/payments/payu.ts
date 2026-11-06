@@ -74,6 +74,25 @@ export const SIGNABLE_COMMANDS = new Set([
   "get_payment_instrument",
 ]);
 
+/**
+ * Saved-card commands CheckoutPro runs for the customer's PayU user
+ * credential (`<key>:<uid>`, var1). Signed only when var1 is the caller's
+ * own credential, so nobody can list or delete another customer's cards.
+ */
+export const USER_COMMANDS = new Set([
+  "get_user_cards",
+  "save_user_card",
+  "edit_user_card",
+  "delete_user_card",
+  "get_payment_instrument",
+  "save_payment_instrument",
+  "delete_payment_instrument",
+  "get_payment_details",
+]);
+
+/** The PayU user credential for a customer. */
+export const userCredential = (merchantKey: string, uid: string) => `${merchantKey}:${uid}`;
+
 /** What the SDK sent to `generateHash`. */
 export interface HashRequest {
   hashName: string;
@@ -112,6 +131,7 @@ export const SDK_EVENT_MAX_SKEW_MS = 5 * 60 * 1000;
 
 export type HashDecision =
   | { kind: "command" }
+  | { kind: "userCommand"; credential: string }
   | { kind: "sdkEvent"; bodyShape: string; amountPaise: number | null }
   | { kind: "payment"; txnid: string; amountPaise: number }
   | { kind: "v2"; txnids: string[] }
@@ -159,6 +179,7 @@ export function classifyHash(
   }
   const field2 = parts[1];
   if (SIGNABLE_COMMANDS.has(field2)) return { kind: "command" };
+  if (USER_COMMANDS.has(field2)) return { kind: "userCommand", credential: parts[2] };
   if (/^z[A-Za-z0-9]{24}$/.test(field2)) {
     const amountPaise = amountToPaise(parts[2]);
     if (Number.isNaN(amountPaise)) return { kind: "reject", reason: "bad amount" };

@@ -43,6 +43,7 @@ class FirebasePaymentRepository implements PaymentRepository {
       email: data['email'] as String,
       phone: data['phone'] as String,
       environment: data['environment'] as String,
+      userCredential: data['userCredential'] as String,
       amountPaise: data['amountPaise'] as int,
     );
   }
