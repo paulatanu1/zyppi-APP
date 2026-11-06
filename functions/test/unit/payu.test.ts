@@ -4,6 +4,7 @@ import {
   amountString,
   amountToPaise,
   classifyHash,
+  describeBody,
   mapVerifyResult,
   newTxnId,
   signHash,
@@ -79,6 +80,44 @@ describe("classifyHash", () => {
     expect(
       classifyHash({ hashName: "payment", hashString: "{}|date|", hashType: "V2" }, KEY).kind,
     ).toBe("reject");
+  });
+});
+
+describe("SDK event hashes (offers / quick-pay)", () => {
+  const now = Date.parse("Fri, 06 Nov 2026 20:06:04 GMT");
+  const date = "Fri, 06 Nov 2026 20:06:04 GMT";
+
+  it("accepts a fresh body|date| string for the allow-listed names", () => {
+    expect(
+      classifyHash({ hashName: "get_all_offer_details", hashString: `{"a":1,"b":2}|${date}|` }, KEY, now),
+    ).toEqual({ kind: "sdkEvent", bodyShape: "json{a,b}" });
+    expect(
+      classifyHash({ hashName: "quickPayEvent", hashString: `x|${date}|` }, KEY, now).kind,
+    ).toBe("sdkEvent");
+  });
+
+  it("refuses stale or future dates", () => {
+    const stale = "Fri, 06 Nov 2026 19:50:00 GMT";
+    expect(
+      classifyHash({ hashName: "quickPayEvent", hashString: `{}|${stale}|` }, KEY, now).kind,
+    ).toBe("reject");
+    expect(
+      classifyHash({ hashName: "quickPayEvent", hashString: "{}|not a date|" }, KEY, now).kind,
+    ).toBe("reject");
+  });
+
+  it("refuses other shapes and other names", () => {
+    expect(
+      classifyHash({ hashName: "quickPayEvent", hashString: `{}|${date}|extra` }, KEY, now).kind,
+    ).toBe("reject");
+    expect(
+      classifyHash({ hashName: "refund", hashString: `{}|${date}|` }, KEY, now).kind,
+    ).toBe("reject");
+  });
+
+  it("describes bodies by field names only", () => {
+    expect(describeBody('{"phone":"9999999999","key":"k"}')).toBe("json{key,phone}");
+    expect(describeBody("plain")).toBe("text(len=5)");
   });
 });
 

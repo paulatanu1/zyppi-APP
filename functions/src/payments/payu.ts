@@ -88,8 +88,20 @@ export interface OwnIntent {
   amountPaise: number;
 }
 
+/**
+ * Optional CheckoutPro features (offers, quick-pay) that ask for PayU's
+ * API-style signature, `body|date|` + salt. Such a signature isn't tied
+ * to one command, so it's only given for these names, for a fresh date,
+ * and (checked by the caller) during the user's own open checkout.
+ */
+export const SDK_EVENT_HASHES = new Set(["get_all_offer_details", "quickPayEvent"]);
+
+/** How far an SDK event's date may be from the server clock. */
+export const SDK_EVENT_MAX_SKEW_MS = 5 * 60 * 1000;
+
 export type HashDecision =
   | { kind: "command" }
+  | { kind: "sdkEvent"; bodyShape: string }
   | { kind: "payment"; txnid: string; amountPaise: number }
   | { kind: "v2"; txnids: string[] }
   | { kind: "reject"; reason: string };
@@ -101,12 +113,20 @@ export type HashDecision =
  * its amount and must match the intent (checked by the caller). V2
  * (HMAC) strings are only signed when they name the caller's own txnid.
  */
-export function classifyHash(request: HashRequest, merchantKey: string): HashDecision {
+export function classifyHash(
+  request: HashRequest,
+  merchantKey: string,
+  now: number = Date.now(),
+): HashDecision {
   const { hashName, hashString } = request;
   if (!hashName || typeof hashString !== "string" || hashString.length > 20000) {
     return { kind: "reject", reason: "malformed" };
   }
   if (hashName === "mcpLookup") return { kind: "reject", reason: "mcp not enabled" };
+
+  if (SDK_EVENT_HASHES.has(hashName) && request.hashType !== "V2") {
+    return classifySdkEvent(hashString, now);
+  }
 
   if (request.hashType === "V2") {
     const txnids = [...new Set(hashString.match(TXNID_PATTERN) ?? [])];
@@ -134,6 +154,33 @@ export function classifyHash(request: HashRequest, merchantKey: string): HashDec
     return { kind: "payment", txnid: field2, amountPaise };
   }
   return { kind: "reject", reason: `command ${field2} not allowed` };
+}
+
+function classifySdkEvent(hashString: string, now: number): HashDecision {
+  const parts = hashString.split("|");
+  if (parts.length !== 3 || parts[2] !== "" || parts[0].length > 4000) {
+    return { kind: "reject", reason: `sdk event shape (parts=${parts.length})` };
+  }
+  const date = Date.parse(parts[1]);
+  if (!/^[A-Z][a-z]{2}, \d{2} [A-Z][a-z]{2} \d{4} \d{2}:\d{2}:\d{2} GMT$/.test(parts[1]) ||
+      Number.isNaN(date) ||
+      Math.abs(now - date) > SDK_EVENT_MAX_SKEW_MS) {
+    return { kind: "reject", reason: "sdk event date" };
+  }
+  return { kind: "sdkEvent", bodyShape: describeBody(parts[0]) };
+}
+
+/** A body's field names (never values), for the audit log. */
+export function describeBody(body: string): string {
+  try {
+    const parsed: unknown = JSON.parse(body);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return `json{${Object.keys(parsed).sort().join(",")}}`;
+    }
+    return `json(${Array.isArray(parsed) ? "array" : typeof parsed})`;
+  } catch {
+    return `text(len=${body.length})`;
+  }
 }
 
 /** A hash-string field for logs: command names as-is, anything else by shape. */

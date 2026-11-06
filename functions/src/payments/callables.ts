@@ -103,12 +103,15 @@ export const createPayUOrder = onCall({ secrets: PAYU_SECRETS }, async (request)
 
 // A payment hash is only signed for an intent created recently.
 const SIGNABLE_INTENT_AGE_MS = 60 * 60 * 1000;
+// Offers / quick-pay hashes only while a checkout opened this recently.
+const SDK_EVENT_INTENT_AGE_MS = 15 * 60 * 1000;
 
 /**
  * Signs a hash CheckoutPro asks for (its `generateHash` callback). The
  * salt stays here, and only safe strings are signed: allow-listed
- * read-only commands, or a payment for one of the caller's own open
- * intents at exactly the quoted amount.
+ * read-only commands, a payment for one of the caller's own open
+ * intents at exactly the quoted amount, or (offers / quick-pay) a
+ * fresh `body|date|` string during the caller's own open checkout.
  *
  * Request: {hashName, hashString, hashType?, postSalt?}
  * Response: {[hashName]: hash}
@@ -153,6 +156,26 @@ export const signPayUHash = onCall({ secrets: PAYU_SECRETS }, async (request) =>
     }
     case "command":
       break;
+    case "sdkEvent": {
+      // Only during the caller's own checkout: an open intent from the
+      // last 15 minutes.
+      const open = await db
+        .collection("paymentIntents")
+        .where("userId", "==", uid)
+        .where("status", "==", "created")
+        .get();
+      const fresh = open.docs.some((doc) => {
+        const createdAt = doc.get("createdAt") as Timestamp | undefined;
+        return createdAt && Date.now() - createdAt.toMillis() <= SDK_EVENT_INTENT_AGE_MS;
+      });
+      if (!fresh) return refuse("no open checkout");
+      logger.info("Signed PayU SDK event hash", {
+        uid,
+        hashName: hashRequest.hashName,
+        body: decision.bodyShape,
+      });
+      break;
+    }
   }
 
   return { [hashRequest.hashName]: signHash(hashRequest, merchantSalt()) };
