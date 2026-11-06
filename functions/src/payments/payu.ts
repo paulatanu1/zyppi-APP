@@ -116,14 +116,30 @@ export interface OwnIntent {
 export const SDK_EVENT_HASHES = new Set(["get_all_offer_details", "quickPayEvent", "binBaseDetails"]);
 
 /**
- * The JSON fields each SDK event body may carry (as seen from CheckoutPro
- * 1.5.0). null = not pinned down yet: any JSON object, logged by field
- * names so the list can be filled in.
+ * The JSON fields each SDK event body may carry, as CheckoutPro 1.5.0
+ * sends them (from the audit log). null would mean "any object".
  */
 const SDK_EVENT_FIELDS: Record<string, ReadonlySet<string> | null> = {
   get_all_offer_details: new Set(["amount"]),
-  quickPayEvent: new Set(["amount", "deviceId", "phone", "requestId", "requestType", "userToken"]),
-  binBaseDetails: null,
+  quickPayEvent: new Set([
+    "amount",
+    "deviceId",
+    "phone",
+    "requestId",
+    "requestType",
+    "userToken",
+    "userCredential",
+  ]),
+  binBaseDetails: new Set([
+    "amount",
+    "cardNumber",
+    "disableConvFeeCompounding",
+    "isPricingCFEnable",
+    "isSITxn",
+    "merchantKey",
+    "source",
+    "txnId",
+  ]),
 };
 
 /** How far an SDK event's date may be from the server clock. */
@@ -132,7 +148,14 @@ export const SDK_EVENT_MAX_SKEW_MS = 5 * 60 * 1000;
 export type HashDecision =
   | { kind: "command" }
   | { kind: "userCommand"; credential: string }
-  | { kind: "sdkEvent"; bodyShape: string; amountPaise: number | null }
+  | {
+      kind: "sdkEvent";
+      bodyShape: string;
+      /** Each, when present, must be the caller's own (checked by the caller). */
+      amountPaise: number | null;
+      txnid: string | null;
+      credential: string | null;
+    }
   | { kind: "payment"; txnid: string; amountPaise: number }
   | { kind: "v2"; txnids: string[] }
   | { kind: "reject"; reason: string };
@@ -216,13 +239,22 @@ function classifySdkEvent(hashName: string, hashString: string, now: number): Ha
     return { kind: "reject", reason: `sdk event fields ${extra.sort().join(",")}` };
   }
 
-  // An amount must be the checkout's own (checked by the caller).
+  // Amount, txnid and credential must be the caller's own checkout's
+  // (checked by the caller).
+  const record = body as Record<string, unknown>;
   let amountPaise: number | null = null;
-  if ("amount" in body) {
-    amountPaise = amountToPaise((body as Record<string, unknown>).amount);
+  if ("amount" in record) {
+    amountPaise = amountToPaise(record.amount);
     if (Number.isNaN(amountPaise)) return { kind: "reject", reason: "sdk event amount" };
   }
-  return { kind: "sdkEvent", bodyShape: describeBody(parts[0]), amountPaise };
+  const text = (field: string) => (field in record ? String(record[field] ?? "") : null);
+  return {
+    kind: "sdkEvent",
+    bodyShape: describeBody(parts[0]),
+    amountPaise,
+    txnid: text("txnId"),
+    credential: text("userCredential"),
+  };
 }
 
 /** A body's field names (never values), for the audit log. */

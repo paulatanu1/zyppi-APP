@@ -173,15 +173,22 @@ export const signPayUHash = onCall({ secrets: PAYU_SECRETS }, async (request) =>
         .where("userId", "==", uid)
         .where("status", "==", "created")
         .get();
+      if (
+        decision.credential !== null &&
+        decision.credential !== userCredential(merchantKey(), uid)
+      ) {
+        return refuse("another user's credential");
+      }
       const fresh = open.docs.some((doc) => {
         const createdAt = doc.get("createdAt") as Timestamp | undefined;
         return (
           createdAt &&
           Date.now() - createdAt.toMillis() <= SDK_EVENT_INTENT_AGE_MS &&
-          (decision.amountPaise === null || doc.get("amountPaise") === decision.amountPaise)
+          (decision.amountPaise === null || doc.get("amountPaise") === decision.amountPaise) &&
+          (decision.txnid === null || doc.id === decision.txnid)
         );
       });
-      if (!fresh) return refuse("no open checkout for this amount");
+      if (!fresh) return refuse("no open checkout for this amount / txnid");
       logger.info("Signed PayU SDK event hash", {
         uid,
         hashName: hashRequest.hashName,

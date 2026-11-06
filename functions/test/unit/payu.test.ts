@@ -96,18 +96,30 @@ describe("SDK event hashes (offers / quick-pay)", () => {
   it("accepts a fresh body|date| string for the allow-listed names", () => {
     expect(
       classifyHash({ hashName: "get_all_offer_details", hashString: `{"amount":"30.00"}|${date}|` }, KEY, now),
-    ).toEqual({ kind: "sdkEvent", bodyShape: "json{amount}", amountPaise: 3000 });
+    ).toEqual({
+      kind: "sdkEvent",
+      bodyShape: "json{amount}",
+      amountPaise: 3000,
+      txnid: null,
+      credential: null,
+    });
     expect(
       classifyHash(
-        { hashName: "quickPayEvent", hashString: `{"amount":30,"phone":"9","deviceId":"d","requestId":"r","requestType":"t","userToken":"u"}|${date}|` },
+        {
+          hashName: "quickPayEvent",
+          hashString: `{"amount":30,"phone":"9","deviceId":"d","requestId":"r","requestType":"t","userToken":"u","userCredential":"${KEY}:uid1"}|${date}|`,
+        },
         KEY,
         now,
-      ).kind,
-    ).toBe("sdkEvent");
-    // Fields not pinned yet: any object, no amount.
+      ),
+    ).toMatchObject({ kind: "sdkEvent", amountPaise: 3000, credential: `${KEY}:uid1` });
     expect(
-      classifyHash({ hashName: "binBaseDetails", hashString: `{"bin":"512345"}|${date}|` }, KEY, now),
-    ).toEqual({ kind: "sdkEvent", bodyShape: "json{bin}", amountPaise: null });
+      classifyHash(
+        { hashName: "binBaseDetails", hashString: `{"amount":"30.00","cardNumber":"512345","txnId":"${TXN}","merchantKey":"${KEY}"}|${date}|` },
+        KEY,
+        now,
+      ),
+    ).toMatchObject({ kind: "sdkEvent", amountPaise: 3000, txnid: TXN, credential: null });
   });
 
   it("refuses bodies with unexpected fields or that aren't JSON objects", () => {
@@ -116,6 +128,9 @@ describe("SDK event hashes (offers / quick-pay)", () => {
     ).toBe("reject");
     expect(
       classifyHash({ hashName: "quickPayEvent", hashString: `x|${date}|` }, KEY, now).kind,
+    ).toBe("reject");
+    expect(
+      classifyHash({ hashName: "binBaseDetails", hashString: `{"bin":"512345"}|${date}|` }, KEY, now).kind,
     ).toBe("reject");
     expect(
       classifyHash({ hashName: "binBaseDetails", hashString: `[1]|${date}|` }, KEY, now).kind,
