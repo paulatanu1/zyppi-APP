@@ -70,5 +70,10 @@
             <action android:name="android.intent.action.DIAL" />
             <data android:scheme="tel" />
         </intent>
+        <!-- PayU CheckoutPro: find installed UPI apps for UPI-intent. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="upi" android:host="pay" />
+        </intent>
     </queries>
 </manifest>

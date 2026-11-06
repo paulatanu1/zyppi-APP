@@ -10,7 +10,7 @@ import 'package:zippy/core/payments/presentation/payment_options.dart';
 import 'package:zippy/features/account/widgets/settings_scaffold.dart';
 
 /// Account → Payment settings: the method checkout starts with. Cards are
-/// never stored by the app — PhonePe handles them at payment time.
+/// never stored by the app — PayU handles them at payment time.
 class PaymentSettingsScreen extends ConsumerWidget {
   const PaymentSettingsScreen({super.key});
 

@@ -104,7 +104,7 @@ class SharedPreferenceProvider extends StateNotifier<SharedPreferenceState> {
 
 // Mirrors PendingPaymentStore's key (core/payments) without importing it
 // here, which would create an import cycle through the payments layer.
-const _pendingPaymentKey = 'pendingPaymentMerchantOrderId';
+const _pendingPaymentKey = 'pendingPayUTxnId';
 
 final sharedPreferenceProvider =
     StateNotifierProvider.autoDispose<

@@ -18,12 +18,17 @@ class MockPaymentRepository implements PaymentRepository {
     String? couponCode,
     int tipPaise = 0,
   }) async {
-    throw UnsupportedError('No PhonePe gateway in the mock flavor');
+    throw UnsupportedError('No PayU gateway in the mock flavor');
   }
 
   @override
-  Future<PaymentVerification> verifyPayment(String merchantOrderId) async {
-    throw UnsupportedError('No PhonePe gateway in the mock flavor');
+  Future<PaymentVerification> verifyPayment(String txnid) async {
+    throw UnsupportedError('No PayU gateway in the mock flavor');
+  }
+
+  @override
+  Future<Map<String, String>> signHash(Map<dynamic, dynamic> request) async {
+    throw UnsupportedError('No PayU gateway in the mock flavor');
   }
 }
 

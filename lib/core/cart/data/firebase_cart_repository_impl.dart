@@ -4,7 +4,7 @@ import 'package:zippy/core/cart/domain/cart_repository.dart';
 import 'package:zippy/core/domain/cart_item.dart';
 
 /// Server copy of the cart at `users/{uid}/cart/{variantId}` — the cart the
-/// placeOrder / createPhonePeOrder functions price. CartNotifier pushes
+/// placeOrder / createPayUOrder functions price. CartNotifier pushes
 /// local changes here in the background.
 class FirebaseCartRepository implements CartRepository {
   final FirebaseAuth auth;

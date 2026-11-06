@@ -1,12 +1,9 @@
 import 'dart:async';
 
-import 'dart:convert';
-
 import 'package:easy_localization/easy_localization.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:phonepe_payment_sdk/phonepe_payment_sdk.dart';
 import 'package:zippy/core/analytics/analytics_service.dart';
 import 'package:zippy/core/domain/address.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
@@ -19,6 +16,7 @@ import 'package:zippy/core/domain/order_item.dart';
 import 'package:zippy/core/domain/order_status.dart';
 import 'package:zippy/core/order/data/order_repository_impl.dart';
 import 'package:zippy/core/payments/data/payment_repository_impl.dart';
+import 'package:zippy/core/payments/data/payu_checkout.dart';
 import 'package:zippy/core/payments/data/pending_payment_store.dart';
 import 'package:zippy/core/payments/domain/payment_repository.dart';
 import 'package:zippy/core/payments/presentation/payment_options.dart';
@@ -26,13 +24,8 @@ import 'package:zippy/core/payments/domain/payment_order.dart';
 import 'package:zippy/features/checkout/application/checkout_errors.dart';
 import 'package:zippy/features/checkout/application/checkout_state.dart';
 
-// PhonePe's SDK redirects back into the app via this custom URL scheme on
-// iOS (registered in ios/Runner/Info.plist's CFBundleURLTypes); unused on
-// Android.
-const _iosAppSchema = 'com.zyppi.one.payments';
-
-// How long to wait before each payment-status check: PhonePe can report
-// PENDING for a few seconds after the SDK returns SUCCESS.
+// How long to wait before each payment-status check: PayU can report a
+// payment as pending for a few seconds after the SDK returns success.
 const _verifyDelays = [
   Duration.zero,
   Duration(seconds: 2),
@@ -194,7 +187,7 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
       return;
     }
 
-    // Online payments aren't offered in this build (no PhonePe yet).
+    // Online payments aren't offered in this build (no PayU credentials yet).
     if (!Env.onlinePaymentsEnabled) {
       _fail('paymentFailed'.tr());
       return;
@@ -226,55 +219,35 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
       return;
     }
 
-    await ref
-        .read(pendingPaymentStoreProvider)
-        .save(paymentOrder.merchantOrderId);
+    await ref.read(pendingPaymentStoreProvider).save(paymentOrder.txnid);
 
-    final completedInSdk = await _openPhonePeCheckout(paymentOrder);
+    final PayUCheckoutResult sdkResult;
+    try {
+      sdkResult = await PayUCheckout(ref.read(paymentRepositoryProvider))
+          .open(paymentOrder);
+    } catch (_) {
+      // The SDK itself failed to open; the server check below settles it.
+      return _confirmPayment(paymentOrder.txnid, delays: const [Duration.zero]);
+    }
     if (!mounted) return;
 
     // Even when the SDK reports failure, check once with the server: the
     // payment may have gone through (e.g. the app was backgrounded).
     await _confirmPayment(
-      paymentOrder.merchantOrderId,
-      delays: completedInSdk ? _verifyDelays : const [Duration.zero],
+      paymentOrder.txnid,
+      delays: sdkResult == PayUCheckoutResult.success
+          ? _verifyDelays
+          : const [Duration.zero],
     );
   }
 
-  /// Opens PhonePe's pay page. Returns whether the SDK reported SUCCESS.
-  Future<bool> _openPhonePeCheckout(PaymentOrder paymentOrder) async {
-    try {
-      await PhonePePaymentSdk.init(
-        Env.phonePeEnvironment,
-        paymentOrder.merchantId,
-        paymentOrder.merchantOrderId,
-        false,
-      );
-
-      final request = jsonEncode({
-        'orderId': paymentOrder.orderId,
-        'merchantId': paymentOrder.merchantId,
-        'token': paymentOrder.token,
-        'paymentMode': {'type': 'PAY_PAGE'},
-      });
-
-      final result = await PhonePePaymentSdk.startTransaction(
-        request,
-        _iosAppSchema,
-      );
-      return result != null && result['status'] == 'SUCCESS';
-    } catch (_) {
-      return false;
-    }
-  }
-
-  /// Asks the server about [merchantOrderId] until PhonePe settles it. The
+  /// Asks the server about [txnid] until PayU settles it. The
   /// server creates the order itself once the payment is confirmed, so
   /// this only has to report the outcome. Leaving checkout mid-way is
   /// safe: the payment stays in [PendingPaymentStore] and is re-checked
   /// next time.
   Future<void> _confirmPayment(
-    String merchantOrderId, {
+    String txnid, {
     List<Duration> delays = _verifyDelays,
   }) async {
     final store = ref.read(pendingPaymentStoreProvider);
@@ -287,7 +260,7 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
       try {
         verification = await ref
             .read(paymentRepositoryProvider)
-            .verifyPayment(merchantOrderId);
+            .verifyPayment(txnid);
       } catch (_) {
         continue; // network blip — try again on the next delay
       }
