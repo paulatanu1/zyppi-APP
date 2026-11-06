@@ -9,7 +9,14 @@ import 'package:zippy/core/theme/zyppi_colors.dart';
 
 /// How a CheckoutPro session ended, as the SDK reported it. Only a hint:
 /// the server's verify_payment decides whether the order is placed.
-enum PayUCheckoutResult { success, failure, cancelled }
+///
+/// [closed]: PayU's screen went away without a final callback (it does
+/// this after some errors), so the outcome is unknown.
+enum PayUCheckoutResult { success, failure, cancelled, closed }
+
+// After PayU's screen closes, how long to wait for its final callback
+// before handing over to the server's verify.
+const _closedGrace = Duration(seconds: 3);
 
 // PayU's own landing pages for SDK integrations; CheckoutPro intercepts
 // them and reports the outcome through its callbacks.
@@ -17,18 +24,28 @@ const _successUrl = 'https://cbjs.payu.in/sdk/success';
 const _failureUrl = 'https://cbjs.payu.in/sdk/failure';
 
 /// Opens PayU CheckoutPro for [PaymentOrder] and completes once the SDK
-/// reports an outcome. Hashes are signed by the server through
-/// [PaymentRepository.signHash].
-class PayUCheckout implements PayUCheckoutProProtocol {
+/// reports an outcome — or once its screen has closed without one, which
+/// CheckoutPro does after some errors. Hashes are signed by the server
+/// through [PaymentRepository.signHash].
+class PayUCheckout
+    with WidgetsBindingObserver
+    implements PayUCheckoutProProtocol {
   final PaymentRepository repository;
 
   late final PayUCheckoutProFlutter _sdk = PayUCheckoutProFlutter(this);
   Completer<PayUCheckoutResult>? _result;
 
+  /// The app has gone to the background behind PayU's screen; coming back
+  /// to the foreground then means that screen closed.
+  bool _behindPayU = false;
+  Timer? _closedTimer;
+
   PayUCheckout(this.repository);
 
   Future<PayUCheckoutResult> open(PaymentOrder order) {
     final result = _result = Completer<PayUCheckoutResult>();
+    _behindPayU = false;
+    WidgetsBinding.instance.addObserver(this);
     unawaited(
       _sdk.openCheckoutScreen(
         payUPaymentParams: {
@@ -95,8 +112,29 @@ class PayUCheckout implements PayUCheckoutProProtocol {
   @override
   void onError(Map? response) => _log('onError', response);
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.paused || AppLifecycleState.hidden:
+        _behindPayU = true;
+        _closedTimer?.cancel();
+      case AppLifecycleState.resumed when _behindPayU:
+        // PayU's screen has closed. Its final callback normally arrives
+        // right away; if it doesn't, stop waiting and let the server say.
+        _closedTimer?.cancel();
+        _closedTimer = Timer(
+          _closedGrace,
+          () => _finish(PayUCheckoutResult.closed, null),
+        );
+      default:
+        break;
+    }
+  }
+
   void _finish(PayUCheckoutResult result, dynamic response) {
     _log(result.name, response);
+    _closedTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     final completer = _result;
     if (completer != null && !completer.isCompleted) completer.complete(result);
   }

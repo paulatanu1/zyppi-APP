@@ -232,10 +232,14 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
     if (!mounted) return;
 
     // Even when the SDK reports failure, check once with the server: the
-    // payment may have gone through (e.g. the app was backgrounded).
+    // payment may have gone through (e.g. the app was backgrounded). If
+    // PayU closed without saying (closed), it may have been paid, so
+    // give the server the full settling time.
     await _confirmPayment(
       paymentOrder.txnid,
-      delays: sdkResult == PayUCheckoutResult.success
+      delays:
+          sdkResult == PayUCheckoutResult.success ||
+              sdkResult == PayUCheckoutResult.closed
           ? _verifyDelays
           : const [Duration.zero],
     );
