@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/domain/home_section.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
 import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/utils/launch.dart';
 import 'package:zippy/features/home_screen/widgets/sections/section_data.dart';
@@ -70,13 +69,13 @@ class _BannerCarouselSectionState extends State<BannerCarouselSection> {
                   ),
                   _ => null,
                 },
-                borderRadius: BorderRadius.circular(AppRadius.banner),
+                borderRadius: BorderRadius.circular(ZRadius.banner),
                 child: Container(
                   width: double.infinity,
                   height: double.infinity,
                   decoration: BoxDecoration(
                     color: context.z.deal,
-                    borderRadius: BorderRadius.circular(AppRadius.banner),
+                    borderRadius: BorderRadius.circular(ZRadius.banner),
                   ),
                   // Image owns the right ~42%, text the rest, so they never
                   // overlap whatever the image's aspect ratio.
@@ -93,7 +92,7 @@ class _BannerCarouselSectionState extends State<BannerCarouselSection> {
                             width: imageWidth,
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(
-                                AppRadius.banner,
+                                ZRadius.banner,
                               ),
                               child: CatalogImage(
                                 image: imageUrl,

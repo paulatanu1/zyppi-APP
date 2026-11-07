@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
-import 'package:zippy/core/theme/app_colors.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/widgets/z_chrome.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
@@ -70,7 +69,7 @@ class ExploreScreen extends ConsumerWidget {
           return ZCategoryTile(
             label: category.name,
             image: CatalogImage(image: category.image, fit: BoxFit.contain),
-            color: AppColors.fromHex(category.colorHex),
+            color: ZColors.fromHex(category.colorHex),
             onTap: () => context.push(
               '/categoryDetailsScreen?categoryId=${category.id}',
             ),

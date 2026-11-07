@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/domain/category.dart';
 import 'package:zippy/core/domain/home_section.dart';
-import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/zyppi_colors.dart';
 import 'package:zippy/core/theme/zyppi_tokens.dart';
 import 'package:zippy/core/widgets/z_chrome.dart';
 import 'package:zippy/features/home_screen/widgets/sections/section_data.dart';
@@ -50,7 +50,7 @@ class CategoryGridSection extends StatelessWidget {
         return ZCategoryTile(
           label: category.name,
           image: CatalogImage(image: category.image, fit: BoxFit.contain),
-          color: AppColors.fromHex(category.colorHex),
+          color: ZColors.fromHex(category.colorHex),
           onTap: () =>
               context.push('/categoryDetailsScreen?categoryId=${category.id}'),
         );

@@ -8,7 +8,6 @@ import 'package:zippy/core/data/provider/addresses_provider.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/my_address/widgets/address_actions.dart';
 import 'package:zippy/features/my_address/widgets/saved_address_row.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
 
 /// docs/mockups/Location.dc.html's "SAVED ADDRESSES" section; "Add new
 /// address" opens the map-pin picker (search_address_screen.dart).
@@ -37,7 +36,7 @@ class MyAddressScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            Divider(height: 1, color: context.colors.divider),
+            Divider(height: 1, color: context.z.line),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(ZSpace.x4),
@@ -98,10 +97,8 @@ class MyAddressScreen extends ConsumerWidget {
                               )
                             : ListView.separated(
                                 itemCount: addresses.length,
-                                separatorBuilder: (context, index) => Divider(
-                                  height: 1,
-                                  color: context.colors.divider,
-                                ),
+                                separatorBuilder: (context, index) =>
+                                    Divider(height: 1, color: context.z.line),
                                 itemBuilder: (context, index) =>
                                     SavedAddressRow(
                                       address: addresses[index],

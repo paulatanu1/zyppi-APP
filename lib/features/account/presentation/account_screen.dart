@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/nav_bar/provider/nav_bar_provider.dart';
 import 'package:zippy/core/data/provider/profile_provider.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
 import 'package:zippy/core/theme/theme_mode_provider.dart';
 import 'package:zippy/core/common_widgets/help_sheet.dart';
 import 'package:zippy/core/widgets/z_chrome.dart';
@@ -573,7 +572,7 @@ class _AppearanceOption extends StatelessWidget {
             color: selected ? context.z.surface : Colors.transparent,
             borderRadius: BorderRadius.circular(ZRadius.control),
             boxShadow: selected
-                ? [BoxShadow(color: context.colors.shadow, blurRadius: 4)]
+                ? [BoxShadow(color: context.z.shadow, blurRadius: 4)]
                 : null,
           ),
           padding: const EdgeInsets.symmetric(horizontal: ZSpace.x1),

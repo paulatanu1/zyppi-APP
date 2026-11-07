@@ -9,7 +9,6 @@ import 'package:zippy/core/utils/snack_bar.dart';
 import 'package:zippy/features/favourite/application/favourite_products_provider.dart';
 import 'package:zippy/core/cart/presentation/catalog_product_card.dart';
 import 'package:zippy/core/widgets/z_product_card.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
 
 class FavouriteScreen extends ConsumerWidget {
   const FavouriteScreen({super.key});
@@ -26,7 +25,7 @@ class FavouriteScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(ZSpace.x4),
               child: Text('favourite'.tr(), style: AppTypography.headlineSmall),
             ),
-            Divider(height: 1, color: context.colors.divider),
+            Divider(height: 1, color: context.z.line),
             Expanded(
               child: productsAsync.when(
                 // Removing a heart refreshes the list; keep it on screen.

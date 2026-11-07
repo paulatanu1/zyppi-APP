@@ -1,6 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:zippy/core/theme/app_colors_ext.dart';
+import 'package:zippy/core/theme/zyppi_colors.dart';
 
 /// Renders a category/product image: a Firebase Storage URL in
 /// Firebase mode, or a bundled asset path in mock mode — the catalog
@@ -42,7 +42,7 @@ class CatalogImage extends StatelessWidget {
         width: width,
         height: height,
         placeholder: (context, url) => ColoredBox(
-          color: context.colors.divider,
+          color: context.z.surface2,
           child: SizedBox(width: width, height: height),
         ),
         errorWidget: (context, url, error) =>

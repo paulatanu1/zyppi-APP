@@ -25,6 +25,9 @@ abstract final class ZRadius {
       card = 18,
       tile = 16,
       sheet = 26,
+          // Home promo banner (Main.dc.html).
+          banner =
+          20,
           // Onboarding hero illustration (zyppi.css .illo).
           illo =
           28;

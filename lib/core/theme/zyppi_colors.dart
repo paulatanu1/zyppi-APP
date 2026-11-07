@@ -70,6 +70,10 @@ class ZColors extends ThemeExtension<ZColors> {
   final Color mapBg, mapRoad, mapBlock, mapPark, mapWater;
   final Color shadow;
 
+  /// Parses a data-driven colour such as a category's `colorHex`
+  /// (ARGB hex, e.g. `FFF2E6D9`). Pass it through `zTileTint` for dark mode.
+  static Color fromHex(String argbHex) => Color(int.parse(argbHex, radix: 16));
+
   static const light = ZColors(
     bg: Color(0xFFF6F5F2),
     surface: Color(0xFFFFFFFF),
