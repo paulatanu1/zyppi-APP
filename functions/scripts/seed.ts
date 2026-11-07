@@ -1,5 +1,6 @@
 /**
- * Seeds the catalog into Firestore + Storage (port of supabase/seed.sql).
+ * Seeds the catalog into Firestore + Storage (ported from the retired
+ * Supabase seed.sql; see git history).
  * Idempotent: re-running overwrites the same documents and images.
  *
  *   # Emulators (from the repo root, `firebase emulators:start` running):
@@ -32,7 +33,7 @@ const bucket = getStorage().bucket();
 
 const ASSETS = join(__dirname, "..", "..", "assets", "images");
 
-// Storage object path → local asset (same pairs as the old
+// Storage object path → local asset (same pairs as the retired
 // scripts/upload_catalog_images.sh).
 const IMAGES: Record<string, string> = {
   "categories/category.png": "category.png",
