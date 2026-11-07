@@ -2,7 +2,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/home_screen/widgets/add_new_address_row.dart';
 import 'package:zippy/core/data/provider/addresses_provider.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
@@ -32,7 +31,10 @@ class MyAddressScreen extends ConsumerWidget {
                     icon: const Icon(Icons.arrow_back_ios_new, size: 20),
                     tooltip: 'back'.tr(),
                   ),
-                  Text('myAddress'.tr(), style: AppTypography.titleMedium),
+                  Text(
+                    'myAddress'.tr(),
+                    style: Theme.of(context).textTheme.titleMedium!,
+                  ),
                 ],
               ),
             ),
@@ -47,9 +49,8 @@ class MyAddressScreen extends ConsumerWidget {
                     const SizedBox(height: ZSpace.x4),
                     Text(
                       'yourSavedAddress'.tr(),
-                      style: AppTypography.labelSmall.copyWith(
-                        color: context.z.ink2,
-                      ),
+                      style: Theme.of(context).textTheme.labelSmall!
+                          .copyWith(color: context.z.ink2),
                     ),
                     const SizedBox(height: ZSpace.x3),
                     Expanded(
@@ -76,7 +77,7 @@ class MyAddressScreen extends ConsumerWidget {
                           children: [
                             Text(
                               'somethingWentWrong'.tr(),
-                              style: AppTypography.bodyMedium,
+                              style: Theme.of(context).textTheme.bodyMedium!,
                             ),
                             TextButton(
                               onPressed: () =>
@@ -90,9 +91,8 @@ class MyAddressScreen extends ConsumerWidget {
                                 padding: const EdgeInsets.only(top: ZSpace.x4),
                                 child: Text(
                                   'noSavedAddresses'.tr(),
-                                  style: AppTypography.bodyMedium.copyWith(
-                                    color: context.z.ink2,
-                                  ),
+                                  style: Theme.of(context).textTheme.bodyMedium!
+                                      .copyWith(color: context.z.ink2),
                                 ),
                               )
                             : ListView.separated(

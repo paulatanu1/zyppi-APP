@@ -1,7 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:zippy/core/domain/address.dart';
-import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/utils/address_label.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 
@@ -43,9 +42,8 @@ class SavedAddressRow extends StatelessWidget {
                   children: [
                     Text(
                       addressLabelText(address.label),
-                      style: AppTypography.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: Theme.of(context).textTheme.bodyMedium!
+                          .copyWith(fontWeight: FontWeight.w700),
                     ),
                     if (address.isDefault) ...[
                       const SizedBox(width: ZSpace.x2),
@@ -60,10 +58,11 @@ class SavedAddressRow extends StatelessWidget {
                         ),
                         child: Text(
                           'defaultAddress'.tr(),
-                          style: AppTypography.bodySmall.copyWith(
-                            color: context.z.brand,
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall!
+                              .copyWith(
+                                color: context.z.brand,
+                                fontWeight: FontWeight.w700,
+                              ),
                         ),
                       ),
                     ],
@@ -74,9 +73,8 @@ class SavedAddressRow extends StatelessWidget {
                     address.line1,
                     address.area,
                   ].where((s) => s.isNotEmpty).join(', '),
-                  style: AppTypography.bodySmall.copyWith(
-                    color: context.z.ink2,
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall!
+                      .copyWith(color: context.z.ink2),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),

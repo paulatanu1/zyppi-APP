@@ -1,6 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 
 class FilterHeader extends StatelessWidget {
@@ -13,7 +12,7 @@ class FilterHeader extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text('filters'.tr(), style: AppTypography.titleMedium),
+        Text('filters'.tr(), style: Theme.of(context).textTheme.titleMedium!),
         IconButton(
           onPressed: onCrossIconClicked,
           icon: Icon(Icons.close, color: context.z.ink),

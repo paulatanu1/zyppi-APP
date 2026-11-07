@@ -4,7 +4,6 @@ import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
-import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
 import 'package:zippy/features/favourite/application/favourite_products_provider.dart';
 import 'package:zippy/core/cart/presentation/catalog_product_card.dart';
@@ -23,7 +22,10 @@ class FavouriteScreen extends ConsumerWidget {
           children: [
             Padding(
               padding: const EdgeInsets.all(ZSpace.x4),
-              child: Text('favourite'.tr(), style: AppTypography.headlineSmall),
+              child: Text(
+                'favourite'.tr(),
+                style: Theme.of(context).textTheme.headlineSmall!,
+              ),
             ),
             Divider(height: 1, color: context.z.line),
             Expanded(
@@ -41,7 +43,7 @@ class FavouriteScreen extends ConsumerWidget {
                     children: [
                       Text(
                         'somethingWentWrong'.tr(),
-                        style: AppTypography.bodyMedium,
+                        style: Theme.of(context).textTheme.bodyMedium!,
                       ),
                       TextButton(
                         onPressed: () =>
@@ -55,7 +57,7 @@ class FavouriteScreen extends ConsumerWidget {
                     ? Center(
                         child: Text(
                           'noFavouritesYet'.tr(),
-                          style: AppTypography.bodyMedium,
+                          style: Theme.of(context).textTheme.bodyMedium!,
                         ),
                       )
                     // Tapping a card's heart removes it from this list.

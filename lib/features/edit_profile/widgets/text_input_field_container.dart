@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 
+/// A v2 text field (zyppi.css `.field`): the theme's rounded 1.5 px input,
+/// a floating label, a clear button and an inline error.
 class TextInputFieldContainer extends StatelessWidget {
   final String inputFieldName;
   final TextEditingController controller;
@@ -28,59 +29,42 @@ class TextInputFieldContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(ZRadius.input),
-            color: enabled ? context.z.surface : context.z.surface2,
-            border: Border.all(
-              color: errorText != null ? context.z.danger : context.z.line,
-            ),
-          ),
-          child: TextField(
-            controller: controller,
-            enabled: enabled,
-            readOnly: onTap != null,
-            onTap: onTap,
-            keyboardType: keyboardType,
-            onChanged: onChanged,
-            style: AppTypography.bodyLarge.copyWith(color: context.z.ink),
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(
-                vertical: ZSpace.x3,
-                horizontal: ZSpace.x3,
-              ),
-              suffixIcon: enabled
-                  ? IconButton(
-                      icon: Icon(Icons.clear, color: context.z.ink2),
-                      onPressed: controller.clear,
-                    )
-                  : null,
-              // A label, not a hint: it stays visible once the field has text.
-              labelText: inputFieldName,
-              labelStyle: AppTypography.bodyLarge.copyWith(
-                color: context.z.ink2,
-              ),
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              disabledBorder: InputBorder.none,
-              errorBorder: InputBorder.none,
-              focusedErrorBorder: InputBorder.none,
-            ),
-          ),
-        ),
-        if (errorText != null)
-          Padding(
-            padding: const EdgeInsets.only(left: ZSpace.x3, top: ZSpace.x1),
-            child: Text(
-              errorText!,
-              style: AppTypography.bodySmall.copyWith(color: context.z.danger),
-            ),
-          ),
-      ],
+    final z = context.z;
+    final text = Theme.of(context).textTheme;
+    OutlineInputBorder border(Color color) => OutlineInputBorder(
+      borderRadius: ZRadius.all(ZRadius.input),
+      borderSide: BorderSide(color: color, width: 1.5),
+    );
+
+    return TextField(
+      controller: controller,
+      enabled: enabled,
+      readOnly: onTap != null,
+      onTap: onTap,
+      keyboardType: keyboardType,
+      onChanged: onChanged,
+      style: text.bodyLarge!.copyWith(color: enabled ? z.ink : z.ink2),
+      decoration: InputDecoration(
+        // A label, not a hint: it stays visible once the field has text.
+        labelText: inputFieldName,
+        labelStyle: text.bodyLarge!.copyWith(color: z.ink2),
+        errorText: errorText,
+        errorStyle: text.bodySmall!.copyWith(color: z.danger),
+        fillColor: enabled ? z.surface : z.surface2,
+        disabledBorder: border(z.line),
+        errorBorder: border(z.danger),
+        focusedErrorBorder: border(z.danger),
+        suffixIcon: enabled
+            ? IconButton(
+                tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
+                icon: Icon(Icons.clear_rounded, color: z.ink3),
+                onPressed: () {
+                  controller.clear();
+                  onChanged?.call('');
+                },
+              )
+            : null,
+      ),
     );
   }
 }

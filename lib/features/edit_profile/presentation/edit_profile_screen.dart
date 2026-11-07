@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/data/provider/profile_provider.dart';
 import 'package:zippy/core/data/profile_repository_impl.dart';
 import 'package:zippy/core/domain/profile.dart';
-import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
 import 'package:zippy/features/edit_profile/widgets/text_input_field_container.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
@@ -141,7 +140,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   children: [
                     Text(
                       'somethingWentWrong'.tr(),
-                      style: AppTypography.bodyMedium,
+                      style: Theme.of(context).textTheme.bodyMedium!,
                     ),
                     TextButton(
                       onPressed: () => ref.invalidate(profileProvider),
@@ -236,9 +235,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   const SizedBox(height: ZSpace.x2),
                   Text(
                     'appVersion'.tr(args: [Constants.appVersion]),
-                    style: AppTypography.bodySmall.copyWith(
-                      color: context.z.ink2,
-                    ),
+                    style: Theme.of(context).textTheme.bodySmall!
+                        .copyWith(color: context.z.ink2),
                   ),
                   const SizedBox(height: ZSpace.x3),
                 ],
