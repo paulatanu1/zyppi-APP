@@ -105,7 +105,6 @@ lib/
 assets/mock/                 # categories.json, products.json, orders.json, addresses.json, slots.json, service_areas.json
 functions/                   # Cloud Functions (TypeScript), seed + set-admin scripts, emulator tests
 firestore.rules  firestore.indexes.json  storage.rules  firebase.json
-supabase/                    # legacy (Phases 3–5); delete once Phase 6 is verified end to end
 env/                         # *.example.json committed; real files gitignored
 ```
 
@@ -181,7 +180,7 @@ Done when: PhonePe test payment succeeds, background push arrives, tracking map 
 - [x] Performance + accessibility passes — tooltips added to every icon-only button that lacked one (screen readers were announcing a bare "button"); found two real bugs this surfaced rather than went looking for: `splash_screen.dart` was dead code (never routed to) referencing a missing asset and the wrong-case route, now deleted since `flutter_native_splash` already covers that moment; the launcher icon and new native splash were both built from `appLogo.png`, a 303×111 non-square wordmark — the icon was being squished (pre-existing since Phase 0) and the splash was blurry from upscaling. Both now source from `appIconMark.png` (the bicycle/gift mark alone, cropped and padded square) — no more distortion, still soft since the source is only ~71×68px natively; a real fix needs a proper high-res icon asset
 - [x] Launcher icon, native splash — see above; release signing — `android/app/build.gradle`'s release build was hardcoded to debug-sign with the real keystore commented out; now uses `android/key.properties` automatically once supplied (gitignored, `key.properties.example` documents the fields), falling back to debug signing so local release builds keep working without one
 - [ ] Play internal testing + TestFlight — needs a Play Console / App Store Connect account and a real signed build; not something this environment can do
-- [ ] Remove Supabase test phone numbers — this is a Supabase dashboard setting (Authentication → Phone Auth), not anything in this repo; flagging as a pre-launch checklist item rather than a code change
+- [x] ~~Remove Supabase test phone numbers~~ — obsolete since Phase 6 (Supabase retired). The Firebase equivalent: remove the Firebase Auth test phone numbers (console → Authentication → Phone) before launch
 
 Done when: both store test tracks run a week of internal use with no crashes. ⚠️ Not reachable from here — needs real signing, store accounts, and a week of real usage.
 
@@ -195,7 +194,8 @@ Supabase (Postgres, Auth, Storage, Realtime, Edge Functions) is replaced by Fire
 - [x] Tests: functions emulator suite (pricing, coupons, stock, rollback, idempotency, rules) in CI; Dart tests for distance and error mapping
 - [ ] Console: Blaze plan, Firestore (`asia-south1`), Storage, Auth providers (Phone, Google, Anonymous, Email/Password), SHA-1/SHA-256 fingerprints, APNs key; secrets `PAYU_MERCHANT_KEY`, `PAYU_SALT` (+ param `PAYU_ENV`), `GOOGLE_PLACES_API_KEY`
 - [ ] Deploy (`firebase deploy --only firestore,storage,functions`), seed, create the admin login + `set-admin`
-- [ ] Verify end to end on a device, then delete `supabase/` and `scripts/upload_catalog_images.sh`
+- [ ] Verify end to end on a device
+- [x] Delete `supabase/` and `scripts/upload_catalog_images.sh` — done 2026-11-08 on `chore/legacy-cleanup`, ahead of the device check (the Firebase backend doesn't depend on them; recover from git history if ever needed); unused translation keys pruned at the same time
 
 Done when: on a real phone against `zippy-app-2024` — OTP, Google and guest sign-in work; a COD order is placed and appears in the admin panel; an admin status change updates tracking live and sends a push; delete account works.
 
