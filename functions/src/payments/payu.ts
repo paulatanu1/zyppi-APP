@@ -71,7 +71,6 @@ export const SIGNABLE_COMMANDS = new Set([
   "check_isDomestic",
   "getBinInfo",
   "validateVPA",
-  "get_payment_instrument",
 ]);
 
 /**

@@ -8,6 +8,8 @@ import {
   mapVerifyResult,
   newTxnId,
   signHash,
+  SIGNABLE_COMMANDS,
+  USER_COMMANDS,
 } from "../../src/payments/payu";
 
 const KEY = "testKey";
@@ -60,6 +62,17 @@ describe("classifyHash", () => {
     expect(
       classifyHash({ hashName: "x", hashString: `${KEY}|get_user_cards|${KEY}:uid1|` }, KEY),
     ).toEqual({ kind: "userCommand", credential: `${KEY}:uid1` });
+  });
+
+  it("checks the credential on every saved-card command", () => {
+    for (const command of USER_COMMANDS) {
+      expect(SIGNABLE_COMMANDS.has(command)).toBe(false);
+      const hashString = `${KEY}|${command}|${KEY}:victim|`;
+      expect(classifyHash({ hashName: "x", hashString }, KEY)).toEqual({
+        kind: "userCommand",
+        credential: `${KEY}:victim`,
+      });
+    }
   });
 
   it("refuses admin commands such as refunds", () => {
