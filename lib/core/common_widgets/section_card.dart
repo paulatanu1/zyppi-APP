@@ -13,23 +13,28 @@ class SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final z = context.z;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(ZSpace.x4),
-      decoration: BoxDecoration(
-        color: z.surface,
+    // A Material (not a decorated box) so ListTiles / switches inside get
+    // their ink splashes, clipped to the rounded corners.
+    return Material(
+      color: z.surface,
+      shape: RoundedRectangleBorder(
         borderRadius: ZRadius.all(ZRadius.card),
-        border: Border.all(color: z.line),
+        side: BorderSide(color: z.line),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (title != null) ...[
-            Text(title!, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: ZSpace.x3),
+      clipBehavior: Clip.antiAlias,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(ZSpace.x4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (title != null) ...[
+              Text(title!, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: ZSpace.x3),
+            ],
+            child,
           ],
-          child,
-        ],
+        ),
       ),
     );
   }
