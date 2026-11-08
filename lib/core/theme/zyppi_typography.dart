@@ -32,7 +32,9 @@ TextTheme zyppiTextTheme(Color ink, Color ink2, Color ink3) {
     double h = 1.15,
   }) => TextStyle(
     fontFamily: ZFonts.display,
-    fontFamilyFallback: ZFonts.fallback,
+    // Sora has no ₹ (U+20B9): Manrope draws it, so amounts in headings
+    // ("Order total", "To pay") stay in the app's own fonts.
+    fontFamilyFallback: const [ZFonts.body, ...ZFonts.fallback],
     fontSize: size,
     fontWeight: w,
     height: h,
