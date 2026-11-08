@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/domain/home_section.dart';
 import 'package:zippy/core/domain/product.dart';
-import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/home_screen/widgets/sections/section_data.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 
@@ -85,9 +84,8 @@ class SpotlightCardsSection extends StatelessWidget {
                             badge,
                             textAlign: TextAlign.center,
                             maxLines: 1,
-                            style: AppTypography.overline.copyWith(
-                              color: context.z.onBrand,
-                            ),
+                            style: Theme.of(context).textTheme.labelSmall!
+                                .copyWith(color: context.z.onBrand),
                           ),
                         ),
                       ),

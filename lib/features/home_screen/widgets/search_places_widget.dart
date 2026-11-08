@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
-import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 
 /// Opens the full map-pin picker (search_address_screen.dart) to change the
@@ -37,7 +36,8 @@ class SearchPlacesWidget extends ConsumerWidget {
                     : 'searchAreaPlaceholder'.tr(),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTypography.bodyMedium.copyWith(color: context.z.ink2),
+                style: Theme.of(context).textTheme.bodyMedium!
+                    .copyWith(color: context.z.ink2),
               ),
             ),
           ],

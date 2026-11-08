@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
-import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/home_screen/widgets/add_new_address_row.dart';
 import 'package:zippy/features/home_screen/widgets/search_places_widget.dart';
@@ -28,7 +27,10 @@ void bottomSheet(BuildContext context, WidgetRef ref) {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('selectAddress'.tr(), style: AppTypography.titleMedium),
+            Text(
+              'selectAddress'.tr(),
+              style: Theme.of(context).textTheme.titleMedium!,
+            ),
             const SizedBox(height: ZSpace.x4),
             const SearchPlacesWidget(),
             const SizedBox(height: ZSpace.x3),
@@ -36,7 +38,8 @@ void bottomSheet(BuildContext context, WidgetRef ref) {
             const SizedBox(height: ZSpace.x4),
             Text(
               'yourSavedAddress'.tr(),
-              style: AppTypography.labelSmall.copyWith(color: context.z.ink2),
+              style: Theme.of(context).textTheme.labelSmall!
+                  .copyWith(color: context.z.ink2),
             ),
             Consumer(
               builder: (context, ref, _) {

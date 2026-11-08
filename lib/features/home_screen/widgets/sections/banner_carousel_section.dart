@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/domain/home_section.dart';
-import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/utils/launch.dart';
 import 'package:zippy/features/home_screen/widgets/sections/section_data.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
@@ -117,9 +116,10 @@ class _BannerCarouselSectionState extends State<BannerCarouselSection> {
                                   overflow: TextOverflow.ellipsis,
                                   // Accent yellow in both themes, so use its
                                   // fixed dark ink rather than the theme ink.
-                                  style: AppTypography.titleL.copyWith(
-                                    color: context.z.dealInk,
-                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineSmall!
+                                      .copyWith(color: context.z.dealInk),
                                 ),
                                 if (ctaText != null) ...[
                                   const SizedBox(height: ZSpace.x1),
@@ -127,10 +127,13 @@ class _BannerCarouselSectionState extends State<BannerCarouselSection> {
                                     ctaText,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: AppTypography.label.copyWith(
-                                      color: context.z.dealInk,
-                                      fontWeight: FontWeight.w800,
-                                    ),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelLarge!
+                                        .copyWith(
+                                          color: context.z.dealInk,
+                                          fontWeight: FontWeight.w800,
+                                        ),
                                   ),
                                 ],
                               ],

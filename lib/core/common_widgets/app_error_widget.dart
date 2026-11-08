@@ -1,6 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 
 /// Shown in place of a widget that threw while building, in release builds
@@ -29,7 +28,8 @@ class AppErrorWidget extends StatelessWidget {
             Flexible(
               child: Text(
                 'somethingWentWrong'.tr(),
-                style: AppTypography.bodySmall.copyWith(color: context.z.ink2),
+                style: Theme.of(context).textTheme.bodySmall!
+                    .copyWith(color: context.z.ink2),
               ),
             ),
           ],

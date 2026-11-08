@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/domain/home_section.dart';
-import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/features/home_screen/widgets/sections/section_icons.dart';
 import 'package:zippy/features/home_screen/widgets/sections/section_data.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
@@ -57,7 +56,8 @@ class CategoryTabsSection extends StatelessWidget {
                     label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTypography.caption.copyWith(color: context.z.ink),
+                    style: Theme.of(context).textTheme.bodySmall!
+                        .copyWith(color: context.z.ink),
                   ),
                 ],
               ),

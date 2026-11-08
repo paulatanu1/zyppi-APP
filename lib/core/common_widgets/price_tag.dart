@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:zippy/core/theme/app_typography.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 
 /// Formats money (always `int` paise, per CLAUDE.md) as ₹ with an
@@ -42,7 +41,7 @@ class PriceTag extends StatelessWidget {
             maxLines: 1,
             style:
                 priceStyle ??
-                AppTypography.bodyMedium.copyWith(
+                Theme.of(context).textTheme.bodyMedium!.copyWith(
                   color: context.z.ink,
                   fontWeight: FontWeight.w700,
                 ),
@@ -54,7 +53,7 @@ class PriceTag extends StatelessWidget {
               maxLines: 1,
               style:
                   mrpStyle ??
-                  AppTypography.bodySmall.copyWith(
+                  Theme.of(context).textTheme.bodySmall!.copyWith(
                     color: context.z.ink2,
                     decoration: TextDecoration.lineThrough,
                   ),
