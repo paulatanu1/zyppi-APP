@@ -50,6 +50,8 @@ class ZColors extends ThemeExtension<ZColors> {
     required this.mapPark,
     required this.mapWater,
     required this.shadow,
+    required this.logo,
+    required this.splashBg,
   });
 
   final Color bg, surface, surface2, surface3, line, line2;
@@ -69,6 +71,11 @@ class ZColors extends ThemeExtension<ZColors> {
       tileAll;
   final Color mapBg, mapRoad, mapBlock, mapPark, mapWater;
   final Color shadow;
+
+  /// The Z mark's purple (#673AB7) and the launch screen's background —
+  /// launch / splash / icon only; the app's brand stays [brand] pink.
+  /// `splashBg` must match `flutter_native_splash` in pubspec.yaml.
+  final Color logo, splashBg;
 
   /// Parses a data-driven colour such as a category's `colorHex`
   /// (ARGB hex, e.g. `FFF2E6D9`). Pass it through `zTileTint` for dark mode.
@@ -118,6 +125,8 @@ class ZColors extends ThemeExtension<ZColors> {
     mapPark: Color(0xFFD9EDD2),
     mapWater: Color(0xFFCFE3F5),
     shadow: Color(0x14141519),
+    logo: Color(0xFF673AB7),
+    splashBg: Color(0xFFFFFFFF),
   );
 
   static const dark = ZColors(
@@ -164,6 +173,9 @@ class ZColors extends ThemeExtension<ZColors> {
     mapPark: Color(0xFF16261B),
     mapWater: Color(0xFF14243A),
     shadow: Color(0x59000000),
+    // Lighter tint so the tagline reads on near-black.
+    logo: Color(0xFFB39DDB),
+    splashBg: Color(0xFF0D0E11),
   );
 
   /// Card/sheet shadow used by floating elements (cart bar, map buttons).
@@ -222,6 +234,8 @@ class ZColors extends ThemeExtension<ZColors> {
       mapPark: l(mapPark, other.mapPark),
       mapWater: l(mapWater, other.mapWater),
       shadow: l(shadow, other.shadow),
+      logo: l(logo, other.logo),
+      splashBg: l(splashBg, other.splashBg),
     );
   }
 }

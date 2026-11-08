@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/config/env.dart';
@@ -23,6 +24,8 @@ import 'package:zippy/features/favourite/presentation/favourite_screen.dart';
 import 'package:zippy/features/filter/presentation/filter_screen.dart';
 import 'package:zippy/features/home_screen/presentation/home_screen.dart';
 import 'package:zippy/features/intro/presentation/slider/slider.dart';
+import 'package:zippy/features/launch/presentation/launch_screen.dart';
+import 'package:zippy/core/theme/zyppi_tokens.dart';
 import 'package:zippy/features/my_cart/presentation/my_cart_screen.dart';
 import 'package:zippy/features/order_placed/presentation/order_placed_screen.dart';
 import 'package:zippy/features/order_tracking/presentation/order_tracking_screen.dart';
@@ -46,6 +49,9 @@ class Routes {
       GoRouterRefreshListenable(container);
 
   String? _redirect(GoRouterState state) {
+    // The launch animation picks Home or Onboarding itself when it ends.
+    if (state.matchedLocation == '/launch') return null;
+
     // Design playground: dev builds only, never an auth bypass elsewhere.
     if (state.matchedLocation == '/design-v2' && Env.flavor == 'dev') {
       return null;
@@ -67,14 +73,19 @@ class Routes {
     await container.read(sharedPreferenceProvider.notifier).getLocalStorage();
 
     return GoRouter(
-      initialLocation: '/slider',
+      initialLocation: '/launch',
       refreshListenable: _refreshListenable,
       redirect: (context, state) => _redirect(state),
       routes: <RouteBase>[
         GoRoute(
+          path: '/launch',
+          name: 'Launch',
+          builder: (context, state) => const LaunchScreen(),
+        ),
+        GoRoute(
           path: '/slider',
           name: 'Slider',
-          builder: (context, state) => SliderScreen(),
+          pageBuilder: (context, state) => _fade(state, SliderScreen()),
         ),
         GoRoute(
           path: '/loginScreen',
@@ -96,10 +107,10 @@ class Routes {
         GoRoute(
           path: '/navBar',
           name: 'NavigationBar',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final index =
                 int.tryParse(state.uri.queryParameters['index'] ?? '') ?? 0;
-            return NavBar(initialIndex: index);
+            return _fade(state, NavBar(initialIndex: index));
           },
         ),
         GoRoute(
@@ -244,3 +255,18 @@ class Routes {
     );
   }
 }
+
+/// Cross-fade in (used out of the launch screen, and after sign-in), or a
+/// plain cut when the user has asked for reduced motion.
+CustomTransitionPage<void> _fade(GoRouterState state, Widget child) =>
+    CustomTransitionPage<void>(
+      key: state.pageKey,
+      child: child,
+      transitionDuration: ZMotion.sheet,
+      transitionsBuilder: (context, animation, _, child) => FadeTransition(
+        opacity: MediaQuery.disableAnimationsOf(context)
+            ? kAlwaysCompleteAnimation
+            : CurvedAnimation(parent: animation, curve: ZMotion.standard),
+        child: child,
+      ),
+    );
