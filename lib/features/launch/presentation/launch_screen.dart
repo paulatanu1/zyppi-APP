@@ -67,9 +67,13 @@ class _LaunchScreenState extends ConsumerState<LaunchScreen>
 
   @override
   Widget build(BuildContext context) {
-    final z = context.z;
+    // Follow the phone's theme, not the in-app Light/Dark choice: Android
+    // draws the native splash from the system setting before the app can
+    // read its own, so matching it here avoids a light/dark flash. The fade
+    // into Home/Onboarding then blends into the app's chosen theme.
+    final dark = MediaQuery.platformBrightnessOf(context) == Brightness.dark;
+    final z = dark ? ZColors.dark : ZColors.light;
     final text = Theme.of(context).textTheme;
-    final dark = Theme.of(context).brightness == Brightness.dark;
 
     // Phases of the 1.1 s timeline.
     final lift = CurvedAnimation(

@@ -14,9 +14,7 @@ Future<void> _pump(
   bool disableAnimations = false,
   ThemeData? theme,
 }) async {
-  SharedPreferences.setMockInitialValues({
-    KeyNames.token: ?token,
-  });
+  SharedPreferences.setMockInitialValues({KeyNames.token: ?token});
   final prefs = (await tester.runAsync(SharedPreferences.getInstance))!;
   final container = ProviderContainer(
     overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
@@ -83,5 +81,17 @@ void main() {
     await tester.pump(LaunchScreen.reducedMotionHold);
     await tester.pump();
     expect(find.text('onboarding'), findsOneWidget);
+  });
+
+  testWidgets('follows the phone theme, not the app theme (no flash)', (
+    tester,
+  ) async {
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+    addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+    // App forced to Light while the phone (and so the native splash) is dark.
+    await _pump(tester, theme: ZyppiTheme.light);
+    final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
+    expect(scaffold.backgroundColor, ZColors.dark.splashBg);
+    await tester.pumpAndSettle();
   });
 }
