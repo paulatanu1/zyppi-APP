@@ -15,8 +15,22 @@ abstract class GetCurrentLocationState with _$GetCurrentLocationState {
     @Default('') String city,
     @Default('') String state,
     @Default('') String postalCode,
+    String? landmark,
+
+    /// The saved address's label ('Home', 'Work', 'Other') when one was
+    /// picked; null for a GPS or searched location.
+    String? label,
     @Default(false) bool checkingServiceability,
     ServiceArea? serviceArea,
+
+    /// The serviceability check itself failed (offline…), as opposed to
+    /// "checked: we don't deliver here".
+    @Default(false) bool serviceabilityError,
+
+    /// A serviceability check has completed for the current point. Until
+    /// then (no permission, nothing picked yet) [serviceArea] being null
+    /// means "unknown", not "we don't deliver here".
+    @Default(false) bool serviceabilityChecked,
     String? error,
   }) = _GetCurrentLocationState;
 

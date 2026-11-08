@@ -28,8 +28,8 @@ class OrderTrackingProvider extends StateNotifier<OrderTrackingState> {
     : super(OrderTrackingState()) {
     _load();
 
-    // Under Supabase, status changes come from a future rider/admin app,
-    // not this client — Realtime (via repository.watch()) is what tells
+    // Under Firebase, status changes come from the admin panel, not this
+    // client — a Firestore listener (repository.watch()) is what tells
     // us to re-read the order. The mock flavor drives its own fake
     // lifecycle timer below instead.
     if (!Env.isMockDataSource) {
@@ -38,21 +38,31 @@ class OrderTrackingProvider extends StateNotifier<OrderTrackingState> {
   }
 
   Future<void> _load() async {
-    final orders = await repository.getOrders();
-    final match = orders.where((o) => o.id == orderId);
+    state = state.copyWith(error: null);
+    try {
+      final order = await repository.getOrderById(orderId);
+      if (!mounted) return;
 
-    state = state.copyWith(
-      order: match.isEmpty ? null : match.first,
-      loading: false,
-    );
+      state = state.copyWith(order: order, loading: false);
+    } catch (error) {
+      if (!mounted) return;
+      // Keep showing the last known order if a live refresh fails.
+      state = state.copyWith(loading: false, error: error.toString());
+      return;
+    }
 
     _scheduleNextStep();
   }
 
+  Future<void> retry() {
+    state = state.copyWith(loading: state.order == null);
+    return _load();
+  }
+
   void _scheduleNextStep() {
     // The fake lifecycle timer only applies to the offline mock flavor —
-    // under Supabase, status is server-controlled (Phase 4 wires it up
-    // via Realtime).
+    // under Firebase, status is server-controlled and arrives through
+    // repository.watch().
     if (!Env.isMockDataSource) return;
 
     final order = state.order;
@@ -61,10 +71,12 @@ class OrderTrackingProvider extends StateNotifier<OrderTrackingState> {
     final currentIndex = _sequence.indexOf(order.status);
     if (currentIndex == -1 || currentIndex >= _sequence.length - 1) return;
 
+    _timer?.cancel();
     _timer = Timer(_stepDuration, () async {
       final nextStatus = _sequence[currentIndex + 1];
 
       await repository.updateStatus(orderId, nextStatus);
+      if (!mounted) return;
 
       state = state.copyWith(order: order.copyWith(status: nextStatus));
 

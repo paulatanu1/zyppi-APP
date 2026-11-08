@@ -9,7 +9,7 @@
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>
-		<string>com.betastechnologies.zippy</string>
+		<string>com.zyppi.one</string>
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
 		<key>CFBundleName</key>
@@ -54,11 +54,31 @@
 		<true/>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>Zyppi uses your location to find your delivery address and show accurate delivery times.</string>
-		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-		<string>So that the application recognizes real time location updates without the user having to restart the application for a location update</string>
-		<key>GoogleMapsApiKey</key>
-		<string>$(GOOGLE_MAPS_API_KEY)</string>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<!-- UPI apps PayU CheckoutPro can hand a UPI-intent payment to. -->
+		<key>LSApplicationQueriesSchemes</key>
+		<array>
+			<string>phonepe</string>
+			<string>tez</string>
+			<string>gpay</string>
+			<string>paytmmp</string>
+			<string>bhim</string>
+			<string>credpay</string>
+		</array>
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleURLName</key>
+				<string>com.zyppi.one.auth</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<!-- Google Sign-In (REVERSED_CLIENT_ID from GoogleService-Info.plist) -->
+					<string>com.googleusercontent.apps.182229138750-svu7g9tma7pomljs49vlv5fqs49s1qqr</string>
+					<!-- Firebase Phone Auth reCAPTCHA fallback (encoded iOS app id) -->
+					<string>app-1-182229138750-ios-57ee1fd42801caf19a806f</string>
+				</array>
+			</dict>
+		</array>
 	</dict>
 </plist>

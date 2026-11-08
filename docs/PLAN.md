@@ -1,10 +1,10 @@
 # Zyppi Grocery App — Upgrade & Development Plan
 
-Approved plan for Claude Code. Repo: `paulatanu1/zyppi-APP`, base branch **`Development`**. Last updated 14 Oct 2026.
+Approved plan for Claude Code. Repo: `paulatanu1/zyppi-APP`, base branch **`Development`**. Last updated 3 Nov 2026 (backend moved from Supabase to Firebase — Phase 6).
 
 ## 1. Summary and audit
 
-The app already exists on `Development` (65 commits, Nov 2024 – Feb 2025): 17 feature screens on Riverpod, freezed and go_router, Firebase + Google sign-in, easy_localization in 4 languages. It runs on Flutter 3.24.3 and talks to an old REST backend over plain HTTP. The plan upgrades it in place, moves data and auth to Supabase, builds the missing grocery flow (product search, checkout, order placed, order tracking) and restyles screens to the approved mockup.
+The app already exists on `Development` (65 commits, Nov 2024 – Feb 2025): 17 feature screens on Riverpod, freezed and go_router, Firebase + Google sign-in, easy_localization in 4 languages. It runs on Flutter 3.24.3 and talks to an old REST backend over plain HTTP. The plan upgrades it in place, moves data and auth to Supabase (Phases 3–4; replaced by Firebase in Phase 6), builds the missing grocery flow (product search, checkout, order placed, order tracking) and restyles screens to the approved mockup.
 
 | Area | Current state (`Development` @ 2cfeb0c, 3 Feb 2025) | Action |
 | --- | --- | --- |
@@ -15,7 +15,7 @@ The app already exists on `Development` (65 commits, Nov 2024 – Feb 2025): 17 
 | Auth | REST phone login, `firebase_auth`, `google_sign_in` 6 | Supabase Auth: phone OTP + Google via `signInWithIdToken` |
 | Secrets | Google Maps key hard-coded in `lib/core/constants/googleApiKey.dart`; `android/app/google-services.json`, `ios/Runner/GoogleService-Info.plist` committed | Restrict/rotate the Maps key; read it from env; restrict Firebase API keys in Google Cloud |
 | Android | Groovy DSL, AGP 8.7.2, Kotlin 2.0.0, Gradle 8.9, `compileSdk 34`, `minSdk 23` | Bump AGP/Kotlin/Gradle; `compileSdk = flutter.compileSdkVersion`; `minSdk 24` |
-| App id / package | `com.betastechnologies.zippy`; Dart package `zippy` | Keep both |
+| App id / package | `com.betastechnologies.zippy`; Dart package `zippy` | Keep Dart package `zippy`; Android/iOS id changed to `com.zyppi.one` (2026-10-17, pre-submission) |
 | UI | `flutter_screenutil` with swapped MediaQuery design size; Poppins, Montserrat + 3 unused fonts; colors in `core/constants/colors.dart`; curved 5-tab nav | Design size 390×844; tokens from `docs/design-tokens.md`; drop unused fonts |
 | Localization | `easy_localization`: `assets/translations/{en-UK,bn-BN,hi-IN,pa-Guru}.json` | Keep |
 | Code style | PascalCase folders, camelCase files; `otp_text_field` + `flutter_otp_text_field`; `flutter_lints` mis-indented under `flutter_launcher_icons` (lints off) | snake_case rename pass; one OTP package; lints on |
@@ -31,15 +31,15 @@ Flutter **3.47.x stable** (Dart 3.13) pinned with **FVM** (`.fvmrc`). Upgrade wi
 | State | `flutter_riverpod` 2.6, `riverpod_annotation`, `riverpod_generator` | Riverpod 3 + `riverpod_lint`, `custom_lint` | 0 |
 | Routing | `go_router` 14 | latest | 0 |
 | Models | `freezed` 2, `json_serializable` | `freezed` 3, latest | 0 |
-| Backend | `dio` + REST | `supabase_flutter`; Supabase CLI | 3 |
-| Auth | `firebase_auth`, `google_sign_in` 6 | Supabase Auth; `google_sign_in` latest for the ID token | 3 |
+| Backend | `dio` + REST | `cloud_firestore`, `cloud_functions`; Firebase CLI + Cloud Functions (TypeScript, `functions/`). Was `supabase_flutter` in Phases 3–5 | 6 |
+| Auth | `firebase_auth`, `google_sign_in` 6 | `firebase_auth` (phone OTP, Google, anonymous guest + linking); `google_sign_in` latest for the ID token. Was Supabase Auth in Phases 3–5 | 6 |
 | Local storage | `shared_preferences` | + `hive_ce`, `hive_ce_flutter` (cart, recent searches) | 2 |
 | UI kit | `flutter_screenutil`, `carousel_slider`, `smooth_page_indicator`, `curved_navigation_bar`, `flutter_bounce`, `fluttertoast` | Keep first four; SnackBar instead of `fluttertoast`; add `cached_network_image`, `skeletonizer` | 1–2 |
 | OTP input | `otp_text_field` + `flutter_otp_text_field` | `flutter_otp_text_field` only | 1 |
 | Localization | `easy_localization` | latest | 0 |
-| Location / maps | `geolocator`, `google_places_flutter` (client key) | `geolocator`, `geocoding`, `google_maps_flutter`; Places via Edge Function | 4 |
+| Location / maps | `geolocator`, `google_places_flutter` (client key) | `geolocator`, `geocoding`; Places API (New) via the `placesProxy` Cloud Function. `google_maps_flutter` was added in Phase 4 then removed (2026-10-26): delivery here only needs `lat`/`lng` for the rider to navigate externally, not an embedded map in the customer app — see decisions table | 4 |
 | Push / crash / analytics | `firebase_core` | + `firebase_messaging`, `firebase_crashlytics`, `firebase_analytics` | 4–5 |
-| Payments | — | `razorpay_flutter` + COD | 4 |
+| Payments | — | `payu_checkoutpro_flutter` (PayU CheckoutPro) + COD — replaced `phonepe_payment_sdk` 2026-11-07 | 4 |
 | Testing | `flutter_test` | + `mocktail`, `integration_test` | all |
 | Release assets | `flutter_launcher_icons` | + `flutter_native_splash` | 5 |
 
@@ -51,7 +51,7 @@ Launch areas **Purulia, Raghunathpur, Chelyama**. INR. Languages en, bn, hi, pa.
 
 | # | Screen | Existing code (`lib/features/`) | Status | Mockup (`docs/mockups/`) |
 | --- | --- | --- | --- | --- |
-| 1 | Splash / onboarding | `Intro/` | Exists | `Onboarding.dc.html` |
+| 1 | Splash / onboarding | `Intro/` | Exists — restructured (2026-10-28) from a 4-slide carousel to a single screen per the v2 mockup | `Onboarding.dc.html` |
 | 2 | Login | `Auth/Login/`, `core/commonWidgets/googleSignInButton.dart` | Exists (REST) | `Login.dc.html` |
 | 3 | OTP verify | `Auth/OTPVerification/` | Exists (REST) | `Otp.dc.html` |
 | 4 | Location setup | `SearchAddress/`, `HomeScreen/widgets/addressSheet.dart`, `core/sharedProviders/Location/` | Partial | `Location.dc.html` |
@@ -81,7 +81,7 @@ application (Riverpod notifiers + freezed state)
       ↓
 domain (entities + repository interfaces)   ← swap point
       ↓                        ↓
-data/mock (assets/mock)   data/supabase (supabase_flutter)
+data/mock (assets/mock)   data/firebase_* (cloud_firestore, cloud_functions)
 ```
 
 Target layout after the Phase 1 rename pass:
@@ -89,21 +89,22 @@ Target layout after the Phase 1 rename pass:
 ```text
 lib/
   main.dart                  # flavor → bootstrap()
-  bootstrap.dart             # EasyLocalization, Firebase, Supabase.initialize, ProviderScope
+  bootstrap.dart             # EasyLocalization, Firebase (+ emulators), ProviderScope
   app/
     app.dart                 # MaterialApp.router, theme, ScreenUtilInit(390x844)
     router.dart              # go_router + redirect/refreshListenable (onboarding, auth, location)
   core/
     config/env.dart          # String.fromEnvironment(...)
     theme/                   # tokens from docs/design-tokens.md (replaces constants/colors.dart)
-    supabase/                # client provider, error mapping (replaces infrastructure/ in Phase 3)
+    firebase/                # Functions region, emulator setup (firebase_setup.dart)
     storage/                 # shared_preferences, hive boxes
     location/                # from sharedProviders/Location
     utils/  widgets/         # money (paise), formatters; shared widgets (from commonWidgets/)
   features/<feature>/{data,domain,application,presentation,widgets}
     intro auth location home explore category product search cart checkout orders tracking account favourites addresses
 assets/mock/                 # categories.json, products.json, orders.json, addresses.json, slots.json, service_areas.json
-supabase/                    # migrations/, seed.sql, functions/ (Phase 3+)
+functions/                   # Cloud Functions (TypeScript), seed + set-admin scripts, emulator tests
+firestore.rules  firestore.indexes.json  storage.rules  firebase.json
 env/                         # *.example.json committed; real files gitignored
 ```
 
@@ -164,14 +165,14 @@ Done when: release APK runs splash → tracking fully offline and matches the mo
 Done when: staging flavor places a real order end to end; mock flavor still runs. ✅ Done — four Phase 3 bugs blocking staging checkout end to end were fixed (see `5e8496c`); mock flavor still runs offline.
 
 ### Phase 4 — Delivery features (~2 weeks) · `feat/delivery-features`
-- [x] Location: permission, current position, reverse geocode, map-pin picker, serviceability vs `service_areas`; Places autocomplete through an Edge Function (no client Maps key for Places) — `search_address_screen.dart` is now a real `google_maps_flutter` map-pin picker (drag-to-reverse-geocode via the `geocoding` package, no API key needed; "use current location" FAB; serviceability banner; saved-addresses quick-pick), replacing the old REST-era screen that hardcoded every new address's area/city/state/postalCode to Kolkata regardless of what was picked. `serviceable_area()` RPC (haversine vs radius) + a new `ServiceAreaRepository` back the serviceability check against the three launch towns' approximate centers (`20261015120500_service_area_geofence.sql` — refine the coordinates against real dark-store addresses before launch). Places autocomplete/details move behind `supabase/functions/places-proxy`; `dio` and `lib/core/infrastructure/` are now fully deleted (both remaining call sites — geocoding, Places — are gone), closing Phase 3's "full deletion waits until Phase 4" note. Also found and fixed a live Google Maps API key hardcoded in `AndroidManifest.xml`/`AppDelegate.swift` since Phase 0 — **that key is in git history and should be rotated**; it now reads per-flavor from `env/<flavor>.json` (Android) / a gitignored `Secrets.xcconfig` (iOS)
-- [x] Razorpay order creation + signature verification in Edge Functions; COD — `create-razorpay-order` / `verify-razorpay-payment` keep `RAZORPAY_KEY_SECRET` off the client; checkout verifies the HMAC signature before ever calling `place_order()`, which now records a real `payments` row. Mock flavor places every order directly (no gateway to open) — **not yet exercised against a live Razorpay test account**, needs `RAZORPAY_KEY_ID`/`RAZORPAY_KEY_SECRET` as Edge Function secrets and a real `env/staging.json`
+- [x] Location: permission, current position, reverse geocode, serviceability vs `service_areas`; Places autocomplete through an Edge Function (no client Maps key for Places) — `search_address_screen.dart` resolves a location via GPS (`geolocator`) or place search (reverse-geocoded via the `geocoding` package, the OS's own geocoder — no API key needed), with editable address-line/landmark text instead of a dragged map pin; "use current location" button; serviceability banner; saved-addresses quick-pick. This replaced the old REST-era screen that hardcoded every new address's area/city/state/postalCode to Kolkata regardless of what was picked. `serviceable_area()` RPC (haversine vs radius) + a new `ServiceAreaRepository` back the serviceability check against the three launch towns' approximate centers (`20261015120500_service_area_geofence.sql` — refine the coordinates against real dark-store addresses before launch). Places autocomplete/details move behind `supabase/functions/places-proxy`; `dio` and `lib/core/infrastructure/` are now fully deleted (both remaining call sites — geocoding, Places — are gone), closing Phase 3's "full deletion waits until Phase 4" note. Also found and fixed a live Google Maps API key hardcoded in `AndroidManifest.xml`/`AppDelegate.swift` since Phase 0 — it briefly moved to per-flavor `env/<flavor>.json` (Android) / a gitignored `Secrets.xcconfig` (iOS), then **`google_maps_flutter` itself was removed entirely (2026-10-26)**: this is a remote-area delivery app where the rider navigates with their own phone's Maps app from the order's `lat`/`lng`, not an embedded map in the customer app, so there's no client Maps key left to rotate or restrict at all — the leaked key in git history is now moot for the app (it was never used server-side)
+- [x] PhonePe (Standard Checkout) order creation + status verification in Edge Functions; COD — the app never had a real Razorpay account, so the original Razorpay integration was replaced (2026-10-26) with PhonePe: `create-phonepe-order` / `verify-phonepe-payment` keep `PHONEPE_CLIENT_SECRET` off the client; the app opens PhonePe's hosted PAY_PAGE via `phonepe_payment_sdk`'s `startTransaction`, then checkout verifies the order's status before ever calling `place_order()`, which now records a real `payments` row (`provider_reference` holds PhonePe's `transactionId`). Mock flavor places every order directly (no gateway to open) — **not yet exercised against a live PhonePe sandbox account**, needs `PHONEPE_CLIENT_ID`/`PHONEPE_CLIENT_SECRET`/`PHONEPE_CLIENT_VERSION`/`PHONEPE_MERCHANT_ID`/`PHONEPE_ENV` as Edge Function secrets (pending from the PhonePe Business Dashboard) and a real device for the SDK's PAY_PAGE redirect flow
 - [x] FCM push on `order_events` insert (Edge Function); deep link to tracking — `push-on-order-event` mints its own OAuth2 token from a Firebase service-account secret and sends via FCM v1; a new `on_order_event_notify` trigger calls it via `pg_net` (the same mechanism the dashboard's Database Webhooks UI generates, checked into migrations instead). It no-ops with a warning until two per-project GUCs (`app.settings.edge_functions_url`, `app.settings.service_role_key`) are set — can't be done from inside a migration since they differ per environment. `profiles.fcm_token` + `PushTokenRepository` register the token on refresh and right after login. **Not yet verified on a real device** — also needs the Push Notifications + Background Modes capabilities added in Xcode and APNs configured for iOS (carries forward Phase 1's already-flagged "needs Xcode" gap)
 - [x] Live tracking via Supabase Realtime — `orders` joins the `supabase_realtime` publication; `SupabaseOrderRepository.watch()` streams Postgres Changes instead of `Stream.empty()`, and `OrderTrackingProvider` re-reads the order on every event. The tracking screen's map stays decorative-only (already the case since Phase 2) — there's no rider/location data source behind it; that's explicitly out of scope until a rider app exists (§3)
 - [x] Express vs scheduled slot picker — `delivery_slots` now seeds four concrete scheduled windows alongside the express one (previously one generic "Schedule for later" row with no actual times); checkout's delivery-time section is the mockup's two-card Express/Schedule toggle, revealing the windows as choice chips. Window labels are static per seed, not date-relative at runtime — same follow-up bucket as §6's "realistic express ETA per town"
 - [x] Production SMS: MSG91 through the Supabase Send SMS Hook; DLT sender ID + template — `send-sms-hook` verifies Supabase Auth's `standardwebhooks` signature and sends via MSG91's OTP API with a DLT template id. Registered in `config.toml` but left **disabled**; dev/staging keep Supabase's test phone numbers per §6's own decision, and this only needs flipping on once a real MSG91 account + DLT template + project-ref are in hand
 
-Done when: Razorpay test payment succeeds, background push arrives, tracking map updates. ⚠️ Not yet verified — every piece above is implemented and code-complete (`fvm flutter analyze` 0 issues, tests pass), but all three checks need things this environment doesn't have: a staging `env/*.json` with real Supabase/Maps/Razorpay keys, the Edge Functions actually deployed (no Supabase CLI available here) and their secrets set, the two Postgres GUCs for the push trigger, and a physical device for push/location/payment UI. Treat Phase 4 as code-complete, not verified end-to-end.
+Done when: PhonePe test payment succeeds, background push arrives, tracking map updates. ⚠️ Not yet verified — every piece above is implemented and code-complete (`fvm flutter analyze` 0 issues, tests pass), but all three checks need things this environment doesn't have: a staging `env/*.json` with real Supabase/PhonePe keys, the Edge Functions' secrets set (they are now deployed, to both the dev and prod Supabase projects), the two Postgres GUCs for the push trigger, and a physical device for push/location/payment UI. Treat Phase 4 as code-complete, not verified end-to-end.
 
 ### Phase 5 — Release hardening (1–2 weeks) · `chore/release-hardening`
 - [x] Integration test for the order flow; unit/widget tests across domain + application — `integration_test/order_flow_test.dart` drives home → add to cart → checkout → order placed → tracking against the mock flavor (login always goes through live Supabase per `bootstrap.dart`, so it's bypassed via a pre-seeded auth token rather than driven). Getting it running on a real emulator surfaced and fixed three real bugs: `bootstrap()` was awaiting the location/push permission dialogs before `runApp()`, blocking the whole app (not just those features) until answered — now fire-and-forget; `GetCurrentLocationProvider` (autoDispose) wrote to `state` after an `await` with no `mounted` check, crashing with "used after dispose" when navigated away mid-request; Crashlytics' error hook fully replaced `FlutterError.onError` instead of chaining, which silently broke `expect()`'s own error capturing under `flutter_test`. **The test itself did not reach a fully green run in this sandbox** — an Android 13+ permission dialog intermittently steals focus during the automated run (environment/CI-setup flakiness, not an app bug); also added `test/core/utils/parsed_address_test.dart` and `test/core/data/mock_service_area_repository_test.dart` for Phase 4's address-parsing and serviceability logic
@@ -179,26 +180,42 @@ Done when: Razorpay test payment succeeds, background push arrives, tracking map
 - [x] Performance + accessibility passes — tooltips added to every icon-only button that lacked one (screen readers were announcing a bare "button"); found two real bugs this surfaced rather than went looking for: `splash_screen.dart` was dead code (never routed to) referencing a missing asset and the wrong-case route, now deleted since `flutter_native_splash` already covers that moment; the launcher icon and new native splash were both built from `appLogo.png`, a 303×111 non-square wordmark — the icon was being squished (pre-existing since Phase 0) and the splash was blurry from upscaling. Both now source from `appIconMark.png` (the bicycle/gift mark alone, cropped and padded square) — no more distortion, still soft since the source is only ~71×68px natively; a real fix needs a proper high-res icon asset
 - [x] Launcher icon, native splash — see above; release signing — `android/app/build.gradle`'s release build was hardcoded to debug-sign with the real keystore commented out; now uses `android/key.properties` automatically once supplied (gitignored, `key.properties.example` documents the fields), falling back to debug signing so local release builds keep working without one
 - [ ] Play internal testing + TestFlight — needs a Play Console / App Store Connect account and a real signed build; not something this environment can do
-- [ ] Remove Supabase test phone numbers — this is a Supabase dashboard setting (Authentication → Phone Auth), not anything in this repo; flagging as a pre-launch checklist item rather than a code change
+- [x] ~~Remove Supabase test phone numbers~~ — obsolete since Phase 6 (Supabase retired). The Firebase equivalent: remove the Firebase Auth test phone numbers (console → Authentication → Phone) before launch
 
 Done when: both store test tracks run a week of internal use with no crashes. ⚠️ Not reachable from here — needs real signing, store accounts, and a week of real usage.
+
+### Phase 6 — Move to Firebase · `feat/firebase-migration`
+Supabase (Postgres, Auth, Storage, Realtime, Edge Functions) is replaced by Firebase on the existing project `zippy-app-2024`.
+- [x] `firebase.json`, `.firebaserc`, `firestore.rules`, `firestore.indexes.json`, `storage.rules`. Catalog is public-read/admin-write; `users/{uid}` + `addresses`/`cart`/`favourites` are owner-only; `orders`, `paymentIntents`, `inventory` are written only by Cloud Functions. Admins = custom claim `admin: true` (`functions/scripts/set-admin.ts`)
+- [x] Cloud Functions (`functions/`, TypeScript, Node 22, `asia-south1`): `placeOrder` (COD), `createPayUOrder`, `signPayUHash`, `verifyPayUPayment` (idempotent paid orders, mismatches → `needs_review`; PhonePe replaced by PayU 2026-11-07), `placesProxy`, `deleteAccount`, `onOrderEventCreated` (FCM push), `adminUpdateOrderStatus`, `adminListUsers`. Ported from `quote_order` / `place_order_internal` / `place_paid_order`; stock now spills across an area's stores instead of failing when no single store has enough
+- [x] `functions/scripts/seed.ts` loads the old `seed.sql` catalog + images into Firestore/Storage; search uses a `keywords` prefix array
+- [x] App: one `firebase_*_repository_impl.dart` per interface; Firebase Auth for phone OTP, Google, guest and guest upgrade (`linkWithCredential`); order tracking listens to Firestore; `supabase_flutter` removed
+- [x] Admin panel (`zyppi-admin`): Firebase Auth email/password + admin claim, Firestore services, Storage uploads
+- [x] Tests: functions emulator suite (pricing, coupons, stock, rollback, idempotency, rules) in CI; Dart tests for distance and error mapping
+- [ ] Console: Blaze plan, Firestore (`asia-south1`), Storage, Auth providers (Phone, Google, Anonymous, Email/Password), SHA-1/SHA-256 fingerprints, APNs key; secrets `PAYU_MERCHANT_KEY`, `PAYU_SALT` (+ param `PAYU_ENV`), `GOOGLE_PLACES_API_KEY`
+- [ ] Deploy (`firebase deploy --only firestore,storage,functions`), seed, create the admin login + `set-admin`
+- [ ] Verify end to end on a device
+- [x] Delete `supabase/` and `scripts/upload_catalog_images.sh` — done 2026-11-08 on `chore/legacy-cleanup`, ahead of the device check (the Firebase backend doesn't depend on them; recover from git history if ever needed); unused translation keys pruned at the same time
+
+Done when: on a real phone against `zippy-app-2024` — OTP, Google and guest sign-in work; a COD order is placed and appears in the admin panel; an admin status change updates tracking live and sends a push; delete account works.
 
 ## 6. Decisions
 
 | Decision | Value |
 | --- | --- |
 | Repo / base branch | `paulatanu1/zyppi-APP`, `Development` |
-| App id / package | Keep `com.betastechnologies.zippy`, Dart package `zippy` |
-| Scope | Customer app first; rider + admin later |
-| Backend | Supabase from scratch (project ref `dcgjsspymailbciqkhvq` = dev); old REST API retired |
+| App id / package | `com.zyppi.one` (changed from `com.betastechnologies.zippy` on 2026-10-17, pre-submission), Dart package `zippy` |
+| Scope | Customer app first, admin panel (`zyppi-admin`, Angular) alongside; rider later |
+| Backend | Firebase project `zippy-app-2024` for every flavor (Firestore + Cloud Functions in `asia-south1`, Auth, Storage) — Phase 6, 2026-11-03. Supabase (`dcgjsspymailbciqkhvq`) retired; started fresh, catalog re-seeded, no user data copied |
 | Launch areas | Purulia, Raghunathpur, Chelyama |
 | Delivery model | Dark store per area; express + scheduled slots |
-| Payments | Razorpay + COD |
-| SMS / OTP | Dev: Supabase test numbers. Prod: MSG91 via Send SMS Hook |
+| Payments | PayU CheckoutPro + COD (PhonePe dropped 2026-11-07) |
+| SMS / OTP | Firebase Phone Auth (sends the SMS itself). Dev: Firebase test phone numbers |
 | Brand | Existing Zyppi brand (pink, blue, Poppins/Montserrat) — mockup re-themed |
 | Navigation | Home, Explore, Cart, Favourite, Account |
+| Support chat | Added 2026-11-06 (branch `feat/support-chat`). Customer ↔ support only — rider chat stays out of scope. A free retrieval bot (no LLM, no paid API) in `functions/src/support`: BM25 + `multilingual-e5-small` embeddings (open model, run in-process with transformers.js) fused with RRF over a curated 4-language knowledge base, plus live order status; refunds, cancellations, missing items and payment problems hand off to the team, with WhatsApp / call as the fallback. New collections `supportChats/{chatId}` (+ `/messages`) and `supportKb/{entryId}`; rules in `firestore.rules`. Phase 2: the `zyppi-admin` inbox (reply / close via the existing `adminReplySupport` / `adminCloseSupport` callables) and a KB editor; optionally an LLM "generate" step on top of the same retrieval |
 | Localization | easy_localization: en, bn, hi, pa |
 | Platforms | Android, iOS |
 | State | Riverpod 3 + codegen |
 
-Open: production SMS provider sign-up; Maps key rotation; realistic express ETA per town.
+Open: production SMS provider sign-up; realistic express ETA per town; PayU test Merchant Key + Salt still need setting as Cloud Functions secrets (`firebase functions:secrets:set PAYU_MERCHANT_KEY` / `PAYU_SALT`); then verify a sandbox payment on a real device; `zyppi-admin` (sibling repo) should surface a per-order "Navigate" link (e.g. `https://www.google.com/maps/dir/?api=1&destination=lat,lng`) built from the `orders`/`addresses` data this app already writes, for whoever is handling deliveries until a rider app exists — not implemented here, this repo's data model already supports it.

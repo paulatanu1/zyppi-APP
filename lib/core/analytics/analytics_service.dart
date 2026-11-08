@@ -8,23 +8,35 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 class AnalyticsService {
   AnalyticsService._();
 
-  static final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
+  /// Analytics must never break a user action: if Firebase isn't set up
+  /// (tests, a failed init), events are simply dropped. Accessing
+  /// `FirebaseAnalytics.instance` throws synchronously in that case, so
+  /// every call goes through [_log].
+  static Future<void> _log(
+    Future<void> Function(FirebaseAnalytics analytics) send,
+  ) async {
+    try {
+      await send(FirebaseAnalytics.instance);
+    } catch (_) {}
+  }
 
   static Future<void> logViewItem({
     required String itemId,
     required String itemName,
     required int pricePaise,
   }) {
-    return _analytics.logViewItem(
-      currency: 'INR',
-      value: pricePaise / 100,
-      items: [
-        AnalyticsEventItem(
-          itemId: itemId,
-          itemName: itemName,
-          price: pricePaise / 100,
-        ),
-      ],
+    return _log(
+      (a) => a.logViewItem(
+        currency: 'INR',
+        value: pricePaise / 100,
+        items: [
+          AnalyticsEventItem(
+            itemId: itemId,
+            itemName: itemName,
+            price: pricePaise / 100,
+          ),
+        ],
+      ),
     );
   }
 
@@ -34,24 +46,25 @@ class AnalyticsService {
     required int pricePaise,
     required int quantity,
   }) {
-    return _analytics.logAddToCart(
-      currency: 'INR',
-      value: pricePaise * quantity / 100,
-      items: [
-        AnalyticsEventItem(
-          itemId: itemId,
-          itemName: itemName,
-          price: pricePaise / 100,
-          quantity: quantity,
-        ),
-      ],
+    return _log(
+      (a) => a.logAddToCart(
+        currency: 'INR',
+        value: pricePaise * quantity / 100,
+        items: [
+          AnalyticsEventItem(
+            itemId: itemId,
+            itemName: itemName,
+            price: pricePaise / 100,
+            quantity: quantity,
+          ),
+        ],
+      ),
     );
   }
 
   static Future<void> logBeginCheckout({required int totalPaise}) {
-    return _analytics.logBeginCheckout(
-      currency: 'INR',
-      value: totalPaise / 100,
+    return _log(
+      (a) => a.logBeginCheckout(currency: 'INR', value: totalPaise / 100),
     );
   }
 
@@ -59,10 +72,12 @@ class AnalyticsService {
     required String orderId,
     required int totalPaise,
   }) {
-    return _analytics.logPurchase(
-      transactionId: orderId,
-      currency: 'INR',
-      value: totalPaise / 100,
+    return _log(
+      (a) => a.logPurchase(
+        transactionId: orderId,
+        currency: 'INR',
+        value: totalPaise / 100,
+      ),
     );
   }
 }

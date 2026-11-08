@@ -13,6 +13,7 @@ _OrderItem _$OrderItemFromJson(Map<String, dynamic> json) => _OrderItem(
   unit: json['unit'] as String,
   quantity: (json['quantity'] as num).toInt(),
   pricePaise: (json['pricePaise'] as num).toInt(),
+  image: json['image'] as String?,
 );
 
 Map<String, dynamic> _$OrderItemToJson(_OrderItem instance) =>
@@ -23,4 +24,5 @@ Map<String, dynamic> _$OrderItemToJson(_OrderItem instance) =>
       'unit': instance.unit,
       'quantity': instance.quantity,
       'pricePaise': instance.pricePaise,
+      'image': instance.image,
     };

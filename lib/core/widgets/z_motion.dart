@@ -93,17 +93,20 @@ class _ZPressableState extends State<ZPressable> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: widget.onTap,
-      onTapDown: (_) => _set(true),
-      onTapUp: (_) => _set(false),
-      onTapCancel: () => _set(false),
-      child: AnimatedScale(
-        scale: _down && !_reduceMotion(context) ? widget.scale : 1,
-        duration: ZMotion.press,
-        curve: ZMotion.standard,
-        child: widget.child,
+    return Semantics(
+      button: widget.onTap != null,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onTap,
+        onTapDown: (_) => _set(true),
+        onTapUp: (_) => _set(false),
+        onTapCancel: () => _set(false),
+        child: AnimatedScale(
+          scale: _down && !_reduceMotion(context) ? widget.scale : 1,
+          duration: ZMotion.press,
+          curve: ZMotion.standard,
+          child: widget.child,
+        ),
       ),
     );
   }
@@ -139,7 +142,18 @@ class _ZLoopState extends State<ZLoop> with SingleTickerProviderStateMixin {
       ZLoopKind.float => const Duration(milliseconds: 4000),
     },
     value: widget.phase,
-  )..repeat(reverse: true);
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // No ticking at all when the user has turned animations off.
+    if (_reduceMotion(context)) {
+      _c.stop();
+    } else if (!_c.isAnimating) {
+      _c.repeat(reverse: true);
+    }
+  }
 
   @override
   void dispose() {
@@ -199,7 +213,18 @@ class _ZSkeletonState extends State<ZSkeleton>
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1200),
-  )..repeat();
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Static block when the user has turned animations off.
+    if (_reduceMotion(context)) {
+      _c.stop();
+    } else if (!_c.isAnimating) {
+      _c.repeat();
+    }
+  }
 
   @override
   void dispose() {

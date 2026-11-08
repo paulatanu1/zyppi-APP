@@ -10,6 +10,9 @@ abstract class Product with _$Product {
     required String id,
     required String name,
     String? image,
+
+    /// "About this item" on product details; hidden when empty.
+    String? description,
     required String categoryId,
     required List<ProductVariant> variants,
     @Default(false) bool isFavourite,
@@ -20,5 +23,7 @@ abstract class Product with _$Product {
 }
 
 extension ProductPricing on Product {
-  ProductVariant get defaultVariant => variants.first;
+  /// The variant cards show and add; null for a product with no variants
+  /// (shown as unavailable rather than crashing).
+  ProductVariant? get defaultVariant => variants.firstOrNull;
 }

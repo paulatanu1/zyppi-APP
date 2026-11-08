@@ -1,65 +1,87 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:zippy/core/cart/domain/bill_breakdown.dart';
-import 'package:zippy/core/common_widgets/price_tag.dart';
-import 'package:zippy/core/theme/app_colors.dart';
-import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
+import 'package:zippy/core/widgets/z_commerce.dart';
 
-/// Matches docs/mockups/Cart.dc.html's "Bill details" section.
+/// docs/screens/light/09-cart.png's "Bill details": item total, fees, tip,
+/// discount, then [tipSelector] and "To pay".
 class BillDetails extends StatelessWidget {
   final BillBreakdown bill;
+  final Widget? tipSelector;
 
-  const BillDetails({super.key, required this.bill});
+  const BillDetails({super.key, required this.bill, this.tipSelector});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('billDetails'.tr(), style: AppTypography.titleMedium),
-          const SizedBox(height: 10),
-          _row('itemTotal'.tr(), PriceTag.format(bill.itemTotalPaise)),
+    final z = context.z;
+    final t = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('billDetails'.tr(), style: t.titleMedium),
+        const SizedBox(height: ZSpace.x2),
+        _row(context, 'itemTotal'.tr(), rupees(bill.itemTotalPaise)),
+        _row(
+          context,
+          'deliveryFee'.tr(),
+          bill.deliveryFeePaise == 0
+              ? 'free'.tr()
+              : rupees(bill.deliveryFeePaise),
+          valueColor: bill.deliveryFeePaise == 0 ? z.ok : null,
+        ),
+        _row(context, 'handlingFee'.tr(), rupees(bill.handlingFeePaise)),
+        _row(context, 'tip'.tr(), rupees(bill.tipPaise)),
+        if (bill.discountPaise > 0)
           _row(
-            'deliveryFee'.tr(),
-            bill.deliveryFeePaise == 0
-                ? 'free'.tr()
-                : PriceTag.format(bill.deliveryFeePaise),
+            context,
+            'discount'.tr(),
+            '-${rupees(bill.discountPaise)}',
+            valueColor: z.ok,
           ),
-          _row('handlingFee'.tr(), PriceTag.format(bill.handlingFeePaise)),
-          if (bill.tipPaise > 0)
-            _row('tip'.tr(), PriceTag.format(bill.tipPaise)),
-          if (bill.discountPaise > 0)
-            _row(
-              'discount'.tr(),
-              '-${PriceTag.format(bill.discountPaise)}',
-              valueColor: AppColors.green,
-            ),
-          const Divider(height: 20, color: AppColors.divider),
-          _row('total'.tr(), PriceTag.format(bill.totalPaise), emphasize: true),
+        if (tipSelector != null) ...[
+          const SizedBox(height: ZSpace.x2),
+          tipSelector!,
         ],
-      ),
+        const SizedBox(height: ZSpace.x3),
+        Divider(color: z.line),
+        const SizedBox(height: ZSpace.x1),
+        Row(
+          children: [
+            Expanded(child: Text('toPay'.tr(), style: t.titleMedium)),
+            Text(rupees(bill.totalPaise), style: t.titleMedium),
+          ],
+        ),
+      ],
     );
   }
 
   Widget _row(
+    BuildContext context,
     String label,
     String value, {
-    bool emphasize = false,
     Color? valueColor,
   }) {
-    final style = emphasize
-        ? AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.w700)
-        : AppTypography.bodyMedium;
-
+    final t = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: ZSpace.x1),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: style),
-          Text(value, style: style.copyWith(color: valueColor)),
+          Expanded(
+            child: Text(
+              label,
+              style: t.bodyMedium!.copyWith(color: context.z.ink2),
+            ),
+          ),
+          const SizedBox(width: ZSpace.x3),
+          Text(
+            value,
+            style: t.labelLarge!.copyWith(
+              color: valueColor,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );

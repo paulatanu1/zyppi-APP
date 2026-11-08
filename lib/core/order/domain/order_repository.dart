@@ -4,18 +4,20 @@ import 'package:zippy/core/domain/order_status.dart';
 abstract class OrderRepository {
   Future<List<Order>> getOrders();
 
+  /// One order (the order-placed / details / tracking screens), or null.
+  Future<Order?> getOrderById(String id);
+
   /// Mock: persists [order] — already built client-side from the cart —
   /// locally and returns its id unchanged.
-  /// Supabase: ignores the client-built totals and calls place_order(),
-  /// which re-derives everything from the user's synced cart server-side;
-  /// returns the server-generated order id. [razorpayOrderId] /
-  /// [razorpayPaymentId] are only passed once CheckoutProvider has
-  /// already verified the payment signature; omit both for COD.
+  /// Firebase: cash on delivery only. Ignores the client-built totals and
+  /// calls the placeOrder function, which re-derives everything from the user's
+  /// synced cart server-side; returns the server-generated order id.
+  /// Prepaid (PayU) orders are created by the server itself once the
+  /// payment is verified — see PaymentRepository.verifyPayment.
   Future<String> placeOrder(
     Order order, {
     required String deliverySlotId,
-    String? razorpayOrderId,
-    String? razorpayPaymentId,
+    String? couponCode,
   });
 
   Future<void> updateStatus(String orderId, OrderStatus status);

@@ -24,7 +24,13 @@ abstract final class ZRadius {
       button = 16,
       card = 18,
       tile = 16,
-      sheet = 26;
+      sheet = 26,
+          // Home promo banner (Main.dc.html).
+          banner =
+          20,
+          // Onboarding hero illustration (zyppi.css .illo).
+          illo =
+          28;
 
   static BorderRadius all(double r) => BorderRadius.all(Radius.circular(r));
   static const BorderRadius sheetTop = BorderRadius.vertical(

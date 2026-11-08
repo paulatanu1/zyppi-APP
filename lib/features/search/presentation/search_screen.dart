@@ -2,146 +2,207 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zippy/core/cart/application/cart_provider.dart';
-import 'package:zippy/core/common_widgets/primary_button.dart';
-import 'package:zippy/core/common_widgets/text_form_field.dart';
-import 'package:zippy/core/theme/app_colors.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
-import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
+import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/search/application/search_provider.dart';
 import 'package:zippy/features/search/widgets/product_list_row.dart';
 
-/// docs/mockups/Search.dc.html, minus the recent/trending-search chips
-/// (no search-history persistence yet).
-class SearchScreen extends ConsumerWidget {
-  SearchScreen({super.key});
-
-  final TextEditingController searchController = TextEditingController();
+/// docs/screens/light/08-search.png. Left out until there's data for them:
+/// recent searches, trending tiles and "See all N results" (every result
+/// is already listed).
+class SearchScreen extends ConsumerStatefulWidget {
+  const SearchScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SearchScreen> createState() => _SearchScreenState();
+}
+
+class _SearchScreenState extends ConsumerState<SearchScreen> {
+  // Owned by the State so it survives rebuilds and is disposed; starts
+  // from the provider's query so the box and the results always agree.
+  late final searchController = TextEditingController(
+    text: ref.read(searchProvider).query,
+  );
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  void _clear() {
+    searchController.clear();
+    ref.read(searchProvider.notifier).search('');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final z = context.z;
+    final t = Theme.of(context).textTheme;
     final state = ref.watch(searchProvider);
     final notifier = ref.read(searchProvider.notifier);
-    final cart = ref.watch(cartProvider);
+    // A product with no variant can't be shown or added; dropping it here
+    // (not in the list builder) keeps the dividers even.
+    final results = state.results.where((p) => p.variants.isNotEmpty).toList();
+
+    final Widget body;
+    if (state.error != null) {
+      body = Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('somethingWentWrong'.tr(), style: t.bodyMedium),
+            const SizedBox(height: ZSpace.x3),
+            FilledButton(onPressed: notifier.retry, child: Text('retry'.tr())),
+          ],
+        ),
+      );
+    } else if (state.loading && results.isEmpty) {
+      body = ListView(
+        padding: const EdgeInsets.all(ZSpace.screen),
+        children: [
+          for (var i = 0; i < 5; i++) ...[
+            const Row(
+              children: [
+                ZSkeleton(
+                  width: ZSize.input,
+                  height: ZSize.input,
+                  radius: ZRadius.tile,
+                ),
+                SizedBox(width: ZSpace.x3),
+                Expanded(child: ZSkeleton(height: 16)),
+                SizedBox(width: ZSpace.x6),
+                ZSkeleton(
+                  width: 70,
+                  height: ZSize.addButton,
+                  radius: ZRadius.control,
+                ),
+              ],
+            ),
+            const SizedBox(height: ZSpace.x6),
+          ],
+        ],
+      );
+    } else if (state.query.trim().isEmpty) {
+      body = _Message(icon: Icons.search_rounded, text: 'searchIdleHint'.tr());
+    } else if (results.isEmpty) {
+      body = _Message(
+        icon: Icons.search_off_rounded,
+        text: 'noProductsFound'.tr(),
+      );
+    } else {
+      body = ListView.separated(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: const EdgeInsets.fromLTRB(
+          ZSpace.screen,
+          ZSpace.x4,
+          ZSpace.screen,
+          ZSpace.x6,
+        ),
+        itemCount: results.length + 1,
+        separatorBuilder: (context, index) => index == 0
+            ? const SizedBox.shrink()
+            : Divider(height: 1, color: z.line),
+        itemBuilder: (context, index) => index == 0
+            ? Text(
+                'resultsFor'.tr(args: [state.query.trim()]).toUpperCase(),
+                style: t.labelSmall!.copyWith(
+                  color: z.ink3,
+                  letterSpacing: 1.1,
+                ),
+              )
+            : ProductListRow(product: results[index - 1], query: state.query),
+      );
+    }
 
     return Scaffold(
-      backgroundColor: AppColors.white,
+      backgroundColor: z.bg,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: const EdgeInsets.fromLTRB(
+                ZSpace.x1,
+                ZSpace.x2,
+                ZSpace.screen,
+                ZSpace.x3,
+              ),
+              decoration: BoxDecoration(
+                color: z.surface,
+                border: Border(bottom: BorderSide(color: z.line)),
+              ),
+              child: Row(
                 children: [
                   IconButton(
                     onPressed: () => context.pop(),
-                    icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 20,
+                    ),
                     tooltip: 'back'.tr(),
                   ),
                   Expanded(
-                    child: TextformField(
-                      prefixIcon: true,
-                      textFormFieldController: searchController,
-                      labelText: 'searchStoreHint'.tr(),
-                      onChanged: notifier.search,
+                    child: ValueListenableBuilder(
+                      valueListenable: searchController,
+                      builder: (context, value, _) => TextField(
+                        controller: searchController,
+                        autofocus: value.text.isEmpty,
+                        onChanged: notifier.search,
+                        textInputAction: TextInputAction.search,
+                        decoration: InputDecoration(
+                          hintText: 'searchStoreHint'.tr(),
+                          isDense: true,
+                          prefixIcon: Icon(Icons.search_rounded, color: z.ink3),
+                          suffixIcon: value.text.isEmpty
+                              ? null
+                              : IconButton(
+                                  onPressed: _clear,
+                                  tooltip: 'clearSearch'.tr(),
+                                  icon: Icon(
+                                    Icons.cancel_outlined,
+                                    color: z.ink3,
+                                  ),
+                                ),
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.lg),
-              if (state.error != null)
-                Expanded(
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'somethingWentWrong'.tr(),
-                          style: AppTypography.bodyMedium,
-                        ),
-                        const SizedBox(height: AppSpacing.base),
-                        SizedBox(
-                          width: 160,
-                          child: PrimaryButton(
-                            buttonTitle: 'retry'.tr(),
-                            action: notifier.retry,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              else if (state.loading && state.results.isEmpty)
-                const Expanded(
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else if (state.query.isNotEmpty && state.results.isEmpty)
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      'noProductsFound'.tr(),
-                      style: AppTypography.bodyMedium,
-                    ),
-                  ),
-                )
-              else if (state.query.isNotEmpty)
-                Expanded(
-                  child: ListView.separated(
-                    itemCount: state.results.length,
-                    separatorBuilder: (context, index) =>
-                        const Divider(height: 1, color: AppColors.divider),
-                    itemBuilder: (context, index) {
-                      final product = state.results[index];
-                      final variant = product.variants.isNotEmpty
-                          ? product.variants.first
-                          : null;
-                      if (variant == null) return const SizedBox.shrink();
+            ),
+            Expanded(child: body),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-                      final cartLine = cart.lines.where(
-                        (l) =>
-                            l.product.id == product.id &&
-                            l.variant.id == variant.id,
-                      );
-                      final cartQuantity = cartLine.isEmpty
-                          ? 0
-                          : cartLine.first.quantity;
+class _Message extends StatelessWidget {
+  const _Message({required this.icon, required this.text});
 
-                      return ProductListRow(
-                        name: product.name,
-                        imagePath: product.image,
-                        unit: variant.label,
-                        pricePaise: variant.pricePaise,
-                        cartQuantity: cartQuantity,
-                        onClicked: () => context.push(
-                          '/productDetailsScreen?productId=${product.id}',
-                        ),
-                        onAddClicked: () => ref
-                            .read(cartProvider.notifier)
-                            .addItem(
-                              productId: product.id,
-                              variantId: variant.id,
-                            ),
-                        onIncrement: () => ref
-                            .read(cartProvider.notifier)
-                            .setQuantity(
-                              productId: product.id,
-                              variantId: variant.id,
-                              quantity: cartQuantity + 1,
-                            ),
-                        onDecrement: () => ref
-                            .read(cartProvider.notifier)
-                            .setQuantity(
-                              productId: product.id,
-                              variantId: variant.id,
-                              quantity: cartQuantity - 1,
-                            ),
-                      );
-                    },
-                  ),
-                ),
-            ],
-          ),
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final z = context.z;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(ZSpace.x6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 48, color: z.ink3),
+            const SizedBox(height: ZSpace.x3),
+            Text(
+              text,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium!
+                  .copyWith(color: z.ink2),
+            ),
+          ],
         ),
       ),
     );

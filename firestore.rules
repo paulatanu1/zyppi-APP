@@ -1,0 +1,201 @@
+rules_version = '2';
+
+// Zyppi Firestore security rules (replaces the Supabase RLS policies in
+// supabase/migrations/). Money is always int paise.
+//
+// - Catalog data is public to read; only admins write it.
+// - Each user owns users/{uid} and its addresses / cart / favourites.
+// - Orders, order events, payment intents and inventory are written only
+//   by Cloud Functions (Admin SDK bypasses these rules), so prices,
+//   stock and payment state can't be forged from the app.
+// - Admins carry the custom claim `admin: true`
+//   (functions/scripts/set-admin.ts).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // ---------------------------------------------------------------
+    // Catalog (public read, admin write)
+    // ---------------------------------------------------------------
+
+    match /categories/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /products/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /serviceAreas/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /stores/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /deliverySlots/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /homeSections/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Stock levels are internal; the app never reads them (quoteOrder
+    // checks stock server-side).
+    match /inventory/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // Customers may look up one active, unexpired coupon by its code
+    // (doc id = upper-cased code); they can't list them all.
+    match /coupons/{code} {
+      allow get: if resource.data.isActive == true
+        && (resource.data.expiresAt == null
+            || resource.data.expiresAt > request.time);
+      allow read, write: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // Users and their private data
+    // ---------------------------------------------------------------
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly([
+          'phone', 'fullName', 'email', 'dob', 'gender',
+          'preferredPaymentMethod', 'notifyOrderUpdates', 'notifyOffers',
+          'fcmToken', 'createdAt', 'updatedAt'
+        ]);
+      // Account deletion goes through the deleteAccount function.
+      allow delete: if false;
+
+      match /addresses/{addressId} {
+        allow read: if isOwner(uid) || isAdmin();
+        allow create, update: if isOwner(uid)
+          && request.resource.data.label is string
+          && request.resource.data.line1 is string
+          && request.resource.data.lat is number
+          && request.resource.data.lng is number
+          && request.resource.data.isDefault is bool;
+        allow delete: if isOwner(uid);
+      }
+
+      // Doc id = product variant id.
+      match /cart/{variantId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && request.resource.data.keys().hasOnly(['productId', 'quantity', 'updatedAt'])
+          && request.resource.data.productId is string
+          && request.resource.data.quantity is int
+          && request.resource.data.quantity > 0
+          && request.resource.data.quantity <= 99;
+      }
+
+      // Doc id = product id.
+      match /favourites/{productId} {
+        allow read, delete: if isOwner(uid);
+        allow create: if isOwner(uid)
+          && request.resource.data.keys().hasOnly(['createdAt']);
+      }
+    }
+
+    // Admin panel: a customer's addresses across users.
+    match /{path=**}/addresses/{addressId} {
+      allow read: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------
+    // Orders and payments (written only by Cloud Functions)
+    // ---------------------------------------------------------------
+
+    match /orders/{orderId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid);
+      allow write: if false;
+
+      match /events/{eventId} {
+        allow read: if isAdmin()
+          || (signedIn()
+              && get(/databases/$(database)/documents/orders/$(orderId)).data.userId
+                 == request.auth.uid);
+        allow write: if false;
+      }
+    }
+
+    match /paymentIntents/{id} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid);
+      allow write: if false;
+    }
+
+    // ---------------------------------------------------------------
+    // Support chat (functions/src/support). Chats are opened by the
+    // openSupportChat function; bot, agent and system messages and every
+    // status change come from Cloud Functions. The customer may only add
+    // their own text messages and clear their unread count.
+    // ---------------------------------------------------------------
+
+    match /supportChats/{chatId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid);
+      allow update: if signedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['unreadByUser'])
+        && request.resource.data.unreadByUser == 0;
+      allow create, delete: if false;
+
+      function chatOwner() {
+        return signedIn()
+          && get(/databases/$(database)/documents/supportChats/$(chatId)).data.userId
+             == request.auth.uid;
+      }
+
+      match /messages/{messageId} {
+        allow read: if isAdmin() || chatOwner();
+        allow create: if chatOwner()
+          && get(/databases/$(database)/documents/supportChats/$(chatId)).data.status != 'closed'
+          && request.resource.data.keys().hasOnly(['from', 'text', 'createdAt', 'quickReplyId'])
+          && request.resource.data.from == 'user'
+          && (!('quickReplyId' in request.resource.data)
+              || (request.resource.data.quickReplyId is string
+                  && request.resource.data.quickReplyId.size() <= 100))
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 1000
+          && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
+    }
+
+    // Bot knowledge base: written by functions/scripts/seed-support-kb.ts,
+    // read only by the bot.
+    match /supportKb/{entryId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Everything else is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

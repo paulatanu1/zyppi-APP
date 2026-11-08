@@ -18,8 +18,21 @@ abstract class Order with _$Order {
     required int tipPaise,
     required int discountPaise,
     required int totalPaise,
-    required String addressId,
+    // Null once the address (or account) is deleted; the snapshot below
+    // keeps what was delivered to.
+    String? addressId,
     required String paymentMethod,
+
+    /// Address snapshot taken when the order was placed.
+    String? addressLabel,
+    String? addressText,
+
+    /// Set by the store once a rider is assigned (tracking screen).
+    String? riderName,
+    String? riderPhone,
+
+    /// The chosen delivery slot's promise, for the tracking ETA.
+    int? etaMinutes,
   }) = _Order;
 
   factory Order.fromJson(Map<String, dynamic> json) => _$OrderFromJson(json);

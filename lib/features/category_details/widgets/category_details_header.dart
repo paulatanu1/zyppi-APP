@@ -1,53 +1,62 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zippy/core/theme/app_colors.dart';
-import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 
-/// docs/mockups/Category.dc.html's header: back, title + item count,
-/// search.
+/// docs/screens/light/06-category.png's header: back, title with
+/// "148 items · delivered in 12 min", search.
 class CategoryDetailsHeader extends StatelessWidget {
   final String title;
   final int itemCount;
+  final bool loading;
 
   const CategoryDetailsHeader({
     super.key,
     required this.title,
     required this.itemCount,
+    this.loading = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        IconButton(
-          onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-          tooltip: 'back'.tr(),
-        ),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: AppTypography.titleLarge),
-              Text(
-                '$itemCount items',
-                style: AppTypography.bodySmall.copyWith(color: AppColors.muted),
-              ),
-            ],
+    final t = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: ZSpace.x1),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: () => context.pop(),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+            tooltip: 'back'.tr(),
           ),
-        ),
-        IconButton(
-          onPressed: () => context.push('/filterScreen'),
-          icon: const Icon(Icons.filter_list),
-          tooltip: 'filters'.tr(),
-        ),
-        IconButton(
-          onPressed: () => context.push('/searchScreen'),
-          icon: const Icon(Icons.search),
-          tooltip: 'search'.tr(),
-        ),
-      ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: t.titleLarge,
+                ),
+                // No "0 items" flash while loading.
+                if (!loading)
+                  Text(
+                    '${'itemCount'.plural(itemCount)} · ${'deliveredInEta'.tr()}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: t.bodySmall,
+                  ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: () => context.push('/searchScreen'),
+            icon: const Icon(Icons.search_rounded),
+            tooltip: 'search'.tr(),
+          ),
+        ],
+      ),
     );
   }
 }

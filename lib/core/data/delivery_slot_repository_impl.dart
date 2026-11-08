@@ -1,9 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zippy/core/config/env.dart';
 import 'package:zippy/core/data/delivery_slot_repository.dart';
 import 'package:zippy/core/data/mock/mock_data_source.dart';
-import 'package:zippy/core/data/supabase_delivery_slot_repository_impl.dart';
+import 'package:zippy/core/data/firebase_delivery_slot_repository_impl.dart';
 import 'package:zippy/core/domain/delivery_slot.dart';
 
 class MockDeliverySlotRepository implements DeliverySlotRepository {
@@ -22,5 +22,5 @@ class MockDeliverySlotRepository implements DeliverySlotRepository {
 final deliverySlotRepositoryProvider = Provider<DeliverySlotRepository>(
   (ref) => Env.isMockDataSource
       ? MockDeliverySlotRepository()
-      : SupabaseDeliverySlotRepository(Supabase.instance.client),
+      : FirebaseDeliverySlotRepository(FirebaseFirestore.instance),
 );

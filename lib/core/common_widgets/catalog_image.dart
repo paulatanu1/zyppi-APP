@@ -1,9 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/zyppi_colors.dart';
 
-/// Renders a category/product image: a Supabase Storage URL in
-/// Supabase mode, or a bundled asset path in mock mode — the catalog
+/// Renders a category/product image: a Firebase Storage URL in
+/// Firebase mode, or a bundled asset path in mock mode — the catalog
 /// repositories hand back whichever one applies, so this is the only
 /// place that needs to tell them apart.
 class CatalogImage extends StatelessWidget {
@@ -42,7 +42,7 @@ class CatalogImage extends StatelessWidget {
         width: width,
         height: height,
         placeholder: (context, url) => ColoredBox(
-          color: AppColors.divider,
+          color: context.z.surface2,
           child: SizedBox(width: width, height: height),
         ),
         errorWidget: (context, url, error) =>

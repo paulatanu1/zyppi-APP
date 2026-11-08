@@ -1,13 +1,12 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
-import 'package:zippy/core/theme/app_colors.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
-import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/home_screen/widgets/add_new_address_row.dart';
 import 'package:zippy/features/home_screen/widgets/search_places_widget.dart';
-import 'package:zippy/features/my_address/application/addresses_provider.dart';
+import 'package:zippy/core/data/provider/addresses_provider.dart';
 import 'package:zippy/features/my_address/widgets/saved_address_row.dart';
 
 /// Tapping the home header's address row opens this sheet — a compact
@@ -17,36 +16,44 @@ void bottomSheet(BuildContext context, WidgetRef ref) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    backgroundColor: AppColors.surface,
+    backgroundColor: context.z.surface,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(AppRadius.sheetTop),
-      ),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(ZRadius.sheet)),
     ),
     builder: (context) {
       return Padding(
-        padding: const EdgeInsets.all(AppSpacing.xxl),
+        padding: const EdgeInsets.all(ZSpace.x4),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('selectAddress'.tr(), style: AppTypography.titleMedium),
-            const SizedBox(height: AppSpacing.xxl),
+            Text(
+              'selectAddress'.tr(),
+              style: Theme.of(context).textTheme.titleMedium!,
+            ),
+            const SizedBox(height: ZSpace.x4),
             const SearchPlacesWidget(),
-            const SizedBox(height: AppSpacing.base),
+            const SizedBox(height: ZSpace.x3),
             const AddNewAddressRow(),
-            const SizedBox(height: AppSpacing.xxl),
+            const SizedBox(height: ZSpace.x4),
             Text(
               'yourSavedAddress'.tr(),
-              style: AppTypography.labelSmall.copyWith(color: AppColors.muted),
+              style: Theme.of(context).textTheme.labelSmall!
+                  .copyWith(color: context.z.ink2),
             ),
             Consumer(
               builder: (context, ref, _) {
                 final addressesAsync = ref.watch(addressesProvider);
 
                 return addressesAsync.when(
-                  loading: () => const SizedBox.shrink(),
-                  error: (error, stackTrace) => const SizedBox.shrink(),
+                  loading: () => const Padding(
+                    padding: EdgeInsets.symmetric(vertical: ZSpace.x3),
+                    child: ZSkeleton(height: 44, radius: ZRadius.control),
+                  ),
+                  error: (error, stackTrace) => TextButton(
+                    onPressed: () => ref.invalidate(addressesProvider),
+                    child: Text('retry'.tr()),
+                  ),
                   data: (addresses) => Column(
                     children: addresses
                         .map(

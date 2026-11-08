@@ -110,7 +110,10 @@ class _HomeV2ScreenState extends State<HomeV2Screen> {
                               for (final c in _demoCats)
                                 ZCategoryTile(
                                   label: c.label,
-                                  image: AssetImage(c.asset),
+                                  image: Image.asset(
+                                    c.asset,
+                                    fit: BoxFit.contain,
+                                  ),
                                   color: c.color(z),
                                   onTap: () {},
                                 ),
@@ -141,7 +144,10 @@ class _HomeV2ScreenState extends State<HomeV2Screen> {
                                   width: 150,
                                   name: d.name,
                                   weight: d.weight,
-                                  image: AssetImage(d.asset),
+                                  image: Image.asset(
+                                    d.asset,
+                                    fit: BoxFit.contain,
+                                  ),
                                   price: d.price,
                                   mrp: d.mrp,
                                   quantity: _cart[d.name] ?? 0,
@@ -168,7 +174,8 @@ class _HomeV2ScreenState extends State<HomeV2Screen> {
               child: ZCartBar(
                 thumbnails: [
                   for (final d in _demoDeals)
-                    if ((_cart[d.name] ?? 0) > 0) AssetImage(d.asset),
+                    if ((_cart[d.name] ?? 0) > 0)
+                      Image.asset(d.asset, fit: BoxFit.contain),
                 ],
                 itemCount: _count,
                 total: _total,

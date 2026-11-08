@@ -1,8 +1,10 @@
 {
   "FLAVOR": "staging",
   "DATA_SOURCE": "mock",
-  "SUPABASE_URL": "https://paste-your-staging-project-ref.supabase.co",
-  "SUPABASE_ANON_KEY": "paste-your-publishable-key-here",
-  "GOOGLE_MAPS_API_KEY": "paste-restricted-maps-key-here",
-  "RAZORPAY_KEY_ID": "rzp_test_xxxxxxxx"
+  "USE_FIREBASE_EMULATOR": false,
+  "FIREBASE_EMULATOR_HOST": "",
+  "SUPPORT_PHONE": "919876543210",
+  "PRIVACY_POLICY_URL": "https://zyppi.one/privacy",
+  "TERMS_URL": "https://zyppi.one/terms",
+  "ONLINE_PAYMENTS_ENABLED": false
 }

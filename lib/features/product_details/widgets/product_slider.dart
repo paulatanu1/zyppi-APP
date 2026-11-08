@@ -1,82 +1,126 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bounce/flutter_bounce.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zippy/core/common_widgets/app_skeleton.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/favourites/application/favourites_provider.dart';
-import 'package:zippy/core/theme/app_colors.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
+import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/product_details/application/product_detail_provider.dart';
 
+/// docs/screens/light/07-product.png's hero: tinted panel with the photo on
+/// a soft disc, back and favourite buttons. (No share button or image
+/// dots: there's no share package and products have one image.)
 class ProductSlider extends ConsumerWidget {
   final String productId;
 
   const ProductSlider({super.key, required this.productId});
 
+  /// Photo panel height below the status bar.
+  static const double _panelHeight = 300;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    double height = MediaQuery.of(context).size.height;
-    double width = MediaQuery.of(context).size.width;
-
+    final z = context.z;
     final productDetail = ref.watch(productDetailProvider(productId));
-    final favourites = ref.watch(favouritesProvider);
-    final isFavourite = favourites.contains(productId);
+    final isFavourite = ref.watch(
+      favouritesProvider.select((ids) => ids.contains(productId)),
+    );
+    final top = MediaQuery.paddingOf(context).top;
 
     return Container(
-      width: width,
-      decoration: BoxDecoration(
-        color: AppColors.grey2,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(height * 0.025),
-          bottomRight: Radius.circular(height * 0.025),
-        ),
-      ),
-      child: SafeArea(
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(
-                    top: height * 0.01,
-                    left: height * 0.03,
-                  ),
-                  child: Bounce(
-                    duration: Duration(milliseconds: 300),
-                    onPressed: () => context.pop(),
-                    child: Icon(Icons.arrow_back_ios, size: 30, weight: 2),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(
-                    top: height * 0.01,
-                    right: height * 0.03,
-                  ),
-                  child: Bounce(
-                    duration: const Duration(milliseconds: 300),
-                    onPressed: () =>
-                        ref.read(favouritesProvider.notifier).toggle(productId),
-                    child: Icon(
-                      isFavourite ? Icons.favorite : Icons.favorite_border,
-                      size: 26,
-                      color: isFavourite ? AppColors.primary : AppColors.ink,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            AppSkeleton(
-              enabled: productDetail.loading,
-              child: CatalogImage(
-                image: productDetail.product?.image,
-                height: height * 0.25,
-                width: width * 0.6,
-                fit: BoxFit.contain,
+      color: z.surface2,
+      height: top + _panelHeight,
+      padding: EdgeInsets.only(top: top),
+      child: Stack(
+        children: [
+          Center(
+            child: Container(
+              width: 240,
+              height: 240,
+              decoration: BoxDecoration(
+                color: z.surface.withValues(alpha: .6),
+                shape: BoxShape.circle,
               ),
+              alignment: Alignment.center,
+              child: productDetail.loading
+                  ? const ZSkeleton(width: 180, height: 180, radius: 90)
+                  : CatalogImage(
+                      image: productDetail.product?.image,
+                      width: 220,
+                      height: 220,
+                      fit: BoxFit.contain,
+                    ),
             ),
-            SizedBox(height: height * 0.025),
-          ],
+          ),
+          Positioned(
+            left: ZSpace.screen,
+            top: ZSpace.x2,
+            child: _SquareButton(
+              icon: Icons.arrow_back_ios_new_rounded,
+              label: 'back'.tr(),
+              onTap: () =>
+                  context.canPop() ? context.pop() : context.go('/navBar'),
+            ),
+          ),
+          Positioned(
+            right: ZSpace.screen,
+            top: ZSpace.x2,
+            child: _SquareButton(
+              icon: isFavourite
+                  ? Icons.favorite_rounded
+                  : Icons.favorite_border_rounded,
+              color: isFavourite ? z.brandText : z.ink,
+              label: isFavourite
+                  ? 'removeFromFavourites'.tr()
+                  : 'addToFavourites'.tr(),
+              onTap: () =>
+                  ref.read(favouritesProvider.notifier).toggle(productId),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SquareButton extends StatelessWidget {
+  const _SquareButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final z = context.z;
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      child: ZPressable(
+        onTap: onTap,
+        child: Container(
+          width: ZSize.touch,
+          height: ZSize.touch,
+          decoration: BoxDecoration(
+            color: z.surface,
+            borderRadius: ZRadius.all(ZRadius.input),
+            boxShadow: [
+              BoxShadow(
+                color: z.shadow,
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Icon(icon, size: 20, color: color ?? z.ink),
         ),
       ),
     );

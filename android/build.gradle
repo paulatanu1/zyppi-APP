@@ -17,6 +17,17 @@ rootProject.buildDir = '../build'
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
+// payu_checkoutpro_flutter 1.5.0 still compiles against android-31, but
+// its AndroidX dependencies need 33+, which fails the release build's AAR
+// metadata check. Build it against the app's compileSdk instead (targetSdk
+// and runtime behaviour are unaffected). Remove once PayU raises it.
+subprojects {
+    afterEvaluate { project ->
+        if (project.name == 'payu_checkoutpro_flutter' && project.hasProperty('android')) {
+            project.android.compileSdkVersion rootProject.project(':app').android.compileSdk
+        }
+    }
+}
 subprojects {
     project.evaluationDependsOn(':app')
 }

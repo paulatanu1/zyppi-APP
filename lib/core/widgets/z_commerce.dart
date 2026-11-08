@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/zyppi_theme.dart';
@@ -35,31 +36,39 @@ class ZOffBadge extends StatelessWidget {
         borderRadius: ZRadius.all(ZRadius.badge),
       ),
       child: Text(
-        '$percent% OFF',
-        style: Theme.of(context).textTheme.labelSmall!
-            .copyWith(color: Colors.white, fontSize: 10.5, letterSpacing: 0.2),
+        'offPercent'.tr(args: ['$percent']),
+        style: Theme.of(context).textTheme.labelSmall!.copyWith(
+          color: context.z.onBrand,
+          fontSize: 10.5,
+          letterSpacing: 0.2,
+        ),
       ),
     );
   }
 }
 
-/// Grey "⚡ 12 MINS" chip.
+/// Grey "⚡ 12 MINS" chip. [label] defaults to the store-wide ETA
+/// (`etaBadge`); no product or location carries its own ETA yet.
 class ZEtaBadge extends StatelessWidget {
-  const ZEtaBadge({
-    super.key,
-    this.label = '12 MINS',
-    this.background,
-    this.foreground,
-  });
-  final String label;
+  const ZEtaBadge({super.key, this.label, this.background, this.foreground});
+  final String? label;
   final Color? background, foreground;
+
+  static const double iconSize = 12, verticalPadding = 3;
+
+  static TextStyle textStyle(BuildContext context) =>
+      Theme.of(context).textTheme.labelSmall!
+          .copyWith(fontSize: 10.5, letterSpacing: 0.4);
 
   @override
   Widget build(BuildContext context) {
     final z = context.z;
     final fg = foreground ?? z.ink2;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 6,
+        vertical: verticalPadding,
+      ),
       decoration: BoxDecoration(
         color: background ?? z.surface2,
         borderRadius: ZRadius.all(6),
@@ -67,12 +76,15 @@ class ZEtaBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.bolt_rounded, size: 12, color: fg),
+          Icon(Icons.bolt_rounded, size: iconSize, color: fg),
           const SizedBox(width: 2),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall!
-                .copyWith(color: fg, fontSize: 10.5, letterSpacing: 0.4),
+          Flexible(
+            child: Text(
+              label ?? 'etaBadge'.tr(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: textStyle(context).copyWith(color: fg),
+            ),
           ),
         ],
       ),
@@ -162,7 +174,7 @@ class ZAddStepper extends StatelessWidget {
                   border: Border.all(color: z.brandText, width: 1.5),
                 ),
                 child: Text(
-                  'ADD',
+                  'add'.tr(),
                   style: label.copyWith(color: z.brandText, letterSpacing: 0.5),
                 ),
               ),
@@ -182,7 +194,7 @@ class ZAddStepper extends StatelessWidget {
                   _StepBtn(
                     icon: Icons.remove_rounded,
                     onTap: onRemove,
-                    semantic: 'Remove one',
+                    semantic: 'removeOne'.tr(),
                     size: height,
                   ),
                   AnimatedSwitcher(
@@ -203,7 +215,7 @@ class ZAddStepper extends StatelessWidget {
                   _StepBtn(
                     icon: Icons.add_rounded,
                     onTap: onAdd,
-                    semantic: 'Add one',
+                    semantic: 'addOne'.tr(),
                     size: height,
                   ),
                 ],
@@ -241,7 +253,16 @@ class _StepBtn extends StatelessWidget {
   );
 }
 
+/// Category tints arrive from catalog data as light pastels; on a dark
+/// surface they glare, so in dark mode they are muted into the surface.
+Color zTileTint(BuildContext context, Color color) =>
+    Theme.of(context).brightness == Brightness.dark
+    ? Color.alphaBlend(color.withValues(alpha: .16), context.z.surface)
+    : color;
+
 /// Rounded tinted square holding a product photo (no circular crop).
+/// [image] is a widget so catalog photos go through `CatalogImage`
+/// (Firebase Storage URL or asset, with placeholder and fallback).
 class ZImageTile extends StatelessWidget {
   const ZImageTile({
     super.key,
@@ -251,7 +272,7 @@ class ZImageTile extends StatelessWidget {
     this.height = ZSize.productTile,
     this.fill = .82,
   });
-  final ImageProvider image;
+  final Widget image;
   final Color color;
   final double? width;
   final double height;
@@ -269,7 +290,7 @@ class ZImageTile extends StatelessWidget {
     child: FractionallySizedBox(
       widthFactor: fill,
       heightFactor: fill,
-      child: Image(image: image, fit: BoxFit.contain),
+      child: image,
     ),
   );
 }

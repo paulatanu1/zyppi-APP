@@ -19,8 +19,13 @@ _Order _$OrderFromJson(Map<String, dynamic> json) => _Order(
   tipPaise: (json['tipPaise'] as num).toInt(),
   discountPaise: (json['discountPaise'] as num).toInt(),
   totalPaise: (json['totalPaise'] as num).toInt(),
-  addressId: json['addressId'] as String,
+  addressId: json['addressId'] as String?,
   paymentMethod: json['paymentMethod'] as String,
+  addressLabel: json['addressLabel'] as String?,
+  addressText: json['addressText'] as String?,
+  riderName: json['riderName'] as String?,
+  riderPhone: json['riderPhone'] as String?,
+  etaMinutes: (json['etaMinutes'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$OrderToJson(_Order instance) => <String, dynamic>{
@@ -36,6 +41,11 @@ Map<String, dynamic> _$OrderToJson(_Order instance) => <String, dynamic>{
   'totalPaise': instance.totalPaise,
   'addressId': instance.addressId,
   'paymentMethod': instance.paymentMethod,
+  'addressLabel': instance.addressLabel,
+  'addressText': instance.addressText,
+  'riderName': instance.riderName,
+  'riderPhone': instance.riderPhone,
+  'etaMinutes': instance.etaMinutes,
 };
 
 const _$OrderStatusEnumMap = {

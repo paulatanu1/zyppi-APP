@@ -4,8 +4,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
 
 /// Requests location permission once at app start (see bootstrap.dart);
-/// the map-pin picker re-checks and re-requests on its own if the user
-/// denied it here and later wants "use current location".
+/// "use current location" calls [checkAndRequestLocationPermission] again
+/// (via GetCurrentLocationProvider) if the user denied it here.
 class CheckAndRequestLocationProvider
     extends StateNotifier<LocationPermission> {
   CheckAndRequestLocationProvider()
@@ -13,7 +13,14 @@ class CheckAndRequestLocationProvider
     checkAndRequestLocationPermission();
   }
 
-  Future<void> checkAndRequestLocationPermission() async {
+  Future<void>? _inFlight;
+
+  /// Safe to call more than once: concurrent callers share one request, as
+  /// Android rejects a second permission dialog while one is showing.
+  Future<void> checkAndRequestLocationPermission() =>
+      _inFlight ??= _checkAndRequest().whenComplete(() => _inFlight = null);
+
+  Future<void> _checkAndRequest() async {
     var permission = await Geolocator.checkPermission();
 
     if (permission == LocationPermission.denied) {
@@ -25,7 +32,7 @@ class CheckAndRequestLocationProvider
       showSuccessToast(message: 'locationPermissionRequired'.tr());
     }
 
-    state = permission;
+    if (mounted) state = permission;
   }
 }
 

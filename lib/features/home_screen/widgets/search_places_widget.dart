@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
-import 'package:zippy/core/theme/app_colors.dart';
-import 'package:zippy/core/theme/app_spacing.dart';
-import 'package:zippy/core/theme/app_typography.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
 
 /// Opens the full map-pin picker (search_address_screen.dart) to change the
 /// home screen's delivery location.
@@ -17,20 +15,20 @@ class SearchPlacesWidget extends ConsumerWidget {
     final location = ref.watch(currentLocation);
 
     return InkWell(
-      borderRadius: BorderRadius.circular(AppRadius.input),
+      borderRadius: BorderRadius.circular(ZRadius.input),
       onTap: () => context.pushNamed('SearchAddressScreen', extra: false),
       child: Container(
-        height: AppSizes.inputMin,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+        height: ZSize.input,
+        padding: const EdgeInsets.symmetric(horizontal: ZSpace.x3),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.input),
-          border: Border.all(color: AppColors.line),
+          color: context.z.surface,
+          borderRadius: BorderRadius.circular(ZRadius.input),
+          border: Border.all(color: context.z.line),
         ),
         child: Row(
           children: [
-            const Icon(Icons.search, size: 20, color: AppColors.muted),
-            const SizedBox(width: AppSpacing.base),
+            Icon(Icons.search, size: 20, color: context.z.ink2),
+            const SizedBox(width: ZSpace.x3),
             Expanded(
               child: Text(
                 location.line1.isNotEmpty
@@ -38,9 +36,8 @@ class SearchPlacesWidget extends ConsumerWidget {
                     : 'searchAreaPlaceholder'.tr(),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.muted,
-                ),
+                style: Theme.of(context).textTheme.bodyMedium!
+                    .copyWith(color: context.z.ink2),
               ),
             ),
           ],

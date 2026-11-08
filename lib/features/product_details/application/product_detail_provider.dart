@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:zippy/core/analytics/analytics_service.dart';
 import 'package:zippy/core/data/catalog_repository.dart';
@@ -19,17 +21,24 @@ class ProductDetailProvider extends StateNotifier<ProductDetailState> {
 
     try {
       final product = await repository.fetchProductById(productId);
+      if (!mounted) return;
 
       state = state.copyWith(product: product, loading: false);
 
-      if (product != null) {
-        AnalyticsService.logViewItem(
-          itemId: product.id,
-          itemName: product.name,
-          pricePaise: product.defaultVariant.pricePaise,
-        );
+      final variant = product?.defaultVariant;
+      if (product != null && variant != null) {
+        try {
+          unawaited(
+            AnalyticsService.logViewItem(
+              itemId: product.id,
+              itemName: product.name,
+              pricePaise: variant.pricePaise,
+            ).catchError((_) {}),
+          );
+        } catch (_) {}
       }
     } catch (error) {
+      if (!mounted) return;
       state = state.copyWith(loading: false, error: error.toString());
     }
   }
