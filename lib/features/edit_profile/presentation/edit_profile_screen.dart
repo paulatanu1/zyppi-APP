@@ -231,7 +231,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           : Text('save'.tr()),
                     ),
                   ),
-                  Image.asset('assets/images/prof_logo.png', height: 32),
+                  Image.asset(
+                    'assets/brand/zyppi_mark.png',
+                    height: 24,
+                    semanticLabel: 'Zyppi',
+                  ),
                   const SizedBox(height: ZSpace.x2),
                   Text(
                     'appVersion'.tr(args: [Constants.appVersion]),

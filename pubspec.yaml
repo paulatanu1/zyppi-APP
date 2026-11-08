@@ -88,21 +88,27 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  # appLogo.png is a wide wordmark (icon + "ZYPPI" + tagline), not a
-  # square icon — appIconMark.png crops just the bicycle/gift mark,
-  # padded onto a square canvas. Source is only ~71x68px so this is
-  # still soft when upscaled; swap for a proper high-res icon when one
-  # exists.
-  image_path: "assets/icons/appIconMark.png"
+  # The purple Z mark (assets/brand/zyppi_mark.png, 680x656). The padded
+  # variants keep it inside the launcher's circle/squircle mask; the
+  # monochrome one is Android 13+'s themed icon.
+  image_path: "assets/brand/zyppi_mark_adaptive.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/brand/zyppi_mark_adaptive.png"
+  adaptive_icon_monochrome: "assets/brand/zyppi_mark_monochrome.png"
   min_sdk_android: 21
   remove_alpha_ios: true
 
+# Same mark, same 120 dp size and position as the in-app launch screen
+# (lib/features/launch), so the hand-off between them doesn't jump.
+# Colours = ZColors.splashBg.
 flutter_native_splash:
   color: "#FFFFFF"
-  image: "assets/icons/appIconMark.png"
+  color_dark: "#0D0E11"
+  image: "assets/brand/zyppi_mark_splash.png"
   android_12:
     color: "#FFFFFF"
-    image: "assets/icons/appIconMark.png"
+    color_dark: "#0D0E11"
+    image: "assets/brand/zyppi_mark_splash12.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -117,6 +123,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/translations/
+    - assets/brand/zyppi_mark.png
     - assets/icons/
     - assets/fonts/
     - assets/images/
