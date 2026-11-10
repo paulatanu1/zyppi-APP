@@ -99,7 +99,7 @@ class HomeScreen extends ConsumerWidget {
                             ),
                           ),
                         ),
-                      for (final section in data.sections) ...[
+                      for (final (i, section) in data.sections.indexed) ...[
                         if (section.type == 'category_tabs' &&
                             section.config.boolean('sticky') == true)
                           SliverPersistentHeader(
@@ -108,10 +108,15 @@ class HomeScreen extends ConsumerWidget {
                           )
                         else
                           SliverToBoxAdapter(
-                            child: HomeSectionWidget(
-                              section: section,
-                              categoriesById: data.categoriesById,
-                              productsById: data.productsById,
+                            // Sections rise in one after another when Home
+                            // first loads (Home stays mounted, so once).
+                            child: ZEntrance(
+                              index: i,
+                              child: HomeSectionWidget(
+                                section: section,
+                                categoriesById: data.categoriesById,
+                                productsById: data.productsById,
+                              ),
                             ),
                           ),
                         const SliverToBoxAdapter(

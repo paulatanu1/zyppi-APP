@@ -6,18 +6,31 @@ bool _reduceMotion(BuildContext context) =>
     MediaQuery.disableAnimationsOf(context);
 
 /// Fade + 14px slide-up entrance. `index` staggers siblings by 60 ms
-/// (mockup class `.in` with `--i`).
+/// (mockup class `.in` with `--i`), on the one controller (no timers).
+///
+/// In lazily built lists/grids pass [once]: an id unique to that item on
+/// that screen instance, e.g. `(identityHashCode(context), index)`. The
+/// item then animates only the first time it's built, not again each time
+/// it scrolls back into view.
 class ZEntrance extends StatefulWidget {
   const ZEntrance({
     super.key,
     required this.child,
     this.index = 0,
     this.offset = 14,
+    this.once,
   });
 
   final Widget child;
   final int index;
   final double offset;
+  final Object? once;
+
+  /// Stagger stops growing after this many items, so item 30 of a list
+  /// doesn't wait two seconds.
+  static const int maxStagger = 8;
+
+  static final _played = <Object>{};
 
   @override
   State<ZEntrance> createState() => _ZEntranceState();
@@ -25,21 +38,35 @@ class ZEntrance extends StatefulWidget {
 
 class _ZEntranceState extends State<ZEntrance>
     with SingleTickerProviderStateMixin {
+  late final int _slot = widget.index.clamp(0, ZEntrance.maxStagger);
   late final AnimationController _c = AnimationController(
     vsync: this,
-    duration: ZMotion.entrance,
+    duration: ZMotion.entrance + ZMotion.stagger * _slot,
   );
   late final Animation<double> _t = CurvedAnimation(
     parent: _c,
-    curve: ZMotion.emphasized,
+    curve: Interval(
+      _c.duration!.inMicroseconds == 0
+          ? 0
+          : (ZMotion.stagger * _slot).inMicroseconds /
+                _c.duration!.inMicroseconds,
+      1,
+      curve: ZMotion.emphasized,
+    ),
   );
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(ZMotion.stagger * widget.index, () {
-      if (mounted) _c.forward();
-    });
+    final once = widget.once;
+    if (once != null) {
+      if (ZEntrance._played.length > 2000) ZEntrance._played.clear();
+      if (!ZEntrance._played.add(once)) {
+        _c.value = 1;
+        return;
+      }
+    }
+    _c.forward();
   }
 
   @override
@@ -50,6 +77,8 @@ class _ZEntranceState extends State<ZEntrance>
 
   @override
   Widget build(BuildContext context) {
+    // Same tree once finished (Opacity at 1 adds no layer), so completing
+    // never remounts the child.
     if (_reduceMotion(context)) return widget.child;
     return AnimatedBuilder(
       animation: _t,
@@ -164,6 +193,12 @@ class _ZLoopState extends State<ZLoop> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     if (_reduceMotion(context)) return widget.child;
+    // Its own layer: without it the loop repainted everything up to the
+    // nearest boundary (on Home, the whole scrolling viewport) every frame.
+    return RepaintBoundary(child: _animated());
+  }
+
+  Widget _animated() {
     return AnimatedBuilder(
       animation: _c,
       child: widget.child,
@@ -192,6 +227,12 @@ class _ZLoopState extends State<ZLoop> with SingleTickerProviderStateMixin {
 }
 
 /// Shimmering placeholder block for loading states.
+///
+/// Cheap enough to use by the dozen: the sweep is painted by a
+/// [CustomPainter] that repaints from the controller (no widget rebuild or
+/// new decoration per frame), inside its own [RepaintBoundary], and every
+/// block starts at the same phase of a shared clock so a screen of
+/// skeletons shimmers as one surface.
 class ZSkeleton extends StatefulWidget {
   const ZSkeleton({
     super.key,
@@ -204,6 +245,8 @@ class ZSkeleton extends StatefulWidget {
   final double height;
   final double radius;
 
+  static const Duration period = Duration(milliseconds: 1200);
+
   @override
   State<ZSkeleton> createState() => _ZSkeletonState();
 }
@@ -212,7 +255,7 @@ class _ZSkeletonState extends State<ZSkeleton>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1200),
+    duration: ZSkeleton.period,
   );
 
   @override
@@ -222,6 +265,9 @@ class _ZSkeletonState extends State<ZSkeleton>
     if (_reduceMotion(context)) {
       _c.stop();
     } else if (!_c.isAnimating) {
+      // Same phase as every other block on screen.
+      final period = ZSkeleton.period.inMicroseconds;
+      _c.value = (DateTime.now().microsecondsSinceEpoch % period) / period;
       _c.repeat();
     }
   }
@@ -235,20 +281,57 @@ class _ZSkeletonState extends State<ZSkeleton>
   @override
   Widget build(BuildContext context) {
     final z = context.z;
-    return AnimatedBuilder(
-      animation: _c,
-      builder: (context, _) => Container(
+    return RepaintBoundary(
+      child: SizedBox(
         width: widget.width,
         height: widget.height,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(widget.radius),
-          gradient: LinearGradient(
-            begin: Alignment(-1 + 2 * _c.value - 1, 0),
-            end: Alignment(1 + 2 * _c.value - 1, 0),
-            colors: [z.surface2, z.surface3, z.surface2],
+        child: CustomPaint(
+          // Fill the box like the old decoration-only Container did.
+          size: Size.infinite,
+          painter: _ShimmerPainter(
+            progress: _c,
+            radius: widget.radius,
+            base: z.surface2,
+            highlight: z.surface3,
           ),
         ),
       ),
     );
   }
+}
+
+class _ShimmerPainter extends CustomPainter {
+  _ShimmerPainter({
+    required this.progress,
+    required this.radius,
+    required this.base,
+    required this.highlight,
+  }) : super(repaint: progress);
+
+  final Animation<double> progress;
+  final double radius;
+  final Color base, highlight;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final v = progress.value;
+    final paint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment(-2 + 2 * v, 0),
+        end: Alignment(2 * v, 0),
+        colors: [base, highlight, base],
+      ).createShader(rect);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, Radius.circular(radius)),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_ShimmerPainter old) =>
+      old.progress != progress ||
+      old.radius != radius ||
+      old.base != base ||
+      old.highlight != highlight;
 }

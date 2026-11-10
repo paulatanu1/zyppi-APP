@@ -6,6 +6,7 @@ import 'package:zippy/core/cart/presentation/floating_cart_bar.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/domain/product_filter.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
+import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/core/widgets/z_product_card.dart';
 import 'package:zippy/features/category_details/application/category_details_provider.dart';
 import 'package:zippy/features/category_details/widgets/category_details_header.dart';
@@ -25,6 +26,7 @@ class CategoryDetailsScreen extends ConsumerWidget {
     final filter = ref.watch(productFilterProvider(categoryId));
     final products = filter.apply(state.products);
     final t = Theme.of(context).textTheme;
+    final screenId = identityHashCode(context);
 
     Widget message(String text, {Widget? action}) => Center(
       child: Padding(
@@ -85,7 +87,13 @@ class CategoryDetailsScreen extends ConsumerWidget {
         itemCount: state.loading ? 6 : products.length,
         itemBuilder: (context, index) => state.loading
             ? const ZProductCardSkeleton()
-            : CatalogProductCard(product: products[index]),
+            // Fades in once per visit (and per filter result), not again
+            // as cards scroll back into view.
+            : ZEntrance(
+                index: index,
+                once: (screenId, filter, products[index].id),
+                child: CatalogProductCard(product: products[index]),
+              ),
       );
     }
 

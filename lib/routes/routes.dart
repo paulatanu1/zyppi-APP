@@ -128,7 +128,10 @@ class Routes {
           name: 'ProductDetailsScreen',
           builder: (context, state) {
             final productId = state.uri.queryParameters['productId'] ?? '';
-            return ProductDetailsScreen(productId: productId);
+            return ProductDetailsScreen(
+              productId: productId,
+              heroTag: state.uri.queryParameters['hero'],
+            );
           },
         ),
         GoRoute(
@@ -262,7 +265,7 @@ CustomTransitionPage<void> _fade(GoRouterState state, Widget child) =>
     CustomTransitionPage<void>(
       key: state.pageKey,
       child: child,
-      transitionDuration: ZMotion.sheet,
+      transitionDuration: ZMotion.page,
       transitionsBuilder: (context, animation, _, child) => FadeTransition(
         opacity: MediaQuery.disableAnimationsOf(context)
             ? kAlwaysCompleteAnimation

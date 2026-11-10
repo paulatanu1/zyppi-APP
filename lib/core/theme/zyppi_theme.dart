@@ -175,9 +175,13 @@ abstract final class ZyppiTheme {
         color: c.brand,
         linearTrackColor: c.surface3,
       ),
+      // Zoom, not FadeForwards: it rasterises both pages into snapshots for
+      // the length of the transition instead of fading and sliding two live
+      // full-screen layers, which dropped frames on mid-range Android
+      // phones (most visibly when pushing over the five-tab NavBar).
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
-          TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.android: ZoomPageTransitionsBuilder(),
           TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
         },
       ),
