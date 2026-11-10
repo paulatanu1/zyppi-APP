@@ -6,18 +6,31 @@ bool _reduceMotion(BuildContext context) =>
     MediaQuery.disableAnimationsOf(context);
 
 /// Fade + 14px slide-up entrance. `index` staggers siblings by 60 ms
-/// (mockup class `.in` with `--i`).
+/// (mockup class `.in` with `--i`), on the one controller (no timers).
+///
+/// In lazily built lists/grids pass [once]: an id unique to that item on
+/// that screen instance, e.g. `(identityHashCode(context), index)`. The
+/// item then animates only the first time it's built, not again each time
+/// it scrolls back into view.
 class ZEntrance extends StatefulWidget {
   const ZEntrance({
     super.key,
     required this.child,
     this.index = 0,
     this.offset = 14,
+    this.once,
   });
 
   final Widget child;
   final int index;
   final double offset;
+  final Object? once;
+
+  /// Stagger stops growing after this many items, so item 30 of a list
+  /// doesn't wait two seconds.
+  static const int maxStagger = 8;
+
+  static final _played = <Object>{};
 
   @override
   State<ZEntrance> createState() => _ZEntranceState();
@@ -25,21 +38,35 @@ class ZEntrance extends StatefulWidget {
 
 class _ZEntranceState extends State<ZEntrance>
     with SingleTickerProviderStateMixin {
+  late final int _slot = widget.index.clamp(0, ZEntrance.maxStagger);
   late final AnimationController _c = AnimationController(
     vsync: this,
-    duration: ZMotion.entrance,
+    duration: ZMotion.entrance + ZMotion.stagger * _slot,
   );
   late final Animation<double> _t = CurvedAnimation(
     parent: _c,
-    curve: ZMotion.emphasized,
+    curve: Interval(
+      _c.duration!.inMicroseconds == 0
+          ? 0
+          : (ZMotion.stagger * _slot).inMicroseconds /
+                _c.duration!.inMicroseconds,
+      1,
+      curve: ZMotion.emphasized,
+    ),
   );
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(ZMotion.stagger * widget.index, () {
-      if (mounted) _c.forward();
-    });
+    final once = widget.once;
+    if (once != null) {
+      if (ZEntrance._played.length > 2000) ZEntrance._played.clear();
+      if (!ZEntrance._played.add(once)) {
+        _c.value = 1;
+        return;
+      }
+    }
+    _c.forward();
   }
 
   @override
@@ -50,6 +77,8 @@ class _ZEntranceState extends State<ZEntrance>
 
   @override
   Widget build(BuildContext context) {
+    // Same tree once finished (Opacity at 1 adds no layer), so completing
+    // never remounts the child.
     if (_reduceMotion(context)) return widget.child;
     return AnimatedBuilder(
       animation: _t,
