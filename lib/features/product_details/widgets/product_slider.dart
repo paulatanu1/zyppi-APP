@@ -22,7 +22,12 @@ class ProductSlider extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final z = context.z;
-    final productDetail = ref.watch(productDetailProvider(productId));
+    // Only what the hero shows, so price/stock/variant updates elsewhere on
+    // the page don't rebuild (and re-layout) the photo panel.
+    final (:loading, :image) = ref.watch(
+      productDetailProvider(productId)
+          .select((s) => (loading: s.loading, image: s.product?.image)),
+    );
     final isFavourite = ref.watch(
       favouritesProvider.select((ids) => ids.contains(productId)),
     );
@@ -43,10 +48,10 @@ class ProductSlider extends ConsumerWidget {
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
-              child: productDetail.loading
+              child: loading
                   ? const ZSkeleton(width: 180, height: 180, radius: 90)
                   : CatalogImage(
-                      image: productDetail.product?.image,
+                      image: image,
                       width: 220,
                       height: 220,
                       fit: BoxFit.contain,
