@@ -327,7 +327,12 @@ class _CouponFieldState extends ConsumerState<_CouponField> {
   Widget build(BuildContext context) {
     final z = context.z;
     final t = Theme.of(context).textTheme;
-    final cart = ref.watch(cartProvider);
+    final (:couponError, :itemTotalPaise) = ref.watch(
+      cartProvider.select(
+        (c) =>
+            (couponError: c.couponError, itemTotalPaise: c.bill.itemTotalPaise),
+      ),
+    );
     final coupon = widget.appliedCoupon;
 
     final icon = Container(
@@ -343,7 +348,7 @@ class _CouponFieldState extends ConsumerState<_CouponField> {
     if (coupon != null) {
       // Applied, but the cart is below the coupon's minimum: say how much
       // more is needed instead of claiming a discount that isn't there.
-      final shortBy = (coupon.minOrderPaise ?? 0) - cart.bill.itemTotalPaise;
+      final shortBy = (coupon.minOrderPaise ?? 0) - itemTotalPaise;
 
       return Row(
         children: [
@@ -370,7 +375,7 @@ class _CouponFieldState extends ConsumerState<_CouponField> {
       );
     }
 
-    final error = cart.couponError;
+    final error = couponError;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

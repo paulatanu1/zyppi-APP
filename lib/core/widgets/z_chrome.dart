@@ -225,8 +225,8 @@ class ZCartBar extends StatelessWidget {
             boxShadow: [
               BoxShadow(
                 color: z.brand.withValues(alpha: .35),
-                blurRadius: 28,
-                offset: const Offset(0, 10),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
@@ -267,14 +267,29 @@ class ZCartBar extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '${'itemCount'.plural(itemCount)} · ${rupees(total)}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: t.labelLarge!.copyWith(
-                        color: z.onBrand,
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w800,
+                    // A quick pop each time the count changes, so an ADD
+                    // anywhere on the screen visibly lands in the bar.
+                    TweenAnimationBuilder<double>(
+                      key: ValueKey(itemCount),
+                      tween: Tween(begin: 1.12, end: 1),
+                      duration: MediaQuery.disableAnimationsOf(context)
+                          ? Duration.zero
+                          : ZMotion.ui,
+                      curve: Curves.easeOutBack,
+                      builder: (context, s, child) => Transform.scale(
+                        scale: s,
+                        alignment: Alignment.centerLeft,
+                        child: child,
+                      ),
+                      child: Text(
+                        '${'itemCount'.plural(itemCount)} · ${rupees(total)}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: t.labelLarge!.copyWith(
+                          color: z.onBrand,
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                     if (saved > 0)
