@@ -262,7 +262,7 @@ CustomTransitionPage<void> _fade(GoRouterState state, Widget child) =>
     CustomTransitionPage<void>(
       key: state.pageKey,
       child: child,
-      transitionDuration: ZMotion.sheet,
+      transitionDuration: ZMotion.page,
       transitionsBuilder: (context, animation, _, child) => FadeTransition(
         opacity: MediaQuery.disableAnimationsOf(context)
             ? kAlwaysCompleteAnimation

@@ -55,6 +55,7 @@ abstract final class ZMotion {
   static const Duration press = Duration(milliseconds: 120);
   static const Duration ui = Duration(milliseconds: 240);
   static const Duration entrance = Duration(milliseconds: 420);
+  static const Duration page = Duration(milliseconds: 300);
   static const Duration sheet = Duration(milliseconds: 500);
   static const Duration stagger = Duration(milliseconds: 60);
 
