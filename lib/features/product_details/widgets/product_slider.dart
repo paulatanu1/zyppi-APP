@@ -13,8 +13,9 @@ import 'package:zippy/features/product_details/application/product_detail_provid
 /// dots: there's no share package and products have one image.)
 class ProductSlider extends ConsumerWidget {
   final String productId;
+  final String? heroTag;
 
-  const ProductSlider({super.key, required this.productId});
+  const ProductSlider({super.key, required this.productId, this.heroTag});
 
   /// Photo panel height below the status bar.
   static const double _panelHeight = 300;
@@ -48,14 +49,16 @@ class ProductSlider extends ConsumerWidget {
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
-              child: loading
-                  ? const ZSkeleton(width: 180, height: 180, radius: 90)
-                  : CatalogImage(
-                      image: image,
-                      width: 220,
-                      height: 220,
-                      fit: BoxFit.contain,
-                    ),
+              child: _hero(
+                loading
+                    ? const ZSkeleton(width: 180, height: 180, radius: 90)
+                    : CatalogImage(
+                        image: image,
+                        width: 220,
+                        height: 220,
+                        fit: BoxFit.contain,
+                      ),
+              ),
             ),
           ),
           Positioned(
@@ -85,6 +88,26 @@ class ProductSlider extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+extension on ProductSlider {
+  /// The landing spot for the tapped card's photo. The flight always shows
+  /// the card's (already decoded) photo, so it lands smoothly even if this
+  /// screen is still on its skeleton.
+  Widget _hero(Widget child) {
+    final tag = heroTag;
+    if (tag == null) return child;
+    return Hero(
+      tag: tag,
+      flightShuttleBuilder: (_, _, direction, fromContext, toContext) {
+        final source = direction == HeroFlightDirection.push
+            ? fromContext
+            : toContext;
+        return (source.widget as Hero).child;
+      },
+      child: child,
     );
   }
 }

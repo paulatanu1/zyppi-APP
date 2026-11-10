@@ -128,7 +128,10 @@ class Routes {
           name: 'ProductDetailsScreen',
           builder: (context, state) {
             final productId = state.uri.queryParameters['productId'] ?? '';
-            return ProductDetailsScreen(productId: productId);
+            return ProductDetailsScreen(
+              productId: productId,
+              heroTag: state.uri.queryParameters['hero'],
+            );
           },
         ),
         GoRoute(

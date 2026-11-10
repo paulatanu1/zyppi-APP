@@ -36,18 +36,27 @@ class CatalogProductCard extends ConsumerWidget {
       favouritesProvider.select((ids) => ids.contains(product.id)),
     );
     final cart = ref.read(cartProvider.notifier);
+    // Unique per card on screen (the same product can be in two Home
+    // sections) and stable across rebuilds, so the flight back on pop
+    // still finds this card.
+    final heroTag = 'product-${product.id}-${identityHashCode(context)}';
 
     return ZProductCard(
       width: width,
       name: product.name,
       weight: variant?.label ?? '',
       image: CatalogImage(image: product.image, fit: BoxFit.contain),
+      heroTag: heroTag,
       price: variant?.pricePaise,
       mrp: variant?.mrpPaise,
       quantity: quantity,
       favourite: favourite,
-      onTap: () =>
-          context.push('/productDetailsScreen?productId=${product.id}'),
+      onTap: () => context.push(
+        Uri(
+          path: '/productDetailsScreen',
+          queryParameters: {'productId': product.id, 'hero': heroTag},
+        ).toString(),
+      ),
       onFavourite: () =>
           ref.read(favouritesProvider.notifier).toggle(product.id),
       // Read the live quantity at tap time: two quick taps before a

@@ -30,9 +30,14 @@ class ZProductCard extends StatelessWidget {
     this.onFavourite,
     this.width,
     this.eta,
+    this.heroTag,
   });
 
   final String name, weight;
+
+  /// When set, the photo flies to the product screen's hero image (which
+  /// uses the same tag) on tap. Must be unique on the screen.
+  final Object? heroTag;
 
   /// ETA chip label; defaults to the store-wide `etaBadge`.
   final String? eta;
@@ -143,7 +148,12 @@ class ZProductCard extends StatelessWidget {
           children: [
             Stack(
               children: [
-                ZImageTile(image: image, color: tileColor ?? z.surface2),
+                ZImageTile(
+                  image: heroTag == null
+                      ? image
+                      : Hero(tag: heroTag!, child: image),
+                  color: tileColor ?? z.surface2,
+                ),
                 if (_offPercent != null)
                   Positioned(left: 6, top: 6, child: ZOffBadge(_offPercent!)),
                 if (onFavourite != null)

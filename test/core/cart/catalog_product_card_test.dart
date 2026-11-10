@@ -115,4 +115,41 @@ void main() {
     expect(find.text('productUnavailable'), findsOneWidget);
     expect(find.text('add'), findsNothing);
   });
+
+  testWidgets('the same product twice on a screen gets distinct hero tags', (
+    tester,
+  ) async {
+    final container = ProviderContainer(
+      overrides: await cartAndFavouritesOverrides(tester),
+    );
+    addTearDown(container.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: ZyppiTheme.light,
+          home: Scaffold(
+            body: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 173,
+                  child: CatalogProductCard(product: _apple),
+                ),
+                SizedBox(
+                  width: 173,
+                  child: CatalogProductCard(product: _apple),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    final tags = tester.widgetList<Hero>(find.byType(Hero)).map((h) => h.tag);
+    expect(tags, hasLength(2));
+    expect(tags.toSet(), hasLength(2));
+    expect(tags.every((t) => '$t'.startsWith('product-p1-')), isTrue);
+  });
 }
