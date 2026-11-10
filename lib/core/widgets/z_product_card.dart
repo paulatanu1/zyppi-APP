@@ -58,11 +58,26 @@ class ZProductCard extends StatelessWidget {
       ? (((mrp! - price!) * 100) / mrp!).round()
       : null;
 
+  /// Measured line heights, keyed by style + text scale + sample. Every
+  /// card (and every grid's item extent) asks for the same few, so they're
+  /// laid out once instead of with fresh TextPainters on each build.
+  static final _lineHeights = <(TextStyle, TextScaler, String), double>{};
+
   static double _lineHeight(
     TextStyle style,
     TextScaler scaler, {
     String sample = 'Ag',
   }) {
+    // Theme or text-size changes add new keys; keep the map small.
+    if (_lineHeights.length > 64) _lineHeights.clear();
+    return _lineHeights.putIfAbsent((
+      style,
+      scaler,
+      sample,
+    ), () => _measure(style, scaler, sample));
+  }
+
+  static double _measure(TextStyle style, TextScaler scaler, String sample) {
     final painter = TextPainter(
       text: TextSpan(text: sample, style: style),
       textScaler: scaler,

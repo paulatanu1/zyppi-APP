@@ -164,6 +164,12 @@ class _ZLoopState extends State<ZLoop> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     if (_reduceMotion(context)) return widget.child;
+    // Its own layer: without it the loop repainted everything up to the
+    // nearest boundary (on Home, the whole scrolling viewport) every frame.
+    return RepaintBoundary(child: _animated());
+  }
+
+  Widget _animated() {
     return AnimatedBuilder(
       animation: _c,
       child: widget.child,
@@ -192,6 +198,12 @@ class _ZLoopState extends State<ZLoop> with SingleTickerProviderStateMixin {
 }
 
 /// Shimmering placeholder block for loading states.
+///
+/// Cheap enough to use by the dozen: the sweep is painted by a
+/// [CustomPainter] that repaints from the controller (no widget rebuild or
+/// new decoration per frame), inside its own [RepaintBoundary], and every
+/// block starts at the same phase of a shared clock so a screen of
+/// skeletons shimmers as one surface.
 class ZSkeleton extends StatefulWidget {
   const ZSkeleton({
     super.key,
@@ -204,6 +216,8 @@ class ZSkeleton extends StatefulWidget {
   final double height;
   final double radius;
 
+  static const Duration period = Duration(milliseconds: 1200);
+
   @override
   State<ZSkeleton> createState() => _ZSkeletonState();
 }
@@ -212,7 +226,7 @@ class _ZSkeletonState extends State<ZSkeleton>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1200),
+    duration: ZSkeleton.period,
   );
 
   @override
@@ -222,6 +236,9 @@ class _ZSkeletonState extends State<ZSkeleton>
     if (_reduceMotion(context)) {
       _c.stop();
     } else if (!_c.isAnimating) {
+      // Same phase as every other block on screen.
+      final period = ZSkeleton.period.inMicroseconds;
+      _c.value = (DateTime.now().microsecondsSinceEpoch % period) / period;
       _c.repeat();
     }
   }
@@ -235,20 +252,57 @@ class _ZSkeletonState extends State<ZSkeleton>
   @override
   Widget build(BuildContext context) {
     final z = context.z;
-    return AnimatedBuilder(
-      animation: _c,
-      builder: (context, _) => Container(
+    return RepaintBoundary(
+      child: SizedBox(
         width: widget.width,
         height: widget.height,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(widget.radius),
-          gradient: LinearGradient(
-            begin: Alignment(-1 + 2 * _c.value - 1, 0),
-            end: Alignment(1 + 2 * _c.value - 1, 0),
-            colors: [z.surface2, z.surface3, z.surface2],
+        child: CustomPaint(
+          // Fill the box like the old decoration-only Container did.
+          size: Size.infinite,
+          painter: _ShimmerPainter(
+            progress: _c,
+            radius: widget.radius,
+            base: z.surface2,
+            highlight: z.surface3,
           ),
         ),
       ),
     );
   }
+}
+
+class _ShimmerPainter extends CustomPainter {
+  _ShimmerPainter({
+    required this.progress,
+    required this.radius,
+    required this.base,
+    required this.highlight,
+  }) : super(repaint: progress);
+
+  final Animation<double> progress;
+  final double radius;
+  final Color base, highlight;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final v = progress.value;
+    final paint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment(-2 + 2 * v, 0),
+        end: Alignment(2 * v, 0),
+        colors: [base, highlight, base],
+      ).createShader(rect);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, Radius.circular(radius)),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_ShimmerPainter old) =>
+      old.progress != progress ||
+      old.radius != radius ||
+      old.base != base ||
+      old.highlight != highlight;
 }
