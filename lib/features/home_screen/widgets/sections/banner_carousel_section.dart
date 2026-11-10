@@ -21,17 +21,28 @@ class BannerCarouselSection extends StatefulWidget {
 
 class _BannerCarouselSectionState extends State<BannerCarouselSection> {
   final _controller = CarouselSliderController();
-  int _page = 0;
+
+  /// Only the dots listen, so a page change doesn't rebuild every slide.
+  final _page = ValueNotifier(0);
+
+  @override
+  void dispose() {
+    _page.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final items = widget.section.items;
     if (items.isEmpty) return const SizedBox.shrink();
 
-    // Auto-advancing content is motion; respect the OS setting.
+    // Auto-advancing content is motion; respect the OS setting. Also
+    // paused while Home isn't the visible tab (NavBar turns its tickers
+    // off): the carousel's own timer otherwise kept sliding off screen.
     final autoplay =
         widget.section.config['autoplay'] == true &&
-        !MediaQuery.disableAnimationsOf(context);
+        !MediaQuery.disableAnimationsOf(context) &&
+        TickerMode.valuesOf(context).enabled;
 
     return Column(
       children: [
@@ -42,7 +53,7 @@ class _BannerCarouselSectionState extends State<BannerCarouselSection> {
             viewportFraction: 1,
             autoPlay: autoplay && items.length > 1,
             autoPlayInterval: const Duration(seconds: 5),
-            onPageChanged: (index, reason) => setState(() => _page = index),
+            onPageChanged: (index, reason) => _page.value = index,
           ),
           items: items.map((item) {
             final title = item.data.string('title') ?? '';
@@ -150,14 +161,17 @@ class _BannerCarouselSectionState extends State<BannerCarouselSection> {
         ),
         if (items.length > 1) ...[
           const SizedBox(height: ZSpace.x2),
-          AnimatedSmoothIndicator(
-            activeIndex: _page,
-            count: items.length,
-            effect: ExpandingDotsEffect(
-              dotHeight: 6,
-              dotWidth: 6,
-              activeDotColor: context.z.brand,
-              dotColor: context.z.line2,
+          ValueListenableBuilder(
+            valueListenable: _page,
+            builder: (context, page, _) => AnimatedSmoothIndicator(
+              activeIndex: page,
+              count: items.length,
+              effect: ExpandingDotsEffect(
+                dotHeight: 6,
+                dotWidth: 6,
+                activeDotColor: context.z.brand,
+                dotColor: context.z.line2,
+              ),
             ),
           ),
         ],
