@@ -40,6 +40,7 @@ Flutter **3.47.x stable** (Dart 3.13) pinned with **FVM** (`.fvmrc`). Upgrade wi
 | Location / maps | `geolocator`, `google_places_flutter` (client key) | `geolocator`, `geocoding`; Places API (New) via the `placesProxy` Cloud Function. `google_maps_flutter` was added in Phase 4 then removed (2026-10-26): delivery here only needs `lat`/`lng` for the rider to navigate externally, not an embedded map in the customer app — see decisions table | 4 |
 | Push / crash / analytics | `firebase_core` | + `firebase_messaging`, `firebase_crashlytics`, `firebase_analytics` | 4–5 |
 | Payments | — | `payu_checkoutpro_flutter` (PayU CheckoutPro) + COD — replaced `phonepe_payment_sdk` 2026-11-07 | 4 |
+| Connectivity | — | `connectivity_plus` (app-wide offline banner only; added 2026-11-11) | 2 |
 | Testing | `flutter_test` | + `mocktail`, `integration_test` | all |
 | Release assets | `flutter_launcher_icons` | + `flutter_native_splash` | 5 |
 

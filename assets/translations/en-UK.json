@@ -336,5 +336,7 @@
   "clearRecentSearches": "Clear",
   "trySearching": "Try searching",
   "searchForItem": "Search \"{}\"",
-  "buyAgain": "Buy again"
+  "buyAgain": "Buy again",
+  "offlineBanner": "You're offline — showing saved items",
+  "backOnline": "Back online"
 }

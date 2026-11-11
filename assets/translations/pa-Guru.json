@@ -336,5 +336,7 @@
   "clearRecentSearches": "ਹਟਾਓ",
   "trySearching": "ਇਹ ਖੋਜੋ",
   "searchForItem": "\"{}\" ਖੋਜੋ",
-  "buyAgain": "ਦੁਬਾਰਾ ਖਰੀਦੋ"
+  "buyAgain": "ਦੁਬਾਰਾ ਖਰੀਦੋ",
+  "offlineBanner": "ਤੁਸੀਂ ਆਫ਼ਲਾਈਨ ਹੋ — ਸੰਭਾਲੀ ਜਾਣਕਾਰੀ ਦਿਖ ਰਹੀ ਹੈ",
+  "backOnline": "ਮੁੜ ਆਨਲਾਈਨ"
 }
