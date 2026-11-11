@@ -327,5 +327,9 @@
   "helpChat": "আমাদের সঙ্গে চ্যাট করুন",
   "helpChatSubtitle": "সঙ্গে সঙ্গে উত্তর, বা আমাদের টিমের সঙ্গে কথা",
   "pressBackAgainToExit": "বের হতে আবার ব্যাক চাপুন",
-  "subcategoryAll": "সব"
+  "subcategoryAll": "সব",
+  "addMoreToOrder": "অর্ডার করতে আরও {} যোগ করুন",
+  "addMoreForFreeDelivery": "ফ্রি ডেলিভারির জন্য আরও {} যোগ করুন",
+  "freeDeliveryUnlocked": "দারুণ! এই অর্ডারে ফ্রি ডেলিভারি পাচ্ছেন",
+  "errorMinOrder": "ন্যূনতম অর্ডার {}। কার্টে আরও কিছু যোগ করুন।"
 }

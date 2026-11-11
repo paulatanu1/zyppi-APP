@@ -59,6 +59,13 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Delivery pricing (fee, free-above threshold, minimum order): the app
+    // shows it; quoteOrder enforces it server-side.
+    match /config/delivery {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Stock levels are internal; the app never reads them (quoteOrder
     // checks stock server-side).
     match /inventory/{id} {

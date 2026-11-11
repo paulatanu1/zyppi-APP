@@ -327,5 +327,9 @@
   "helpChat": "ਸਾਡੇ ਨਾਲ ਚੈਟ ਕਰੋ",
   "helpChatSubtitle": "ਤੁਰੰਤ ਜਵਾਬ, ਜਾਂ ਸਾਡੀ ਟੀਮ ਨਾਲ ਗੱਲ",
   "pressBackAgainToExit": "ਬਾਹਰ ਜਾਣ ਲਈ ਦੁਬਾਰਾ ਬੈਕ ਦਬਾਓ",
-  "subcategoryAll": "ਸਾਰੇ"
+  "subcategoryAll": "ਸਾਰੇ",
+  "addMoreToOrder": "ਆਰਡਰ ਕਰਨ ਲਈ {} ਹੋਰ ਜੋੜੋ",
+  "addMoreForFreeDelivery": "ਮੁਫ਼ਤ ਡਿਲੀਵਰੀ ਲਈ {} ਹੋਰ ਜੋੜੋ",
+  "freeDeliveryUnlocked": "ਵਾਹ! ਇਸ ਆਰਡਰ 'ਤੇ ਡਿਲੀਵਰੀ ਮੁਫ਼ਤ ਹੈ",
+  "errorMinOrder": "ਘੱਟੋ-ਘੱਟ ਆਰਡਰ {} ਹੈ। ਕਾਰਟ ਵਿੱਚ ਥੋੜ੍ਹਾ ਹੋਰ ਜੋੜੋ।"
 }

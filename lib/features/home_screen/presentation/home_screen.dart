@@ -6,6 +6,7 @@ import 'package:zippy/core/cart/presentation/floating_cart_bar.dart';
 import 'package:zippy/core/common_widgets/home_screen_header.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/data/catalog_repository_impl.dart';
+import 'package:zippy/core/data/delivery_config_repository.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/widgets/z_chrome.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
@@ -64,6 +65,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               onRefresh: () {
                 ref.read(catalogRepositoryProvider).invalidate();
                 ref.invalidate(homeSectionsProvider);
+                // Picks up a changed delivery fee / free-delivery threshold.
+                ref.invalidate(deliveryConfigProvider);
                 return ref
                     .read(homeSectionsProvider.future)
                     .then((_) {}, onError: (_) {});

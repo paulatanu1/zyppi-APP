@@ -199,7 +199,7 @@ const homeSections: {
     id: SECTION(2), type: "banner_carousel", title: null, config: { autoplay: true },
     items: [
       { title: "Fresh fruits, flat 20% off", cta_text: "Shop now", link_type: "category", link_target: CAT(1), image_url: "products/apple.png" },
-      { title: "Free delivery above ₹299", cta_text: "Order now", link_type: "category", link_target: null, image_url: "categories/category.png" },
+      { title: "Free delivery above ₹499", cta_text: "Order now", link_type: "category", link_target: null, image_url: "categories/category.png" },
     ],
   },
   {
@@ -280,6 +280,8 @@ async function main() {
   for (const [id, label, etaMinutes, isExpress] of slots) {
     batch.set(db.collection("deliverySlots").doc(id), { label, etaMinutes, isExpress, isActive: true });
   }
+  // Delivery pricing (functions/src/orders/delivery_config.ts).
+  batch.set(db.doc("config/delivery"), { feePaise: 2500, freeAbovePaise: 49900, minOrderPaise: 9900 });
   batch.set(db.collection("coupons").doc("ZYPPI50"), {
     description: "Flat ₹50 off on orders above ₹300",
     discountPaise: 5000, minOrderPaise: 30000, isActive: true, expiresAt: null, createdAt: now,

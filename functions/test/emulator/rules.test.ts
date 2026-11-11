@@ -59,6 +59,16 @@ describe("firestore.rules", () => {
     await assertSucceeds(updateDoc(doc(admin, "products/p1"), { name: "Milk 1L" }));
   });
 
+  it("lets anyone read the delivery config but only admins write it", async () => {
+    const anon = env.unauthenticatedContext().firestore();
+    await assertSucceeds(getDoc(doc(anon, "config/delivery")));
+    const alice = env.authenticatedContext("alice").firestore();
+    await assertFails(setDoc(doc(alice, "config/delivery"), { feePaise: 0 }));
+    await assertFails(getDoc(doc(alice, "config/secret")));
+    const admin = env.authenticatedContext("boss", { admin: true }).firestore();
+    await assertSucceeds(setDoc(doc(admin, "config/delivery"), { feePaise: 2500 }));
+  });
+
   it("hides inactive coupons and the coupon list", async () => {
     const alice = env.authenticatedContext("alice").firestore();
     await assertSucceeds(getDoc(doc(alice, "coupons/ON")));

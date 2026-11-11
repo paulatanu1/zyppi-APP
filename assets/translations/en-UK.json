@@ -327,5 +327,9 @@
   "helpChat": "Chat with us",
   "helpChatSubtitle": "Instant answers, or reach our team",
   "pressBackAgainToExit": "Press back again to exit",
-  "subcategoryAll": "All"
+  "subcategoryAll": "All",
+  "addMoreToOrder": "Add {} more to place your order",
+  "addMoreForFreeDelivery": "Add {} more for FREE delivery",
+  "freeDeliveryUnlocked": "Yay! You get FREE delivery on this order",
+  "errorMinOrder": "Minimum order is {}. Add a little more to your cart."
 }

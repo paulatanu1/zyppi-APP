@@ -8,6 +8,7 @@ import 'package:zippy/core/domain/coupon.dart';
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/utils/address_label.dart';
+import 'package:zippy/core/utils/snack_bar.dart';
 import 'package:zippy/core/widgets/z_commerce.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/my_cart/widgets/bill_details.dart';
@@ -15,9 +16,9 @@ import 'package:zippy/features/my_cart/widgets/my_cart_item.dart';
 import 'package:zippy/features/my_cart/widgets/tip_selector.dart';
 
 /// docs/screens/light/09-cart.png. Both a tab and a pushed route
-/// (`/myCartScreen`); the back arrow only shows when pushed. Left out
-/// until the data exists: Share, and the free-delivery progress bar (no
-/// threshold in the bill).
+/// (`/myCartScreen`); the back arrow only shows when pushed. The
+/// free-delivery / minimum-order bar follows `config/delivery`. Left out
+/// until the data exists: Share.
 class MyCartScreen extends ConsumerWidget {
   const MyCartScreen({super.key});
 
@@ -101,6 +102,13 @@ class MyCartScreen extends ConsumerWidget {
           ),
           const SizedBox(height: ZSpace.x3),
         ],
+        ZDeliveryProgress(
+          itemTotalPaise: cart.bill.itemTotalPaise,
+          delivery: cart.delivery,
+        ),
+        if (cart.delivery.minOrderPaise > 0 ||
+            cart.delivery.hasFreeDeliveryGoal)
+          const SizedBox(height: ZSpace.x3),
         _Card(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,6 +182,8 @@ class _CheckoutBar extends ConsumerWidget {
     final label = location.label == null
         ? 'currentLocation'.tr()
         : addressLabelText(location.label!);
+    final belowMinimum =
+        cart.delivery.remainingForMinimum(cart.bill.itemTotalPaise) > 0;
 
     return Container(
       decoration: BoxDecoration(
@@ -217,8 +227,19 @@ class _CheckoutBar extends ConsumerWidget {
                 child: Semantics(
                   button: true,
                   child: ZPressable(
-                    onTap: () => context.push('/checkoutScreen'),
-                    child: Container(
+                    // Below the minimum order the button explains why
+                    // instead of opening checkout.
+                    onTap: belowMinimum
+                        ? () => showError(
+                            'errorMinOrder'.tr(
+                              args: [rupees(cart.delivery.minOrderPaise)],
+                            ),
+                          )
+                        : () => context.push('/checkoutScreen'),
+                    child: AnimatedContainer(
+                      duration: MediaQuery.disableAnimationsOf(context)
+                          ? Duration.zero
+                          : ZMotion.ui,
                       constraints: const BoxConstraints(
                         minHeight: ZSize.button,
                       ),
@@ -227,7 +248,7 @@ class _CheckoutBar extends ConsumerWidget {
                         vertical: ZSpace.x2,
                       ),
                       decoration: BoxDecoration(
-                        color: z.brand,
+                        color: belowMinimum ? z.ink3 : z.brand,
                         borderRadius: ZRadius.all(ZRadius.button),
                       ),
                       child: FittedBox(
