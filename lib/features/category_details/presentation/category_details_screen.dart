@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/cart/presentation/catalog_product_card.dart';
 import 'package:zippy/core/cart/presentation/floating_cart_bar.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
+import 'package:zippy/core/data/catalog_repository_impl.dart';
 import 'package:zippy/core/domain/product_filter.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/widgets/z_product_card.dart';
@@ -74,28 +75,37 @@ class CategoryDetailsScreen extends ConsumerWidget {
             : null,
       );
     } else {
-      body = GridView.builder(
+      body = RefreshIndicator(
         // A new grid (and a cross-fade) per rail selection.
         key: ValueKey(state.selectedSubcategoryId),
-        physics: const BouncingScrollPhysics(),
-        // Room at the end for the floating cart bar.
-        padding: EdgeInsets.fromLTRB(
-          gutter,
-          ZSpace.x2,
-          gutter,
-          ZSize.cartBar + ZSpace.x6,
+        // Pull down: drop the cached catalog and reload this category.
+        onRefresh: () {
+          ref.read(catalogRepositoryProvider).invalidate();
+          return notifier.retry();
+        },
+        child: GridView.builder(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          // Room at the end for the floating cart bar.
+          padding: EdgeInsets.fromLTRB(
+            gutter,
+            ZSpace.x2,
+            gutter,
+            ZSize.cartBar + ZSpace.x6,
+          ),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: ZSpace.x3,
+            mainAxisSpacing: ZSpace.x3,
+            // Cards share one height that grows with text size.
+            mainAxisExtent: ZProductCard.height(context),
+          ),
+          itemCount: state.loading ? 6 : products.length,
+          itemBuilder: (context, index) => state.loading
+              ? const ZProductCardSkeleton()
+              : CatalogProductCard(product: products[index]),
         ),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: ZSpace.x3,
-          mainAxisSpacing: ZSpace.x3,
-          // Cards share one height that grows with text size.
-          mainAxisExtent: ZProductCard.height(context),
-        ),
-        itemCount: state.loading ? 6 : products.length,
-        itemBuilder: (context, index) => state.loading
-            ? const ZProductCardSkeleton()
-            : CatalogProductCard(product: products[index]),
       );
     }
 

@@ -61,10 +61,15 @@ class FavouriteScreen extends ConsumerWidget {
                         ),
                       )
                     // Tapping a card's heart removes it from this list.
-                    : _ProductGrid(
-                        itemCount: products.length,
-                        itemBuilder: (context, index) =>
-                            CatalogProductCard(product: products[index]),
+                    : RefreshIndicator(
+                        // Pull down for fresh prices/stock.
+                        onRefresh: () =>
+                            ref.refresh(favouriteProductsProvider.future),
+                        child: _ProductGrid(
+                          itemCount: products.length,
+                          itemBuilder: (context, index) =>
+                              CatalogProductCard(product: products[index]),
+                        ),
                       ),
               ),
             ),
@@ -115,7 +120,9 @@ class _ProductGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => GridView.builder(
-    physics: const BouncingScrollPhysics(),
+    physics: const AlwaysScrollableScrollPhysics(
+      parent: BouncingScrollPhysics(),
+    ),
     padding: const EdgeInsets.all(ZSpace.screen),
     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
       crossAxisCount: 2,
