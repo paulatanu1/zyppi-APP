@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,11 +20,42 @@ class NavBar extends ConsumerStatefulWidget {
 
   const NavBar({super.key, this.initialIndex = 0});
 
+  /// Window for the second back press on Home that exits the app.
+  static const Duration exitWindow = Duration(seconds: 2);
+
   @override
   ConsumerState<NavBar> createState() => _NavBarState();
 }
 
 class _NavBarState extends ConsumerState<NavBar> {
+  /// When back was last pressed on Home; a second press within
+  /// [NavBar.exitWindow] closes the app.
+  DateTime? _lastBackOnHome;
+
+  void _onBack() {
+    final notifier = ref.read(navBarProvider.notifier);
+    // Any other tab: back returns to Home first, like Blinkit/Zepto.
+    if (ref.read(navBarProvider) != 0) {
+      notifier.updateIndex(0);
+      return;
+    }
+    final now = DateTime.now();
+    final last = _lastBackOnHome;
+    if (last != null && now.difference(last) < NavBar.exitWindow) {
+      SystemNavigator.pop();
+      return;
+    }
+    _lastBackOnHome = now;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('pressBackAgainToExit'.tr()),
+          duration: NavBar.exitWindow,
+        ),
+      );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -64,7 +96,7 @@ class _NavBarState extends ConsumerState<NavBar> {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) SystemNavigator.pop();
+        if (!didPop) _onBack();
       },
       child: Scaffold(
         body: IndexedStack(index: currentIndex, children: screens),
