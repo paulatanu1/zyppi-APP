@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../domain/delivery_config.dart';
 import '../theme/zyppi_theme.dart';
@@ -148,6 +149,19 @@ class ZAddStepper extends StatelessWidget {
   final VoidCallback onAdd, onRemove;
   final double height, minWidth;
 
+  // A light tick on every change: a firmer one for the first add.
+  void _add() {
+    quantity == 0
+        ? HapticFeedback.lightImpact()
+        : HapticFeedback.selectionClick();
+    onAdd();
+  }
+
+  void _remove() {
+    HapticFeedback.selectionClick();
+    onRemove();
+  }
+
   @override
   Widget build(BuildContext context) {
     final z = context.z;
@@ -163,7 +177,7 @@ class ZAddStepper extends StatelessWidget {
       child: quantity == 0
           ? ZPressable(
               key: const ValueKey('add'),
-              onTap: onAdd,
+              onTap: _add,
               child: Container(
                 height: height,
                 constraints: const BoxConstraints(minWidth: 70),
@@ -194,7 +208,7 @@ class ZAddStepper extends StatelessWidget {
                 children: [
                   _StepBtn(
                     icon: Icons.remove_rounded,
-                    onTap: onRemove,
+                    onTap: _remove,
                     semantic: 'removeOne'.tr(),
                     size: height,
                   ),
@@ -215,7 +229,7 @@ class ZAddStepper extends StatelessWidget {
                   ),
                   _StepBtn(
                     icon: Icons.add_rounded,
-                    onTap: onAdd,
+                    onTap: _add,
                     semantic: 'addOne'.tr(),
                     size: height,
                   ),
