@@ -335,5 +335,6 @@
   "recentSearches": "Recent searches",
   "clearRecentSearches": "Clear",
   "trySearching": "Try searching",
-  "searchForItem": "Search \"{}\""
+  "searchForItem": "Search \"{}\"",
+  "buyAgain": "Buy again"
 }

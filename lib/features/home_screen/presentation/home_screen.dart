@@ -11,7 +11,9 @@ import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/widgets/z_chrome.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/core/widgets/z_product_card.dart';
+import 'package:zippy/features/home_screen/application/buy_again_provider.dart';
 import 'package:zippy/features/home_screen/application/home_sections_provider.dart';
+import 'package:zippy/features/home_screen/widgets/buy_again_section.dart';
 import 'package:zippy/core/data/search_suggestions_provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:zippy/features/home_screen/widgets/sections/category_tabs_section.dart';
@@ -68,6 +70,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ref.invalidate(homeSectionsProvider);
                 // Picks up a changed delivery fee / free-delivery threshold.
                 ref.invalidate(deliveryConfigProvider);
+                ref.invalidate(buyAgainProvider);
                 return ref
                     .read(homeSectionsProvider.future)
                     .then((_) {}, onError: (_) {});
@@ -121,6 +124,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ],
                     data: (data) => [
+                      // The user's own past buys come first.
+                      const SliverToBoxAdapter(child: BuyAgainSection()),
                       if (data.sections.isEmpty)
                         SliverToBoxAdapter(
                           child: Padding(
