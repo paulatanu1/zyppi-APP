@@ -326,5 +326,6 @@
   "messageSupport": "এই অর্ডার নিয়ে আমাদের মেসেজ করুন",
   "helpChat": "আমাদের সঙ্গে চ্যাট করুন",
   "helpChatSubtitle": "সঙ্গে সঙ্গে উত্তর, বা আমাদের টিমের সঙ্গে কথা",
-  "pressBackAgainToExit": "বের হতে আবার ব্যাক চাপুন"
+  "pressBackAgainToExit": "বের হতে আবার ব্যাক চাপুন",
+  "subcategoryAll": "সব"
 }

@@ -326,5 +326,6 @@
   "messageSupport": "Message us about this order",
   "helpChat": "Chat with us",
   "helpChatSubtitle": "Instant answers, or reach our team",
-  "pressBackAgainToExit": "Press back again to exit"
+  "pressBackAgainToExit": "Press back again to exit",
+  "subcategoryAll": "All"
 }

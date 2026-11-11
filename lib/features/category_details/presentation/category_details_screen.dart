@@ -9,10 +9,13 @@ import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/widgets/z_product_card.dart';
 import 'package:zippy/features/category_details/application/category_details_provider.dart';
 import 'package:zippy/features/category_details/widgets/category_details_header.dart';
+import 'package:zippy/features/category_details/application/category_details_state.dart';
 import 'package:zippy/features/category_details/widgets/category_filter_chips.dart';
+import 'package:zippy/features/category_details/widgets/subcategory_rail.dart';
 
-/// docs/screens/light/06-category.png, minus the sub-category rail (no
-/// sub-category relationship in the catalog data model yet).
+/// docs/screens/light/06-category.png: header, the sub-category rail on
+/// the left (hidden when the category has none), filter chips and a
+/// two-column product grid.
 class CategoryDetailsScreen extends ConsumerWidget {
   final String categoryId;
 
@@ -23,7 +26,12 @@ class CategoryDetailsScreen extends ConsumerWidget {
     final state = ref.watch(categoryDetailsProvider(categoryId));
     final notifier = ref.read(categoryDetailsProvider(categoryId).notifier);
     final filter = ref.watch(productFilterProvider(categoryId));
-    final products = filter.apply(state.products);
+    final products = filter.apply(state.visibleProducts);
+    final showRail =
+        state.error == null &&
+        state.category != null &&
+        state.subcategories.isNotEmpty;
+    final gutter = showRail ? ZSpace.x2 + 2 : ZSpace.screen;
     final t = Theme.of(context).textTheme;
 
     Widget message(String text, {Widget? action}) => Center(
@@ -67,12 +75,14 @@ class CategoryDetailsScreen extends ConsumerWidget {
       );
     } else {
       body = GridView.builder(
+        // A new grid (and a cross-fade) per rail selection.
+        key: ValueKey(state.selectedSubcategoryId),
         physics: const BouncingScrollPhysics(),
         // Room at the end for the floating cart bar.
-        padding: const EdgeInsets.fromLTRB(
-          ZSpace.screen,
+        padding: EdgeInsets.fromLTRB(
+          gutter,
           ZSpace.x2,
-          ZSpace.screen,
+          gutter,
           ZSize.cartBar + ZSpace.x6,
         ),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -101,9 +111,38 @@ class CategoryDetailsScreen extends ConsumerWidget {
                   itemCount: products.length,
                   loading: state.loading,
                 ),
-                if (state.error == null && state.category != null)
-                  CategoryFilterChips(categoryId: categoryId),
-                Expanded(child: body),
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (showRail)
+                        SubcategoryRail(
+                          parent: state.category!,
+                          subcategories: state.subcategories,
+                          selectedId: state.selectedSubcategoryId,
+                          onSelect: notifier.selectSubcategory,
+                        ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (state.error == null && state.category != null)
+                              CategoryFilterChips(categoryId: categoryId),
+                            Expanded(
+                              child: AnimatedSwitcher(
+                                duration:
+                                    MediaQuery.disableAnimationsOf(context)
+                                    ? Duration.zero
+                                    : ZMotion.ui,
+                                child: body,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
             const Positioned(

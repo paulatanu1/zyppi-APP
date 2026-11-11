@@ -4,6 +4,7 @@
     "name": "Fresh Tomatoes",
     "image": "assets/images/veg.png",
     "categoryId": "cat-fruits-veg",
+    "subcategoryId": "sub-daily-veggies",
     "variants": [
       { "id": "prod-tomato-500g", "label": "500 g", "pricePaise": 2500, "mrpPaise": 3000 }
     ]
@@ -13,6 +14,7 @@
     "name": "Apple",
     "image": "assets/images/apple.png",
     "categoryId": "cat-fruits-veg",
+    "subcategoryId": "sub-fresh-fruits",
     "variants": [
       { "id": "prod-apple-1kg", "label": "1 kg", "pricePaise": 18000, "mrpPaise": 20000 }
     ]
@@ -22,6 +24,7 @@
     "name": "Brown Bread",
     "image": "assets/images/bread.png",
     "categoryId": "cat-bread-eggs",
+    "subcategoryId": "sub-bread",
     "variants": [
       { "id": "prod-bread-400g", "label": "400 g", "pricePaise": 4500, "mrpPaise": 5000 }
     ]

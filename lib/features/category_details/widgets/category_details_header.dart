@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
+import 'package:zippy/routes/home_fallback_scope.dart';
 
 /// docs/screens/light/06-category.png's header: back, title with
 /// "148 items · delivered in 12 min", search.
@@ -25,7 +26,7 @@ class CategoryDetailsHeader extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            onPressed: () => context.pop(),
+            onPressed: () => popOrHome(context),
             icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
             tooltip: 'back'.tr(),
           ),

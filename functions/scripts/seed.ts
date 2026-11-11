@@ -74,6 +74,9 @@ async function upload(path: string): Promise<string> {
 const AREA = (n: number) => `11111111-0000-0000-0000-00000000000${n}`;
 const STORE = (n: number) => `22222222-0000-0000-0000-00000000000${n}`;
 const CAT = (n: number) => `33333333-0000-0000-0000-00000000000${n}`;
+// Sub-categories (`categories` docs with a `parentId`): the category
+// page's left rail.
+const SUBCAT = (n: number) => `33333333-1111-0000-0000-${String(n).padStart(12, "0")}`;
 const PROD = (n: number) => `44444444-0000-0000-0000-00000000000${n}`;
 const VAR = (n: number) => `55555555-0000-0000-0000-00000000000${n}`;
 const SLOT = (n: number) => `66666666-0000-0000-0000-00000000000${n}`;
@@ -103,27 +106,39 @@ const categories = [
   [CAT(8), "Beverages", "categories/beverages.png", "3FB7DFF5", "FFB7DFF5"],
 ] as const;
 
+// [id, parentId, name, image]
+const subcategories = [
+  [SUBCAT(1), CAT(1), "Fresh Fruits", "products/apple.png"],
+  [SUBCAT(2), CAT(1), "Daily Veggies", "products/veg.png"],
+  [SUBCAT(3), CAT(1), "Exotic", "categories/category.png"],
+  [SUBCAT(4), CAT(2), "Bread", "products/bread.png"],
+  [SUBCAT(5), CAT(2), "Eggs", "categories/bread.png"],
+  [SUBCAT(6), CAT(8), "Milk", "products/milk.png"],
+  [SUBCAT(7), CAT(8), "Juices & Drinks", "categories/beverages.png"],
+] as const;
+
 type V = [string, string, number, number];
 const products: {
   id: string;
   categoryId: string;
+  subcategoryId?: string;
   name: string;
   image: string;
   description: string;
   variants: V[];
 }[] = [
   {
-    id: PROD(1), categoryId: CAT(1), name: "Fresh Tomatoes", image: "products/veg.png",
+    id: PROD(1), categoryId: CAT(1), subcategoryId: SUBCAT(2), name: "Fresh Tomatoes", image: "products/veg.png",
     description: "Farm-fresh red tomatoes, picked ripe for curries, salads and chutneys.",
     variants: [[VAR(1), "500 g", 2500, 3000]],
   },
   {
-    id: PROD(2), categoryId: CAT(1), name: "Apple", image: "products/apple.png",
+    id: PROD(2), categoryId: CAT(1), subcategoryId: SUBCAT(1), name: "Apple", image: "products/apple.png",
     description: "Crisp, sweet apples — a ready snack and great in salads.",
     variants: [[VAR(2), "1 kg", 18000, 20000]],
   },
   {
-    id: PROD(3), categoryId: CAT(2), name: "Brown Bread", image: "products/bread.png",
+    id: PROD(3), categoryId: CAT(2), subcategoryId: SUBCAT(4), name: "Brown Bread", image: "products/bread.png",
     description: "Soft whole-wheat brown bread, baked fresh for sandwiches and toast.",
     variants: [[VAR(3), "400 g", 4500, 5000]],
   },
@@ -143,7 +158,7 @@ const products: {
     variants: [[VAR(7), "500 g", 15500, 17500]],
   },
   {
-    id: PROD(7), categoryId: CAT(8), name: "Toned Milk", image: "products/milk.png",
+    id: PROD(7), categoryId: CAT(8), subcategoryId: SUBCAT(6), name: "Toned Milk", image: "products/milk.png",
     description: "Pasteurised toned milk, delivered chilled.",
     variants: [[VAR(8), "1 L", 6400, 6800]],
   },
@@ -228,6 +243,16 @@ async function main() {
     batch.set(db.collection("categories").doc(id), {
       name, imageUrl: await upload(image), colorHex, borderColorHex,
       sortOrder: categories.findIndex((c) => c[0] === id),
+      parentId: null,
+    });
+  }
+  for (const [i, [id, parentId, name, image]] of subcategories.entries()) {
+    const parent = categories.find((c) => c[0] === parentId)!;
+    batch.set(db.collection("categories").doc(id), {
+      name, imageUrl: await upload(image), colorHex: parent[3], borderColorHex: parent[4],
+      // After every top-level category, in rail order.
+      sortOrder: categories.length + i,
+      parentId,
     });
   }
   for (const p of products) {
@@ -236,6 +261,7 @@ async function main() {
       imageUrl: await upload(p.image),
       description: p.description,
       categoryId: p.categoryId,
+      subcategoryId: p.subcategoryId ?? null,
       isActive: true,
       keywords: productKeywords(p.name),
       variants: p.variants.map(([id, label, pricePaise, mrpPaise]) => ({ id, label, pricePaise, mrpPaise })),
