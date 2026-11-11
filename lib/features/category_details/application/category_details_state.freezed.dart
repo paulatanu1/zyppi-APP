@@ -15,7 +15,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CategoryDetailsState {
 
- Category? get category; List<Product> get products; bool get loading; String? get error;
+ Category? get category;/// The category's sub-categories (left rail); empty hides the rail.
+ List<Category> get subcategories;/// Rail selection; null = "All".
+ String? get selectedSubcategoryId; List<Product> get products; bool get loading; String? get error;
 /// Create a copy of CategoryDetailsState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +29,20 @@ $CategoryDetailsStateCopyWith<CategoryDetailsState> get copyWith => _$CategoryDe
 @override
 bool operator ==(Object other) {
   final _this = this as CategoryDetailsState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CategoryDetailsState&&(identical(other.category, _this.category) || other.category == _this.category)&&const DeepCollectionEquality().equals(other.products, _this.products)&&(identical(other.loading, _this.loading) || other.loading == _this.loading)&&(identical(other.error, _this.error) || other.error == _this.error));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CategoryDetailsState&&(identical(other.category, _this.category) || other.category == _this.category)&&const DeepCollectionEquality().equals(other.subcategories, _this.subcategories)&&(identical(other.selectedSubcategoryId, _this.selectedSubcategoryId) || other.selectedSubcategoryId == _this.selectedSubcategoryId)&&const DeepCollectionEquality().equals(other.products, _this.products)&&(identical(other.loading, _this.loading) || other.loading == _this.loading)&&(identical(other.error, _this.error) || other.error == _this.error));
 }
 
 
 @override
 int get hashCode {
   final _this = this as CategoryDetailsState;
-  return Object.hash(runtimeType,_this.category,const DeepCollectionEquality().hash(_this.products),_this.loading,_this.error);
+  return Object.hash(runtimeType,_this.category,const DeepCollectionEquality().hash(_this.subcategories),_this.selectedSubcategoryId,const DeepCollectionEquality().hash(_this.products),_this.loading,_this.error);
 }
 
 @override
 String toString() {
   final _this = this as CategoryDetailsState;
-  return 'CategoryDetailsState(category: ${_this.category}, products: ${_this.products}, loading: ${_this.loading}, error: ${_this.error})';
+  return 'CategoryDetailsState(category: ${_this.category}, subcategories: ${_this.subcategories}, selectedSubcategoryId: ${_this.selectedSubcategoryId}, products: ${_this.products}, loading: ${_this.loading}, error: ${_this.error})';
 }
 
 
@@ -51,7 +53,7 @@ abstract mixin class $CategoryDetailsStateCopyWith<$Res>  {
   factory $CategoryDetailsStateCopyWith(CategoryDetailsState value, $Res Function(CategoryDetailsState) _then) = _$CategoryDetailsStateCopyWithImpl;
 @useResult
 $Res call({
- Category? category, List<Product> products, bool loading, String? error
+ Category? category, List<Category> subcategories, String? selectedSubcategoryId, List<Product> products, bool loading, String? error
 });
 
 
@@ -68,10 +70,12 @@ class _$CategoryDetailsStateCopyWithImpl<$Res>
 
 /// Create a copy of CategoryDetailsState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? category = freezed,Object? products = null,Object? loading = null,Object? error = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? category = freezed,Object? subcategories = null,Object? selectedSubcategoryId = freezed,Object? products = null,Object? loading = null,Object? error = freezed,}) {
   return _then(CategoryDetailsState(
 category: freezed == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
-as Category?,products: null == products ? _self.products : products // ignore: cast_nullable_to_non_nullable
+as Category?,subcategories: null == subcategories ? _self.subcategories : subcategories // ignore: cast_nullable_to_non_nullable
+as List<Category>,selectedSubcategoryId: freezed == selectedSubcategoryId ? _self.selectedSubcategoryId : selectedSubcategoryId // ignore: cast_nullable_to_non_nullable
+as String?,products: null == products ? _self.products : products // ignore: cast_nullable_to_non_nullable
 as List<Product>,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
 as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
 as String?,
@@ -171,10 +175,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Category? category,  List<Product> products,  bool loading,  String? error)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Category? category,  List<Category> subcategories,  String? selectedSubcategoryId,  List<Product> products,  bool loading,  String? error)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CategoryDetailsState() when $default != null:
-return $default(_that.category,_that.products,_that.loading,_that.error);case _:
+return $default(_that.category,_that.subcategories,_that.selectedSubcategoryId,_that.products,_that.loading,_that.error);case _:
   return orElse();
 
 }
@@ -192,10 +196,10 @@ return $default(_that.category,_that.products,_that.loading,_that.error);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Category? category,  List<Product> products,  bool loading,  String? error)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Category? category,  List<Category> subcategories,  String? selectedSubcategoryId,  List<Product> products,  bool loading,  String? error)  $default,) {final _that = this;
 switch (_that) {
 case _CategoryDetailsState():
-return $default(_that.category,_that.products,_that.loading,_that.error);case _:
+return $default(_that.category,_that.subcategories,_that.selectedSubcategoryId,_that.products,_that.loading,_that.error);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -212,10 +216,10 @@ return $default(_that.category,_that.products,_that.loading,_that.error);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Category? category,  List<Product> products,  bool loading,  String? error)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Category? category,  List<Category> subcategories,  String? selectedSubcategoryId,  List<Product> products,  bool loading,  String? error)?  $default,) {final _that = this;
 switch (_that) {
 case _CategoryDetailsState() when $default != null:
-return $default(_that.category,_that.products,_that.loading,_that.error);case _:
+return $default(_that.category,_that.subcategories,_that.selectedSubcategoryId,_that.products,_that.loading,_that.error);case _:
   return null;
 
 }
@@ -227,10 +231,21 @@ return $default(_that.category,_that.products,_that.loading,_that.error);case _:
 
 
 class _CategoryDetailsState implements CategoryDetailsState {
-   _CategoryDetailsState({this.category,  List<Product> products = const [], this.loading = true, this.error}): _products = products;
+   _CategoryDetailsState({this.category,  List<Category> subcategories = const [], this.selectedSubcategoryId,  List<Product> products = const [], this.loading = true, this.error}): _subcategories = subcategories,_products = products;
   
 
 @override final  Category? category;
+/// The category's sub-categories (left rail); empty hides the rail.
+ final  List<Category> _subcategories;
+/// The category's sub-categories (left rail); empty hides the rail.
+@override@JsonKey() List<Category> get subcategories {
+  if (_subcategories is EqualUnmodifiableListView) return _subcategories;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_subcategories);
+}
+
+/// Rail selection; null = "All".
+@override final  String? selectedSubcategoryId;
  final  List<Product> _products;
 @override@JsonKey() List<Product> get products {
   if (_products is EqualUnmodifiableListView) return _products;
@@ -251,18 +266,18 @@ _$CategoryDetailsStateCopyWith<_CategoryDetailsState> get copyWith => __$Categor
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CategoryDetailsState&&(identical(other.category, category) || other.category == category)&&const DeepCollectionEquality().equals(other.products, _products)&&(identical(other.loading, loading) || other.loading == loading)&&(identical(other.error, error) || other.error == error));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CategoryDetailsState&&(identical(other.category, category) || other.category == category)&&const DeepCollectionEquality().equals(other.subcategories, _subcategories)&&(identical(other.selectedSubcategoryId, selectedSubcategoryId) || other.selectedSubcategoryId == selectedSubcategoryId)&&const DeepCollectionEquality().equals(other.products, _products)&&(identical(other.loading, loading) || other.loading == loading)&&(identical(other.error, error) || other.error == error));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,category,const DeepCollectionEquality().hash(_products),loading,error);
+    return Object.hash(runtimeType,category,const DeepCollectionEquality().hash(_subcategories),selectedSubcategoryId,const DeepCollectionEquality().hash(_products),loading,error);
 }
 
 @override
 String toString() {
-    return 'CategoryDetailsState(category: $category, products: $products, loading: $loading, error: $error)';
+    return 'CategoryDetailsState(category: $category, subcategories: $subcategories, selectedSubcategoryId: $selectedSubcategoryId, products: $products, loading: $loading, error: $error)';
 }
 
 
@@ -273,7 +288,7 @@ abstract mixin class _$CategoryDetailsStateCopyWith<$Res> implements $CategoryDe
   factory _$CategoryDetailsStateCopyWith(_CategoryDetailsState value, $Res Function(_CategoryDetailsState) _then) = __$CategoryDetailsStateCopyWithImpl;
 @override @useResult
 $Res call({
- Category? category, List<Product> products, bool loading, String? error
+ Category? category, List<Category> subcategories, String? selectedSubcategoryId, List<Product> products, bool loading, String? error
 });
 
 
@@ -290,10 +305,12 @@ class __$CategoryDetailsStateCopyWithImpl<$Res>
 
 /// Create a copy of CategoryDetailsState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? category = freezed,Object? products = null,Object? loading = null,Object? error = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? category = freezed,Object? subcategories = null,Object? selectedSubcategoryId = freezed,Object? products = null,Object? loading = null,Object? error = freezed,}) {
   return _then(_CategoryDetailsState(
 category: freezed == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
-as Category?,products: null == products ? _self._products : products // ignore: cast_nullable_to_non_nullable
+as Category?,subcategories: null == subcategories ? _self._subcategories : subcategories // ignore: cast_nullable_to_non_nullable
+as List<Category>,selectedSubcategoryId: freezed == selectedSubcategoryId ? _self.selectedSubcategoryId : selectedSubcategoryId // ignore: cast_nullable_to_non_nullable
+as String?,products: null == products ? _self._products : products // ignore: cast_nullable_to_non_nullable
 as List<Product>,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
 as bool,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
 as String?,

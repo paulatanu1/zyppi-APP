@@ -325,5 +325,18 @@
   "supportHandoffOffline": "ਸਾਡੀ ਟੀਮ ਤੁਹਾਡੇ ਨਾਲ ਸੰਪਰਕ ਕਰੇਗੀ। ਜਲਦੀ ਮਦਦ ਲਈ WhatsApp ਜਾਂ ਕਾਲ ਕਰੋ।",
   "messageSupport": "ਇਸ ਆਰਡਰ ਬਾਰੇ ਸਾਨੂੰ ਸੁਨੇਹਾ ਭੇਜੋ",
   "helpChat": "ਸਾਡੇ ਨਾਲ ਚੈਟ ਕਰੋ",
-  "helpChatSubtitle": "ਤੁਰੰਤ ਜਵਾਬ, ਜਾਂ ਸਾਡੀ ਟੀਮ ਨਾਲ ਗੱਲ"
+  "helpChatSubtitle": "ਤੁਰੰਤ ਜਵਾਬ, ਜਾਂ ਸਾਡੀ ਟੀਮ ਨਾਲ ਗੱਲ",
+  "pressBackAgainToExit": "ਬਾਹਰ ਜਾਣ ਲਈ ਦੁਬਾਰਾ ਬੈਕ ਦਬਾਓ",
+  "subcategoryAll": "ਸਾਰੇ",
+  "addMoreToOrder": "ਆਰਡਰ ਕਰਨ ਲਈ {} ਹੋਰ ਜੋੜੋ",
+  "addMoreForFreeDelivery": "ਮੁਫ਼ਤ ਡਿਲੀਵਰੀ ਲਈ {} ਹੋਰ ਜੋੜੋ",
+  "freeDeliveryUnlocked": "ਵਾਹ! ਇਸ ਆਰਡਰ 'ਤੇ ਡਿਲੀਵਰੀ ਮੁਫ਼ਤ ਹੈ",
+  "errorMinOrder": "ਘੱਟੋ-ਘੱਟ ਆਰਡਰ {} ਹੈ। ਕਾਰਟ ਵਿੱਚ ਥੋੜ੍ਹਾ ਹੋਰ ਜੋੜੋ।",
+  "recentSearches": "ਹਾਲੀਆ ਖੋਜਾਂ",
+  "clearRecentSearches": "ਹਟਾਓ",
+  "trySearching": "ਇਹ ਖੋਜੋ",
+  "searchForItem": "\"{}\" ਖੋਜੋ",
+  "buyAgain": "ਦੁਬਾਰਾ ਖਰੀਦੋ",
+  "offlineBanner": "ਤੁਸੀਂ ਆਫ਼ਲਾਈਨ ਹੋ — ਸੰਭਾਲੀ ਜਾਣਕਾਰੀ ਦਿਖ ਰਹੀ ਹੈ",
+  "backOnline": "ਮੁੜ ਆਨਲਾਈਨ"
 }

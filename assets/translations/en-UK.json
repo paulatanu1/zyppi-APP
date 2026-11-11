@@ -325,5 +325,18 @@
   "supportHandoffOffline": "Our team will get back to you. For faster help, WhatsApp or call us.",
   "messageSupport": "Message us about this order",
   "helpChat": "Chat with us",
-  "helpChatSubtitle": "Instant answers, or reach our team"
+  "helpChatSubtitle": "Instant answers, or reach our team",
+  "pressBackAgainToExit": "Press back again to exit",
+  "subcategoryAll": "All",
+  "addMoreToOrder": "Add {} more to place your order",
+  "addMoreForFreeDelivery": "Add {} more for FREE delivery",
+  "freeDeliveryUnlocked": "Yay! You get FREE delivery on this order",
+  "errorMinOrder": "Minimum order is {}. Add a little more to your cart.",
+  "recentSearches": "Recent searches",
+  "clearRecentSearches": "Clear",
+  "trySearching": "Try searching",
+  "searchForItem": "Search \"{}\"",
+  "buyAgain": "Buy again",
+  "offlineBanner": "You're offline — showing saved items",
+  "backOnline": "Back online"
 }

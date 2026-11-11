@@ -5,11 +5,11 @@ import {
   Transaction,
 } from "firebase-admin/firestore";
 import { db } from "../shared/firebase";
+import { DELIVERY_CONFIG_PATH, deliveryConfigFrom, deliveryFeeFor } from "./delivery_config";
 import { AreaLike, findServiceableArea } from "../shared/geo";
 
 /** ₹5 handling fee and free delivery, matching the app's BillCalculator. */
 export const HANDLING_FEE_PAISE = 500;
-export const DELIVERY_FEE_PAISE = 0;
 /** ₹500 tip cap, matching the app's tip selector. */
 export const MAX_TIP_PAISE = 50000;
 
@@ -211,6 +211,12 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
     }
   }
 
+  const delivery = deliveryConfigFrom(await tx.get(db.doc(DELIVERY_CONFIG_PATH)));
+  if (itemTotal < delivery.minOrderPaise) {
+    throw new OrderError(`MIN_ORDER_NOT_MET:${delivery.minOrderPaise}`);
+  }
+  const deliveryFee = deliveryFeeFor(itemTotal, delivery);
+
   const addressText = [address.line1, address.area, address.city, address.postalCode]
     .filter((part: unknown) => typeof part === "string" && part.trim() !== "")
     .join(", ");
@@ -235,11 +241,11 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
     lines,
     cartRefs: cartSnap.docs.map((d) => d.ref),
     itemTotalPaise: itemTotal,
-    deliveryFeePaise: DELIVERY_FEE_PAISE,
+    deliveryFeePaise: deliveryFee,
     handlingFeePaise: HANDLING_FEE_PAISE,
     discountPaise: discount,
     tipPaise: p.tipPaise,
-    totalPaise: itemTotal + DELIVERY_FEE_PAISE + HANDLING_FEE_PAISE + p.tipPaise - discount,
+    totalPaise: itemTotal + deliveryFee + HANDLING_FEE_PAISE + p.tipPaise - discount,
   };
 }
 

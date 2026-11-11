@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
+import 'package:zippy/core/cart/presentation/cart_fly.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/domain/product.dart';
 import 'package:zippy/core/favourites/application/favourites_provider.dart';
@@ -56,6 +57,13 @@ class CatalogProductCard extends ConsumerWidget {
           ? null
           : () {
               final current = cart.quantityOf(product.id, variant.id);
+              if (current == 0) {
+                // First add: the picture flies into the cart bar.
+                CartFly.launch(
+                  context,
+                  CatalogImage(image: product.image, fit: BoxFit.contain),
+                );
+              }
               current == 0
                   ? cart.addItem(product: product, variant: variant)
                   : cart.setQuantity(

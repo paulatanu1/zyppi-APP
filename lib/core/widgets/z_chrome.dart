@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -120,16 +122,68 @@ class ZCategoryTile extends StatelessWidget {
 
 /// White search field used in the home header. The mic button only shows
 /// when [onMic] is set (there is no voice search yet).
-class ZSearchBar extends StatelessWidget {
-  const ZSearchBar({super.key, this.hint, this.onTap, this.onMic});
+class ZSearchBar extends StatefulWidget {
+  const ZSearchBar({super.key, this.hint, this.onTap, this.onMic, this.hints});
 
   /// Defaults to `homeSearchHint`.
   final String? hint;
   final VoidCallback? onTap, onMic;
 
+  /// When set, the placeholder rotates through `Search "<hint>"` every
+  /// [rotateEvery] (static [hint] when animations are off).
+  final List<String>? hints;
+
+  static const Duration rotateEvery = Duration(milliseconds: 2600);
+
+  @override
+  State<ZSearchBar> createState() => _ZSearchBarState();
+}
+
+class _ZSearchBarState extends State<ZSearchBar> {
+  Timer? _timer;
+  int _index = 0;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncTimer();
+  }
+
+  @override
+  void didUpdateWidget(ZSearchBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _syncTimer();
+  }
+
+  void _syncTimer() {
+    final rotate =
+        (widget.hints?.length ?? 0) > 1 &&
+        !MediaQuery.disableAnimationsOf(context);
+    if (!rotate) {
+      _timer?.cancel();
+      _timer = null;
+      return;
+    }
+    _timer ??= Timer.periodic(ZSearchBar.rotateEvery, (_) {
+      if (mounted) setState(() => _index++);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final z = context.z;
+    final hints = widget.hints ?? const [];
+    final rotating = _timer != null && hints.isNotEmpty;
+    final hint = rotating
+        ? 'searchForItem'.tr(args: [hints[_index % hints.length]])
+        : widget.hint ?? 'homeSearchHint'.tr();
+    final onTap = widget.onTap, onMic = widget.onMic;
     return ZPressable(
       onTap: onTap,
       scale: .99,
@@ -152,12 +206,34 @@ class ZSearchBar extends StatelessWidget {
             Icon(Icons.search_rounded, color: z.ink3, size: 22),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(
-                hint ?? 'homeSearchHint'.tr(),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium!
-                    .copyWith(color: z.ink3, fontSize: 14.5),
+              child: ClipRect(
+                child: AnimatedSwitcher(
+                  duration: ZMotion.ui,
+                  switchInCurve: ZMotion.emphasized,
+                  // New hint rolls up from below, the old one up and out.
+                  transitionBuilder: (child, animation) {
+                    final incoming = child.key == ValueKey(hint);
+                    return SlideTransition(
+                      position: Tween(
+                        begin: Offset(0, incoming ? 1 : -1),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: FadeTransition(opacity: animation, child: child),
+                    );
+                  },
+                  layoutBuilder: (current, previous) => Stack(
+                    alignment: Alignment.centerLeft,
+                    children: [...previous, ?current],
+                  ),
+                  child: Text(
+                    hint,
+                    key: ValueKey(hint),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium!
+                        .copyWith(color: z.ink3, fontSize: 14.5),
+                  ),
+                ),
               ),
             ),
             if (onMic != null)

@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:zippy/core/payments/domain/payment_repository.dart';
+import 'package:zippy/core/widgets/z_commerce.dart';
 
 /// Turns a placeOrder / createPayUOrder failure into a translated
 /// message. The functions return fixed English sentences (OrderError in
@@ -21,6 +22,10 @@ String friendlyOrderError(Object error) {
   final unavailable = RegExp(r'Product unavailable: (.+)').firstMatch(message);
   if (unavailable != null) {
     return 'errorProductUnavailable'.tr(args: [unavailable.group(1)!]);
+  }
+  final minOrder = RegExp(r'MIN_ORDER_NOT_MET:(\d+)').firstMatch(message);
+  if (minOrder != null) {
+    return 'errorMinOrder'.tr(args: [rupees(int.parse(minOrder.group(1)!))]);
   }
   if (message.contains('Delivery slot')) return 'errorSlotUnavailable'.tr();
   if (message.contains('not serviceable') ||

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/connectivity/offline_banner.dart';
 import 'package:zippy/core/theme/theme_mode_provider.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
@@ -46,7 +47,7 @@ class Zyppi extends ConsumerWidget {
                           ? Brightness.light
                           : Brightness.dark,
                     ),
-            child: child!,
+            child: OfflineBannerHost(child: child!),
           );
         },
       ),

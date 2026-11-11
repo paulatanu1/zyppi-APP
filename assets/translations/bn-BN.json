@@ -325,5 +325,18 @@
   "supportHandoffOffline": "আমাদের টিম আপনার সঙ্গে যোগাযোগ করবে। তাড়াতাড়ি সাহায্যের জন্য WhatsApp বা ফোন করুন।",
   "messageSupport": "এই অর্ডার নিয়ে আমাদের মেসেজ করুন",
   "helpChat": "আমাদের সঙ্গে চ্যাট করুন",
-  "helpChatSubtitle": "সঙ্গে সঙ্গে উত্তর, বা আমাদের টিমের সঙ্গে কথা"
+  "helpChatSubtitle": "সঙ্গে সঙ্গে উত্তর, বা আমাদের টিমের সঙ্গে কথা",
+  "pressBackAgainToExit": "বের হতে আবার ব্যাক চাপুন",
+  "subcategoryAll": "সব",
+  "addMoreToOrder": "অর্ডার করতে আরও {} যোগ করুন",
+  "addMoreForFreeDelivery": "ফ্রি ডেলিভারির জন্য আরও {} যোগ করুন",
+  "freeDeliveryUnlocked": "দারুণ! এই অর্ডারে ফ্রি ডেলিভারি পাচ্ছেন",
+  "errorMinOrder": "ন্যূনতম অর্ডার {}। কার্টে আরও কিছু যোগ করুন।",
+  "recentSearches": "সাম্প্রতিক খোঁজ",
+  "clearRecentSearches": "মুছুন",
+  "trySearching": "খুঁজে দেখুন",
+  "searchForItem": "\"{}\" খুঁজুন",
+  "buyAgain": "আবার কিনুন",
+  "offlineBanner": "আপনি অফলাইন — সংরক্ষিত তথ্য দেখানো হচ্ছে",
+  "backOnline": "আবার অনলাইন"
 }

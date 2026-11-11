@@ -3,6 +3,8 @@ import 'dart:math';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:zippy/core/data/delivery_config_repository.dart';
+import 'package:zippy/core/domain/delivery_config.dart';
 import 'package:zippy/core/analytics/analytics_service.dart';
 import 'package:zippy/core/cart/application/cart_state.dart';
 import 'package:zippy/core/cart/data/cart_repository_impl.dart';
@@ -129,6 +131,7 @@ class CartNotifier extends StateNotifier<CartState> {
       loading: false,
       error: null,
       bill: BillCalculator.calculate(
+        delivery: state.delivery,
         lines: lines,
         tipPaise: state.tipPaise,
         coupon: state.appliedCoupon,
@@ -290,11 +293,26 @@ class CartNotifier extends StateNotifier<CartState> {
   /// 20261101120000_secure_payments.sql).
   static const maxTipPaise = 50000;
 
+  /// New delivery rule (config/delivery): re-price the bill.
+  void setDeliveryConfig(DeliveryConfig delivery) {
+    if (delivery == state.delivery) return;
+    state = state.copyWith(
+      delivery: delivery,
+      bill: BillCalculator.calculate(
+        delivery: delivery,
+        lines: state.lines,
+        tipPaise: state.tipPaise,
+        coupon: state.appliedCoupon,
+      ),
+    );
+  }
+
   void setTip(int tipPaise) {
     final tip = tipPaise.clamp(0, maxTipPaise);
     state = state.copyWith(
       tipPaise: tip,
       bill: BillCalculator.calculate(
+        delivery: state.delivery,
         lines: state.lines,
         tipPaise: tip,
         coupon: state.appliedCoupon,
@@ -316,6 +334,7 @@ class CartNotifier extends StateNotifier<CartState> {
       state = state.copyWith(
         appliedCoupon: coupon,
         bill: BillCalculator.calculate(
+          delivery: state.delivery,
           lines: state.lines,
           tipPaise: state.tipPaise,
           coupon: coupon,
@@ -331,6 +350,7 @@ class CartNotifier extends StateNotifier<CartState> {
     state = state.copyWith(
       appliedCoupon: null,
       bill: BillCalculator.calculate(
+        delivery: state.delivery,
         lines: state.lines,
         tipPaise: state.tipPaise,
       ),
@@ -365,10 +385,15 @@ final cartProvider = StateNotifierProvider<CartNotifier, CartState>((ref) {
   // Rebuild on login/logout so a new account pulls its own cart.
   ref.watch(sharedPreferenceProvider);
 
-  return CartNotifier(
+  final notifier = CartNotifier(
     ref.read(localCartStoreProvider),
     ref.read(cartRepositoryProvider),
     ref.read(catalogRepositoryProvider),
     ref.read(couponRepositoryProvider),
   );
+  ref.listen(deliveryConfigProvider, (_, next) {
+    final config = next.value;
+    if (config != null) notifier.setDeliveryConfig(config);
+  }, fireImmediately: true);
+  return notifier;
 });

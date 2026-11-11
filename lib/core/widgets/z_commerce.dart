@@ -1,6 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import '../domain/delivery_config.dart';
 import '../theme/zyppi_theme.dart';
 import 'z_motion.dart';
 
@@ -147,6 +149,19 @@ class ZAddStepper extends StatelessWidget {
   final VoidCallback onAdd, onRemove;
   final double height, minWidth;
 
+  // A light tick on every change: a firmer one for the first add.
+  void _add() {
+    quantity == 0
+        ? HapticFeedback.lightImpact()
+        : HapticFeedback.selectionClick();
+    onAdd();
+  }
+
+  void _remove() {
+    HapticFeedback.selectionClick();
+    onRemove();
+  }
+
   @override
   Widget build(BuildContext context) {
     final z = context.z;
@@ -162,7 +177,7 @@ class ZAddStepper extends StatelessWidget {
       child: quantity == 0
           ? ZPressable(
               key: const ValueKey('add'),
-              onTap: onAdd,
+              onTap: _add,
               child: Container(
                 height: height,
                 constraints: const BoxConstraints(minWidth: 70),
@@ -193,7 +208,7 @@ class ZAddStepper extends StatelessWidget {
                 children: [
                   _StepBtn(
                     icon: Icons.remove_rounded,
-                    onTap: onRemove,
+                    onTap: _remove,
                     semantic: 'removeOne'.tr(),
                     size: height,
                   ),
@@ -214,7 +229,7 @@ class ZAddStepper extends StatelessWidget {
                   ),
                   _StepBtn(
                     icon: Icons.add_rounded,
-                    onTap: onAdd,
+                    onTap: _add,
                     semantic: 'addOne'.tr(),
                     size: height,
                   ),
@@ -293,4 +308,151 @@ class ZImageTile extends StatelessWidget {
       child: image,
     ),
   );
+}
+
+/// Free-delivery / minimum-order progress (docs/mockups/Cart.dc.html's
+/// truck + bar card): "Add ₹X more to place your order" until the
+/// minimum is met, then "Add ₹X more for FREE delivery", then a
+/// celebratory "free delivery" line once unlocked. Renders nothing when
+/// [delivery] has neither a minimum nor a free-delivery goal.
+///
+/// [compact] is the slim pill shown above the floating cart bar; it hides
+/// itself once there is nothing left to add.
+class ZDeliveryProgress extends StatelessWidget {
+  const ZDeliveryProgress({
+    super.key,
+    required this.itemTotalPaise,
+    required this.delivery,
+    this.compact = false,
+  });
+
+  final int itemTotalPaise;
+  final DeliveryConfig delivery;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final z = context.z;
+    final t = Theme.of(context).textTheme;
+    final toMinimum = delivery.remainingForMinimum(itemTotalPaise);
+    final toFree = delivery.remainingForFree(itemTotalPaise);
+    final unlocked = delivery.hasFreeDeliveryGoal && toFree == 0;
+
+    if (toMinimum == 0 && !delivery.hasFreeDeliveryGoal) {
+      return const SizedBox.shrink();
+    }
+    if (compact && toMinimum == 0 && unlocked) return const SizedBox.shrink();
+
+    final String message;
+    final double progress;
+    final Color accent;
+    final IconData icon;
+    if (toMinimum > 0) {
+      message = 'addMoreToOrder'.tr(args: [rupees(toMinimum)]);
+      progress = itemTotalPaise / delivery.minOrderPaise;
+      accent = z.warn;
+      icon = Icons.shopping_basket_outlined;
+    } else if (!unlocked) {
+      message = 'addMoreForFreeDelivery'.tr(args: [rupees(toFree)]);
+      progress = itemTotalPaise / delivery.freeAbovePaise;
+      accent = z.brand;
+      icon = Icons.local_shipping_outlined;
+    } else {
+      message = 'freeDeliveryUnlocked'.tr();
+      progress = 1;
+      accent = z.ok;
+      icon = Icons.celebration_outlined;
+    }
+
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final motion = reduceMotion ? Duration.zero : ZMotion.sheet;
+
+    final bar = ClipRRect(
+      borderRadius: ZRadius.all(ZRadius.badge),
+      child: SizedBox(
+        height: compact ? 4 : 6,
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(end: progress.clamp(0, 1).toDouble()),
+          duration: motion,
+          curve: ZMotion.emphasized,
+          builder: (context, value, _) => LinearProgressIndicator(
+            value: value,
+            minHeight: compact ? 4 : 6,
+            backgroundColor: z.surface3,
+            valueColor: AlwaysStoppedAnimation(accent),
+          ),
+        ),
+      ),
+    );
+
+    final row = Row(
+      children: [
+        // Pops when the stage changes (minimum met, free delivery unlocked).
+        AnimatedSwitcher(
+          duration: motion,
+          transitionBuilder: (child, animation) => ScaleTransition(
+            scale: CurvedAnimation(parent: animation, curve: Curves.elasticOut),
+            child: child,
+          ),
+          child: Icon(
+            icon,
+            key: ValueKey(icon),
+            size: compact ? 16 : 18,
+            color: accent,
+          ),
+        ),
+        const SizedBox(width: ZSpace.x2),
+        Expanded(
+          child: Text(
+            message,
+            maxLines: compact ? 1 : 2,
+            overflow: TextOverflow.ellipsis,
+            style: (compact ? t.labelSmall : t.labelMedium)!.copyWith(
+              color: z.ink,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
+    );
+
+    return Semantics(
+      liveRegion: true,
+      label: message,
+      excludeSemantics: true,
+      child: Container(
+        padding: compact
+            ? const EdgeInsets.fromLTRB(
+                ZSpace.x3,
+                ZSpace.x2,
+                ZSpace.x3,
+                ZSpace.x2,
+              )
+            : const EdgeInsets.all(ZSpace.x4 - 2),
+        decoration: BoxDecoration(
+          color: z.surface,
+          borderRadius: ZRadius.all(compact ? ZRadius.chip : ZRadius.card),
+          border: Border.all(color: z.line),
+          boxShadow: compact
+              ? [
+                  BoxShadow(
+                    color: z.shadow,
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            row,
+            SizedBox(height: compact ? ZSpace.x1 + 2 : ZSpace.x2 + 2),
+            bar,
+          ],
+        ),
+      ),
+    );
+  }
 }

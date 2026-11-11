@@ -4,12 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
+import 'package:zippy/core/widgets/z_chrome.dart';
 import 'package:zippy/features/search/application/search_provider.dart';
+import 'package:zippy/core/data/search_suggestions_provider.dart';
+import 'package:zippy/features/search/data/recent_searches.dart';
 import 'package:zippy/features/search/widgets/product_list_row.dart';
 
-/// docs/screens/light/08-search.png. Left out until there's data for them:
-/// recent searches, trending tiles and "See all N results" (every result
-/// is already listed).
+/// docs/screens/light/08-search.png. Before typing: recent searches (this
+/// device) and "Try searching" suggestions. Left out: trending tiles and
+/// "See all N results" (every result is already listed).
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
 
@@ -24,10 +27,26 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     text: ref.read(searchProvider).query,
   );
 
+  late final _recent = ref.read(recentSearchesProvider.notifier);
+
+  /// Latest query that found something: saved as a recent search when the
+  /// user leaves (or submits), so half-typed prefixes aren't remembered.
+  String? _lastFound;
+
   @override
   void dispose() {
+    final found = _lastFound;
+    if (found != null) _recent.add(found);
     searchController.dispose();
     super.dispose();
+  }
+
+  void _useSuggestion(String query) {
+    searchController
+      ..text = query
+      ..selection = TextSelection.collapsed(offset: query.length);
+    ref.read(searchProvider.notifier).search(query);
+    FocusScope.of(context).unfocus();
   }
 
   void _clear() {
@@ -40,6 +59,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final z = context.z;
     final t = Theme.of(context).textTheme;
     final state = ref.watch(searchProvider);
+    ref.listen(searchProvider, (_, next) {
+      if (!next.loading && next.results.isNotEmpty) {
+        _lastFound = next.query.trim();
+      }
+    });
     final notifier = ref.read(searchProvider.notifier);
     // A product with no variant can't be shown or added; dropping it here
     // (not in the list builder) keeps the dividers even.
@@ -84,7 +108,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         ],
       );
     } else if (state.query.trim().isEmpty) {
-      body = _Message(icon: Icons.search_rounded, text: 'searchIdleHint'.tr());
+      body = _IdleSuggestions(onPick: _useSuggestion);
     } else if (results.isEmpty) {
       body = _Message(
         icon: Icons.search_off_rounded,
@@ -149,6 +173,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         controller: searchController,
                         autofocus: value.text.isEmpty,
                         onChanged: notifier.search,
+                        onSubmitted: _recent.add,
                         textInputAction: TextInputAction.search,
                         decoration: InputDecoration(
                           hintText: 'searchStoreHint'.tr(),
@@ -205,6 +230,75 @@ class _Message extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Shown before typing: recent searches (with Clear) and "Try searching"
+/// chips; the plain hint when there are neither.
+class _IdleSuggestions extends ConsumerWidget {
+  const _IdleSuggestions({required this.onPick});
+
+  final ValueChanged<String> onPick;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final z = context.z;
+    final t = Theme.of(context).textTheme;
+    final recent = ref.watch(recentSearchesProvider);
+    final suggestions = ref.watch(searchSuggestionsProvider).value ?? const [];
+
+    if (recent.isEmpty && suggestions.isEmpty) {
+      return _Message(icon: Icons.search_rounded, text: 'searchIdleHint'.tr());
+    }
+
+    Widget heading(String text, {Widget? trailing}) => Padding(
+      padding: const EdgeInsets.only(bottom: ZSpace.x2),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              text.toUpperCase(),
+              style: t.labelSmall!.copyWith(color: z.ink3, letterSpacing: 1.1),
+            ),
+          ),
+          ?trailing,
+        ],
+      ),
+    );
+
+    Widget chips(List<String> items, IconData icon) => Wrap(
+      spacing: ZSpace.x2,
+      runSpacing: ZSpace.x2,
+      children: [
+        for (final (i, item) in items.indexed)
+          ZEntrance(
+            index: i,
+            child: ZChip(label: item, icon: icon, onTap: () => onPick(item)),
+          ),
+      ],
+    );
+
+    return ListView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: const EdgeInsets.all(ZSpace.screen),
+      children: [
+        if (recent.isNotEmpty) ...[
+          heading(
+            'recentSearches'.tr(),
+            trailing: TextButton(
+              onPressed: ref.read(recentSearchesProvider.notifier).clear,
+              child: Text('clearRecentSearches'.tr()),
+            ),
+          ),
+          chips(recent, Icons.history_rounded),
+          const SizedBox(height: ZSpace.x6),
+        ],
+        if (suggestions.isNotEmpty) ...[
+          heading('trySearching'.tr()),
+          chips(suggestions, Icons.trending_up_rounded),
+        ],
+      ],
     );
   }
 }

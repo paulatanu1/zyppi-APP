@@ -325,5 +325,18 @@
   "supportHandoffOffline": "हमारी टीम आपसे संपर्क करेगी। जल्दी मदद के लिए WhatsApp या कॉल करें।",
   "messageSupport": "इस ऑर्डर के बारे में हमें मैसेज करें",
   "helpChat": "हमसे चैट करें",
-  "helpChatSubtitle": "तुरंत जवाब, या हमारी टीम से बात"
+  "helpChatSubtitle": "तुरंत जवाब, या हमारी टीम से बात",
+  "pressBackAgainToExit": "बाहर निकलने के लिए फिर से बैक दबाएँ",
+  "subcategoryAll": "सभी",
+  "addMoreToOrder": "ऑर्डर करने के लिए {} और जोड़ें",
+  "addMoreForFreeDelivery": "मुफ़्त डिलीवरी के लिए {} और जोड़ें",
+  "freeDeliveryUnlocked": "वाह! इस ऑर्डर पर डिलीवरी मुफ़्त है",
+  "errorMinOrder": "न्यूनतम ऑर्डर {} है। कार्ट में थोड़ा और जोड़ें।",
+  "recentSearches": "हाल की खोजें",
+  "clearRecentSearches": "हटाएँ",
+  "trySearching": "यह खोजें",
+  "searchForItem": "\"{}\" खोजें",
+  "buyAgain": "फिर से खरीदें",
+  "offlineBanner": "आप ऑफ़लाइन हैं — सहेजी गई जानकारी दिख रही है",
+  "backOnline": "फिर से ऑनलाइन"
 }

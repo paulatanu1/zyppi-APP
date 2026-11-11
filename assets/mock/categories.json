@@ -54,5 +54,45 @@
     "image": "assets/images/beverages.png",
     "colorHex": "3FB7DFF5",
     "borderColorHex": "FFB7DFF5"
+  },
+  {
+    "id": "sub-fresh-fruits",
+    "name": "Fresh Fruits",
+    "image": "assets/images/apple.png",
+    "colorHex": "1A53B175",
+    "borderColorHex": "FF53B175",
+    "parentId": "cat-fruits-veg"
+  },
+  {
+    "id": "sub-daily-veggies",
+    "name": "Daily Veggies",
+    "image": "assets/images/veg.png",
+    "colorHex": "1A53B175",
+    "borderColorHex": "FF53B175",
+    "parentId": "cat-fruits-veg"
+  },
+  {
+    "id": "sub-exotic",
+    "name": "Exotic",
+    "image": "assets/images/category.png",
+    "colorHex": "1A53B175",
+    "borderColorHex": "FF53B175",
+    "parentId": "cat-fruits-veg"
+  },
+  {
+    "id": "sub-bread",
+    "name": "Bread",
+    "image": "assets/images/bread.png",
+    "colorHex": "FFFFECF7",
+    "borderColorHex": "FFFB54B6",
+    "parentId": "cat-bread-eggs"
+  },
+  {
+    "id": "sub-eggs",
+    "name": "Eggs",
+    "image": "assets/images/bread.png",
+    "colorHex": "FFFFECF7",
+    "borderColorHex": "FFFB54B6",
+    "parentId": "cat-bread-eggs"
   }
 ]
