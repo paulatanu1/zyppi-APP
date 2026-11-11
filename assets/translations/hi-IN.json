@@ -331,5 +331,9 @@
   "addMoreToOrder": "ऑर्डर करने के लिए {} और जोड़ें",
   "addMoreForFreeDelivery": "मुफ़्त डिलीवरी के लिए {} और जोड़ें",
   "freeDeliveryUnlocked": "वाह! इस ऑर्डर पर डिलीवरी मुफ़्त है",
-  "errorMinOrder": "न्यूनतम ऑर्डर {} है। कार्ट में थोड़ा और जोड़ें।"
+  "errorMinOrder": "न्यूनतम ऑर्डर {} है। कार्ट में थोड़ा और जोड़ें।",
+  "recentSearches": "हाल की खोजें",
+  "clearRecentSearches": "हटाएँ",
+  "trySearching": "यह खोजें",
+  "searchForItem": "\"{}\" खोजें"
 }

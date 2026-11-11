@@ -9,7 +9,11 @@ import 'package:zippy/core/data/cached_catalog_repository.dart';
 import 'package:zippy/core/data/catalog_repository_impl.dart';
 import 'package:zippy/core/domain/product.dart';
 import 'package:zippy/core/domain/product_variant.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:zippy/core/data/provider/shared_preference_provider.dart';
+import 'package:zippy/core/data/search_suggestions_provider.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
+import 'package:zippy/features/search/data/recent_searches.dart';
 import 'package:zippy/features/search/presentation/search_screen.dart';
 
 import '../helpers/fake_repositories.dart';
@@ -42,9 +46,15 @@ void main() {
     WidgetTester tester, {
     ThemeData? theme,
     double textScale = 1,
+    List<String> recent = const [],
+    List<String> suggestions = const [],
   }) async {
+    SharedPreferences.setMockInitialValues({'recentSearches': recent});
+    final prefs = (await tester.runAsync(SharedPreferences.getInstance))!;
     final container = ProviderContainer(
       overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        searchSuggestionsProvider.overrideWith((ref) async => suggestions),
         catalogRepositoryProvider.overrideWithValue(
           CachedCatalogRepository(_catalog),
         ),
@@ -121,4 +131,45 @@ void main() {
       });
     }
   }
+
+  testWidgets('recent searches and suggestions fill the idle screen', (
+    tester,
+  ) async {
+    final container = await pumpSearch(
+      tester,
+      recent: ['shimla'],
+      suggestions: ['Brown Bread'],
+    );
+    expect(find.text('RECENT SEARCHES'), findsOneWidget);
+    expect(find.text('TRY SEARCHING'), findsOneWidget);
+
+    // Tapping a chip runs that search.
+    await tester.tap(find.text('Brown Bread'));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+    expect(find.text('RESULTS FOR “BROWN BREAD”'), findsOneWidget);
+
+    // Clear empties the recent list.
+    await tester.tap(find.byTooltip('Clear search'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Clear'));
+    await tester.pumpAndSettle();
+    expect(container.read(recentSearchesProvider), isEmpty);
+    expect(find.text('RECENT SEARCHES'), findsNothing);
+  });
+
+  test('recent searches: newest first, de-duplicated, capped', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final recent = RecentSearchesNotifier(prefs);
+    for (var i = 0; i < 10; i++) {
+      recent.add('item $i');
+    }
+    recent.add('ITEM 9');
+    expect(recent.state.first, 'ITEM 9');
+    expect(recent.state.length, RecentSearchesNotifier.max);
+    expect(prefs.getStringList('recentSearches'), recent.state);
+    recent.add('a'); // too short
+    expect(recent.state.first, 'ITEM 9');
+  });
 }

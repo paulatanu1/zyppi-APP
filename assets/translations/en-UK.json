@@ -331,5 +331,9 @@
   "addMoreToOrder": "Add {} more to place your order",
   "addMoreForFreeDelivery": "Add {} more for FREE delivery",
   "freeDeliveryUnlocked": "Yay! You get FREE delivery on this order",
-  "errorMinOrder": "Minimum order is {}. Add a little more to your cart."
+  "errorMinOrder": "Minimum order is {}. Add a little more to your cart.",
+  "recentSearches": "Recent searches",
+  "clearRecentSearches": "Clear",
+  "trySearching": "Try searching",
+  "searchForItem": "Search \"{}\""
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/domain/home_section.dart';
@@ -151,10 +152,14 @@ class HomePinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
   final VoidCallback onSearch;
   final VoidCallback? onAllTap;
 
+  /// Product names the search placeholder rotates through.
+  final List<String> searchHints;
+
   const HomePinnedHeaderDelegate({
     required this.tabs,
     required this.onSearch,
     this.onAllTap,
+    this.searchHints = const [],
   });
 
   static const double _searchBlock = ZSize.search + ZSpace.x3;
@@ -198,7 +203,7 @@ class HomePinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
               ZSpace.screen,
               ZSpace.x3,
             ),
-            child: ZSearchBar(onTap: onSearch),
+            child: ZSearchBar(onTap: onSearch, hints: searchHints),
           ),
           if (tabs != null)
             CategoryTabsSection(
@@ -213,5 +218,7 @@ class HomePinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(HomePinnedHeaderDelegate oldDelegate) =>
-      oldDelegate.tabs != tabs || oldDelegate.onAllTap != onAllTap;
+      oldDelegate.tabs != tabs ||
+      oldDelegate.onAllTap != onAllTap ||
+      !listEquals(oldDelegate.searchHints, searchHints);
 }

@@ -12,6 +12,7 @@ import 'package:zippy/core/widgets/z_chrome.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/core/widgets/z_product_card.dart';
 import 'package:zippy/features/home_screen/application/home_sections_provider.dart';
+import 'package:zippy/core/data/search_suggestions_provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:zippy/features/home_screen/widgets/sections/category_tabs_section.dart';
 import 'package:zippy/features/home_screen/widgets/sections/home_section_widget.dart';
@@ -85,6 +86,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       tabs: stickyTabs,
                       onSearch: () => context.push('/searchScreen'),
                       onAllTap: _scrollToTop,
+                      searchHints:
+                          ref.watch(searchSuggestionsProvider).value ??
+                          const [],
                     ),
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: ZSpace.x3)),

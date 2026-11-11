@@ -331,5 +331,9 @@
   "addMoreToOrder": "ਆਰਡਰ ਕਰਨ ਲਈ {} ਹੋਰ ਜੋੜੋ",
   "addMoreForFreeDelivery": "ਮੁਫ਼ਤ ਡਿਲੀਵਰੀ ਲਈ {} ਹੋਰ ਜੋੜੋ",
   "freeDeliveryUnlocked": "ਵਾਹ! ਇਸ ਆਰਡਰ 'ਤੇ ਡਿਲੀਵਰੀ ਮੁਫ਼ਤ ਹੈ",
-  "errorMinOrder": "ਘੱਟੋ-ਘੱਟ ਆਰਡਰ {} ਹੈ। ਕਾਰਟ ਵਿੱਚ ਥੋੜ੍ਹਾ ਹੋਰ ਜੋੜੋ।"
+  "errorMinOrder": "ਘੱਟੋ-ਘੱਟ ਆਰਡਰ {} ਹੈ। ਕਾਰਟ ਵਿੱਚ ਥੋੜ੍ਹਾ ਹੋਰ ਜੋੜੋ।",
+  "recentSearches": "ਹਾਲੀਆ ਖੋਜਾਂ",
+  "clearRecentSearches": "ਹਟਾਓ",
+  "trySearching": "ਇਹ ਖੋਜੋ",
+  "searchForItem": "\"{}\" ਖੋਜੋ"
 }
