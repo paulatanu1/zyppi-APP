@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:zippy/core/domain/home_section.dart';
 import 'package:zippy/core/cart/presentation/floating_cart_bar.dart';
 import 'package:zippy/core/common_widgets/home_screen_header.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
@@ -17,12 +19,38 @@ import 'package:zippy/features/home_screen/widgets/sections/section_data.dart';
 /// Backend/admin-driven Home screen — renders `home_sections` in order
 /// (see docs/PLAN.md's Blinkit-referenced redesign note). The delivery
 /// header and search stay fixed app chrome, not admin content.
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final _scroll = ScrollController();
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _scrollToTop() {
+    if (!_scroll.hasClients) return;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _scroll.jumpTo(0);
+    } else {
+      _scroll.animateTo(0, duration: ZMotion.sheet, curve: ZMotion.emphasized);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final sectionsAsync = ref.watch(homeSectionsProvider);
+    // A `config.sticky` category_tabs section pins with the search bar.
+    final stickyTabs = sectionsAsync.value?.sections
+        .where(_isStickyTabs)
+        .firstOrNull;
 
     return Scaffold(
       backgroundColor: context.z.bg,
@@ -42,11 +70,20 @@ class HomeScreen extends ConsumerWidget {
               },
               // Slivers so a `config.sticky` category_tabs section can pin.
               child: CustomScrollView(
+                controller: _scroll,
                 physics: const AlwaysScrollableScrollPhysics(
                   parent: BouncingScrollPhysics(),
                 ),
                 slivers: [
                   const SliverToBoxAdapter(child: HomeScreenHeader()),
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: HomePinnedHeaderDelegate(
+                      tabs: stickyTabs,
+                      onSearch: () => context.push('/searchScreen'),
+                      onAllTap: _scrollToTop,
+                    ),
+                  ),
                   const SliverToBoxAdapter(child: SizedBox(height: ZSpace.x3)),
                   ...sectionsAsync.when(
                     loading: () => [
@@ -99,21 +136,16 @@ class HomeScreen extends ConsumerWidget {
                             ),
                           ),
                         ),
-                      for (final section in data.sections) ...[
-                        if (section.type == 'category_tabs' &&
-                            section.config.boolean('sticky') == true)
-                          SliverPersistentHeader(
-                            pinned: true,
-                            delegate: StickyCategoryTabsDelegate(section),
-                          )
-                        else
-                          SliverToBoxAdapter(
-                            child: HomeSectionWidget(
-                              section: section,
-                              categoriesById: data.categoriesById,
-                              productsById: data.productsById,
-                            ),
+                      for (final section in data.sections.where(
+                        (s) => s != stickyTabs,
+                      )) ...[
+                        SliverToBoxAdapter(
+                          child: HomeSectionWidget(
+                            section: section,
+                            categoriesById: data.categoriesById,
+                            productsById: data.productsById,
                           ),
+                        ),
                         const SliverToBoxAdapter(
                           child: SizedBox(height: ZSpace.x4),
                         ),
@@ -142,6 +174,9 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 }
+
+bool _isStickyTabs(HomeSection s) =>
+    s.type == 'category_tabs' && s.config.boolean('sticky') == true;
 
 /// Banner, category grid and a product row, shaped like the loaded page.
 class _HomeSkeleton extends StatelessWidget {
