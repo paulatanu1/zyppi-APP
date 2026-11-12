@@ -59,11 +59,12 @@ class CategoryTabsSection extends StatelessWidget {
               label: item.data.string('label') ?? '',
               icon: resolveSectionIcon(item.data.string('icon')),
               onHero: onHero,
-              onTap: categoryId == null
-                  ? null
-                  : () => context.push(
-                      '/categoryDetailsScreen?categoryId=$categoryId',
-                    ),
+              // No category (the "All" chip) opens the product page on All.
+              onTap: () => context.push(
+                categoryId == null
+                    ? '/categoryDetailsScreen'
+                    : '/categoryDetailsScreen?categoryId=$categoryId',
+              ),
             );
           },
         ),

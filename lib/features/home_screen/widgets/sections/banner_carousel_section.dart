@@ -60,6 +60,10 @@ class _BannerCarouselSectionState extends State<BannerCarouselSection> {
                   ('category', final String id) => () => context.push(
                     '/categoryDetailsScreen?categoryId=$id',
                   ),
+                  // A category banner with no target opens All.
+                  ('category', null) => () => context.push(
+                    '/categoryDetailsScreen',
+                  ),
                   ('product', final String id) => () => context.push(
                     '/productDetailsScreen?productId=$id',
                   ),
