@@ -236,7 +236,7 @@ class ZSearchBar extends StatelessWidget {
   }
 }
 
-/// Floating magenta cart bar: stacked thumbnails · "3 items · ₹447 / You save ₹50" · View cart ›.
+/// Floating purple cart bar: stacked thumbnails · "3 items · ₹447 / You save ₹50" · View cart ›.
 /// Slides up on first build. Place in a Stack, 12 px above the nav bar.
 /// [thumbnails] are widgets (e.g. `CatalogImage`) so network and asset
 /// images both work; at most three are shown.
@@ -248,14 +248,14 @@ class ZCartBar extends StatelessWidget {
     required this.total,
     this.saved = 0,
     required this.onTap,
-    this.textured = false,
+    this.textured = true,
   });
   final List<Widget> thumbnails;
   final int itemCount, total, saved;
   final VoidCallback onTap;
 
   /// The splash texture (aurora + grain) on the bar, with a softer, wider
-  /// glow (Home trial). Off: the flat brand bar.
+  /// glow. Off: the flat brand bar.
   final bool textured;
 
   @override
@@ -610,7 +610,7 @@ class ZChip extends StatelessWidget {
   }
 }
 
-/// Fills the status-bar area with [color] (default: the magenta header) and
+/// Fills the status-bar area with [color] (default: the purple header) and
 /// asks for light status-bar icons — for screens whose top section is the
 /// header colour (Home, Account). Place at the top of a `Stack`.
 class ZStatusBarStrip extends StatelessWidget {

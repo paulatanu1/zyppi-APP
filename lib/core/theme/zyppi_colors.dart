@@ -72,8 +72,8 @@ class ZColors extends ThemeExtension<ZColors> {
   final Color mapBg, mapRoad, mapBlock, mapPark, mapWater;
   final Color shadow;
 
-  /// The Z mark's purple (#673AB7) and the splash's first frame — splash
-  /// / icon only; the app's brand stays [brand] pink. `splashBg` is white
+  /// The Z mark's purple (#673AB7) and the splash's first frame (the
+  /// app's [brand] is the same logo purple). `splashBg` is white
   /// in both themes and must match `flutter_native_splash` in pubspec.yaml.
   final Color logo, splashBg;
 
@@ -92,14 +92,14 @@ class ZColors extends ThemeExtension<ZColors> {
     ink2: Color(0xFF55585F),
     ink3: Color(0xFF83868D),
     onBrand: Color(0xFFFFFFFF),
-    brand: Color(0xFFD4127B),
-    brandPress: Color(0xFFB00E66),
-    brandText: Color(0xFFC0106F),
-    brandSoft: Color(0xFFFDE8F3),
-    brandSoft2: Color(0xFFFBD3E8),
-    header: Color(0xFFD4127B),
+    brand: Color(0xFF673AB7),
+    brandPress: Color(0xFF5E35B1),
+    brandText: Color(0xFF5E35B1),
+    brandSoft: Color(0xFFEDE7F6),
+    brandSoft2: Color(0xFFD1C4E9),
+    header: Color(0xFF673AB7),
     headerInk: Color(0xFFFFFFFF),
-    headerInk2: Color(0xFFFFD6EB),
+    headerInk2: Color(0xFFD1C4E9),
     blue: Color(0xFF2443D6),
     blueText: Color(0xFF2443D6),
     blueSoft: Color(0xFFE7EBFD),
@@ -140,14 +140,14 @@ class ZColors extends ThemeExtension<ZColors> {
     ink2: Color(0xFFA8AAB2),
     ink3: Color(0xFF787B84),
     onBrand: Color(0xFFFFFFFF),
-    brand: Color(0xFFE0198A),
-    brandPress: Color(0xFFC21275),
-    brandText: Color(0xFFFF6DB7),
-    brandSoft: Color(0xFF33142A),
-    brandSoft2: Color(0xFF4A1B3C),
-    header: Color(0xFF1A0A15),
+    brand: Color(0xFF7E57C2),
+    brandPress: Color(0xFF673AB7),
+    brandText: Color(0xFFB39DDB),
+    brandSoft: Color(0xFF1F1533),
+    brandSoft2: Color(0xFF2D1F4A),
+    header: Color(0xFF2A1658),
     headerInk: Color(0xFFFFFFFF),
-    headerInk2: Color(0xFFF3A9D0),
+    headerInk2: Color(0xFFCDBDF0),
     blue: Color(0xFF4865F0),
     blueText: Color(0xFF97A9FF),
     blueSoft: Color(0xFF1A2150),
@@ -183,8 +183,7 @@ class ZColors extends ThemeExtension<ZColors> {
     BoxShadow(color: shadow, blurRadius: 24, offset: const Offset(0, 8)),
   ];
 
-  /// A copy with only the brand / header group replaced — used for the
-  /// logo-purple trial on Home ([violetLight], [violetDark]).
+  /// A copy with only the brand / header group replaced.
   ZColors withBrand({
     Color? brand,
     Color? brandPress,
@@ -239,28 +238,6 @@ class ZColors extends ThemeExtension<ZColors> {
     shadow: shadow,
     logo: logo,
     splashBg: splashBg,
-  );
-
-  /// Logo purple (#673AB7) brand, matching the splash. Trial: Home only
-  /// (see `ZBrandScope`).
-  static final violetLight = light.withBrand(
-    brand: const Color(0xFF673AB7),
-    brandPress: const Color(0xFF5E35B1),
-    brandText: const Color(0xFF5E35B1),
-    brandSoft: const Color(0xFFEDE7F6),
-    brandSoft2: const Color(0xFFD1C4E9),
-    header: const Color(0xFF673AB7),
-    headerInk2: const Color(0xFFD1C4E9),
-  );
-
-  static final violetDark = dark.withBrand(
-    brand: const Color(0xFF7E57C2),
-    brandPress: const Color(0xFF673AB7),
-    brandText: const Color(0xFFB39DDB),
-    brandSoft: const Color(0xFF1F1533),
-    brandSoft2: const Color(0xFF2D1F4A),
-    header: const Color(0xFF2A1658),
-    headerInk2: const Color(0xFFCDBDF0),
   );
 
   @override

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../widgets/z_brand_texture.dart';
 import 'app_colors_ext.dart';
 import 'zyppi_colors.dart';
 import 'zyppi_tokens.dart';
@@ -16,16 +17,6 @@ export 'zyppi_typography.dart';
 abstract final class ZyppiTheme {
   static final ThemeData light = _build(ZColors.light, Brightness.light);
   static final ThemeData dark = _build(ZColors.dark, Brightness.dark);
-
-  /// Logo-purple variants (trial on Home; see `ZBrandScope`).
-  static final ThemeData violetLight = _build(
-    ZColors.violetLight,
-    Brightness.light,
-  );
-  static final ThemeData violetDark = _build(
-    ZColors.violetDark,
-    Brightness.dark,
-  );
 
   static ThemeData _build(ZColors c, Brightness b) {
     final text = zyppiTextTheme(c.ink, c.ink2, c.ink3);
@@ -77,16 +68,24 @@ abstract final class ZyppiTheme {
         b == Brightness.light ? AppColorsExt.light : AppColorsExt.dark,
       ],
       splashFactory: InkSparkle.splashFactory,
+      actionIconTheme: ActionIconThemeData(
+        backButtonIconBuilder: (context) =>
+            const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+      ),
       dividerTheme: DividerThemeData(color: c.line, thickness: 1, space: 1),
+      // Detail screens: a light bar that blends into the page (no divider),
+      // a touch taller, with a rounded back chevron. Main tabs and key
+      // moments use the textured ZHeroHeader instead.
       appBarTheme: AppBarTheme(
-        backgroundColor: c.surface,
+        backgroundColor: c.bg,
         foregroundColor: c.ink,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
+        toolbarHeight: 64,
+        titleSpacing: ZSpace.x1,
         titleTextStyle: text.titleLarge,
-        shape: Border(bottom: BorderSide(color: c.line)),
         systemOverlayStyle: b == Brightness.light
             ? SystemUiOverlayStyle.dark
             : SystemUiOverlayStyle.light,
@@ -99,6 +98,8 @@ abstract final class ZyppiTheme {
           shape: buttonShape,
           textStyle: buttonText,
           elevation: 0,
+          // The splash texture on every brand button.
+          backgroundBuilder: zBrandButtonBackground,
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(

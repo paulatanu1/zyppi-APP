@@ -1,5 +1,7 @@
 # Zyppi design tokens — v2 (Sora + Manrope, light + dark)
 
+**Brand (2026-11):** the app uses the logo purple everywhere (pink removed). Brand surfaces carry the splash texture — purple fill + aurora blobs + film grain — via `ZBrandTexture` (`lib/core/widgets/z_brand_texture.dart`): hero headers on the main tabs and key moments (`ZHeroHeader`), filled buttons, the cart and checkout bars. Detail screens use the light app bar from the theme. The PNGs in `docs/screens` still show the old magenta and are out of date on colour.
+
 **Source of truth is code:** `lib/core/theme/` (ZColors, ZyppiTheme, ZSpace, ZRadius, ZSize, ZMotion). This file is the human-readable copy. Visual truth is `docs/screens/{light,dark}/*.png`.
 
 Rules: widgets never use literal colours, font sizes or radii — read `context.z.<token>`, `Theme.of(context).textTheme.<style>`, `ZRadius.*`, `ZSpace.*`.
@@ -14,10 +16,10 @@ Rules: widgets never use literal colours, font sizes or radii — read `context.
 | `surface3` | `#E8E5DF` | `#272930` | Progress track, skeleton highlight |
 | `line` / `line2` | `#E4E1DA` / `#D6D2C9` | `#2A2C33` / `#383B43` | Borders / input + outline-button borders |
 | `ink` / `ink2` / `ink3` | `#141519` / `#55585F` / `#83868D` | `#F2F2F4` / `#A8AAB2` / `#787B84` | Text: primary / secondary / captions |
-| `brand` | `#D4127B` | `#E0198A` | Primary buttons, stepper, cart bar, header (light) |
-| `brandText` | `#C0106F` | `#FF6DB7` | Links, ADD outline, active tab icon (text-safe brand) |
-| `brandSoft` / `brandSoft2` | `#FDE8F3` / `#FBD3E8` | `#33142A` / `#4A1B3C` | Active tab pill, selected option bg |
-| `header` | `#D4127B` | `#1A0A15` | Home/Account header band |
+| `brand` | `#673AB7` | `#7E57C2` | Logo purple: primary buttons (textured), stepper, cart bar (textured), active states |
+| `brandText` | `#5E35B1` | `#B39DDB` | Links, ADD outline, active tab icon (text-safe brand) |
+| `brandSoft` / `brandSoft2` | `#EDE7F6` / `#D1C4E9` | `#1F1533` / `#2D1F4A` | Active tab pill, See-all pill, selected option bg |
+| `header` | `#673AB7` | `#2A1658` | Textured hero headers (`ZBrandTexture` / `ZHeroHeader`) |
 | `blue` / `blueText` / `blueSoft` | `#2443D6` / `#2443D6` / `#E7EBFD` | `#4865F0` / `#97A9FF` / `#1A2150` | "% OFF" badge, secondary accent |
 | `deal` / `dealInk` | `#FFC83D` / `#3B2A00` | same | Promo banner |
 | `ok` / `okSoft` | `#138A4A` / `#E2F4E9` | `#3FD27F` / `#0F2E1D` | Savings, delivered, success |

@@ -8,7 +8,7 @@ import 'package:zippy/core/widgets/z_chrome.dart';
 /// docs/mockups/Main.dc.html's floating "View cart" bar, fed from the
 /// cart. Renders nothing while the cart is loading or empty.
 class FloatingCartBar extends ConsumerWidget {
-  const FloatingCartBar({super.key, this.textured = false});
+  const FloatingCartBar({super.key, this.textured = true});
 
   /// See [ZCartBar.textured].
   final bool textured;

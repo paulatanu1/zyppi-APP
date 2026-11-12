@@ -14,7 +14,6 @@ import 'package:zippy/core/domain/product.dart';
 import 'package:zippy/core/domain/profile.dart';
 import 'package:zippy/core/shared_providers/location/application/get_current_location_state.dart';
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
-import 'package:zippy/core/theme/z_brand_scope.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/widgets/z_brand_texture.dart';
 import 'package:zippy/core/widgets/z_chrome.dart';
@@ -108,18 +107,12 @@ void main() {
   ZColors colorsOf(WidgetTester tester, Finder finder) =>
       Theme.of(tester.element(finder)).extension<ZColors>()!;
 
-  testWidgets('Home is logo purple; the app around it keeps its brand', (
-    tester,
-  ) async {
+  testWidgets('Home is logo purple and textured', (tester) async {
     await pumpHome(tester);
 
     expect(
       colorsOf(tester, find.byType(HomeScreenHeader)).brand,
-      ZColors.violetLight.brand,
-    );
-    expect(
-      colorsOf(tester, find.byType(HomeScreen)).brand,
-      ZColors.light.brand,
+      const Color(0xFF673AB7),
     );
     expect(find.byType(ZBrandTexture), findsWidgets);
     expect(tester.takeException(), isNull);
@@ -202,44 +195,6 @@ void main() {
       tester.getSize(find.byType(CategoryTabsSection)).height,
       CategoryTabsSection.height,
     );
-  });
-
-  testWidgets('ZBrandScope keeps light/dark and swaps only the brand', (
-    tester,
-  ) async {
-    late ZColors light, dark;
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: ZyppiTheme.light,
-        home: Column(
-          children: [
-            ZBrandScope.violet(
-              child: Builder(
-                builder: (c) {
-                  light = c.z;
-                  return const SizedBox();
-                },
-              ),
-            ),
-            Theme(
-              data: ZyppiTheme.dark,
-              child: ZBrandScope.violet(
-                child: Builder(
-                  builder: (c) {
-                    dark = c.z;
-                    return const SizedBox();
-                  },
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-    expect(light.brand, ZColors.violetLight.brand);
-    expect(light.bg, ZColors.light.bg);
-    expect(dark.brand, ZColors.violetDark.brand);
-    expect(dark.bg, ZColors.dark.bg);
   });
 
   test('shared widgets default to their existing look', () {

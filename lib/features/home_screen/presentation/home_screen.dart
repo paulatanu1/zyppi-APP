@@ -6,7 +6,6 @@ import 'package:zippy/core/cart/presentation/floating_cart_bar.dart';
 import 'package:zippy/core/common_widgets/home_screen_header.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/data/catalog_repository_impl.dart';
-import 'package:zippy/core/theme/z_brand_scope.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/widgets/z_brand_texture.dart';
 import 'package:zippy/core/widgets/z_chrome.dart';
@@ -22,8 +21,7 @@ import 'package:zippy/features/home_screen/widgets/sections/section_data.dart';
 /// (see docs/PLAN.md's Blinkit-referenced redesign note). The delivery
 /// header and search stay fixed app chrome, not admin content.
 ///
-/// Logo-purple trial: the screen is wrapped in [ZBrandScope.violet]. A
-/// textured hero panel sits behind the scroll view and curves under the
+/// A textured hero panel sits behind the scroll view and curves under the
 /// first section; the header pins and folds down to the search bar.
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -46,10 +44,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      ZBrandScope.violet(child: Builder(builder: _build));
-
-  Widget _build(BuildContext context) {
+  Widget build(BuildContext context) {
     final sectionsAsync = ref.watch(homeSectionsProvider);
     final maxHeader = HomeScreenHeader.maxHeight(context);
     final minHeader = HomeScreenHeader.minHeight(context);
@@ -216,7 +211,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             right: ZSpace.screen,
             // 12px above the nav bar, per docs/mockups/zyppi.css .cartbar.
             bottom: ZSpace.x3,
-            child: FloatingCartBar(textured: true),
+            child: FloatingCartBar(),
           ),
         ],
       ),

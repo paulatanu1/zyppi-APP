@@ -128,14 +128,14 @@ class AppColorsExt extends ThemeExtension<AppColorsExt> {
   });
 
   static const light = AppColorsExt(
-    primary: Color(0xFFD4127B),
-    primaryDark: Color(0xFFB00E66),
-    primaryText: Color(0xFFC0106F),
-    primaryTint: Color(0xFFFDE8F3),
-    primarySurface: Color(0xFFFBD3E8),
-    header: Color(0xFFD4127B),
-    headerAlt: Color(0xFFB00E66),
-    onPrimaryMuted: Color(0xFFFFD6EB),
+    primary: Color(0xFF673AB7),
+    primaryDark: Color(0xFF5E35B1),
+    primaryText: Color(0xFF5E35B1),
+    primaryTint: Color(0xFFEDE7F6),
+    primarySurface: Color(0xFFD1C4E9),
+    header: Color(0xFF673AB7),
+    headerAlt: Color(0xFF5E35B1),
+    onPrimaryMuted: Color(0xFFD1C4E9),
     brandBlue: Color(0xFF2443D6),
     blueText: Color(0xFF2443D6),
     blueSoft: Color(0xFFE7EBFD),
@@ -183,18 +183,18 @@ class AppColorsExt extends ThemeExtension<AppColorsExt> {
     mapBlock: Color(0xFFE2DFD8),
     mapPark: Color(0xFFD9EDD2),
     mapWater: Color(0xFFCFE3F5),
-    mapRoute: Color(0xFFC0106F),
+    mapRoute: Color(0xFF5E35B1),
   );
 
   static const dark = AppColorsExt(
-    primary: Color(0xFFE0198A),
-    primaryDark: Color(0xFFC21275),
-    primaryText: Color(0xFFFF6DB7),
-    primaryTint: Color(0xFF33142A),
-    primarySurface: Color(0xFF4A1B3C),
-    header: Color(0xFF1A0A15),
+    primary: Color(0xFF7E57C2),
+    primaryDark: Color(0xFF673AB7),
+    primaryText: Color(0xFFB39DDB),
+    primaryTint: Color(0xFF1F1533),
+    primarySurface: Color(0xFF2D1F4A),
+    header: Color(0xFF2A1658),
     headerAlt: Color(0xFF2A1022),
-    onPrimaryMuted: Color(0xFFF3A9D0),
+    onPrimaryMuted: Color(0xFFCDBDF0),
     brandBlue: Color(0xFF4865F0),
     blueText: Color(0xFF97A9FF),
     blueSoft: Color(0xFF1A2150),
@@ -207,7 +207,7 @@ class AppColorsExt extends ThemeExtension<AppColorsExt> {
     accent: Color(0xFFFFC83D),
     accentInk: Color(0xFF3B2A00),
     accentTint: Color(0xFF33270A),
-    onboardingDotInactive: Color(0xFF4A1B3C),
+    onboardingDotInactive: Color(0xFF2D1F4A),
     ink: Color(0xFFF2F2F4),
     muted: Color(0xFFA8AAB2),
     faint: Color(0xFF787B84),
@@ -242,7 +242,7 @@ class AppColorsExt extends ThemeExtension<AppColorsExt> {
     mapBlock: Color(0xFF1C1E24),
     mapPark: Color(0xFF16261B),
     mapWater: Color(0xFF14243A),
-    mapRoute: Color(0xFFFF6DB7),
+    mapRoute: Color(0xFFB39DDB),
   );
 
   @override

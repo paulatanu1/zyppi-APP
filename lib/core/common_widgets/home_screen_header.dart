@@ -17,7 +17,7 @@ import 'package:zippy/features/home_screen/widgets/address_sheet.dart';
 
 /// Home's header: "ZYPPI EXPRESS", ⚡ ETA, address row (opens the address
 /// sheet), avatar (Account tab) and the search bar (search screen), on the
-/// splash texture (logo-purple trial; see `ZBrandScope`).
+/// splash texture.
 ///
 /// [collapse] (0–1) folds the ETA / address block away so only the search
 /// bar is left; Home drives it from a pinned sliver header. With

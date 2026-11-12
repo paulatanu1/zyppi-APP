@@ -13,6 +13,32 @@ abstract final class ZBrandTones {
   static const lilac = Color(0xFFB39DDB);
 }
 
+/// The textured fill of brand buttons (`filledButtonTheme`): the texture
+/// in [ZColors.brand], with a pressed shade drawn here because the ink
+/// ripple sits under it. Disabled buttons keep their flat colour.
+Widget zBrandButtonBackground(
+  BuildContext context,
+  Set<WidgetState> states,
+  Widget? child,
+) {
+  if (states.contains(WidgetState.disabled)) return child ?? const SizedBox();
+  final pressed = states.contains(WidgetState.pressed);
+  return ZBrandTexture(
+    color: context.z.brand,
+    borderRadius: ZRadius.all(ZRadius.button),
+    child: Stack(
+      alignment: Alignment.center,
+      children: [
+        if (pressed)
+          Positioned.fill(
+            child: ColoredBox(color: ZBrandTones.deep.withValues(alpha: .3)),
+          ),
+        ?child,
+      ],
+    ),
+  );
+}
+
 /// A tile of film grain (random greys at 7% alpha), made once and kept for
 /// the life of the app. Tile it with an [ImageShader].
 abstract final class ZGrain {
@@ -129,18 +155,27 @@ class ZBrandTexture extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return ClipRRect(
-      borderRadius: borderRadius,
-      child: RepaintBoundary(
-        child: CustomPaint(
-          painter: _BrandTexturePainter(
-            fill: color ?? context.z.header,
-            // Softer blobs on the dark header so it stays dark.
-            strength: dark ? .45 : 1,
-          ),
-          child: child,
+    // The texture repaints only when its colour or size changes, never
+    // because the content on top of it did.
+    final texture = RepaintBoundary(
+      child: CustomPaint(
+        painter: _BrandTexturePainter(
+          fill: color ?? context.z.header,
+          // Softer blobs on the dark header so it stays dark.
+          strength: dark ? .45 : 1,
         ),
       ),
+    );
+    return ClipRRect(
+      borderRadius: borderRadius,
+      child: child == null
+          ? SizedBox.expand(child: texture)
+          : Stack(
+              children: [
+                Positioned.fill(child: texture),
+                child!,
+              ],
+            ),
     );
   }
 }

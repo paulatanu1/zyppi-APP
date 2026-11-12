@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/common_widgets/nav_bar/provider/nav_bar_provider.dart';
-import 'package:zippy/core/theme/z_brand_scope.dart';
 import 'package:zippy/core/widgets/z_chrome.dart';
 import 'package:zippy/features/account/presentation/account_screen.dart';
 import 'package:zippy/features/explore/presentation/explore_screen.dart';
@@ -69,19 +68,12 @@ class _NavBarState extends ConsumerState<NavBar> {
       },
       child: Scaffold(
         body: IndexedStack(index: currentIndex, children: screens),
-        bottomNavigationBar: _themed(
-          currentIndex,
-          ZNavBar(
-            index: currentIndex,
-            cartCount: cartCount,
-            onTap: changeIndex.updateIndex,
-          ),
+        bottomNavigationBar: ZNavBar(
+          index: currentIndex,
+          cartCount: cartCount,
+          onTap: changeIndex.updateIndex,
         ),
       ),
     );
   }
-
-  /// Logo-purple trial: the bar matches Home while Home is selected.
-  static Widget _themed(int index, Widget bar) =>
-      index == 0 ? ZBrandScope.violet(child: bar) : bar;
 }

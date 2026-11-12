@@ -11,14 +11,14 @@ class AppColors {
   static Color fromHex(String argbHex) => Color(int.parse(argbHex, radix: 16));
 
   // Brand
-  static const Color primary = Color(0xFFD4127B);
-  static const Color primaryDark = Color(0xFFB00E66);
-  static const Color primaryText = Color(0xFFC0106F);
-  static const Color primaryTint = Color(0xFFFDE8F3);
-  static const Color primarySurface = Color(0xFFFBD3E8);
-  static const Color header = Color(0xFFD4127B);
-  static const Color headerAlt = Color(0xFFB00E66);
-  static const Color onPrimaryMuted = Color(0xFFFFD6EB);
+  static const Color primary = Color(0xFF673AB7);
+  static const Color primaryDark = Color(0xFF5E35B1);
+  static const Color primaryText = Color(0xFF5E35B1);
+  static const Color primaryTint = Color(0xFFEDE7F6);
+  static const Color primarySurface = Color(0xFFD1C4E9);
+  static const Color header = Color(0xFF673AB7);
+  static const Color headerAlt = Color(0xFF5E35B1);
+  static const Color onPrimaryMuted = Color(0xFFD1C4E9);
 
   // Blue (links, info)
   static const Color brandBlue = Color(0xFF2443D6);
@@ -98,9 +98,9 @@ class AppColors {
 
   // Legacy tokens kept for screens not yet restyled to the v2 mockup.
   // Prefer the brand tokens above in new code.
-  static const Color brandPink = primary;
+  static const Color brandPurple = primary;
   static const Color navy = Color(0xFF05416F);
-  static const Color primaryButtonColor = brandPink;
+  static const Color primaryButtonColor = brandPurple;
   static const Color googleSignInButtonColor = Color(0xFFF6F5F5);
   static const Color googleSignInShadowColor = Colors.grey;
   static const Color textFormFieldColor = Color.fromARGB(255, 207, 207, 207);
@@ -108,7 +108,7 @@ class AppColors {
   static const Color hintTextColor = Color(0xFF676767);
   static const Color hintTextColor1 = Color(0xFFF3F3F3);
   static const Color unselectedOTP = Color.fromRGBO(248, 55, 88, 0.33);
-  static const Color selectedOTP = brandPink;
+  static const Color selectedOTP = brandPurple;
   static const Color selectedOTP1 = Color.fromARGB(255, 231, 62, 115);
   static const Color white = Color(0xFFFFFFFF);
   static const Color deepBlue = brandBlue;
