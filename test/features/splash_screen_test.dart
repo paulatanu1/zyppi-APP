@@ -74,9 +74,9 @@ void main() {
   final full = ZyppiSplashScreen.durationOf(SplashMode.full);
   final short = ZyppiSplashScreen.durationOf(SplashMode.short);
 
-  test('full runs through the exit zoom; short is about 2 s', () {
+  test('full runs through the exit zoom; short is 1.5 s', () {
     expect(full, const Duration(milliseconds: 4950));
-    expect(short, const Duration(seconds: 2));
+    expect(short, const Duration(milliseconds: 1500));
   });
 
   testWidgets('first launch: full splash, then onboarding; remembers it', (
@@ -108,7 +108,7 @@ void main() {
     // The short version has no wordmark.
     expect(find.byKey(ZyppiSplashScreen.wordmarkKey), findsNothing);
 
-    await _play(tester, const Duration(milliseconds: 1900));
+    await _play(tester, const Duration(milliseconds: 1400));
     expect(find.text('home'), findsNothing);
 
     await tester.pump(const Duration(milliseconds: 150));

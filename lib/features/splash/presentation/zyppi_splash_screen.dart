@@ -166,18 +166,15 @@ class _ZyppiSplashScreenState extends State<ZyppiSplashScreen>
         : _controller.value * _timeline.totalMs;
     final story = tl.story;
     final fade = 1 - seg(t, tl.exitStart, SplashTimeline.fadeDur);
-    final centre = tileCentre(size);
+    final centre = tileCentre(size, tl.tileY);
 
     final swarm = story && !_reduced
         ? (_swarm?.size == size ? _swarm! : _swarm = SplashSwarm(size))
         : null;
 
-    // Light status-bar icons once the brand stripe covers the white.
-    final onBrand =
-        t >= tl.stripeStart + 3 * tl.stripeStagger + tl.stripeDur / 2;
-
+    // Purple from the first frame: light status-bar icons throughout.
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: onBrand ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+      value: SystemUiOverlayStyle.light,
       child: Stack(
         children: [
           Positioned.fill(
@@ -190,6 +187,22 @@ class _ZyppiSplashScreenState extends State<ZyppiSplashScreen>
               ),
             ),
           ),
+          // Full version: the native launch screen's tile, fading out
+          // from the centre as the story starts.
+          if (story && !_reduced && t < SplashTimeline.handoffDur)
+            Positioned(
+              left: size.width / 2 - SplashSpec.tile / 2,
+              top: size.height / 2 - SplashSpec.tile / 2,
+              width: SplashSpec.tile,
+              height: SplashSpec.tile,
+              child: Opacity(
+                opacity: 1 - seg(t, 0, SplashTimeline.handoffDur),
+                child: Transform.scale(
+                  scale: 1 - .3 * seg(t, 0, SplashTimeline.handoffDur),
+                  child: const _TileFace(),
+                ),
+              ),
+            ),
           Positioned(
             left: centre.dx - SplashSpec.tile / 2,
             top: centre.dy - SplashSpec.tile / 2,
@@ -517,4 +530,26 @@ class _CentreClip extends CustomClipper<Rect> {
 
   @override
   bool shouldReclip(_CentreClip old) => old.open != open;
+}
+
+/// The resting tile (white gradient, purple Z): the same face the native
+/// launch screen shows.
+class _TileFace extends StatelessWidget {
+  const _TileFace();
+
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      borderRadius: ZRadius.all(SplashSpec.tileRadius),
+      gradient: const LinearGradient(
+        begin: Alignment(-.57, -.82),
+        end: Alignment(.57, .82),
+        colors: [SplashPalette.white, SplashPalette.tileEnd],
+      ),
+    ),
+    child: const Padding(
+      padding: EdgeInsets.all(SplashSpec.zInset),
+      child: CustomPaint(painter: ZMarkPainter()),
+    ),
+  );
 }

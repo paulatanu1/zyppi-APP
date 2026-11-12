@@ -98,18 +98,19 @@ flutter_launcher_icons:
   min_sdk_android: 21
   remove_alpha_ios: true
 
-# Plain white, no logo, in light and dark phone mode: the in-app splash
-# (lib/features/splash) starts on the same white before its stripes sweep
-# in, so the hand-off can't flash. Android 12+ always draws an icon, so it
-# gets a fully transparent one instead of falling back to the launcher icon.
-# Colours = ZColors.splashBg.
+# Brand purple with the white Z tile, in light and dark phone mode — the
+# exact first frame of the in-app splash (lib/features/splash), so the
+# hand-off can't flash. Tiles are drawn from the Z path at 124 dp
+# (splash_tile.png at 4x; splash_tile12.png on Android 12's 288 dp icon
+# canvas). Colours = ZColors.splashBg.
 flutter_native_splash:
-  color: "#FFFFFF"
-  color_dark: "#FFFFFF"
+  color: "#673AB7"
+  color_dark: "#673AB7"
+  image: "assets/brand/splash_tile.png"
   android_12:
-    color: "#FFFFFF"
-    color_dark: "#FFFFFF"
-    image: "assets/brand/splash_blank12.png"
+    color: "#673AB7"
+    color_dark: "#673AB7"
+    image: "assets/brand/splash_tile12.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

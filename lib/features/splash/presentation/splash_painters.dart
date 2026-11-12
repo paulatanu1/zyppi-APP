@@ -93,8 +93,8 @@ class SplashTextures {
 }
 
 /// Centre of the tile on a screen of [size].
-Offset tileCentre(Size size) =>
-    Offset(size.width / 2, size.height * SplashSpec.tileCentreY);
+Offset tileCentre(Size size, double y) =>
+    Offset(size.width / 2, size.height * y);
 
 /// Stripes, aurora, grain, the ball's ground shadow and the pulse ring:
 /// everything behind the tile.
@@ -113,46 +113,12 @@ class SplashBackdropPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    _stripes(canvas, size);
+    // Brand purple from the first frame, like the native launch screen.
+    canvas.drawColor(SplashPalette.brand, BlendMode.src);
     _aurora(canvas, size);
     ZGrain.paint(canvas, Offset.zero & size);
     if (showGroundShadow) _groundShadow(canvas, size);
     _pulse(canvas, size);
-  }
-
-  void _stripes(Canvas canvas, Size size) {
-    final tl = timeline;
-    final last = seg(
-      t,
-      tl.stripeStart + 3 * tl.stripeStagger,
-      tl.stripeDur,
-      SplashCurves.sweep,
-    );
-    if (last >= 1) {
-      canvas.drawColor(SplashPalette.brand, BlendMode.src);
-      return;
-    }
-    // A box 260% of the screen, rotated −30°; each layer slides in along
-    // its own x axis.
-    final w = size.width * 2.6, h = size.height * 2.6;
-    canvas
-      ..save()
-      ..translate(size.width / 2, size.height / 2)
-      ..rotate(-math.pi / 6);
-    for (var i = 0; i < 4; i++) {
-      final p = seg(
-        t,
-        tl.stripeStart + i * tl.stripeStagger,
-        tl.stripeDur,
-        SplashCurves.sweep,
-      );
-      if (p <= 0) continue;
-      canvas.drawRect(
-        Rect.fromLTWH(-w / 2 - w * (1 - p), -h / 2, w, h),
-        Paint()..color = SplashPalette.stripes[i],
-      );
-    }
-    canvas.restore();
   }
 
   void _aurora(Canvas canvas, Size size) {
@@ -226,7 +192,7 @@ class SplashBackdropPainter extends CustomPainter {
     ]);
     final fade = 1 - seg(t, timeline.exitStart, 200, SplashCurves.ease);
     if (scale <= 0 || fade <= 0) return;
-    final c = tileCentre(size) + const Offset(0, 76 + 7);
+    final c = tileCentre(size, timeline.tileY) + const Offset(0, 76 + 7);
     const blur = 5.0;
     canvas
       ..save()
@@ -247,13 +213,17 @@ class SplashBackdropPainter extends CustomPainter {
   }
 
   void _pulse(Canvas canvas, Size size) {
-    if (t < timeline.zLand || t > timeline.zLand + 800) return;
-    final p = seg(t, timeline.zLand, 800, SplashCurves.easeOut);
+    if (t < timeline.pulseAt || t > timeline.pulseAt + 800) return;
+    final p = seg(t, timeline.pulseAt, 800, SplashCurves.easeOut);
     final scale = 1 + .9 * p;
     final side = SplashSpec.tile * scale;
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromCenter(center: tileCentre(size), width: side, height: side),
+        Rect.fromCenter(
+          center: tileCentre(size, timeline.tileY),
+          width: side,
+          height: side,
+        ),
         Radius.circular(30 * scale),
       ),
       Paint()
@@ -273,7 +243,7 @@ class SplashBackdropPainter extends CustomPainter {
 class SplashSwarm {
   SplashSwarm(this.size) {
     final rnd = math.Random(42);
-    final centre = tileCentre(size);
+    final centre = tileCentre(size, SplashTimeline.full.tileY);
     const inner = SplashSpec.tile - 2 * SplashSpec.zInset;
     const k = inner / zUnits;
     final far = math.max(size.width, size.height) * .55;
@@ -399,7 +369,7 @@ class SplashSwarmPainter extends CustomPainter {
         (s - SplashTimeline.sparksFrom / 1000) /
         (SplashTimeline.sparksDur / 1000);
     final e = 1 - math.pow(1 - q, 3);
-    final c = tileCentre(size);
+    final c = tileCentre(size, SplashTimeline.full.tileY);
     final n = sw.sparkAngle.length;
     for (var i = 0; i < n; i++) {
       final d = 60 + sw.sparkSpeed[i] * e;

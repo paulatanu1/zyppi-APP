@@ -49,7 +49,6 @@ abstract final class SplashSpec {
   /// While it is still a ball the tile is a circle (radius = half of [tile]).
   static const double ballRadius = 62;
   static const double zInset = 22;
-  static const double tileCentreY = .38;
 
   static const double wordTop = .56;
   static const double wordSize = 46;

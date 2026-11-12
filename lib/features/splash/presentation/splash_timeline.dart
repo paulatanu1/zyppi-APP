@@ -18,25 +18,30 @@ enum SplashMode {
 class SplashTimeline {
   const SplashTimeline._({
     required this.totalMs,
-    required this.stripeStart,
-    required this.stripeStagger,
-    required this.stripeDur,
+    required this.tileY,
     required this.auroraStart,
     required this.tileStart,
     required this.zLand,
+    required this.pulseAt,
     required this.exitStart,
     required this.story,
   });
 
   final int totalMs;
-  final double stripeStart, stripeStagger, stripeDur;
+
+  /// Tile centre as a fraction of the screen height. The short version
+  /// keeps the tile where the native launch screen draws it (the centre).
+  final double tileY;
   final double auroraStart;
 
   /// Full: the ball starts to drop. Short: the tile pops in.
   final double tileStart;
 
-  /// The solid Z appears, the ring pulses and the sparks burst.
+  /// The solid Z appears (and, in the full version, the sparks burst).
   final double zLand;
+
+  /// The white ring pulses out from the tile.
+  final double pulseAt;
 
   /// Text fades and the tile zooms to fill the screen.
   final double exitStart;
@@ -44,29 +49,35 @@ class SplashTimeline {
   /// Particles, ground shadow, tilt, glass, wordmark, tagline, scooter.
   final bool story;
 
+  // Both versions open on the native launch screen's frame: brand purple
+  // with the Z tile in the centre (see flutter_native_splash in
+  // pubspec.yaml), so the hand-off can't flash.
   static const full = SplashTimeline._(
     totalMs: 4950,
-    stripeStart: 50,
-    stripeStagger: 120,
-    stripeDur: 550,
-    auroraStart: 800,
+    tileY: .38,
+    auroraStart: 300,
     tileStart: 850,
     zLand: 2620,
+    pulseAt: 2620,
     exitStart: 4350,
     story: true,
   );
 
+  /// The tile is already there with its Z: a pulse, then the zoom.
   static const short = SplashTimeline._(
-    totalMs: 2000,
-    stripeStart: 0,
-    stripeStagger: 60,
-    stripeDur: 330,
-    auroraStart: 300,
-    tileStart: 250,
-    zLand: 650,
-    exitStart: 1400,
+    totalMs: 1500,
+    tileY: .5,
+    auroraStart: 0,
+    tileStart: -1000,
+    zLand: -1000,
+    pulseAt: 150,
+    exitStart: 900,
     story: false,
   );
+
+  /// Full version: the native tile fades from the centre while the story
+  /// starts.
+  static const double handoffDur = 400;
 
   static SplashTimeline of(SplashMode mode) =>
       mode == SplashMode.full ? full : short;
