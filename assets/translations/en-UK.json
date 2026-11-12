@@ -141,7 +141,7 @@
   "addressLabelHome": "Home",
   "addressLabelWork": "Work",
   "addressLabelOther": "Other",
-  "paymentPendingRetry": "Your payment is still being confirmed. Tap Pay again in a moment to check — you won’t be charged twice.",
+  "paymentPendingRetry": "Your payment is still being confirmed. Tap Pay again in a moment to check. If it isn’t confirmed within 15 minutes, you can pay again — if the first payment goes through later, it will be refunded.",
   "cartNotSynced": "Couldn't save your cart. Check your connection and try again.",
   "secure": "Secure",
   "stepCart": "Cart",

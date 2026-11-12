@@ -34,6 +34,9 @@ const _verifyDelays = [
   Duration(seconds: 8),
 ];
 
+/// How a payment check ended.
+enum _PaymentCheck { placed, review, failed, pending }
+
 class CheckoutProvider extends StateNotifier<CheckoutState> {
   final Ref ref;
 
@@ -99,10 +102,12 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
     // A payment started earlier (user left checkout, or the app was
     // killed) that never became an order: settle it before anything else
     // so the customer isn't asked to pay twice.
-    final pending = ref.read(pendingPaymentStoreProvider).read();
-    if (pending != null && !Env.isMockDataSource && mounted) {
+    if (!Env.isMockDataSource &&
+        mounted &&
+        ref.read(pendingPaymentStoreProvider).read() != null) {
       state = state.copyWith(placingOrder: true);
-      await _confirmPayment(pending);
+      final handled = await _resolvePendingPayment();
+      if (!handled && mounted) state = state.copyWith(placingOrder: false);
     }
   }
 
@@ -195,11 +200,7 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
 
     // A payment from an earlier attempt that never settled: re-check it
     // instead of charging again, whatever the cart total is now.
-    final pending = ref.read(pendingPaymentStoreProvider).read();
-    if (pending != null) {
-      await _confirmPayment(pending);
-      return;
-    }
+    if (await _resolvePendingPayment() || !mounted) return;
 
     final PaymentOrder paymentOrder;
     try {
@@ -227,7 +228,8 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
           .open(paymentOrder);
     } catch (_) {
       // The SDK itself failed to open; the server check below settles it.
-      return _confirmPayment(paymentOrder.txnid, delays: const [Duration.zero]);
+      await _confirmPayment(paymentOrder.txnid, delays: const [Duration.zero]);
+      return;
     }
     if (!mounted) return;
 
@@ -245,20 +247,55 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
     );
   }
 
+  /// Settles the payment left in [PendingPaymentStore], if any. Returns
+  /// true when that settled checkout for now (an order, a review or an
+  /// error on screen); false when there's nothing to wait for and a new
+  /// payment may start.
+  ///
+  /// A recent payment is waited on, so the customer isn't charged twice.
+  /// One PayU has left unsettled for [PendingPayment.staleAfter] (the
+  /// bank page never finished) is checked once and then let go: the
+  /// server's reconciler still turns a late capture into an order.
+  Future<bool> _resolvePendingPayment() async {
+    final store = ref.read(pendingPaymentStoreProvider);
+    final pending = store.read();
+    if (pending == null) return false;
+
+    if (!pending.isStale(DateTime.now())) {
+      await _confirmPayment(pending.txnid);
+      return true;
+    }
+
+    final check = await _confirmPayment(
+      pending.txnid,
+      delays: const [Duration.zero],
+      quiet: true,
+    );
+    if (check == _PaymentCheck.placed || check == _PaymentCheck.review) {
+      return true;
+    }
+    await store.clear();
+    return false;
+  }
+
   /// Asks the server about [txnid] until PayU settles it. The
   /// server creates the order itself once the payment is confirmed, so
   /// this only has to report the outcome. Leaving checkout mid-way is
   /// safe: the payment stays in [PendingPaymentStore] and is re-checked
   /// next time.
-  Future<void> _confirmPayment(
+  ///
+  /// [quiet]: a failed or still-pending payment isn't reported on screen
+  /// (the caller decides what follows).
+  Future<_PaymentCheck> _confirmPayment(
     String txnid, {
     List<Duration> delays = _verifyDelays,
+    bool quiet = false,
   }) async {
     final store = ref.read(pendingPaymentStoreProvider);
 
     for (final delay in delays) {
       await Future<void>.delayed(delay);
-      if (!mounted) return;
+      if (!mounted) return _PaymentCheck.pending;
 
       final PaymentVerification verification;
       try {
@@ -268,7 +305,7 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
       } catch (_) {
         continue; // network blip — try again on the next delay
       }
-      if (!mounted) return;
+      if (!mounted) return _PaymentCheck.pending;
 
       if (verification.orderId != null) {
         await store.clear();
@@ -276,23 +313,24 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
           verification.orderId!,
           ref.read(cartProvider).bill.totalPaise,
         );
-        return;
+        return _PaymentCheck.placed;
       }
 
       if (verification.needsReview) {
         await store.clear();
         _fail('paymentNeedsReview'.tr());
-        return;
+        return _PaymentCheck.review;
       }
 
       if (!verification.verified && !verification.pending) {
         await store.clear();
-        _fail('paymentFailed'.tr());
-        return;
+        if (!quiet) _fail('paymentFailed'.tr());
+        return _PaymentCheck.failed;
       }
     }
 
-    _fail('paymentPendingRetry'.tr());
+    if (!quiet) _fail('paymentPendingRetry'.tr());
+    return _PaymentCheck.pending;
   }
 
   Future<void> _onOrderPlaced(String orderId, int totalPaise) async {

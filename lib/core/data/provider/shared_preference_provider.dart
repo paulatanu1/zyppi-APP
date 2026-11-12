@@ -94,6 +94,9 @@ class SharedPreferenceProvider extends StateNotifier<SharedPreferenceState> {
       await ref.read(localCartStoreProvider).clear();
       await ref.read(sharedPreferencesProvider).remove(KeyNames.token);
       await ref.read(sharedPreferencesProvider).remove(_pendingPaymentKey);
+      await ref
+          .read(sharedPreferencesProvider)
+          .remove(_pendingPaymentSavedAtKey);
 
       if (mounted) state = state.copyWith(authToken: null);
     } finally {
@@ -102,9 +105,10 @@ class SharedPreferenceProvider extends StateNotifier<SharedPreferenceState> {
   }
 }
 
-// Mirrors PendingPaymentStore's key (core/payments) without importing it
+// Mirror PendingPaymentStore's keys (core/payments) without importing it
 // here, which would create an import cycle through the payments layer.
 const _pendingPaymentKey = 'pendingPayUTxnId';
+const _pendingPaymentSavedAtKey = 'pendingPayUSavedAt';
 
 final sharedPreferenceProvider =
     StateNotifierProvider.autoDispose<
