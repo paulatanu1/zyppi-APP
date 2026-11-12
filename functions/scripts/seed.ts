@@ -50,6 +50,8 @@ const IMAGES: Record<string, string> = {
   "products/meat.png": "meat.png",
   "products/milk.png": "milk.png",
   "products/item.png": "item.png",
+  "products/basket.png": "products/basket.png",
+  "products/dairy.png": "products/dairy.png",
 };
 
 const urls = new Map<string, string>();
@@ -71,13 +73,14 @@ async function upload(path: string): Promise<string> {
   return url;
 }
 
-const AREA = (n: number) => `11111111-0000-0000-0000-00000000000${n}`;
-const STORE = (n: number) => `22222222-0000-0000-0000-00000000000${n}`;
-const CAT = (n: number) => `33333333-0000-0000-0000-00000000000${n}`;
-const PROD = (n: number) => `44444444-0000-0000-0000-00000000000${n}`;
-const VAR = (n: number) => `55555555-0000-0000-0000-00000000000${n}`;
-const SLOT = (n: number) => `66666666-0000-0000-0000-00000000000${n}`;
-const SECTION = (n: number) => `77777777-0000-0000-0000-00000000000${n}`;
+const AREA = (n: number) => `11111111-0000-0000-0000-${String(n).padStart(12, "0")}`;
+const STORE = (n: number) => `22222222-0000-0000-0000-${String(n).padStart(12, "0")}`;
+const CAT = (n: number) => `33333333-0000-0000-0000-${String(n).padStart(12, "0")}`;
+const PROD = (n: number) => `44444444-0000-0000-0000-${String(n).padStart(12, "0")}`;
+const VAR = (n: number) => `55555555-0000-0000-0000-${String(n).padStart(12, "0")}`;
+const SLOT = (n: number) => `66666666-0000-0000-0000-${String(n).padStart(12, "0")}`;
+const SECTION = (n: number) => `77777777-0000-0000-0000-${String(n).padStart(12, "0")}`;
+const SUB = (n: number) => `88888888-0000-0000-0000-${String(n).padStart(12, "0")}`;
 
 // Approximate town centres; refine against real dark-store addresses.
 const areas = [
@@ -103,27 +106,37 @@ const categories = [
   [CAT(8), "Beverages", "categories/beverages.png", "3FB7DFF5", "FFB7DFF5"],
 ] as const;
 
+// Sub-categories: the product page's left menu (admin `parentId`).
+const subcategories = [
+  [SUB(1), "Fresh Fruits", "products/apple.png", CAT(1)],
+  [SUB(2), "Fresh Vegetables", "products/veg.png", CAT(1)],
+  [SUB(3), "Exotics", "products/basket.png", CAT(1)],
+  [SUB(4), "Bread & Buns", "products/bread.png", CAT(2)],
+  [SUB(5), "Eggs", "products/dairy.png", CAT(2)],
+] as const;
+
 type V = [string, string, number, number];
 const products: {
   id: string;
   categoryId: string;
+  subcategoryId?: string;
   name: string;
   image: string;
   description: string;
   variants: V[];
 }[] = [
   {
-    id: PROD(1), categoryId: CAT(1), name: "Fresh Tomatoes", image: "products/veg.png",
+    id: PROD(1), categoryId: CAT(1), subcategoryId: SUB(2), name: "Fresh Tomatoes", image: "products/veg.png",
     description: "Farm-fresh red tomatoes, picked ripe for curries, salads and chutneys.",
     variants: [[VAR(1), "500 g", 2500, 3000]],
   },
   {
-    id: PROD(2), categoryId: CAT(1), name: "Apple", image: "products/apple.png",
+    id: PROD(2), categoryId: CAT(1), subcategoryId: SUB(1), name: "Apple", image: "products/apple.png",
     description: "Crisp, sweet apples — a ready snack and great in salads.",
     variants: [[VAR(2), "1 kg", 18000, 20000]],
   },
   {
-    id: PROD(3), categoryId: CAT(2), name: "Brown Bread", image: "products/bread.png",
+    id: PROD(3), categoryId: CAT(2), subcategoryId: SUB(4), name: "Brown Bread", image: "products/bread.png",
     description: "Soft whole-wheat brown bread, baked fresh for sandwiches and toast.",
     variants: [[VAR(3), "400 g", 4500, 5000]],
   },
@@ -151,6 +164,31 @@ const products: {
     id: PROD(8), categoryId: CAT(7), name: "Butter Cookies", image: "products/item.png",
     description: "Crunchy, buttery cookies — perfect with tea.",
     variants: [[VAR(9), "200 g", 5600, 6000]],
+  },
+  {
+    id: PROD(9), categoryId: CAT(1), subcategoryId: SUB(1), name: "Robusta Banana", image: "products/basket.png",
+    description: "Ripe robusta bananas, naturally sweet.",
+    variants: [[VAR(10), "6 pcs", 4500, 5200]],
+  },
+  {
+    id: PROD(10), categoryId: CAT(1), subcategoryId: SUB(2), name: "Onion", image: "products/veg.png",
+    description: "Everyday red onions for every curry.",
+    variants: [[VAR(11), "1 kg", 3800, 4500]],
+  },
+  {
+    id: PROD(11), categoryId: CAT(1), subcategoryId: SUB(3), name: "Hass Avocado", image: "products/apple.png",
+    description: "Creamy Hass avocado, ready to eat in a day or two.",
+    variants: [[VAR(12), "1 pc", 14900, 17900]],
+  },
+  {
+    id: PROD(12), categoryId: CAT(2), subcategoryId: SUB(4), name: "Soft Pav Buns", image: "products/bread.png",
+    description: "Soft pav buns for pav bhaji and vada pav.",
+    variants: [[VAR(13), "6 pcs", 3500, 3500]],
+  },
+  {
+    id: PROD(13), categoryId: CAT(2), subcategoryId: SUB(5), name: "Farm Eggs", image: "products/dairy.png",
+    description: "Fresh farm eggs, cleaned and graded.",
+    variants: [[VAR(14), "6 pcs", 5400, 6000]],
   },
 ];
 
@@ -228,6 +266,14 @@ async function main() {
     batch.set(db.collection("categories").doc(id), {
       name, imageUrl: await upload(image), colorHex, borderColorHex,
       sortOrder: categories.findIndex((c) => c[0] === id),
+      parentId: null,
+    });
+  }
+  for (const [i, [id, name, image, parentId]] of subcategories.entries()) {
+    const parent = categories.find((c) => c[0] === parentId)!;
+    batch.set(db.collection("categories").doc(id), {
+      name, imageUrl: await upload(image), colorHex: parent[3], borderColorHex: parent[4],
+      sortOrder: i, parentId,
     });
   }
   for (const p of products) {
@@ -236,6 +282,7 @@ async function main() {
       imageUrl: await upload(p.image),
       description: p.description,
       categoryId: p.categoryId,
+      subcategoryId: p.subcategoryId ?? null,
       isActive: true,
       keywords: productKeywords(p.name),
       variants: p.variants.map(([id, label, pricePaise, mrpPaise]) => ({ id, label, pricePaise, mrpPaise })),

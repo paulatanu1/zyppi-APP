@@ -16,7 +16,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Category {
 
- String get id; String get name; String? get image; String get colorHex; String get borderColorHex;
+ String get id; String get name; String? get image; String get colorHex; String get borderColorHex;/// Set on a sub-category (the product page's left menu); null on a
+/// top-level category. Written by the admin panel (`parentId`).
+ String? get parentId; int get sortOrder;
 /// Create a copy of Category
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +32,20 @@ $CategoryCopyWith<Category> get copyWith => _$CategoryCopyWithImpl<Category>(thi
 @override
 bool operator ==(Object other) {
   final _this = this as Category;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Category&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.image, _this.image) || other.image == _this.image)&&(identical(other.colorHex, _this.colorHex) || other.colorHex == _this.colorHex)&&(identical(other.borderColorHex, _this.borderColorHex) || other.borderColorHex == _this.borderColorHex));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Category&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.image, _this.image) || other.image == _this.image)&&(identical(other.colorHex, _this.colorHex) || other.colorHex == _this.colorHex)&&(identical(other.borderColorHex, _this.borderColorHex) || other.borderColorHex == _this.borderColorHex)&&(identical(other.parentId, _this.parentId) || other.parentId == _this.parentId)&&(identical(other.sortOrder, _this.sortOrder) || other.sortOrder == _this.sortOrder));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Category;
-  return Object.hash(runtimeType,_this.id,_this.name,_this.image,_this.colorHex,_this.borderColorHex);
+  return Object.hash(runtimeType,_this.id,_this.name,_this.image,_this.colorHex,_this.borderColorHex,_this.parentId,_this.sortOrder);
 }
 
 @override
 String toString() {
   final _this = this as Category;
-  return 'Category(id: ${_this.id}, name: ${_this.name}, image: ${_this.image}, colorHex: ${_this.colorHex}, borderColorHex: ${_this.borderColorHex})';
+  return 'Category(id: ${_this.id}, name: ${_this.name}, image: ${_this.image}, colorHex: ${_this.colorHex}, borderColorHex: ${_this.borderColorHex}, parentId: ${_this.parentId}, sortOrder: ${_this.sortOrder})';
 }
 
 
@@ -54,7 +56,7 @@ abstract mixin class $CategoryCopyWith<$Res>  {
   factory $CategoryCopyWith(Category value, $Res Function(Category) _then) = _$CategoryCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String? image, String colorHex, String borderColorHex
+ String id, String name, String? image, String colorHex, String borderColorHex, String? parentId, int sortOrder
 });
 
 
@@ -71,14 +73,16 @@ class _$CategoryCopyWithImpl<$Res>
 
 /// Create a copy of Category
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? image = freezed,Object? colorHex = null,Object? borderColorHex = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? image = freezed,Object? colorHex = null,Object? borderColorHex = null,Object? parentId = freezed,Object? sortOrder = null,}) {
   return _then(Category(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,image: freezed == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
 as String?,colorHex: null == colorHex ? _self.colorHex : colorHex // ignore: cast_nullable_to_non_nullable
 as String,borderColorHex: null == borderColorHex ? _self.borderColorHex : borderColorHex // ignore: cast_nullable_to_non_nullable
-as String,
+as String,parentId: freezed == parentId ? _self.parentId : parentId // ignore: cast_nullable_to_non_nullable
+as String?,sortOrder: null == sortOrder ? _self.sortOrder : sortOrder // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 
@@ -163,10 +167,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? image,  String colorHex,  String borderColorHex)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? image,  String colorHex,  String borderColorHex,  String? parentId,  int sortOrder)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Category() when $default != null:
-return $default(_that.id,_that.name,_that.image,_that.colorHex,_that.borderColorHex);case _:
+return $default(_that.id,_that.name,_that.image,_that.colorHex,_that.borderColorHex,_that.parentId,_that.sortOrder);case _:
   return orElse();
 
 }
@@ -184,10 +188,10 @@ return $default(_that.id,_that.name,_that.image,_that.colorHex,_that.borderColor
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? image,  String colorHex,  String borderColorHex)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? image,  String colorHex,  String borderColorHex,  String? parentId,  int sortOrder)  $default,) {final _that = this;
 switch (_that) {
 case _Category():
-return $default(_that.id,_that.name,_that.image,_that.colorHex,_that.borderColorHex);case _:
+return $default(_that.id,_that.name,_that.image,_that.colorHex,_that.borderColorHex,_that.parentId,_that.sortOrder);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -204,10 +208,10 @@ return $default(_that.id,_that.name,_that.image,_that.colorHex,_that.borderColor
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? image,  String colorHex,  String borderColorHex)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? image,  String colorHex,  String borderColorHex,  String? parentId,  int sortOrder)?  $default,) {final _that = this;
 switch (_that) {
 case _Category() when $default != null:
-return $default(_that.id,_that.name,_that.image,_that.colorHex,_that.borderColorHex);case _:
+return $default(_that.id,_that.name,_that.image,_that.colorHex,_that.borderColorHex,_that.parentId,_that.sortOrder);case _:
   return null;
 
 }
@@ -219,7 +223,7 @@ return $default(_that.id,_that.name,_that.image,_that.colorHex,_that.borderColor
 @JsonSerializable()
 
 class _Category implements Category {
-   _Category({required this.id, required this.name, this.image, required this.colorHex, required this.borderColorHex});
+   _Category({required this.id, required this.name, this.image, required this.colorHex, required this.borderColorHex, this.parentId, this.sortOrder = 0});
   factory _Category.fromJson(Map<String, dynamic> json) => _$CategoryFromJson(json);
 
 @override final  String id;
@@ -227,6 +231,10 @@ class _Category implements Category {
 @override final  String? image;
 @override final  String colorHex;
 @override final  String borderColorHex;
+/// Set on a sub-category (the product page's left menu); null on a
+/// top-level category. Written by the admin panel (`parentId`).
+@override final  String? parentId;
+@override@JsonKey() final  int sortOrder;
 
 /// Create a copy of Category
 /// with the given fields replaced by the non-null parameter values.
@@ -241,18 +249,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Category&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.image, image) || other.image == image)&&(identical(other.colorHex, colorHex) || other.colorHex == colorHex)&&(identical(other.borderColorHex, borderColorHex) || other.borderColorHex == borderColorHex));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Category&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.image, image) || other.image == image)&&(identical(other.colorHex, colorHex) || other.colorHex == colorHex)&&(identical(other.borderColorHex, borderColorHex) || other.borderColorHex == borderColorHex)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,name,image,colorHex,borderColorHex);
+    return Object.hash(runtimeType,id,name,image,colorHex,borderColorHex,parentId,sortOrder);
 }
 
 @override
 String toString() {
-    return 'Category(id: $id, name: $name, image: $image, colorHex: $colorHex, borderColorHex: $borderColorHex)';
+    return 'Category(id: $id, name: $name, image: $image, colorHex: $colorHex, borderColorHex: $borderColorHex, parentId: $parentId, sortOrder: $sortOrder)';
 }
 
 
@@ -263,7 +271,7 @@ abstract mixin class _$CategoryCopyWith<$Res> implements $CategoryCopyWith<$Res>
   factory _$CategoryCopyWith(_Category value, $Res Function(_Category) _then) = __$CategoryCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String? image, String colorHex, String borderColorHex
+ String id, String name, String? image, String colorHex, String borderColorHex, String? parentId, int sortOrder
 });
 
 
@@ -280,14 +288,16 @@ class __$CategoryCopyWithImpl<$Res>
 
 /// Create a copy of Category
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? image = freezed,Object? colorHex = null,Object? borderColorHex = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? image = freezed,Object? colorHex = null,Object? borderColorHex = null,Object? parentId = freezed,Object? sortOrder = null,}) {
   return _then(_Category(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,image: freezed == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
 as String?,colorHex: null == colorHex ? _self.colorHex : colorHex // ignore: cast_nullable_to_non_nullable
 as String,borderColorHex: null == borderColorHex ? _self.borderColorHex : borderColorHex // ignore: cast_nullable_to_non_nullable
-as String,
+as String,parentId: freezed == parentId ? _self.parentId : parentId // ignore: cast_nullable_to_non_nullable
+as String?,sortOrder: null == sortOrder ? _self.sortOrder : sortOrder // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 

@@ -14,6 +14,9 @@ abstract class Product with _$Product {
     /// "About this item" on product details; hidden when empty.
     String? description,
     required String categoryId,
+
+    /// Optional sub-category of [categoryId] (admin `subcategoryId`).
+    String? subcategoryId,
     required List<ProductVariant> variants,
     @Default(false) bool isFavourite,
   }) = _Product;

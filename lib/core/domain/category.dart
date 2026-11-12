@@ -14,6 +14,11 @@ abstract class Category with _$Category {
     String? image,
     required String colorHex,
     required String borderColorHex,
+
+    /// Set on a sub-category (the product page's left menu); null on a
+    /// top-level category. Written by the admin panel (`parentId`).
+    String? parentId,
+    @Default(0) int sortOrder,
   }) = _Category;
 
   factory Category.fromJson(Map<String, dynamic> json) =>

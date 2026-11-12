@@ -17,7 +17,8 @@ T _$identity<T>(T value) => value;
 mixin _$Product {
 
  String get id; String get name; String? get image;/// "About this item" on product details; hidden when empty.
- String? get description; String get categoryId; List<ProductVariant> get variants; bool get isFavourite;
+ String? get description; String get categoryId;/// Optional sub-category of [categoryId] (admin `subcategoryId`).
+ String? get subcategoryId; List<ProductVariant> get variants; bool get isFavourite;
 /// Create a copy of Product
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -31,20 +32,20 @@ $ProductCopyWith<Product> get copyWith => _$ProductCopyWithImpl<Product>(this as
 @override
 bool operator ==(Object other) {
   final _this = this as Product;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Product&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.image, _this.image) || other.image == _this.image)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.categoryId, _this.categoryId) || other.categoryId == _this.categoryId)&&const DeepCollectionEquality().equals(other.variants, _this.variants)&&(identical(other.isFavourite, _this.isFavourite) || other.isFavourite == _this.isFavourite));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Product&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.image, _this.image) || other.image == _this.image)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.categoryId, _this.categoryId) || other.categoryId == _this.categoryId)&&(identical(other.subcategoryId, _this.subcategoryId) || other.subcategoryId == _this.subcategoryId)&&const DeepCollectionEquality().equals(other.variants, _this.variants)&&(identical(other.isFavourite, _this.isFavourite) || other.isFavourite == _this.isFavourite));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Product;
-  return Object.hash(runtimeType,_this.id,_this.name,_this.image,_this.description,_this.categoryId,const DeepCollectionEquality().hash(_this.variants),_this.isFavourite);
+  return Object.hash(runtimeType,_this.id,_this.name,_this.image,_this.description,_this.categoryId,_this.subcategoryId,const DeepCollectionEquality().hash(_this.variants),_this.isFavourite);
 }
 
 @override
 String toString() {
   final _this = this as Product;
-  return 'Product(id: ${_this.id}, name: ${_this.name}, image: ${_this.image}, description: ${_this.description}, categoryId: ${_this.categoryId}, variants: ${_this.variants}, isFavourite: ${_this.isFavourite})';
+  return 'Product(id: ${_this.id}, name: ${_this.name}, image: ${_this.image}, description: ${_this.description}, categoryId: ${_this.categoryId}, subcategoryId: ${_this.subcategoryId}, variants: ${_this.variants}, isFavourite: ${_this.isFavourite})';
 }
 
 
@@ -55,7 +56,7 @@ abstract mixin class $ProductCopyWith<$Res>  {
   factory $ProductCopyWith(Product value, $Res Function(Product) _then) = _$ProductCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String? image, String? description, String categoryId, List<ProductVariant> variants, bool isFavourite
+ String id, String name, String? image, String? description, String categoryId, String? subcategoryId, List<ProductVariant> variants, bool isFavourite
 });
 
 
@@ -72,14 +73,15 @@ class _$ProductCopyWithImpl<$Res>
 
 /// Create a copy of Product
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? image = freezed,Object? description = freezed,Object? categoryId = null,Object? variants = null,Object? isFavourite = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? image = freezed,Object? description = freezed,Object? categoryId = null,Object? subcategoryId = freezed,Object? variants = null,Object? isFavourite = null,}) {
   return _then(Product(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,image: freezed == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
 as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,categoryId: null == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
-as String,variants: null == variants ? _self.variants : variants // ignore: cast_nullable_to_non_nullable
+as String,subcategoryId: freezed == subcategoryId ? _self.subcategoryId : subcategoryId // ignore: cast_nullable_to_non_nullable
+as String?,variants: null == variants ? _self.variants : variants // ignore: cast_nullable_to_non_nullable
 as List<ProductVariant>,isFavourite: null == isFavourite ? _self.isFavourite : isFavourite // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
@@ -166,10 +168,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? image,  String? description,  String categoryId,  List<ProductVariant> variants,  bool isFavourite)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? image,  String? description,  String categoryId,  String? subcategoryId,  List<ProductVariant> variants,  bool isFavourite)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Product() when $default != null:
-return $default(_that.id,_that.name,_that.image,_that.description,_that.categoryId,_that.variants,_that.isFavourite);case _:
+return $default(_that.id,_that.name,_that.image,_that.description,_that.categoryId,_that.subcategoryId,_that.variants,_that.isFavourite);case _:
   return orElse();
 
 }
@@ -187,10 +189,10 @@ return $default(_that.id,_that.name,_that.image,_that.description,_that.category
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? image,  String? description,  String categoryId,  List<ProductVariant> variants,  bool isFavourite)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? image,  String? description,  String categoryId,  String? subcategoryId,  List<ProductVariant> variants,  bool isFavourite)  $default,) {final _that = this;
 switch (_that) {
 case _Product():
-return $default(_that.id,_that.name,_that.image,_that.description,_that.categoryId,_that.variants,_that.isFavourite);case _:
+return $default(_that.id,_that.name,_that.image,_that.description,_that.categoryId,_that.subcategoryId,_that.variants,_that.isFavourite);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -207,10 +209,10 @@ return $default(_that.id,_that.name,_that.image,_that.description,_that.category
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? image,  String? description,  String categoryId,  List<ProductVariant> variants,  bool isFavourite)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? image,  String? description,  String categoryId,  String? subcategoryId,  List<ProductVariant> variants,  bool isFavourite)?  $default,) {final _that = this;
 switch (_that) {
 case _Product() when $default != null:
-return $default(_that.id,_that.name,_that.image,_that.description,_that.categoryId,_that.variants,_that.isFavourite);case _:
+return $default(_that.id,_that.name,_that.image,_that.description,_that.categoryId,_that.subcategoryId,_that.variants,_that.isFavourite);case _:
   return null;
 
 }
@@ -222,7 +224,7 @@ return $default(_that.id,_that.name,_that.image,_that.description,_that.category
 @JsonSerializable()
 
 class _Product implements Product {
-   _Product({required this.id, required this.name, this.image, this.description, required this.categoryId, required  List<ProductVariant> variants, this.isFavourite = false}): _variants = variants;
+   _Product({required this.id, required this.name, this.image, this.description, required this.categoryId, this.subcategoryId, required  List<ProductVariant> variants, this.isFavourite = false}): _variants = variants;
   factory _Product.fromJson(Map<String, dynamic> json) => _$ProductFromJson(json);
 
 @override final  String id;
@@ -231,6 +233,8 @@ class _Product implements Product {
 /// "About this item" on product details; hidden when empty.
 @override final  String? description;
 @override final  String categoryId;
+/// Optional sub-category of [categoryId] (admin `subcategoryId`).
+@override final  String? subcategoryId;
  final  List<ProductVariant> _variants;
 @override List<ProductVariant> get variants {
   if (_variants is EqualUnmodifiableListView) return _variants;
@@ -253,18 +257,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Product&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.image, image) || other.image == image)&&(identical(other.description, description) || other.description == description)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&const DeepCollectionEquality().equals(other.variants, _variants)&&(identical(other.isFavourite, isFavourite) || other.isFavourite == isFavourite));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Product&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.image, image) || other.image == image)&&(identical(other.description, description) || other.description == description)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.subcategoryId, subcategoryId) || other.subcategoryId == subcategoryId)&&const DeepCollectionEquality().equals(other.variants, _variants)&&(identical(other.isFavourite, isFavourite) || other.isFavourite == isFavourite));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,name,image,description,categoryId,const DeepCollectionEquality().hash(_variants),isFavourite);
+    return Object.hash(runtimeType,id,name,image,description,categoryId,subcategoryId,const DeepCollectionEquality().hash(_variants),isFavourite);
 }
 
 @override
 String toString() {
-    return 'Product(id: $id, name: $name, image: $image, description: $description, categoryId: $categoryId, variants: $variants, isFavourite: $isFavourite)';
+    return 'Product(id: $id, name: $name, image: $image, description: $description, categoryId: $categoryId, subcategoryId: $subcategoryId, variants: $variants, isFavourite: $isFavourite)';
 }
 
 
@@ -275,7 +279,7 @@ abstract mixin class _$ProductCopyWith<$Res> implements $ProductCopyWith<$Res> {
   factory _$ProductCopyWith(_Product value, $Res Function(_Product) _then) = __$ProductCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String? image, String? description, String categoryId, List<ProductVariant> variants, bool isFavourite
+ String id, String name, String? image, String? description, String categoryId, String? subcategoryId, List<ProductVariant> variants, bool isFavourite
 });
 
 
@@ -292,14 +296,15 @@ class __$ProductCopyWithImpl<$Res>
 
 /// Create a copy of Product
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? image = freezed,Object? description = freezed,Object? categoryId = null,Object? variants = null,Object? isFavourite = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? image = freezed,Object? description = freezed,Object? categoryId = null,Object? subcategoryId = freezed,Object? variants = null,Object? isFavourite = null,}) {
   return _then(_Product(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,image: freezed == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
 as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,categoryId: null == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
-as String,variants: null == variants ? _self._variants : variants // ignore: cast_nullable_to_non_nullable
+as String,subcategoryId: freezed == subcategoryId ? _self.subcategoryId : subcategoryId // ignore: cast_nullable_to_non_nullable
+as String?,variants: null == variants ? _self._variants : variants // ignore: cast_nullable_to_non_nullable
 as List<ProductVariant>,isFavourite: null == isFavourite ? _self.isFavourite : isFavourite // ignore: cast_nullable_to_non_nullable
 as bool,
   ));

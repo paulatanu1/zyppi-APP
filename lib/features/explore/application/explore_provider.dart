@@ -16,7 +16,8 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
     try {
       final categories = await repository.fetchCategories();
 
-      state = state.copyWith(categories: categories, loading: false);
+      // Sub-categories live in the product page's left menu, not here.
+      state = state.copyWith(categories: categories.topLevel, loading: false);
     } catch (error) {
       state = state.copyWith(loading: false, error: error.toString());
     }

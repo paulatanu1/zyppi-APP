@@ -25,3 +25,25 @@ abstract class CatalogRepository {
   /// this for an empty/blank [query].
   Future<List<Product>> searchProducts(String query);
 }
+
+/// Top-level categories vs sub-categories (`Category.parentId`).
+extension CategoryTree on List<Category> {
+  /// Categories with no parent, by `sortOrder` (ties keep list order).
+  List<Category> get topLevel => _sorted((c) => c.parentId == null);
+
+  /// Sub-categories of [parentId], by `sortOrder` (ties keep list order).
+  List<Category> childrenOf(String parentId) =>
+      _sorted((c) => c.parentId == parentId);
+
+  List<Category> _sorted(bool Function(Category) test) {
+    final picked = [
+      for (var i = 0; i < length; i++)
+        if (test(this[i])) (i, this[i]),
+    ];
+    picked.sort((a, b) {
+      final bySort = a.$2.sortOrder.compareTo(b.$2.sortOrder);
+      return bySort != 0 ? bySort : a.$1.compareTo(b.$1);
+    });
+    return [for (final (_, c) in picked) c];
+  }
+}

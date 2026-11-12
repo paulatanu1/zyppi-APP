@@ -54,5 +54,50 @@
     "image": "assets/images/beverages.png",
     "colorHex": "3FB7DFF5",
     "borderColorHex": "FFB7DFF5"
+  },
+  {
+    "id": "sub-fresh-fruits",
+    "name": "Fresh Fruits",
+    "image": "assets/images/products/apple.png",
+    "colorHex": "1A53B175",
+    "borderColorHex": "FF53B175",
+    "parentId": "cat-fruits-veg",
+    "sortOrder": 0
+  },
+  {
+    "id": "sub-fresh-veg",
+    "name": "Fresh Vegetables",
+    "image": "assets/images/products/veg.png",
+    "colorHex": "1A53B175",
+    "borderColorHex": "FF53B175",
+    "parentId": "cat-fruits-veg",
+    "sortOrder": 1
+  },
+  {
+    "id": "sub-exotics",
+    "name": "Exotics",
+    "image": "assets/images/products/basket.png",
+    "colorHex": "1A53B175",
+    "borderColorHex": "FF53B175",
+    "parentId": "cat-fruits-veg",
+    "sortOrder": 2
+  },
+  {
+    "id": "sub-bread",
+    "name": "Bread & Buns",
+    "image": "assets/images/products/bread.png",
+    "colorHex": "FFFFECF7",
+    "borderColorHex": "FFFB54B6",
+    "parentId": "cat-bread-eggs",
+    "sortOrder": 3
+  },
+  {
+    "id": "sub-eggs",
+    "name": "Eggs",
+    "image": "assets/images/products/dairy.png",
+    "colorHex": "FFFFECF7",
+    "borderColorHex": "FFFB54B6",
+    "parentId": "cat-bread-eggs",
+    "sortOrder": 4
   }
 ]

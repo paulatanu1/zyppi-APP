@@ -33,6 +33,8 @@ class FirebaseCatalogRepository implements CatalogRepository {
         'image': data['imageUrl'],
         'colorHex': data['colorHex'],
         'borderColorHex': data['borderColorHex'],
+        'parentId': data['parentId'],
+        'sortOrder': data['sortOrder'] ?? 0,
       });
     }).toList();
   }
@@ -135,6 +137,7 @@ Product productFromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     'image': data['imageUrl'],
     'description': data['description'],
     'categoryId': data['categoryId'],
+    'subcategoryId': data['subcategoryId'],
     'variants': (data['variants'] as List<dynamic>? ?? const [])
         .cast<Map<String, dynamic>>()
         .map(
