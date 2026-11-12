@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/widgets/z_hero_header.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/common_widgets/primary_button.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
@@ -79,29 +80,30 @@ class ExploreScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            ZSpace.screen,
-            ZSpace.x3,
-            ZSpace.screen,
-            0,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ZHeroHeader(
+            title: 'findProducts'.tr(),
+            // Opens the real search screen; nothing is typed here.
+            bottom: ZSearchBar(
+              hint: 'searchStore'.tr(),
+              glow: true,
+              onTap: () => context.push('/searchScreen'),
+            ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text('findProducts'.tr(), style: t.titleLarge),
-              const SizedBox(height: ZSpace.x3),
-              // Opens the real search screen; nothing is typed here.
-              ZSearchBar(
-                hint: 'searchStore'.tr(),
-                onTap: () => context.push('/searchScreen'),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                ZSpace.screen,
+                ZSpace.x4,
+                ZSpace.screen,
+                0,
               ),
-              const SizedBox(height: ZSpace.x4),
-              Expanded(child: body),
-            ],
+              child: body,
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/widgets/z_brand_texture.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/common_widgets/help_sheet.dart';
 import 'package:zippy/core/domain/order.dart';
@@ -274,59 +275,72 @@ class _SheetContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (eta != null) ...[
-                    Text(
-                      'arrivingIn'.tr(),
-                      style: t.labelSmall!.copyWith(
-                        color: z.ink3,
-                        letterSpacing: 1.1,
-                      ),
-                    ),
-                    Text(eta, style: t.displaySmall),
-                  ] else
-                    Text(_statusLabel(order.status), style: t.headlineSmall),
-                ],
-              ),
-            ),
-            const SizedBox(width: ZSpace.x2),
-            Flexible(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: ZSpace.x3,
-                  vertical: ZSpace.x1 + 2,
-                ),
-                decoration: BoxDecoration(
-                  color: badgeBg,
-                  borderRadius: ZRadius.all(ZRadius.chip),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.circle, size: 8, color: badgeFg),
-                    const SizedBox(width: ZSpace.x1),
-                    Flexible(
-                      child: Text(
-                        _statusLabel(order.status),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: t.labelMedium!.copyWith(
-                          color: badgeFg,
-                          fontWeight: FontWeight.w800,
+        // ETA and status on the brand texture.
+        ZBrandTexture(
+          borderRadius: ZRadius.all(ZRadius.card),
+          child: Padding(
+            padding: const EdgeInsets.all(ZSpace.x4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (eta != null) ...[
+                        Text(
+                          'arrivingIn'.tr(),
+                          style: t.labelSmall!.copyWith(
+                            color: z.headerInk2,
+                            letterSpacing: 1.1,
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
+                        Text(
+                          eta,
+                          style: t.displaySmall!.copyWith(color: z.headerInk),
+                        ),
+                      ] else
+                        Text(
+                          _statusLabel(order.status),
+                          style: t.headlineSmall!.copyWith(color: z.headerInk),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
+                const SizedBox(width: ZSpace.x2),
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: ZSpace.x3,
+                      vertical: ZSpace.x1 + 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: badgeBg,
+                      borderRadius: ZRadius.all(ZRadius.chip),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.circle, size: 8, color: badgeFg),
+                        const SizedBox(width: ZSpace.x1),
+                        Flexible(
+                          child: Text(
+                            _statusLabel(order.status),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: t.labelMedium!.copyWith(
+                              color: badgeFg,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
         const SizedBox(height: ZSpace.x4),
         if (order.status == OrderStatus.cancelled)

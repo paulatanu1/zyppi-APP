@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/widgets/z_hero_header.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/features/auth/otp_verification/application/otp_provider.dart';
 
@@ -80,101 +81,89 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
     return Scaffold(
       backgroundColor: z.bg,
       body: SafeArea(
+        top: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                  ZSpace.x5,
-                  ZSpace.x2,
-                  ZSpace.x5,
-                  ZSpace.x5,
-                ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Material(
-                      color: z.surface,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: ZRadius.all(ZRadius.input),
-                        side: BorderSide(color: z.line),
+                    ZHeroHeader(
+                      showBack: true,
+                      onBack: () => context.canPop()
+                          ? context.pop()
+                          : context.go('/loginScreen'),
+                      leading: const ZGlassBadge(
+                        icon: Icons.phone_iphone_rounded,
                       ),
-                      child: IconButton(
-                        tooltip: 'back'.tr(),
-                        onPressed: () => context.canPop()
-                            ? context.pop()
-                            : context.go('/loginScreen'),
-                        icon: Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          size: 20,
-                          color: z.ink,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: ZSpace.x6),
-                    Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color: z.brandSoft,
-                        borderRadius: ZRadius.all(ZRadius.card),
-                      ),
-                      child: Icon(
-                        Icons.phone_iphone_rounded,
-                        size: 30,
-                        color: z.brandText,
-                      ),
-                    ),
-                    const SizedBox(height: ZSpace.x5),
-                    Text('phoneVerification'.tr(), style: text.headlineMedium),
-                    const SizedBox(height: ZSpace.x2),
-                    Wrap(
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        Text(
-                          'sentTo'.tr(args: [widget.phoneNumber]),
-                          style: text.bodyLarge,
-                        ),
-                        TextButton(
-                          onPressed: () => context.canPop()
-                              ? context.pop()
-                              : context.go('/loginScreen'),
-                          child: Text('edit'.tr()),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: ZSpace.x4),
-                    _CodeBoxes(
-                      controller: _controller,
-                      length: _codeLength,
-                      onChanged: (code) {
-                        setState(() {});
-                        ref.read(otpProvider.notifier).setOtp(code);
-                        if (code.length == _codeLength) _submit();
-                      },
-                      onSubmitted: _submit,
-                    ),
-                    const SizedBox(height: ZSpace.x4),
-                    if (_secondsLeft > 0)
-                      Row(
+                      title: 'phoneVerification'.tr(),
+                      subtitle: Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          Icon(Icons.schedule_rounded, size: 18, color: z.ink3),
-                          const SizedBox(width: ZSpace.x2),
-                          Flexible(
-                            child: Text(
-                              'resendIn'.tr(args: ['$_secondsLeft']),
-                              style: text.bodyMedium!.copyWith(color: z.ink2),
+                          Text('sentTo'.tr(args: [widget.phoneNumber])),
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              foregroundColor: z.headerInk,
                             ),
+                            onPressed: () => context.canPop()
+                                ? context.pop()
+                                : context.go('/loginScreen'),
+                            child: Text('edit'.tr()),
                           ),
                         ],
-                      )
-                    else
-                      TextButton.icon(
-                        onPressed: _resending ? null : _resend,
-                        icon: const Icon(Icons.refresh_rounded, size: 18),
-                        label: Text('resendCode'.tr()),
                       ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        ZSpace.x5,
+                        ZSpace.x6,
+                        ZSpace.x5,
+                        ZSpace.x5,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _CodeBoxes(
+                            controller: _controller,
+                            length: _codeLength,
+                            onChanged: (code) {
+                              setState(() {});
+                              ref.read(otpProvider.notifier).setOtp(code);
+                              if (code.length == _codeLength) _submit();
+                            },
+                            onSubmitted: _submit,
+                          ),
+                          const SizedBox(height: ZSpace.x4),
+                          if (_secondsLeft > 0)
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.schedule_rounded,
+                                  size: 18,
+                                  color: z.ink3,
+                                ),
+                                const SizedBox(width: ZSpace.x2),
+                                Flexible(
+                                  child: Text(
+                                    'resendIn'.tr(args: ['$_secondsLeft']),
+                                    style: text.bodyMedium!.copyWith(
+                                      color: z.ink2,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          else
+                            TextButton.icon(
+                              onPressed: _resending ? null : _resend,
+                              icon: const Icon(Icons.refresh_rounded, size: 18),
+                              label: Text('resendCode'.tr()),
+                            ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),

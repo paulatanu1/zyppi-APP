@@ -1,6 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:zippy/core/widgets/z_hero_header.dart';
+import 'package:zippy/core/widgets/z_brand_texture.dart';
 import 'package:zippy/core/utils/phone.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/common_widgets/google_sign_in_button.dart';
@@ -56,58 +58,43 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Pink hero with the phone illustration (02-login.png).
-            Container(
-              height: top + 300,
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                color: z.brandSoft,
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(ZRadius.sheet),
-                ),
+            // Textured purple hero with the phone illustration.
+            AnnotatedRegion<SystemUiOverlayStyle>(
+              value: SystemUiOverlayStyle.light.copyWith(
+                statusBarColor: Colors.transparent,
               ),
-              child: Stack(
-                children: [
-                  Positioned(
-                    left: -80,
-                    top: -60,
-                    child: _Blob(size: 240, color: z.brandSoft2),
+              child: SizedBox(
+                height: top + 300,
+                child: ZBrandTexture(
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(ZRadius.hero),
                   ),
-                  Positioned(
-                    right: -50,
-                    top: top + 40,
-                    child: _Blob(size: 130, color: z.blueSoft),
-                  ),
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: Image.asset(
-                      'assets/images/Splash-4.png',
-                      height: 260,
-                      fit: BoxFit.contain,
-                      excludeFromSemantics: true,
-                    ),
-                  ),
-                  if (Navigator.of(context).canPop())
-                    Positioned(
-                      left: ZSpace.screen,
-                      top: top + ZSpace.x2,
-                      child: Material(
-                        color: z.surface,
-                        borderRadius: ZRadius.all(ZRadius.input),
-                        child: IconButton(
-                          tooltip: 'back'.tr(),
-                          onPressed: () => Navigator.of(context).pop(),
-                          icon: Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            size: 20,
-                            color: z.ink,
-                          ),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: Image.asset(
+                          'assets/images/Splash-4.png',
+                          height: 260,
+                          fit: BoxFit.contain,
+                          excludeFromSemantics: true,
                         ),
                       ),
-                    ),
-                ],
+                      if (Navigator.of(context).canPop())
+                        Positioned(
+                          left: ZSpace.screen,
+                          top: top + ZSpace.x2,
+                          child: ZGlassIconButton(
+                            icon: Icons.arrow_back_ios_new_rounded,
+                            tooltip: 'back'.tr(),
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
               ),
             ),
             Padding(
@@ -248,19 +235,4 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
     );
   }
-}
-
-/// Soft decorative circle in the hero.
-class _Blob extends StatelessWidget {
-  const _Blob({required this.size, required this.color});
-
-  final double size;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: size,
-    height: size,
-    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-  );
 }

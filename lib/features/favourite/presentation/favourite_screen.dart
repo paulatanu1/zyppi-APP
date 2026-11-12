@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:zippy/core/widgets/z_hero_header.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
@@ -18,16 +19,10 @@ class FavouriteScreen extends ConsumerWidget {
 
     return Scaffold(
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(ZSpace.x4),
-              child: Text(
-                'favourite'.tr(),
-                style: Theme.of(context).textTheme.headlineSmall!,
-              ),
-            ),
-            Divider(height: 1, color: context.z.line),
+            ZHeroHeader(title: 'favourite'.tr()),
             Expanded(
               child: productsAsync.when(
                 // Removing a heart refreshes the list; keep it on screen.

@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/widgets/z_brand_texture.dart';
 import 'package:zippy/core/order/application/order_by_id_provider.dart';
 import 'package:zippy/core/payments/presentation/payment_options.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
@@ -42,60 +43,75 @@ class OrderPlacedScreen extends ConsumerWidget {
                   children: [
                     ZEntrance(
                       index: 0,
-                      child: Container(
-                        width: 128,
-                        height: 128,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: z.okSoft,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Container(
-                          width: 88,
-                          height: 88,
-                          decoration: BoxDecoration(
-                            color: z.ok,
-                            shape: BoxShape.circle,
+                      child: ZBrandTexture(
+                        borderRadius: ZRadius.all(ZRadius.sheet),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            ZSpace.x5,
+                            ZSpace.x6,
+                            ZSpace.x5,
+                            ZSpace.x6,
                           ),
-                          child: Icon(
-                            Icons.check_rounded,
-                            color: z.onBrand,
-                            size: 48,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: ZSpace.x4),
-                    ZEntrance(
-                      index: 1,
-                      child: Column(
-                        children: [
-                          Text(
-                            'orderPlaced'.tr(),
-                            textAlign: TextAlign.center,
-                            style: t.headlineMedium,
-                          ),
-                          const SizedBox(height: ZSpace.x2),
-                          Text(
-                            order?.etaMinutes == null
-                                ? 'orderPlacedDescription'.tr()
-                                : 'orderPlacedArriving'.tr(
-                                    args: ['${order!.etaMinutes}'],
+                          child: Column(
+                            children: [
+                              Container(
+                                width: 112,
+                                height: 112,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: z.onBrand.withValues(alpha: .16),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: z.onBrand.withValues(alpha: .22),
                                   ),
-                            textAlign: TextAlign.center,
-                            style: t.bodyLarge!.copyWith(color: z.ink2),
+                                ),
+                                child: Container(
+                                  width: 76,
+                                  height: 76,
+                                  decoration: BoxDecoration(
+                                    color: z.onBrand,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.check_rounded,
+                                    color: z.ok,
+                                    size: 44,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: ZSpace.x4),
+                              Text(
+                                'orderPlaced'.tr(),
+                                textAlign: TextAlign.center,
+                                style: t.headlineMedium!.copyWith(
+                                  color: z.headerInk,
+                                ),
+                              ),
+                              const SizedBox(height: ZSpace.x2),
+                              Text(
+                                order?.etaMinutes == null
+                                    ? 'orderPlacedDescription'.tr()
+                                    : 'orderPlacedArriving'.tr(
+                                        args: ['${order!.etaMinutes}'],
+                                      ),
+                                textAlign: TextAlign.center,
+                                style: t.bodyLarge!.copyWith(
+                                  color: z.headerInk2,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: ZSpace.x5),
                     ZEntrance(
-                      index: 2,
+                      index: 1,
                       child: Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(ZSpace.x4),
                         decoration: BoxDecoration(
-                          color: z.blueSoft,
+                          color: z.brandSoft,
                           borderRadius: ZRadius.all(ZRadius.sheet),
                         ),
                         child: ZLoop(
@@ -111,7 +127,7 @@ class OrderPlacedScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: ZSpace.x4),
                     ZEntrance(
-                      index: 3,
+                      index: 2,
                       child: _Details(
                         orderId: orderId,
                         loading: orderAsync.isLoading && order == null,

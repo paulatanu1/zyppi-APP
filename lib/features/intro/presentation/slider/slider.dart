@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:zippy/core/widgets/z_brand_texture.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
@@ -323,7 +324,6 @@ class _Hero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final z = context.z;
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
@@ -337,22 +337,34 @@ class _Hero extends StatelessWidget {
         return Stack(
           children: [
             Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: z.blueSoft,
-                  borderRadius: ZRadius.all(ZRadius.illo),
-                ),
-                clipBehavior: Clip.antiAlias,
+              // The illustration, framed as a card on the brand texture.
+              child: ZBrandTexture(
+                borderRadius: ZRadius.all(ZRadius.illo),
                 child: Transform.translate(
                   offset: Offset(delta * 90, 0),
                   child: Center(
                     child: ZLoop(
                       kind: ZLoopKind.bob,
-                      child: Image.asset(
-                        step.image,
-                        width: 260,
-                        fit: BoxFit.contain,
-                        excludeFromSemantics: true,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: ZRadius.all(ZRadius.sheet),
+                          boxShadow: [
+                            BoxShadow(
+                              color: ZBrandTones.deep.withValues(alpha: .45),
+                              blurRadius: 30,
+                              offset: const Offset(0, 14),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: ZRadius.all(ZRadius.sheet),
+                          child: Image.asset(
+                            step.image,
+                            width: 230,
+                            fit: BoxFit.contain,
+                            excludeFromSemantics: true,
+                          ),
+                        ),
                       ),
                     ),
                   ),

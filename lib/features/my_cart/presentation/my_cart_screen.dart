@@ -2,12 +2,14 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/widgets/z_hero_header.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/cart/application/cart_state.dart';
 import 'package:zippy/core/domain/coupon.dart';
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/utils/address_label.dart';
+import 'package:zippy/core/widgets/z_brand_texture.dart';
 import 'package:zippy/core/widgets/z_commerce.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/my_cart/widgets/bill_details.dart';
@@ -29,8 +31,13 @@ class MyCartScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: context.z.bg,
-      appBar: AppBar(title: Text('yourCart'.tr())),
-      body: _body(context, ref, cart),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ZHeroHeader(title: 'yourCart'.tr()),
+          Expanded(child: _body(context, ref, cart)),
+        ],
+      ),
       bottomNavigationBar: hasLines ? _CheckoutBar(cart: cart) : null,
     );
   }
@@ -218,49 +225,54 @@ class _CheckoutBar extends ConsumerWidget {
                   button: true,
                   child: ZPressable(
                     onTap: () => context.push('/checkoutScreen'),
-                    child: Container(
-                      constraints: const BoxConstraints(
-                        minHeight: ZSize.button,
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: ZSpace.x4,
-                        vertical: ZSpace.x2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: z.brand,
-                        borderRadius: ZRadius.all(ZRadius.button),
-                      ),
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  rupees(cart.bill.totalPaise),
-                                  style: t.labelLarge!.copyWith(
-                                    color: z.onBrand,
-                                    fontWeight: FontWeight.w800,
+                    child: ZBrandTexture(
+                      color: z.brand,
+                      borderRadius: ZRadius.all(ZRadius.button),
+                      child: Container(
+                        constraints: const BoxConstraints(
+                          minHeight: ZSize.button,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: ZSpace.x4,
+                          vertical: ZSpace.x2,
+                        ),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    rupees(cart.bill.totalPaise),
+                                    style: t.labelLarge!.copyWith(
+                                      color: z.onBrand,
+                                      fontWeight: FontWeight.w800,
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  'total'.tr(),
-                                  style: t.labelSmall!.copyWith(
-                                    color: z.headerInk2,
+                                  Text(
+                                    'total'.tr(),
+                                    style: t.labelSmall!.copyWith(
+                                      color: z.headerInk2,
+                                    ),
                                   ),
+                                ],
+                              ),
+                              const SizedBox(width: ZSpace.x4),
+                              Text(
+                                'checkout'.tr(),
+                                style: t.titleMedium!.copyWith(
+                                  color: z.onBrand,
                                 ),
-                              ],
-                            ),
-                            const SizedBox(width: ZSpace.x4),
-                            Text(
-                              'checkout'.tr(),
-                              style: t.titleMedium!.copyWith(color: z.onBrand),
-                            ),
-                            Icon(Icons.chevron_right_rounded, color: z.onBrand),
-                          ],
+                              ),
+                              Icon(
+                                Icons.chevron_right_rounded,
+                                color: z.onBrand,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),

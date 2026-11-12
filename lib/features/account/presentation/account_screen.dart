@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:zippy/core/widgets/z_hero_header.dart';
+import 'package:zippy/core/widgets/z_brand_texture.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/constants/constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,7 +11,6 @@ import 'package:zippy/core/data/provider/profile_provider.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
 import 'package:zippy/core/theme/theme_mode_provider.dart';
 import 'package:zippy/core/common_widgets/help_sheet.dart';
-import 'package:zippy/core/widgets/z_chrome.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/account/widgets/language_sheet.dart';
 
@@ -38,214 +39,225 @@ class AccountScreen extends ConsumerWidget {
       backgroundColor: z.bg,
       body: Stack(
         children: [
-          SafeArea(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Magenta header; the quick-action card below overlaps
-                  // its bottom edge (the translate leaves that space at the
-                  // end of the scroll).
-                  Container(
-                    color: z.header,
-                    padding: const EdgeInsets.fromLTRB(
-                      ZSpace.screen,
-                      ZSpace.x4,
-                      ZSpace.screen,
-                      ZSpace.x8 + ZSpace.x6,
-                    ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 28,
-                          backgroundColor: z.onBrand.withValues(alpha: .16),
-                          child: Text(
-                            initial,
-                            style: t.headlineSmall!.copyWith(color: z.onBrand),
-                          ),
+          ZStatusBarScrim(
+            child: SafeArea(
+              // The header runs under the status bar.
+              top: false,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Textured purple header; the quick-action card below overlaps
+                    // its bottom edge (the translate leaves that space at the
+                    // end of the scroll).
+                    ZBrandTexture(
+                      borderRadius: const BorderRadius.vertical(
+                        bottom: Radius.circular(ZRadius.hero),
+                      ),
+                      child: Container(
+                        padding: EdgeInsets.fromLTRB(
+                          ZSpace.screen,
+                          MediaQuery.paddingOf(context).top + ZSpace.x4,
+                          ZSpace.screen,
+                          ZSpace.x8 + ZSpace.x6,
                         ),
-                        const SizedBox(width: ZSpace.x3),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (profileAsync.isLoading && profile == null)
-                                const ZSkeleton(
-                                  width: 140,
-                                  height: 18,
-                                  radius: ZRadius.badge,
-                                )
-                              else
-                                Text(
-                                  displayName,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: t.headlineSmall!.copyWith(
-                                    color: z.headerInk,
-                                  ),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 28,
+                              backgroundColor: z.onBrand.withValues(alpha: .16),
+                              child: Text(
+                                initial,
+                                style: t.headlineSmall!.copyWith(
+                                  color: z.onBrand,
                                 ),
-                              if (profileAsync.hasError && profile == null)
-                                GestureDetector(
-                                  onTap: () => ref.invalidate(profileProvider),
-                                  child: Text(
-                                    'profileLoadFailed'.tr(),
-                                    style: t.bodySmall!.copyWith(
-                                      color: z.headerInk,
-                                      decoration: TextDecoration.underline,
-                                      decorationColor: z.headerInk,
+                              ),
+                            ),
+                            const SizedBox(width: ZSpace.x3),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (profileAsync.isLoading && profile == null)
+                                    const ZSkeleton(
+                                      width: 140,
+                                      height: 18,
+                                      radius: ZRadius.badge,
+                                    )
+                                  else
+                                    Text(
+                                      displayName,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: t.headlineSmall!.copyWith(
+                                        color: z.headerInk,
+                                      ),
+                                    ),
+                                  if (profileAsync.hasError && profile == null)
+                                    GestureDetector(
+                                      onTap: () =>
+                                          ref.invalidate(profileProvider),
+                                      child: Text(
+                                        'profileLoadFailed'.tr(),
+                                        style: t.bodySmall!.copyWith(
+                                          color: z.headerInk,
+                                          decoration: TextDecoration.underline,
+                                          decorationColor: z.headerInk,
+                                        ),
+                                      ),
+                                    )
+                                  else if (isGuest)
+                                    Text(
+                                      'guestHint'.tr(),
+                                      style: t.bodySmall!.copyWith(
+                                        color: z.headerInk2,
+                                      ),
+                                    )
+                                  else if (phone.isNotEmpty)
+                                    Text(
+                                      phone,
+                                      style: t.bodyMedium!.copyWith(
+                                        color: z.headerInk2,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            // Flexible: a long label can't push the name out.
+                            if (isGuest)
+                              Flexible(
+                                child: _HeaderPill(
+                                  label: 'saveAccount'.tr(),
+                                  onTap: () =>
+                                      context.pushNamed('GuestUpgradeScreen'),
+                                ),
+                              )
+                            else if (profile != null)
+                              Flexible(
+                                child: _HeaderPill(
+                                  label: 'editProfile'.tr(),
+                                  onTap: () =>
+                                      context.pushNamed('EditProfileScreen'),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Transform.translate(
+                      offset: const Offset(0, -(ZSpace.x8 + ZSpace.x2)),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: ZSpace.screen,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _Card(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: ZSpace.x4,
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: _QuickAction(
+                                      icon: Icons.shopping_bag_outlined,
+                                      background: z.brandSoft,
+                                      foreground: z.brandText,
+                                      label: 'yourOrder'.tr(),
+                                      onTap: () =>
+                                          context.pushNamed('YourOrderScreen'),
                                     ),
                                   ),
-                                )
-                              else if (isGuest)
-                                Text(
-                                  'guestHint'.tr(),
-                                  style: t.bodySmall!.copyWith(
-                                    color: z.headerInk2,
+                                  Expanded(
+                                    child: _QuickAction(
+                                      icon: Icons.favorite_border_rounded,
+                                      background: z.blueSoft,
+                                      foreground: z.blue,
+                                      label: 'favourite'.tr(),
+                                      onTap: () => ref
+                                          .read(navBarProvider.notifier)
+                                          .updateIndex(3),
+                                    ),
                                   ),
-                                )
-                              else if (phone.isNotEmpty)
-                                Text(
-                                  phone,
-                                  style: t.bodyMedium!.copyWith(
-                                    color: z.headerInk2,
+                                  Expanded(
+                                    child: _QuickAction(
+                                      icon: Icons.help_outline_rounded,
+                                      background: z.okSoft,
+                                      foreground: z.ok,
+                                      label: 'help'.tr(),
+                                      onTap: () => showHelpSheet(context),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: ZSpace.x3),
+                            const _AppearanceCard(),
+                            const SizedBox(height: ZSpace.x3),
+                            _Group(
+                              items: [
+                                _GroupItem(
+                                  icon: Icons.location_on_outlined,
+                                  label: 'addressBook'.tr(),
+                                  onTap: () =>
+                                      context.pushNamed('MyAddressScreen'),
+                                ),
+                                _GroupItem(
+                                  icon: Icons.credit_card_outlined,
+                                  label: 'paymentSettings'.tr(),
+                                  onTap: () => context.pushNamed(
+                                    'PaymentSettingsScreen',
                                   ),
                                 ),
-                            ],
-                          ),
-                        ),
-                        // Flexible: a long label can't push the name out.
-                        if (isGuest)
-                          Flexible(
-                            child: _HeaderPill(
-                              label: 'saveAccount'.tr(),
-                              onTap: () =>
-                                  context.pushNamed('GuestUpgradeScreen'),
-                            ),
-                          )
-                        else if (profile != null)
-                          Flexible(
-                            child: _HeaderPill(
-                              label: 'editProfile'.tr(),
-                              onTap: () =>
-                                  context.pushNamed('EditProfileScreen'),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  Transform.translate(
-                    offset: const Offset(0, -(ZSpace.x8 + ZSpace.x2)),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: ZSpace.screen,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _Card(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: ZSpace.x4,
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: _QuickAction(
-                                    icon: Icons.shopping_bag_outlined,
-                                    background: z.brandSoft,
-                                    foreground: z.brandText,
-                                    label: 'yourOrder'.tr(),
-                                    onTap: () =>
-                                        context.pushNamed('YourOrderScreen'),
-                                  ),
+                                _GroupItem(
+                                  icon: Icons.language_rounded,
+                                  label: 'language'.tr(),
+                                  trailingText: currentLanguageName(context),
+                                  onTap: () => showLanguageSheet(context),
                                 ),
-                                Expanded(
-                                  child: _QuickAction(
-                                    icon: Icons.favorite_border_rounded,
-                                    background: z.blueSoft,
-                                    foreground: z.blue,
-                                    label: 'favourite'.tr(),
-                                    onTap: () => ref
-                                        .read(navBarProvider.notifier)
-                                        .updateIndex(3),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: _QuickAction(
-                                    icon: Icons.help_outline_rounded,
-                                    background: z.okSoft,
-                                    foreground: z.ok,
-                                    label: 'help'.tr(),
-                                    onTap: () => showHelpSheet(context),
+                                _GroupItem(
+                                  icon: Icons.notifications_none_rounded,
+                                  label: 'notificationPref'.tr(),
+                                  onTap: () => context.pushNamed(
+                                    'NotificationSettingsScreen',
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                          const SizedBox(height: ZSpace.x3),
-                          const _AppearanceCard(),
-                          const SizedBox(height: ZSpace.x3),
-                          _Group(
-                            items: [
-                              _GroupItem(
-                                icon: Icons.location_on_outlined,
-                                label: 'addressBook'.tr(),
-                                onTap: () =>
-                                    context.pushNamed('MyAddressScreen'),
-                              ),
-                              _GroupItem(
-                                icon: Icons.credit_card_outlined,
-                                label: 'paymentSettings'.tr(),
-                                onTap: () =>
-                                    context.pushNamed('PaymentSettingsScreen'),
-                              ),
-                              _GroupItem(
-                                icon: Icons.language_rounded,
-                                label: 'language'.tr(),
-                                trailingText: currentLanguageName(context),
-                                onTap: () => showLanguageSheet(context),
-                              ),
-                              _GroupItem(
-                                icon: Icons.notifications_none_rounded,
-                                label: 'notificationPref'.tr(),
-                                onTap: () => context.pushNamed(
-                                  'NotificationSettingsScreen',
+                            const SizedBox(height: ZSpace.x3),
+                            _Group(
+                              items: [
+                                _GroupItem(
+                                  icon: Icons.description_outlined,
+                                  label: 'accountPrivacy'.tr(),
+                                  onTap: () =>
+                                      context.pushNamed('AccountPrivacyScreen'),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: ZSpace.x3),
-                          _Group(
-                            items: [
-                              _GroupItem(
-                                icon: Icons.description_outlined,
-                                label: 'accountPrivacy'.tr(),
-                                onTap: () =>
-                                    context.pushNamed('AccountPrivacyScreen'),
-                              ),
-                              _GroupItem(
-                                icon: Icons.logout_rounded,
-                                label: 'logOut'.tr(),
-                                danger: true,
-                                onTap: () =>
-                                    _confirmLogOut(context, ref, isGuest),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: ZSpace.x4),
-                          Text(
-                            'appVersion'.tr(args: [Constants.appVersion]),
-                            textAlign: TextAlign.center,
-                            style: t.bodySmall,
-                          ),
-                        ],
+                                _GroupItem(
+                                  icon: Icons.logout_rounded,
+                                  label: 'logOut'.tr(),
+                                  danger: true,
+                                  onTap: () =>
+                                      _confirmLogOut(context, ref, isGuest),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: ZSpace.x4),
+                            Text(
+                              'appVersion'.tr(args: [Constants.appVersion]),
+                              textAlign: TextAlign.center,
+                              style: t.bodySmall,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-          const ZStatusBarStrip(),
         ],
       ),
     );
@@ -314,7 +326,7 @@ class _Card extends StatelessWidget {
   }
 }
 
-/// "Edit" / "Save account" on the magenta header.
+/// "Edit" / "Save account" on the purple header.
 class _HeaderPill extends StatelessWidget {
   const _HeaderPill({required this.label, required this.onTap});
 
