@@ -20,6 +20,7 @@ import 'package:zippy/core/widgets/z_brand_texture.dart';
 import 'package:zippy/core/widgets/z_chrome.dart';
 import 'package:zippy/features/home_screen/application/home_sections_provider.dart';
 import 'package:zippy/features/home_screen/presentation/home_screen.dart';
+import 'package:zippy/features/home_screen/widgets/sections/category_tabs_section.dart';
 
 import '../helpers/fake_repositories.dart';
 import '../helpers/localized_app.dart';
@@ -36,11 +37,16 @@ class _FixedLocation extends GetCurrentLocationProvider {
   Future<void> getCurrentLocation({bool requestPermission = false}) async {}
 }
 
-HomeSection _section(String type, String title, int items) => HomeSection(
-  id: type,
+HomeSection _section(
+  String type,
+  String title,
+  int items, {
+  Map<String, dynamic> config = const {},
+}) => HomeSection(
+  id: '$type-$title',
   type: type,
   title: title,
-  config: const {},
+  config: config,
   items: [
     for (var i = 0; i < items; i++)
       HomeSectionItem(id: '$i', data: {'title': 'Item $i', 'label': 'L$i'}),
@@ -59,6 +65,7 @@ void main() {
     WidgetTester tester, {
     ThemeData? theme,
     double textScale = 1,
+    bool tabsFirst = false,
   }) async {
     final container = ProviderContainer(
       overrides: [
@@ -68,6 +75,13 @@ void main() {
         homeSectionsProvider.overrideWith(
           (ref) async => (
             sections: [
+              if (tabsFirst)
+                _section(
+                  'category_tabs',
+                  'Tabs',
+                  4,
+                  config: const {'sticky': true},
+                ),
               _section('banner_carousel', 'Offers', 1),
               // Enough content to scroll the header shut.
               for (var i = 0; i < 6; i++)
@@ -148,6 +162,47 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets('a first category strip sits on the purple and pins solid', (
+    tester,
+  ) async {
+    await pumpHome(tester, tabsFirst: true);
+    CategoryTabsSection strip() =>
+        tester.widget<CategoryTabsSection>(find.byType(CategoryTabsSection));
+    expect(strip().onHero, isTrue);
+    expect(strip().pinned, isFalse);
+    // Its chips sit on the textured hero panel, under the search bar.
+    expect(
+      tester.getRect(find.byType(CategoryTabsSection)).top,
+      greaterThanOrEqualTo(tester.getRect(find.byType(ZSearchBar)).bottom),
+    );
+
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -400));
+    await tester.pump();
+    expect(strip().pinned, isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('category strip further down uses light chips', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ZyppiTheme.light,
+        home: Scaffold(
+          body: CategoryTabsSection(
+            section: _section('category_tabs', 'Tabs', 3),
+          ),
+        ),
+      ),
+    );
+    final strip = tester.widget<CategoryTabsSection>(
+      find.byType(CategoryTabsSection),
+    );
+    expect(strip.onHero, isFalse);
+    expect(
+      tester.getSize(find.byType(CategoryTabsSection)).height,
+      CategoryTabsSection.height,
+    );
+  });
 
   testWidgets('ZBrandScope keeps light/dark and swaps only the brand', (
     tester,

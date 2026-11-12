@@ -9,12 +9,12 @@ IconData resolveSectionIcon(String? name) {
     case 'grid_view':
       return Icons.grid_view_rounded;
     case 'eco':
-      return Icons.eco_outlined;
+      return Icons.eco_rounded;
     case 'bakery_dining':
-      return Icons.bakery_dining_outlined;
+      return Icons.bakery_dining_rounded;
     case 'local_drink':
-      return Icons.local_drink_outlined;
+      return Icons.local_drink_rounded;
     default:
-      return Icons.category_outlined;
+      return Icons.category_rounded;
   }
 }

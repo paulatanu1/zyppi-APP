@@ -53,6 +53,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final sectionsAsync = ref.watch(homeSectionsProvider);
     final maxHeader = HomeScreenHeader.maxHeight(context);
     final minHeader = HomeScreenHeader.minHeight(context);
+    // A category strip that comes first sits on the purple: the hero
+    // panel grows to hold it, with the curve just below the chips.
+    final first = sectionsAsync.value?.sections.firstOrNull;
+    final tabsOnHero = first?.type == 'category_tabs';
+    final tabsPinned = tabsOnHero && first!.config.boolean('sticky') == true;
+    final heroOverlap = tabsOnHero
+        ? CategoryTabsSection.height + ZSpace.x6
+        : _heroOverlap;
 
     return Scaffold(
       backgroundColor: context.z.bg,
@@ -70,7 +78,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 right: 0,
                 // Pulling down past the top stretches it instead of
                 // opening a gap.
-                height: maxHeader + _heroOverlap + math.max(0.0, -offset),
+                height: maxHeader + heroOverlap + math.max(0.0, -offset),
                 child: child!,
               );
             },
@@ -104,9 +112,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   delegate: _HomeHeaderDelegate(
                     maxHeight: maxHeader,
                     minHeight: minHeader,
+                    // A pinned category strip carries the curve instead.
+                    roundPinned: !tabsPinned,
                   ),
                 ),
-                const SliverToBoxAdapter(child: SizedBox(height: ZSpace.x3)),
+                if (!tabsOnHero)
+                  const SliverToBoxAdapter(child: SizedBox(height: ZSpace.x3)),
                 ...sectionsAsync.when(
                   loading: () => [
                     const SliverToBoxAdapter(child: _HomeSkeleton()),
@@ -161,7 +172,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           section.config.boolean('sticky') == true)
                         SliverPersistentHeader(
                           pinned: true,
-                          delegate: StickyCategoryTabsDelegate(section),
+                          delegate: StickyCategoryTabsDelegate(
+                            section,
+                            onHero: tabsOnHero && i == 0,
+                          ),
+                        )
+                      else if (section.type == 'category_tabs')
+                        SliverToBoxAdapter(
+                          child: CategoryTabsSection(
+                            section: section,
+                            onHero: tabsOnHero && i == 0,
+                          ),
                         )
                       else
                         SliverToBoxAdapter(
@@ -207,9 +228,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 /// folds to the search bar, its own textured strip fades in so content
 /// scrolling underneath stays hidden.
 class _HomeHeaderDelegate extends SliverPersistentHeaderDelegate {
-  _HomeHeaderDelegate({required this.maxHeight, required this.minHeight});
+  _HomeHeaderDelegate({
+    required this.maxHeight,
+    required this.minHeight,
+    this.roundPinned = true,
+  });
 
   final double maxHeight, minHeight;
+
+  /// Round the folded strip's bottom corners (off when a pinned category
+  /// strip continues the purple below it).
+  final bool roundPinned;
 
   @override
   double get maxExtent => maxHeight;
@@ -226,10 +255,12 @@ class _HomeHeaderDelegate extends SliverPersistentHeaderDelegate {
         if (p > 0)
           Opacity(
             opacity: p,
-            child: const ZBrandTexture(
-              borderRadius: BorderRadius.vertical(
-                bottom: Radius.circular(ZRadius.heroPinned),
-              ),
+            child: ZBrandTexture(
+              borderRadius: roundPinned
+                  ? const BorderRadius.vertical(
+                      bottom: Radius.circular(ZRadius.heroPinned),
+                    )
+                  : BorderRadius.zero,
             ),
           ),
         // Anchored to the bottom so the search bar always sits there; if
@@ -249,7 +280,9 @@ class _HomeHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(_HomeHeaderDelegate old) =>
-      old.maxHeight != maxHeight || old.minHeight != minHeight;
+      old.maxHeight != maxHeight ||
+      old.minHeight != minHeight ||
+      old.roundPinned != roundPinned;
 }
 
 /// Centred empty / error content below the hero panel.
