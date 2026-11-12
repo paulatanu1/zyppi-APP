@@ -165,7 +165,11 @@ class ZAddStepper extends StatelessWidget {
               onTap: onAdd,
               child: Container(
                 height: height,
-                constraints: const BoxConstraints(minWidth: 70),
+                // A full-width stepper (minWidth: infinity) has a
+                // full-width ADD too.
+                constraints: BoxConstraints(
+                  minWidth: minWidth.isInfinite ? minWidth : 70,
+                ),
                 alignment: Alignment.center,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(

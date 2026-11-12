@@ -30,7 +30,13 @@ class ZProductCard extends StatelessWidget {
     this.onFavourite,
     this.width,
     this.eta,
+    this.compact = false,
   });
+
+  /// Narrow cards (about 125 px, beside the product page's left menu):
+  /// the price gets its own line and ADD spans the card below it. Use
+  /// [height] with the same flag.
+  final bool compact;
 
   final String name, weight;
 
@@ -85,8 +91,18 @@ class ZProductCard extends StatelessWidget {
     return text > ZSize.addButton ? text : ZSize.addButton;
   }
 
+  /// Compact: price text on its own line, then a full-width ADD.
+  static double _compactPriceBlockHeight(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    final s = MediaQuery.textScalerOf(context);
+    return _lineHeight(t.price, s, sample: '₹9') +
+        _lineHeight(t.mrp, s, sample: '₹9') +
+        6 +
+        ZSize.addButton;
+  }
+
   /// The card's height at the current text scale.
-  static double height(BuildContext context) {
+  static double height(BuildContext context, {bool compact = false}) {
     final t = Theme.of(context).textTheme;
     final s = MediaQuery.textScalerOf(context);
     final etaText = _lineHeight(ZEtaBadge.textStyle(context), s);
@@ -103,7 +119,9 @@ class ZProductCard extends StatelessWidget {
         2 +
         _lineHeight(t.bodySmall!, s) +
         6 +
-        _priceBlockHeight(context) +
+        (compact
+            ? _compactPriceBlockHeight(context)
+            : _priceBlockHeight(context)) +
         10; // bottom padding
   }
 
@@ -198,36 +216,70 @@ class ZProductCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            SizedBox(
-              height: _priceBlockHeight(context),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Expanded(
-                    child: price == null
-                        ? Text(
-                            'productUnavailable'.tr(),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: t.bodySmall,
-                          )
-                        // Shrinks rather than wraps at large text sizes.
-                        : FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.bottomLeft,
-                            child: ZPrice(price: price!, mrp: mrp),
-                          ),
-                  ),
-                  if (price != null && onAdd != null && onRemove != null)
-                    ZAddStepper(
-                      quantity: quantity,
-                      onAdd: onAdd!,
-                      onRemove: onRemove!,
-                      minWidth: 76,
+            if (compact)
+              SizedBox(
+                height: _compactPriceBlockHeight(context),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: price == null
+                          ? Text(
+                              'productUnavailable'.tr(),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: t.bodySmall,
+                            )
+                          : FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.bottomLeft,
+                              child: ZPrice(price: price!, mrp: mrp),
+                            ),
                     ),
-                ],
+                    const SizedBox(height: 6),
+                    if (price != null && onAdd != null && onRemove != null)
+                      ZAddStepper(
+                        quantity: quantity,
+                        onAdd: onAdd!,
+                        onRemove: onRemove!,
+                        minWidth: double.infinity,
+                      )
+                    else
+                      const SizedBox(height: ZSize.addButton),
+                  ],
+                ),
+              )
+            else
+              SizedBox(
+                height: _priceBlockHeight(context),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: price == null
+                          ? Text(
+                              'productUnavailable'.tr(),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: t.bodySmall,
+                            )
+                          // Shrinks rather than wraps at large text sizes.
+                          : FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.bottomLeft,
+                              child: ZPrice(price: price!, mrp: mrp),
+                            ),
+                    ),
+                    if (price != null && onAdd != null && onRemove != null)
+                      ZAddStepper(
+                        quantity: quantity,
+                        onAdd: onAdd!,
+                        onRemove: onRemove!,
+                        minWidth: 76,
+                      ),
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),

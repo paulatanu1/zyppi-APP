@@ -10,9 +10,14 @@ import 'package:zippy/core/widgets/z_product_card.dart';
 import 'package:zippy/features/category_details/application/category_details_provider.dart';
 import 'package:zippy/features/category_details/widgets/category_details_header.dart';
 import 'package:zippy/features/category_details/widgets/category_filter_chips.dart';
+import 'package:zippy/features/category_details/widgets/category_rail.dart';
 
-/// docs/screens/light/06-category.png, minus the sub-category rail (no
-/// sub-category relationship in the catalog data model yet).
+/// The product list page (Blinkit/Zepto style): purple header, filter
+/// chips, then a left menu of sub-categories (or of every category) beside
+/// a two-column product grid. The menu switches the products in place.
+///
+/// [categoryId] may be a top-level category, a sub-category, or '' for
+/// All (Home's "All" chip).
 class CategoryDetailsScreen extends ConsumerWidget {
   final String categoryId;
 
@@ -22,9 +27,15 @@ class CategoryDetailsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(categoryDetailsProvider(categoryId));
     final notifier = ref.read(categoryDetailsProvider(categoryId).notifier);
-    final filter = ref.watch(productFilterProvider(categoryId));
-    final products = filter.apply(state.products);
+    final key = state.selectionKey;
+    final filter = ref.watch(productFilterProvider(key));
+    final products = filter.apply(state.visibleProducts);
     final t = Theme.of(context).textTheme;
+    final notFound =
+        !state.loading &&
+        state.parentId != null &&
+        state.category == null &&
+        state.error == null;
 
     Widget message(String text, {Widget? action}) => Center(
       child: Padding(
@@ -39,9 +50,9 @@ class CategoryDetailsScreen extends ConsumerWidget {
       ),
     );
 
-    final Widget body;
+    final Widget grid;
     if (state.error != null) {
-      body = message(
+      grid = message(
         'somethingWentWrong'.tr(),
         action: SizedBox(
           width: 160,
@@ -51,41 +62,44 @@ class CategoryDetailsScreen extends ConsumerWidget {
           ),
         ),
       );
-    } else if (!state.loading && state.category == null) {
-      body = message('categoryNotFound'.tr());
+    } else if (notFound) {
+      grid = message('categoryNotFound'.tr());
     } else if (!state.loading && products.isEmpty) {
-      body = message(
+      grid = message(
         filter.isActive ? 'noProductsMatchFilter'.tr() : 'noProductsFound'.tr(),
         action: filter.isActive
             ? TextButton(
                 onPressed: () =>
-                    ref.read(productFilterProvider(categoryId).notifier).state =
+                    ref.read(productFilterProvider(key).notifier).state =
                         ProductFilter.none,
                 child: Text('clearFilters'.tr()),
               )
             : null,
       );
     } else {
-      body = GridView.builder(
+      grid = GridView.builder(
+        // A new list per selection, so it starts at the top.
+        key: ValueKey(key),
         physics: const BouncingScrollPhysics(),
         // Room at the end for the floating cart bar.
         padding: const EdgeInsets.fromLTRB(
-          ZSpace.screen,
-          ZSpace.x2,
-          ZSpace.screen,
+          ZSpace.x3,
+          ZSpace.x3,
+          ZSpace.x3,
           ZSize.cartBar + ZSpace.x6,
         ),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          crossAxisSpacing: ZSpace.x3,
-          mainAxisSpacing: ZSpace.x3,
-          // Cards share one height that grows with text size.
-          mainAxisExtent: ZProductCard.height(context),
+          crossAxisSpacing: ZSpace.x2,
+          mainAxisSpacing: ZSpace.x2,
+          // Narrow cards beside the menu: compact layout, one height that
+          // grows with text size.
+          mainAxisExtent: ZProductCard.height(context, compact: true),
         ),
         itemCount: state.loading ? 6 : products.length,
         itemBuilder: (context, index) => state.loading
             ? const ZProductCardSkeleton()
-            : CatalogProductCard(product: products[index]),
+            : CatalogProductCard(product: products[index], compact: true),
       );
     }
 
@@ -99,15 +113,30 @@ class CategoryDetailsScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 CategoryDetailsHeader(
-                  title: state.category?.name ?? '',
+                  title: state.parentId == null
+                      ? 'allProducts'.tr()
+                      : state.category?.name ?? '',
                   itemCount: products.length,
                   loading: state.loading,
                 ),
-                if (state.error == null && state.category != null) ...[
+                if (state.error == null && !notFound) ...[
                   const SizedBox(height: ZSpace.x2),
-                  CategoryFilterChips(categoryId: categoryId),
+                  CategoryFilterChips(categoryId: key),
                 ],
-                Expanded(child: body),
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (state.categories.isNotEmpty)
+                        CategoryRail(
+                          state: state,
+                          onSelectParent: notifier.selectParent,
+                          onSelectSub: notifier.selectSub,
+                        ),
+                      Expanded(child: grid),
+                    ],
+                  ),
+                ),
               ],
             ),
             const Positioned(

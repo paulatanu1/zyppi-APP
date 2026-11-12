@@ -11,7 +11,15 @@ import 'package:zippy/core/widgets/z_product_card.dart';
 /// variant, as everywhere else in the app), favourites and the product
 /// screen. A product with no variant shows as unavailable.
 class CatalogProductCard extends ConsumerWidget {
-  const CatalogProductCard({super.key, required this.product, this.width});
+  const CatalogProductCard({
+    super.key,
+    required this.product,
+    this.width,
+    this.compact = false,
+  });
+
+  /// See [ZProductCard.compact].
+  final bool compact;
 
   final Product product;
   final double? width;
@@ -39,6 +47,7 @@ class CatalogProductCard extends ConsumerWidget {
 
     return ZProductCard(
       width: width,
+      compact: compact,
       name: product.name,
       weight: variant?.label ?? '',
       image: CatalogImage(image: product.image, fit: BoxFit.contain),

@@ -280,43 +280,52 @@ class ZHeroAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
           child: SizedBox(
             height: _bar,
-            child: Row(
-              children: [
-                if (back) ...[
-                  ZGlassIconButton(
-                    icon: Icons.arrow_back_ios_new_rounded,
-                    tooltip: 'back'.tr(),
-                    onPressed: onBack ?? () => Navigator.of(context).maybePop(),
+            // Fixed-height bar: title + subtitle stop growing at 1.3× so
+            // they always fit.
+            child: MediaQuery.withClampedTextScaling(
+              maxScaleFactor: 1.3,
+              child: Row(
+                children: [
+                  if (back) ...[
+                    ZGlassIconButton(
+                      icon: Icons.arrow_back_ios_new_rounded,
+                      tooltip: 'back'.tr(),
+                      onPressed:
+                          onBack ?? () => Navigator.of(context).maybePop(),
+                    ),
+                    const SizedBox(width: ZSpace.x3),
+                  ],
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (title != null)
+                          Text(
+                            title!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: t.titleLarge!.copyWith(color: z.headerInk),
+                          ),
+                        if (subtitle != null)
+                          Text(
+                            subtitle!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: t.bodySmall!.copyWith(color: z.headerInk2),
+                          ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(width: ZSpace.x3),
+                  Theme(
+                    data: onBrand,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: actions,
+                    ),
+                  ),
                 ],
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (title != null)
-                        Text(
-                          title!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: t.titleLarge!.copyWith(color: z.headerInk),
-                        ),
-                      if (subtitle != null)
-                        Text(
-                          subtitle!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: t.bodySmall!.copyWith(color: z.headerInk2),
-                        ),
-                    ],
-                  ),
-                ),
-                Theme(
-                  data: onBrand,
-                  child: Row(mainAxisSize: MainAxisSize.min, children: actions),
-                ),
-              ],
+              ),
             ),
           ),
         ),
