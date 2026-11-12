@@ -15,7 +15,7 @@ Future<void> resumePendingPayment(ProviderContainer container) async {
   if (Env.isMockDataSource) return;
 
   final store = container.read(pendingPaymentStoreProvider);
-  final txnid = store.read();
+  final txnid = store.read()?.txnid;
   if (txnid == null) return;
 
   try {
