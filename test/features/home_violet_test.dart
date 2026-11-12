@@ -1,0 +1,194 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:hive_ce_flutter/hive_ce_flutter.dart';
+import 'package:zippy/core/common_widgets/home_screen_header.dart';
+import 'package:zippy/core/data/provider/profile_provider.dart';
+import 'package:zippy/core/domain/category.dart';
+import 'package:zippy/core/domain/home_section.dart';
+import 'package:zippy/core/domain/home_section_item.dart';
+import 'package:zippy/core/domain/product.dart';
+import 'package:zippy/core/domain/profile.dart';
+import 'package:zippy/core/shared_providers/location/application/get_current_location_state.dart';
+import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
+import 'package:zippy/core/theme/z_brand_scope.dart';
+import 'package:zippy/core/theme/zyppi_theme.dart';
+import 'package:zippy/core/widgets/z_brand_texture.dart';
+import 'package:zippy/core/widgets/z_chrome.dart';
+import 'package:zippy/features/home_screen/application/home_sections_provider.dart';
+import 'package:zippy/features/home_screen/presentation/home_screen.dart';
+
+import '../helpers/fake_repositories.dart';
+import '../helpers/localized_app.dart';
+
+class _FixedLocation extends GetCurrentLocationProvider {
+  _FixedLocation(super.ref) {
+    state = GetCurrentLocationState.initial().copyWith(
+      isDetecting: false,
+      address: 'Ranchi Road, Purulia',
+    );
+  }
+
+  @override
+  Future<void> getCurrentLocation({bool requestPermission = false}) async {}
+}
+
+HomeSection _section(String type, String title, int items) => HomeSection(
+  id: type,
+  type: type,
+  title: title,
+  config: const {},
+  items: [
+    for (var i = 0; i < items; i++)
+      HomeSectionItem(id: '$i', data: {'title': 'Item $i', 'label': 'L$i'}),
+  ],
+);
+
+void main() {
+  late Directory dir;
+  setUpAll(() async {
+    dir = await Directory.systemTemp.createTemp('home_violet_test');
+    Hive.init(dir.path);
+  });
+  tearDownAll(() => dir.delete(recursive: true));
+
+  Future<void> pumpHome(
+    WidgetTester tester, {
+    ThemeData? theme,
+    double textScale = 1,
+  }) async {
+    final container = ProviderContainer(
+      overrides: [
+        ...await cartAndFavouritesOverrides(tester),
+        currentLocation.overrideWith((ref) => _FixedLocation(ref)),
+        profileProvider.overrideWith((ref) => Completer<Profile>().future),
+        homeSectionsProvider.overrideWith(
+          (ref) async => (
+            sections: [
+              _section('banner_carousel', 'Offers', 1),
+              // Enough content to scroll the header shut.
+              for (var i = 0; i < 6; i++)
+                _section('category_grid', 'Shop by category $i', 8),
+            ],
+            categoriesById: const <String, Category>{},
+            productsById: const <String, Product>{},
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    // Reduced motion: no looping ⚡ or entrance timers to wait out.
+    await pumpLocalizedApp(
+      tester,
+      container: container,
+      home: const HomeScreen(),
+      theme: theme,
+      textScale: textScale,
+      disableAnimations: true,
+    );
+  }
+
+  ZColors colorsOf(WidgetTester tester, Finder finder) =>
+      Theme.of(tester.element(finder)).extension<ZColors>()!;
+
+  testWidgets('Home is logo purple; the app around it keeps its brand', (
+    tester,
+  ) async {
+    await pumpHome(tester);
+
+    expect(
+      colorsOf(tester, find.byType(HomeScreenHeader)).brand,
+      ZColors.violetLight.brand,
+    );
+    expect(
+      colorsOf(tester, find.byType(HomeScreen)).brand,
+      ZColors.light.brand,
+    );
+    expect(find.byType(ZBrandTexture), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('section headers use the See-all pill on Home', (tester) async {
+    await pumpHome(tester);
+    final header = tester.widget<ZSectionHeader>(
+      find.byType(ZSectionHeader).first,
+    );
+    expect(header.pill, isTrue);
+  });
+
+  testWidgets('scrolling folds the header down to the search bar', (
+    tester,
+  ) async {
+    await pumpHome(tester);
+    HomeScreenHeader header() =>
+        tester.widget<HomeScreenHeader>(find.byType(HomeScreenHeader));
+    expect(header().collapse, 0);
+
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -400));
+    await tester.pump();
+
+    expect(header().collapse, 1);
+    expect(find.byType(ZSearchBar), findsOneWidget);
+    expect(tester.getRect(find.byType(ZSearchBar)).top, greaterThan(0));
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final (name, theme, scale) in [
+    ('dark', ZyppiTheme.dark, 1.0),
+    ('large text', ZyppiTheme.light, 2.0),
+  ]) {
+    testWidgets('renders without overflow: $name', (tester) async {
+      await pumpHome(tester, theme: theme, textScale: scale);
+      expect(tester.takeException(), isNull);
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -200));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets('ZBrandScope keeps light/dark and swaps only the brand', (
+    tester,
+  ) async {
+    late ZColors light, dark;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ZyppiTheme.light,
+        home: Column(
+          children: [
+            ZBrandScope.violet(
+              child: Builder(
+                builder: (c) {
+                  light = c.z;
+                  return const SizedBox();
+                },
+              ),
+            ),
+            Theme(
+              data: ZyppiTheme.dark,
+              child: ZBrandScope.violet(
+                child: Builder(
+                  builder: (c) {
+                    dark = c.z;
+                    return const SizedBox();
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    expect(light.brand, ZColors.violetLight.brand);
+    expect(light.bg, ZColors.light.bg);
+    expect(dark.brand, ZColors.violetDark.brand);
+    expect(dark.bg, ZColors.dark.bg);
+  });
+
+  test('shared widgets default to their existing look', () {
+    expect(const ZSectionHeader('x').pill, isFalse);
+    expect(const ZSearchBar().glow, isFalse);
+  });
+}

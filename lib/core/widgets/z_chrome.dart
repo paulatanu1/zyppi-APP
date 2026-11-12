@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme/zyppi_theme.dart';
+import 'z_brand_texture.dart';
 import 'z_commerce.dart';
 import 'z_motion.dart';
 
@@ -13,8 +14,13 @@ class ZSectionHeader extends StatelessWidget {
     super.key,
     this.onSeeAll,
     this.actionLabel,
+    this.pill = false,
   });
   final String title;
+
+  /// Shows the action as a soft brand pill with a chevron (Home) instead
+  /// of plain brand text.
+  final bool pill;
 
   /// Defaults to `seeAll`.
   final String? actionLabel;
@@ -34,16 +40,46 @@ class ZSectionHeader extends StatelessWidget {
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: onSeeAll,
-              child: Text(
-                actionLabel ?? 'seeAll'.tr(),
-                style: t.labelMedium!.copyWith(
-                  color: context.z.brandText,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
+              child: pill ? _pill(context, t) : _label(context, t),
             ),
           ),
       ],
+    );
+  }
+}
+
+extension on ZSectionHeader {
+  Text _label(BuildContext context, TextTheme t) => Text(
+    actionLabel ?? 'seeAll'.tr(),
+    style: t.labelMedium!.copyWith(
+      color: context.z.brandText,
+      fontWeight: FontWeight.w800,
+    ),
+  );
+
+  /// A 44 px tall touch target around a 30 px pill.
+  Widget _pill(BuildContext context, TextTheme t) {
+    final z = context.z;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: ZSize.touch),
+      child: Center(
+        widthFactor: 1,
+        child: Container(
+          height: 30,
+          padding: const EdgeInsets.only(left: ZSpace.x3, right: ZSpace.x1),
+          decoration: BoxDecoration(
+            color: z.brandSoft,
+            borderRadius: ZRadius.all(15),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _label(context, t),
+              Icon(Icons.chevron_right_rounded, size: 18, color: z.brandText),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -121,11 +157,20 @@ class ZCategoryTile extends StatelessWidget {
 /// White search field used in the home header. The mic button only shows
 /// when [onMic] is set (there is no voice search yet).
 class ZSearchBar extends StatelessWidget {
-  const ZSearchBar({super.key, this.hint, this.onTap, this.onMic});
+  const ZSearchBar({
+    super.key,
+    this.hint,
+    this.onTap,
+    this.onMic,
+    this.glow = false,
+  });
 
   /// Defaults to `homeSearchHint`.
   final String? hint;
   final VoidCallback? onTap, onMic;
+
+  /// A soft brand-tinted shadow, so the bar floats over a textured header.
+  final bool glow;
 
   @override
   Widget build(BuildContext context) {
@@ -140,11 +185,18 @@ class ZSearchBar extends StatelessWidget {
           color: z.surface,
           borderRadius: ZRadius.all(15),
           boxShadow: [
-            BoxShadow(
-              color: z.shadow,
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
+            if (glow)
+              BoxShadow(
+                color: ZBrandTones.deep.withValues(alpha: .35),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              )
+            else
+              BoxShadow(
+                color: z.shadow,
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
           ],
         ),
         child: Row(
@@ -196,10 +248,15 @@ class ZCartBar extends StatelessWidget {
     required this.total,
     this.saved = 0,
     required this.onTap,
+    this.textured = false,
   });
   final List<Widget> thumbnails;
   final int itemCount, total, saved;
   final VoidCallback onTap;
+
+  /// The splash texture (aurora + grain) on the bar, with a softer, wider
+  /// glow (Home trial). Off: the flat brand bar.
+  final bool textured;
 
   @override
   Widget build(BuildContext context) {
@@ -218,108 +275,125 @@ class ZCartBar extends StatelessWidget {
         onTap: onTap,
         child: Container(
           height: ZSize.cartBar,
-          padding: const EdgeInsets.only(left: 10, right: 8),
           decoration: BoxDecoration(
-            color: z.brand,
+            color: textured ? null : z.brand,
             borderRadius: ZRadius.all(ZRadius.card),
             boxShadow: [
               BoxShadow(
-                color: z.brand.withValues(alpha: .35),
-                blurRadius: 28,
-                offset: const Offset(0, 10),
+                color: (textured ? ZBrandTones.deep : z.brand).withValues(
+                  alpha: textured ? .4 : .35,
+                ),
+                blurRadius: textured ? 32 : 28,
+                offset: Offset(0, textured ? 12 : 10),
               ),
             ],
           ),
-          child: Row(
-            children: [
-              if (thumbs.isNotEmpty) ...[
-                SizedBox(
-                  width: 38 + (thumbs.length - 1) * 26,
-                  height: 38,
-                  child: Stack(
-                    children: [
-                      for (var i = 0; i < thumbs.length; i++)
-                        Positioned(
-                          left: i * 26,
-                          child: Container(
-                            width: 38,
-                            height: 38,
-                            padding: const EdgeInsets.all(3),
-                            decoration: BoxDecoration(
-                              // Product shots are on white in both themes.
-                              color: z.onBrand,
-                              borderRadius: ZRadius.all(12),
-                              border: Border.all(color: z.brand, width: 2),
+          child: _surface(
+            Padding(
+              padding: const EdgeInsets.only(left: 10, right: 8),
+              child: Row(
+                children: [
+                  if (thumbs.isNotEmpty) ...[
+                    SizedBox(
+                      width: 38 + (thumbs.length - 1) * 26,
+                      height: 38,
+                      child: Stack(
+                        children: [
+                          for (var i = 0; i < thumbs.length; i++)
+                            Positioned(
+                              left: i * 26,
+                              child: Container(
+                                width: 38,
+                                height: 38,
+                                padding: const EdgeInsets.all(3),
+                                decoration: BoxDecoration(
+                                  // Product shots are on white in both themes.
+                                  color: z.onBrand,
+                                  borderRadius: ZRadius.all(12),
+                                  border: Border.all(color: z.brand, width: 2),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: ZRadius.all(8),
+                                  child: thumbs[i],
+                                ),
+                              ),
                             ),
-                            child: ClipRRect(
-                              borderRadius: ZRadius.all(8),
-                              child: thumbs[i],
-                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                  ],
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${'itemCount'.plural(itemCount)} · ${rupees(total)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: t.labelLarge!.copyWith(
+                            color: z.onBrand,
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
-                    ],
+                        if (saved > 0)
+                          Text(
+                            'youSave'.tr(args: [rupees(saved)]),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: t.bodySmall!.copyWith(
+                              color: z.headerInk2,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10),
-              ],
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${'itemCount'.plural(itemCount)} · ${rupees(total)}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: t.labelLarge!.copyWith(
-                        color: z.onBrand,
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w800,
-                      ),
+                  Container(
+                    height: 44,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: z.onBrand.withValues(alpha: .18),
+                      borderRadius: ZRadius.all(13),
                     ),
-                    if (saved > 0)
-                      Text(
-                        'youSave'.tr(args: [rupees(saved)]),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: t.bodySmall!.copyWith(
-                          color: z.headerInk2,
-                          fontWeight: FontWeight.w600,
+                    child: Row(
+                      children: [
+                        Text(
+                          'viewCart'.tr(),
+                          style: t.labelLarge!.copyWith(
+                            color: z.onBrand,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
-                      ),
-                  ],
-                ),
-              ),
-              Container(
-                height: 44,
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                decoration: BoxDecoration(
-                  color: z.onBrand.withValues(alpha: .18),
-                  borderRadius: ZRadius.all(13),
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      'viewCart'.tr(),
-                      style: t.labelLarge!.copyWith(
-                        color: z.onBrand,
-                        fontWeight: FontWeight.w800,
-                      ),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: z.onBrand,
+                          size: 20,
+                        ),
+                      ],
                     ),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      color: z.onBrand,
-                      size: 20,
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
+            z,
           ),
         ),
       ),
     );
   }
+
+  /// The bar's content on its brand surface: flat (the [Container]'s own
+  /// colour) or textured.
+  Widget _surface(Widget child, ZColors z) => textured
+      ? ZBrandTexture(
+          color: z.brand,
+          borderRadius: ZRadius.all(ZRadius.card),
+          child: child,
+        )
+      : child;
 }
 
 /// Bottom navigation: Home · Explore · Cart · Favourite · Account.

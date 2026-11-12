@@ -80,6 +80,7 @@ class HomeSectionWidget extends ConsumerWidget {
         ? null
         : ZSectionHeader(
             section.title!,
+            pill: true,
             // "Shop by category" → every category, on the Explore tab.
             onSeeAll: section.type == 'category_grid'
                 ? () => ref.read(navBarProvider.notifier).updateIndex(1)
