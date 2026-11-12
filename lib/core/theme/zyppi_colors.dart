@@ -72,9 +72,9 @@ class ZColors extends ThemeExtension<ZColors> {
   final Color mapBg, mapRoad, mapBlock, mapPark, mapWater;
   final Color shadow;
 
-  /// The Z mark's purple (#673AB7) and the launch screen's background —
-  /// launch / splash / icon only; the app's brand stays [brand] pink.
-  /// `splashBg` must match `flutter_native_splash` in pubspec.yaml.
+  /// The Z mark's purple (#673AB7) and the splash's first frame — splash
+  /// / icon only; the app's brand stays [brand] pink. `splashBg` is white
+  /// in both themes and must match `flutter_native_splash` in pubspec.yaml.
   final Color logo, splashBg;
 
   /// Parses a data-driven colour such as a category's `colorHex`
@@ -175,7 +175,7 @@ class ZColors extends ThemeExtension<ZColors> {
     shadow: Color(0x59000000),
     // Lighter tint so the tagline reads on near-black.
     logo: Color(0xFFB39DDB),
-    splashBg: Color(0xFF0D0E11),
+    splashBg: Color(0xFFFFFFFF),
   );
 
   /// Card/sheet shadow used by floating elements (cart bar, map buttons).

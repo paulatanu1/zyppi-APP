@@ -98,17 +98,18 @@ flutter_launcher_icons:
   min_sdk_android: 21
   remove_alpha_ios: true
 
-# Same mark, same 120 dp size and position as the in-app launch screen
-# (lib/features/launch), so the hand-off between them doesn't jump.
+# Plain white, no logo, in light and dark phone mode: the in-app splash
+# (lib/features/splash) starts on the same white before its stripes sweep
+# in, so the hand-off can't flash. Android 12+ always draws an icon, so it
+# gets a fully transparent one instead of falling back to the launcher icon.
 # Colours = ZColors.splashBg.
 flutter_native_splash:
   color: "#FFFFFF"
-  color_dark: "#0D0E11"
-  image: "assets/brand/zyppi_mark_splash.png"
+  color_dark: "#FFFFFF"
   android_12:
     color: "#FFFFFF"
-    color_dark: "#0D0E11"
-    image: "assets/brand/zyppi_mark_splash12.png"
+    color_dark: "#FFFFFF"
+    image: "assets/brand/splash_blank12.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
