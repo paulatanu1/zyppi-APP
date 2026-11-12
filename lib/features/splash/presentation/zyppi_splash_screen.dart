@@ -8,13 +8,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
-import 'package:zippy/features/splash/data/splash_seen_store.dart';
 import 'package:zippy/features/splash/presentation/splash_painters.dart';
 import 'package:zippy/features/splash/presentation/splash_palette.dart';
 import 'package:zippy/features/splash/presentation/splash_timeline.dart';
 
-/// The `/launch` route: plays the splash (full the first time, short
-/// after), then goes to Home (signed in) or Onboarding. Bootstrap has
+/// The `/launch` route: plays the full splash (every launch; tap skips),
+/// then goes to Home (signed in) or Onboarding. Bootstrap has
 /// finished before this shows, so the splash is presentation only.
 class SplashRoute extends ConsumerStatefulWidget {
   const SplashRoute({super.key});
@@ -24,12 +23,10 @@ class SplashRoute extends ConsumerStatefulWidget {
 }
 
 class _SplashRouteState extends ConsumerState<SplashRoute> {
-  late final SplashMode _mode = ref.read(splashSeenStoreProvider).hasSeenCurrent
-      ? SplashMode.short
-      : SplashMode.full;
+  // The full animation plays on every launch (tap anywhere skips it).
+  final SplashMode _mode = SplashMode.full;
 
   void _next() {
-    unawaited(ref.read(splashSeenStoreProvider).markSeen());
     if (!mounted) return;
     final token = ref.read(sharedPreferenceProvider).authToken;
     context.go(token != null && token.isNotEmpty ? '/navBar' : '/slider');
@@ -187,22 +184,11 @@ class _ZyppiSplashScreenState extends State<ZyppiSplashScreen>
               ),
             ),
           ),
-          // Full version: the native launch screen's tile, fading out
-          // from the centre as the story starts.
+          // Full version: the native launch screen's tile becomes the
+          // ball: its Z fades, it rounds and shrinks to ball size, then
+          // jumps up off the screen; the story drops it back down.
           if (story && !_reduced && t < SplashTimeline.handoffDur)
-            Positioned(
-              left: size.width / 2 - SplashSpec.tile / 2,
-              top: size.height / 2 - SplashSpec.tile / 2,
-              width: SplashSpec.tile,
-              height: SplashSpec.tile,
-              child: Opacity(
-                opacity: 1 - seg(t, 0, SplashTimeline.handoffDur),
-                child: Transform.scale(
-                  scale: 1 - .3 * seg(t, 0, SplashTimeline.handoffDur),
-                  child: const _TileFace(),
-                ),
-              ),
-            ),
+            _handoff(size, t),
           Positioned(
             left: centre.dx - SplashSpec.tile / 2,
             top: centre.dy - SplashSpec.tile / 2,
@@ -252,6 +238,35 @@ class _ZyppiSplashScreenState extends State<ZyppiSplashScreen>
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _handoff(Size size, double t) {
+    final shrink = seg(t, 0, 320, SplashCurves.easeInOut);
+    final jump = seg(
+      t,
+      380,
+      SplashTimeline.handoffDur - 380,
+      SplashCurves.fall,
+    );
+    final scale = 1 - (1 - .32) * shrink;
+    final radius =
+        SplashSpec.tileRadius +
+        (SplashSpec.ballRadius - SplashSpec.tileRadius) * shrink;
+    // From the screen centre to just above the top edge.
+    final dy = -(size.height / 2 + SplashSpec.tile) * jump;
+    return Positioned(
+      left: size.width / 2 - SplashSpec.tile / 2,
+      top: size.height / 2 - SplashSpec.tile / 2,
+      width: SplashSpec.tile,
+      height: SplashSpec.tile,
+      child: Transform.translate(
+        offset: Offset(0, dy),
+        child: Transform.scale(
+          scale: scale,
+          child: _TileFace(radius: radius, zOpacity: 1 - seg(t, 0, 220)),
+        ),
       ),
     );
   }
@@ -535,21 +550,27 @@ class _CentreClip extends CustomClipper<Rect> {
 /// The resting tile (white gradient, purple Z): the same face the native
 /// launch screen shows.
 class _TileFace extends StatelessWidget {
-  const _TileFace();
+  const _TileFace({this.radius = SplashSpec.tileRadius, this.zOpacity = 1});
+
+  final double radius;
+  final double zOpacity;
 
   @override
   Widget build(BuildContext context) => DecoratedBox(
     decoration: BoxDecoration(
-      borderRadius: ZRadius.all(SplashSpec.tileRadius),
+      borderRadius: ZRadius.all(radius),
       gradient: const LinearGradient(
         begin: Alignment(-.57, -.82),
         end: Alignment(.57, .82),
         colors: [SplashPalette.white, SplashPalette.tileEnd],
       ),
     ),
-    child: const Padding(
-      padding: EdgeInsets.all(SplashSpec.zInset),
-      child: CustomPaint(painter: ZMarkPainter()),
+    child: Padding(
+      padding: const EdgeInsets.all(SplashSpec.zInset),
+      child: Opacity(
+        opacity: zOpacity,
+        child: const CustomPaint(painter: ZMarkPainter()),
+      ),
     ),
   );
 }

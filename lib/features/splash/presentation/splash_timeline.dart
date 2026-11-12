@@ -75,9 +75,9 @@ class SplashTimeline {
     story: false,
   );
 
-  /// Full version: the native tile fades from the centre while the story
-  /// starts.
-  static const double handoffDur = 400;
+  /// Full version: the native tile turns into the ball and jumps off the
+  /// top, just before the story drops it back in at [full.tileStart].
+  static const double handoffDur = 820;
 
   static SplashTimeline of(SplashMode mode) =>
       mode == SplashMode.full ? full : short;
