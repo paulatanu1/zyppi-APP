@@ -30,7 +30,11 @@ abstract final class ZRadius {
           20,
           // Onboarding hero illustration (zyppi.css .illo).
           illo =
-          28;
+          28,
+          // Home header's curved bottom, full and pinned (logo-purple trial).
+          hero =
+          32,
+      heroPinned = 20;
 
   static BorderRadius all(double r) => BorderRadius.all(Radius.circular(r));
   static const BorderRadius sheetTop = BorderRadius.vertical(

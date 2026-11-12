@@ -17,6 +17,16 @@ abstract final class ZyppiTheme {
   static final ThemeData light = _build(ZColors.light, Brightness.light);
   static final ThemeData dark = _build(ZColors.dark, Brightness.dark);
 
+  /// Logo-purple variants (trial on Home; see `ZBrandScope`).
+  static final ThemeData violetLight = _build(
+    ZColors.violetLight,
+    Brightness.light,
+  );
+  static final ThemeData violetDark = _build(
+    ZColors.violetDark,
+    Brightness.dark,
+  );
+
   static ThemeData _build(ZColors c, Brightness b) {
     final text = zyppiTextTheme(c.ink, c.ink2, c.ink3);
     final scheme = ColorScheme(

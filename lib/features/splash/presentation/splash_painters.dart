@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/rendering.dart';
+import 'package:zippy/core/widgets/z_brand_texture.dart';
 import 'package:zippy/features/splash/presentation/splash_palette.dart';
 import 'package:zippy/features/splash/presentation/splash_timeline.dart';
 
@@ -50,23 +51,21 @@ class ZMarkPainter extends CustomPainter {
   bool shouldRepaint(ZMarkPainter oldDelegate) => false;
 }
 
-/// Images made once per splash: a soft glow dot for the particles and
-/// sparks, and a tile of film grain.
+/// The soft glow dot the particles and sparks are drawn with, made once
+/// per splash. (The grain is the app-wide [ZGrain].)
 class SplashTextures {
-  SplashTextures._(this.glow, this.grain);
+  SplashTextures._(this.glow);
 
   /// Side of [glow]; its solid core has radius [glowCore].
   static const int glowSize = 32;
   static const double glowCore = 4;
-  static const int _grainSize = 128;
 
   final ui.Image glow;
-  final ui.Image grain;
 
   factory SplashTextures.create() {
-    // Glow: a white dot (radius 4) with a soft halo, like the canvas
-    // version's `shadowBlur`.
-    var recorder = ui.PictureRecorder();
+    // A white dot (radius 4) with a soft halo, like the canvas version's
+    // `shadowBlur`.
+    final recorder = ui.PictureRecorder();
     const half = glowSize / 2;
     Canvas(recorder).drawCircle(
       const Offset(half, half),
@@ -84,43 +83,13 @@ class SplashTextures {
           const [0, glowCore / half, .4, 1],
         ),
     );
-    var picture = recorder.endRecording();
+    final picture = recorder.endRecording();
     final glow = picture.toImageSync(glowSize, glowSize);
     picture.dispose();
-
-    // Grain: random grey pixels at 7% alpha (the spec's overlay opacity).
-    recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder);
-    final rnd = math.Random(3);
-    const levels = 6;
-    final buckets = List.generate(levels, (_) => <double>[]);
-    for (var y = 0; y < _grainSize; y++) {
-      for (var x = 0; x < _grainSize; x++) {
-        buckets[rnd.nextInt(levels)].addAll([x + .5, y + .5]);
-      }
-    }
-    for (var i = 0; i < levels; i++) {
-      final grey = (255 * i / (levels - 1)).round();
-      canvas.drawRawPoints(
-        ui.PointMode.points,
-        Float32List.fromList(buckets[i]),
-        Paint()
-          ..color = Color.fromARGB(18, grey, grey, grey)
-          ..strokeWidth = 1
-          ..strokeCap = StrokeCap.square,
-      );
-    }
-    picture = recorder.endRecording();
-    final grain = picture.toImageSync(_grainSize, _grainSize);
-    picture.dispose();
-
-    return SplashTextures._(glow, grain);
+    return SplashTextures._(glow);
   }
 
-  void dispose() {
-    glow.dispose();
-    grain.dispose();
-  }
+  void dispose() => glow.dispose();
 }
 
 /// Centre of the tile on a screen of [size].
@@ -146,19 +115,7 @@ class SplashBackdropPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     _stripes(canvas, size);
     _aurora(canvas, size);
-    canvas.drawRect(
-      Offset.zero & size,
-      Paint()
-        ..shader = ImageShader(
-          textures.grain,
-          TileMode.repeated,
-          TileMode.repeated,
-          Float64List.fromList(Matrix4.identity().storage),
-        ),
-      // Plain source-over, not the HTML's `overlay`: an advanced blend
-      // makes Impeller read back the whole screen every frame, and at 7%
-      // the grain looks the same.
-    );
+    ZGrain.paint(canvas, Offset.zero & size);
     if (showGroundShadow) _groundShadow(canvas, size);
     _pulse(canvas, size);
   }
@@ -239,9 +196,7 @@ class SplashBackdropPainter extends CustomPainter {
     return SplashCurves.easeInOut.transform(f <= 1 ? f : 2 - f);
   }
 
-  /// A blurred ellipse (CSS `filter: blur(40px)`) as a radial gradient,
-  /// which is far cheaper than a real blur and reads the same.
-  void _blob(
+  static void _blob(
     Canvas canvas,
     Rect rect,
     Color color,
@@ -249,38 +204,15 @@ class SplashBackdropPainter extends CustomPainter {
     double k,
     Offset move,
     double scaleTo,
-  ) {
-    const blur = 40.0;
-    final scale = 1 + (scaleTo - 1) * k;
-    final centre =
-        rect.center +
-        Offset(move.dx * rect.width * k, move.dy * rect.height * k);
-    final rx = rect.width / 2 * scale, ry = rect.height / 2 * scale;
-    final inner = ((math.min(rx, ry) - blur) / (math.min(rx, ry) + 2 * blur))
-        .clamp(0.0, 1.0);
-    final base = color.withValues(alpha: opacity);
-    canvas
-      ..save()
-      ..translate(centre.dx, centre.dy)
-      ..scale(rx + 2 * blur, ry + 2 * blur)
-      ..drawCircle(
-        Offset.zero,
-        1,
-        Paint()
-          ..shader = ui.Gradient.radial(
-            Offset.zero,
-            1,
-            [
-              base,
-              base,
-              color.withValues(alpha: opacity * .5),
-              color.withValues(alpha: 0),
-            ],
-            [0, inner, (inner + 1) / 2, 1],
-          ),
-      )
-      ..restore();
-  }
+  ) => paintAuroraBlob(
+    canvas,
+    rect,
+    color,
+    opacity: opacity,
+    k: k,
+    move: move,
+    scaleTo: scaleTo,
+  );
 
   void _groundShadow(Canvas canvas, Size size) {
     final p = (t - timeline.tileStart) / SplashTimeline.dropDur;

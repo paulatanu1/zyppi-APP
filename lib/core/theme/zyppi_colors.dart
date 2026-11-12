@@ -183,6 +183,86 @@ class ZColors extends ThemeExtension<ZColors> {
     BoxShadow(color: shadow, blurRadius: 24, offset: const Offset(0, 8)),
   ];
 
+  /// A copy with only the brand / header group replaced — used for the
+  /// logo-purple trial on Home ([violetLight], [violetDark]).
+  ZColors withBrand({
+    Color? brand,
+    Color? brandPress,
+    Color? brandText,
+    Color? brandSoft,
+    Color? brandSoft2,
+    Color? header,
+    Color? headerInk2,
+  }) => ZColors(
+    bg: bg,
+    surface: surface,
+    surface2: surface2,
+    surface3: surface3,
+    line: line,
+    line2: line2,
+    ink: ink,
+    ink2: ink2,
+    ink3: ink3,
+    onBrand: onBrand,
+    brand: brand ?? this.brand,
+    brandPress: brandPress ?? this.brandPress,
+    brandText: brandText ?? this.brandText,
+    brandSoft: brandSoft ?? this.brandSoft,
+    brandSoft2: brandSoft2 ?? this.brandSoft2,
+    header: header ?? this.header,
+    headerInk: headerInk,
+    headerInk2: headerInk2 ?? this.headerInk2,
+    blue: blue,
+    blueText: blueText,
+    blueSoft: blueSoft,
+    ok: ok,
+    okSoft: okSoft,
+    warn: warn,
+    warnSoft: warnSoft,
+    danger: danger,
+    dangerSoft: dangerSoft,
+    deal: deal,
+    dealInk: dealInk,
+    tileFruit: tileFruit,
+    tileVeg: tileVeg,
+    tileDairy: tileDairy,
+    tileBakery: tileBakery,
+    tileMeat: tileMeat,
+    tileDrink: tileDrink,
+    tileOil: tileOil,
+    tileAll: tileAll,
+    mapBg: mapBg,
+    mapRoad: mapRoad,
+    mapBlock: mapBlock,
+    mapPark: mapPark,
+    mapWater: mapWater,
+    shadow: shadow,
+    logo: logo,
+    splashBg: splashBg,
+  );
+
+  /// Logo purple (#673AB7) brand, matching the splash. Trial: Home only
+  /// (see `ZBrandScope`).
+  static final violetLight = light.withBrand(
+    brand: const Color(0xFF673AB7),
+    brandPress: const Color(0xFF5E35B1),
+    brandText: const Color(0xFF5E35B1),
+    brandSoft: const Color(0xFFEDE7F6),
+    brandSoft2: const Color(0xFFD1C4E9),
+    header: const Color(0xFF673AB7),
+    headerInk2: const Color(0xFFD1C4E9),
+  );
+
+  static final violetDark = dark.withBrand(
+    brand: const Color(0xFF7E57C2),
+    brandPress: const Color(0xFF673AB7),
+    brandText: const Color(0xFFB39DDB),
+    brandSoft: const Color(0xFF1F1533),
+    brandSoft2: const Color(0xFF2D1F4A),
+    header: const Color(0xFF2A1658),
+    headerInk2: const Color(0xFFCDBDF0),
+  );
+
   @override
   ZColors copyWith() => this;
 

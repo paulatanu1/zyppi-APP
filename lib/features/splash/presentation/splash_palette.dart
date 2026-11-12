@@ -1,4 +1,5 @@
 import 'package:flutter/painting.dart';
+import 'package:zippy/core/widgets/z_brand_texture.dart';
 
 /// Every colour of the launch animation, in one place
 /// (docs: SPLASH_SPEC "Colours"). The splash is a brand moment and looks
@@ -6,11 +7,11 @@ import 'package:flutter/painting.dart';
 /// app's own background (see `ZyppiSplashScreen`).
 abstract final class SplashPalette {
   static const s1 = Color(0xFFEDE7F6);
-  static const s2 = Color(0xFFB39DDB);
+  static const s2 = ZBrandTones.lilac;
   static const s3 = Color(0xFF7E57C2);
   static const brand = Color(0xFF673AB7);
-  static const deep = Color(0xFF4527A0);
-  static const aurora = Color(0xFF9575CD);
+  static const deep = ZBrandTones.deep;
+  static const aurora = ZBrandTones.aurora;
 
   /// The four sweeps, in order; the last one stays as the background.
   static const stripes = [s1, s2, s3, brand];
