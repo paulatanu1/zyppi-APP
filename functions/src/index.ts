@@ -5,6 +5,8 @@ setGlobalOptions({ region: REGION, maxInstances: 10 });
 
 export { placeOrder } from "./orders/place_order";
 export { createPayUOrder, signPayUHash, verifyPayUPayment } from "./payments/callables";
+export { reconcilePayUIntents } from "./payments/reconcile";
+export { payuWebhook } from "./payments/webhook";
 export { placesProxy } from "./places";
 export { deleteAccount } from "./account";
 export { onOrderEventCreated } from "./push";
