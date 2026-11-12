@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/common_widgets/nav_bar/provider/nav_bar_provider.dart';
+import 'package:zippy/core/widgets/z_back_to_exit.dart';
 import 'package:zippy/core/widgets/z_chrome.dart';
 import 'package:zippy/features/account/presentation/account_screen.dart';
 import 'package:zippy/features/explore/presentation/explore_screen.dart';
@@ -61,11 +61,10 @@ class _NavBarState extends ConsumerState<NavBar> {
       const AccountScreen(),
     ];
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) SystemNavigator.pop();
-      },
+    // Back goes to Home first; on Home it takes two presses to exit.
+    return ZBackToExit(
+      atHome: currentIndex == 0,
+      onGoHome: () => changeIndex.updateIndex(0),
       child: Scaffold(
         body: IndexedStack(index: currentIndex, children: screens),
         bottomNavigationBar: ZNavBar(
