@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:zippy/core/widgets/z_hero_header.dart';
 import 'package:zippy/core/constants/constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/data/provider/profile_provider.dart';
@@ -129,7 +130,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     return Scaffold(
       backgroundColor: context.z.bg,
-      appBar: AppBar(title: Text('editProfile'.tr())),
+      appBar: ZHeroAppBar(title: 'editProfile'.tr()),
       body: SafeArea(
         child: profileAsync.isLoading && _loadedProfile == null
             ? const Center(child: CircularProgressIndicator())

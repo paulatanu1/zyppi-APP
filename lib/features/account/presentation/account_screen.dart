@@ -47,19 +47,19 @@ class AccountScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Textured purple header; the quick-action card below overlaps
-                    // its bottom edge (the translate leaves that space at the
-                    // end of the scroll).
+                    // Textured purple header; the quick-action card below
+                    // overlaps its bottom edge (the translate leaves that
+                    // space at the end of the scroll). Square bottom: the
+                    // card covers the edge, so curved corners would only
+                    // peek out beside it.
                     ZBrandTexture(
-                      borderRadius: const BorderRadius.vertical(
-                        bottom: Radius.circular(ZRadius.hero),
-                      ),
                       child: Container(
                         padding: EdgeInsets.fromLTRB(
                           ZSpace.screen,
                           MediaQuery.paddingOf(context).top + ZSpace.x4,
                           ZSpace.screen,
-                          ZSpace.x8 + ZSpace.x6,
+                          // 24 px clear above the card that overlaps it.
+                          ZSpace.x8 + ZSpace.x8,
                         ),
                         child: Row(
                           children: [
@@ -297,7 +297,7 @@ Future<void> _confirmLogOut(
   }
 }
 
-/// White rounded card with a hairline border.
+/// Soft rounded card (shadow in light, faint edge in dark).
 class _Card extends StatelessWidget {
   const _Card({required this.child, this.padding});
 
@@ -307,19 +307,14 @@ class _Card extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final z = context.z;
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: padding ?? const EdgeInsets.all(ZSpace.x4),
       decoration: BoxDecoration(
         color: z.surface,
         borderRadius: ZRadius.all(ZRadius.card),
-        border: Border.all(color: z.line),
-        boxShadow: [
-          BoxShadow(
-            color: z.shadow,
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: dark ? Border.all(color: z.line) : null,
+        boxShadow: dark ? null : z.elevation,
       ),
       child: child,
     );
@@ -340,20 +335,38 @@ class _HeaderPill extends StatelessWidget {
       button: true,
       child: ZPressable(
         onTap: onTap,
-        child: Container(
+        // A 44 px touch target around a compact glass pill.
+        child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: ZSize.touch),
-          alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: ZSpace.x4),
-          decoration: BoxDecoration(
-            color: z.onBrand.withValues(alpha: .16),
-            borderRadius: ZRadius.all(ZRadius.control),
-          ),
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelLarge!
-                .copyWith(color: z.onBrand),
+          child: Center(
+            widthFactor: 1,
+            child: Container(
+              height: 34,
+              padding: const EdgeInsets.symmetric(horizontal: ZSpace.x3),
+              decoration: BoxDecoration(
+                color: z.onBrand.withValues(alpha: .16),
+                borderRadius: ZRadius.all(17),
+                border: Border.all(color: z.onBrand.withValues(alpha: .22)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.edit_rounded, size: 16, color: z.onBrand),
+                  const SizedBox(width: ZSpace.x1 + 2),
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelMedium!.copyWith(
+                        color: z.onBrand,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

@@ -27,6 +27,7 @@ Widget zBrandButtonBackground(
     color: context.z.brand,
     borderRadius: ZRadius.all(ZRadius.button),
     child: Stack(
+      fit: StackFit.passthrough,
       alignment: Alignment.center,
       children: [
         if (pressed)
@@ -170,7 +171,10 @@ class ZBrandTexture extends StatelessWidget {
       borderRadius: borderRadius,
       child: child == null
           ? SizedBox.expand(child: texture)
+          // Passthrough: the content gets the same constraints as this box
+          // (a button's label stays centred, a header keeps its width).
           : Stack(
+              fit: StackFit.passthrough,
               children: [
                 Positioned.fill(child: texture),
                 child!,

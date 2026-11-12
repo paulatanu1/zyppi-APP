@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:zippy/core/common_widgets/nav_bar/provider/nav_bar_provider.dart';
+import 'package:zippy/core/widgets/z_empty_state.dart';
 import 'package:zippy/core/widgets/z_hero_header.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -49,11 +51,13 @@ class FavouriteScreen extends ConsumerWidget {
                   ),
                 ),
                 data: (products) => products.isEmpty
-                    ? Center(
-                        child: Text(
-                          'noFavouritesYet'.tr(),
-                          style: Theme.of(context).textTheme.bodyMedium!,
-                        ),
+                    ? ZEmptyState(
+                        icon: Icons.favorite_border_rounded,
+                        title: 'noFavouritesYet'.tr(),
+                        message: 'noFavouritesHint'.tr(),
+                        actionLabel: 'browseProducts'.tr(),
+                        onAction: () =>
+                            ref.read(navBarProvider.notifier).updateIndex(1),
                       )
                     // Tapping a card's heart removes it from this list.
                     : _ProductGrid(

@@ -201,13 +201,15 @@ class _CheckoutBar extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'deliverToLabel'.tr(args: [label]).toUpperCase(),
+                        'deliverTo'.tr().toUpperCase(),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: t.labelSmall!.copyWith(color: z.ink3),
                       ),
                       Text(
-                        location.address,
+                        location.label == null
+                            ? location.address
+                            : '$label · ${location.address}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: t.labelLarge,
@@ -387,33 +389,32 @@ class _CouponFieldState extends ConsumerState<_CouponField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            icon,
-            const SizedBox(width: ZSpace.x3),
-            Expanded(
-              child: TextField(
-                controller: _controller,
-                textCapitalization: TextCapitalization.characters,
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _apply(),
-                decoration: InputDecoration(
-                  hintText: 'couponCode'.tr(),
-                  isDense: true,
-                ),
-              ),
+        // One full-width field: tag icon inside on the left, Apply inside
+        // on the right.
+        TextField(
+          controller: _controller,
+          textCapitalization: TextCapitalization.characters,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _apply(),
+          decoration: InputDecoration(
+            hintText: 'couponCode'.tr(),
+            prefixIcon: Icon(Icons.local_offer_outlined, color: z.ok, size: 20),
+            suffixIcon: Padding(
+              padding: const EdgeInsets.only(right: ZSpace.x1),
+              child: _applying
+                  ? const Padding(
+                      padding: EdgeInsets.all(ZSpace.x3),
+                      child: SizedBox.square(
+                        dimension: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2.5),
+                      ),
+                    )
+                  : TextButton(
+                      onPressed: _apply,
+                      child: Text('applyCoupon'.tr()),
+                    ),
             ),
-            const SizedBox(width: ZSpace.x2),
-            _applying
-                ? const SizedBox.square(
-                    dimension: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2.5),
-                  )
-                : TextButton(
-                    onPressed: _apply,
-                    child: Text('applyCoupon'.tr()),
-                  ),
-          ],
+          ),
         ),
         if (error != null)
           Padding(

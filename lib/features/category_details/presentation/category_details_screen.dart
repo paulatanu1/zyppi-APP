@@ -91,6 +91,8 @@ class CategoryDetailsScreen extends ConsumerWidget {
 
     return Scaffold(
       body: SafeArea(
+        // The purple header runs under the status bar.
+        top: false,
         child: Stack(
           children: [
             Column(
@@ -101,8 +103,10 @@ class CategoryDetailsScreen extends ConsumerWidget {
                   itemCount: products.length,
                   loading: state.loading,
                 ),
-                if (state.error == null && state.category != null)
+                if (state.error == null && state.category != null) ...[
+                  const SizedBox(height: ZSpace.x2),
                   CategoryFilterChips(categoryId: categoryId),
+                ],
                 Expanded(child: body),
               ],
             ),

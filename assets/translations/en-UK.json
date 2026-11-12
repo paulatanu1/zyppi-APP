@@ -80,6 +80,8 @@
   "help": "Help",
   "noOrdersYet": "You have no orders yet",
   "noFavouritesYet": "No favourites yet",
+  "noFavouritesHint": "Tap the heart on any product to save it here.",
+  "browseProducts": "Browse products",
   "skip": "Skip",
   "logInOrSignUp": "Log in or sign up",
   "otpSentDescription": "We'll send a 6-digit code to verify your number.",

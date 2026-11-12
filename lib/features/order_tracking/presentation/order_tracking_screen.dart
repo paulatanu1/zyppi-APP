@@ -287,7 +287,14 @@ class _SheetContent extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (eta != null) ...[
+                      // Past the ETA: "Arriving soon" on its own, not
+                      // under an "ARRIVING IN" label.
+                      if (eta != null && eta == 'arrivingSoon'.tr())
+                        Text(
+                          eta,
+                          style: t.headlineSmall!.copyWith(color: z.headerInk),
+                        )
+                      else if (eta != null) ...[
                         Text(
                           'arrivingIn'.tr(),
                           style: t.labelSmall!.copyWith(

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 
-/// White, flat, 1 px-bordered section card (docs/screens/light/10-checkout.png),
-/// shared by checkout, account settings and order details.
+/// Soft section card shared by checkout, account settings and order
+/// details: borderless with a soft shadow in light; a faint edge in dark,
+/// where shadows don't show.
 class SectionCard extends StatelessWidget {
   final String? title;
   final Widget child;
@@ -15,25 +16,32 @@ class SectionCard extends StatelessWidget {
 
     // A Material (not a decorated box) so ListTiles / switches inside get
     // their ink splashes, clipped to the rounded corners.
-    return Material(
-      color: z.surface,
-      shape: RoundedRectangleBorder(
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return DecoratedBox(
+      decoration: BoxDecoration(
         borderRadius: ZRadius.all(ZRadius.card),
-        side: BorderSide(color: z.line),
+        boxShadow: dark ? null : z.elevation,
       ),
-      clipBehavior: Clip.antiAlias,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(ZSpace.x4),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (title != null) ...[
-              Text(title!, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: ZSpace.x3),
+      child: Material(
+        color: z.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: ZRadius.all(ZRadius.card),
+          side: dark ? BorderSide(color: z.line) : BorderSide.none,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(ZSpace.x4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (title != null) ...[
+                Text(title!, style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: ZSpace.x3),
+              ],
+              child,
             ],
-            child,
-          ],
+          ),
         ),
       ),
     );

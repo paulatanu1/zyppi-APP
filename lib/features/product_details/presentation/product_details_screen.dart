@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/widgets/z_hero_header.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/domain/product.dart';
 import 'package:zippy/core/domain/product_variant.dart';
@@ -29,7 +30,7 @@ class ProductDetailsScreen extends ConsumerWidget {
 
     if (state.error != null) {
       return Scaffold(
-        appBar: AppBar(),
+        appBar: const ZHeroAppBar(),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -50,7 +51,7 @@ class ProductDetailsScreen extends ConsumerWidget {
     // product taken off sale.
     if (!state.loading && product == null) {
       return Scaffold(
-        appBar: AppBar(),
+        appBar: const ZHeroAppBar(),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(ZSpace.x6),
@@ -87,33 +88,42 @@ class ProductDetailsScreen extends ConsumerWidget {
       backgroundColor: z.surface,
       body: CustomScrollView(
         slivers: [
-          SliverToBoxAdapter(child: ProductSlider(productId: productId)),
+          // Photo and sheet in one box: a viewport paints earlier slivers
+          // over later ones, which hid the sheet's overlap under the photo.
           SliverToBoxAdapter(
-            // The white sheet overlaps the photo panel by its corner radius.
-            child: Transform.translate(
-              offset: const Offset(0, -ZRadius.sheet),
-              // Material (not a coloured box) so the expansion tile's ink
-              // shows.
-              child: Material(
-                color: z.surface,
-                borderRadius: ZRadius.sheetTop,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    ZSpace.screen,
-                    ZSpace.x5,
-                    ZSpace.screen,
-                    0,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ProductSlider(productId: productId),
+                // The white sheet overlaps the photo panel by its corner radius.
+                Transform.translate(
+                  offset: const Offset(0, -ZRadius.sheet),
+                  // Material (not a coloured box) so the expansion tile's ink
+                  // shows.
+                  child: Material(
+                    color: z.surface,
+                    borderRadius: ZRadius.sheetTop,
+                    elevation: 0,
+                    shadowColor: Colors.transparent,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        ZSpace.screen,
+                        ZSpace.x5,
+                        ZSpace.screen,
+                        0,
+                      ),
+                      child: state.loading || product == null
+                          ? const _InfoSkeleton()
+                          : _Info(
+                              product: product,
+                              variant: variant,
+                              selectedIndex: selectedIndex,
+                              onSelectVariant: notifier.selectVariant,
+                            ),
+                    ),
                   ),
-                  child: state.loading || product == null
-                      ? const _InfoSkeleton()
-                      : _Info(
-                          product: product,
-                          variant: variant,
-                          selectedIndex: selectedIndex,
-                          onSelectVariant: notifier.selectVariant,
-                        ),
                 ),
-              ),
+              ],
             ),
           ),
         ],

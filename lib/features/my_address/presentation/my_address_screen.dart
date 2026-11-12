@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:zippy/core/widgets/z_hero_header.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/features/home_screen/widgets/add_new_address_row.dart';
@@ -18,27 +19,12 @@ class MyAddressScreen extends ConsumerWidget {
     final addressesAsync = ref.watch(addressesProvider);
 
     return Scaffold(
+      appBar: ZHeroAppBar(title: 'myAddress'.tr()),
       body: SafeArea(
+        top: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(ZSpace.x3),
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                    tooltip: 'back'.tr(),
-                  ),
-                  Text(
-                    'myAddress'.tr(),
-                    style: Theme.of(context).textTheme.titleMedium!,
-                  ),
-                ],
-              ),
-            ),
-            Divider(height: 1, color: context.z.line),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(ZSpace.x4),
@@ -95,17 +81,40 @@ class MyAddressScreen extends ConsumerWidget {
                                       .copyWith(color: context.z.ink2),
                                 ),
                               )
-                            : ListView.separated(
-                                itemCount: addresses.length,
-                                separatorBuilder: (context, index) =>
-                                    Divider(height: 1, color: context.z.line),
-                                itemBuilder: (context, index) =>
-                                    SavedAddressRow(
-                                      address: addresses[index],
-                                      trailing: AddressActions(
-                                        address: addresses[index],
-                                      ),
-                                    ),
+                            // Saved addresses in one soft card.
+                            : SingleChildScrollView(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: ZSpace.x3,
+                                    vertical: ZSpace.x1,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: context.z.surface,
+                                    borderRadius: ZRadius.all(ZRadius.card),
+                                    boxShadow: context.z.elevation,
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      for (
+                                        var i = 0;
+                                        i < addresses.length;
+                                        i++
+                                      ) ...[
+                                        if (i > 0)
+                                          Divider(
+                                            height: 1,
+                                            color: context.z.line,
+                                          ),
+                                        SavedAddressRow(
+                                          address: addresses[i],
+                                          trailing: AddressActions(
+                                            address: addresses[i],
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
                               ),
                       ),
                     ),

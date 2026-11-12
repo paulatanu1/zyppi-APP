@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:zippy/core/widgets/z_hero_header.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
 
@@ -26,7 +27,7 @@ class SettingsScaffold<T> extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: z.bg,
-      appBar: AppBar(title: Text(title)),
+      appBar: ZHeroAppBar(title: title),
       body: async.when(
         // Keep showing the last data while a save refreshes it.
         skipLoadingOnRefresh: true,

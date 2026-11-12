@@ -221,3 +221,106 @@ class _ZStatusBarScrimState extends State<ZStatusBarScrim> {
     );
   }
 }
+
+/// Compact textured purple app bar for every screen that isn't a main tab:
+/// glass back button, white title (and optional [subtitle]), white
+/// [actions], and a curved bottom edge. Drop-in for `AppBar` in
+/// `Scaffold.appBar`; it draws under the status bar itself.
+class ZHeroAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const ZHeroAppBar({
+    super.key,
+    this.title,
+    this.subtitle,
+    this.actions = const [],
+    this.showBack,
+    this.onBack,
+  });
+
+  final String? title;
+  final String? subtitle;
+  final List<Widget> actions;
+  final bool? showBack;
+  final VoidCallback? onBack;
+
+  static const double _bar = 60;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(_bar + ZSpace.x3);
+
+  @override
+  Widget build(BuildContext context) {
+    final z = context.z;
+    final theme = Theme.of(context);
+    final t = theme.textTheme;
+    final back = showBack ?? Navigator.of(context).canPop();
+    final onBrand = theme.copyWith(
+      iconTheme: IconThemeData(color: z.onBrand),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: z.onBrand),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(foregroundColor: z.onBrand),
+      ),
+    );
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+      ),
+      child: ZBrandTexture(
+        borderRadius: const BorderRadius.vertical(
+          bottom: Radius.circular(ZRadius.heroPinned),
+        ),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            ZSpace.screen,
+            MediaQuery.paddingOf(context).top,
+            ZSpace.x2,
+            ZSpace.x3,
+          ),
+          child: SizedBox(
+            height: _bar,
+            child: Row(
+              children: [
+                if (back) ...[
+                  ZGlassIconButton(
+                    icon: Icons.arrow_back_ios_new_rounded,
+                    tooltip: 'back'.tr(),
+                    onPressed: onBack ?? () => Navigator.of(context).maybePop(),
+                  ),
+                  const SizedBox(width: ZSpace.x3),
+                ],
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (title != null)
+                        Text(
+                          title!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: t.titleLarge!.copyWith(color: z.headerInk),
+                        ),
+                      if (subtitle != null)
+                        Text(
+                          subtitle!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: t.bodySmall!.copyWith(color: z.headerInk2),
+                        ),
+                    ],
+                  ),
+                ),
+                Theme(
+                  data: onBrand,
+                  child: Row(mainAxisSize: MainAxisSize.min, children: actions),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

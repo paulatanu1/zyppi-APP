@@ -67,181 +67,184 @@ class YourOrderWidget extends ConsumerWidget {
     final thumbs = order.items.take(3).toList();
     final extra = order.items.length - thumbs.length;
 
-    return Material(
-      color: z.surface,
-      shape: RoundedRectangleBorder(
+    // Soft elevated card; an active order gets a lilac edge rather than a
+    // heavy brand outline.
+    return DecoratedBox(
+      decoration: BoxDecoration(
         borderRadius: ZRadius.all(ZRadius.card),
-        side: BorderSide(
-          color: isActive ? z.brand : z.line,
-          width: isActive ? 1.5 : 1,
-        ),
+        boxShadow: z.elevation,
       ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push('/orderDetailsScreen?orderId=${order.id}'),
-        child: Padding(
-          padding: const EdgeInsets.all(ZSpace.x4),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  // Flexible + ellipsis: badge and date share the row at
-                  // any text size.
-                  Flexible(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: ZSpace.x2,
-                        vertical: ZSpace.x1,
-                      ),
-                      decoration: BoxDecoration(
-                        color: bg,
-                        borderRadius: ZRadius.all(ZRadius.badge),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (isActive) ...[
-                            Icon(Icons.circle, size: 8, color: fg),
-                            const SizedBox(width: ZSpace.x1),
-                          ],
-                          Flexible(
-                            child: Text(
-                              label,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: t.labelMedium!.copyWith(
-                                color: fg,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: ZSpace.x2),
-                  Expanded(
-                    child: Text(
-                      DateFormat.yMMMd(context.locale.toLanguageTag())
-                          .add_jm()
-                          .format(order.placedAt.toLocal()),
-                      textAlign: TextAlign.end,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: t.bodySmall,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: ZSpace.x3),
-              Row(
-                children: [
-                  SizedBox(
-                    width:
-                        _thumb +
-                        (thumbs.length - 1 + (extra > 0 ? 1 : 0)) * _overlap,
-                    height: _thumb,
-                    child: Stack(
-                      children: [
-                        for (var i = 0; i < thumbs.length; i++)
-                          Positioned(
-                            left: i * _overlap,
-                            child: _Thumb(
-                              child: thumbs[i].image == null
-                                  ? Icon(
-                                      Icons.shopping_basket_outlined,
-                                      size: 18,
-                                      color: z.ink3,
-                                    )
-                                  : CatalogImage(
-                                      image: thumbs[i].image,
-                                      fit: BoxFit.contain,
-                                    ),
-                            ),
-                          ),
-                        if (extra > 0)
-                          Positioned(
-                            left: thumbs.length * _overlap,
-                            child: _Thumb(
+      child: Material(
+        color: z.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: ZRadius.all(ZRadius.card),
+          side: BorderSide(color: isActive ? z.brandSoft2 : z.line),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => context.push('/orderDetailsScreen?orderId=${order.id}'),
+          child: Padding(
+            padding: const EdgeInsets.all(ZSpace.x4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    // Flexible + ellipsis: badge and date share the row at
+                    // any text size.
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: ZSpace.x2,
+                          vertical: ZSpace.x1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: bg,
+                          borderRadius: ZRadius.all(ZRadius.badge),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (isActive) ...[
+                              Icon(Icons.circle, size: 8, color: fg),
+                              const SizedBox(width: ZSpace.x1),
+                            ],
+                            Flexible(
                               child: Text(
-                                '+$extra',
+                                label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: t.labelMedium!.copyWith(
-                                  color: z.ink2,
+                                  color: fg,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: ZSpace.x3),
-                  // Shrinks at large text sizes rather than overflow.
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(rupees(order.totalPaise), style: t.titleLarge),
-                            Text(
-                              'itemCount'.plural(itemCount),
-                              style: t.bodySmall,
                             ),
                           ],
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              if (isActive) ...[
-                const SizedBox(height: ZSpace.x3),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size(0, ZSize.touch),
+                    const SizedBox(width: ZSpace.x2),
+                    const Spacer(),
+                    Flexible(
+                      flex: 3,
+                      child: Text(
+                        DateFormat.yMMMd(context.locale.toLanguageTag())
+                            .add_jm()
+                            .format(order.placedAt.toLocal()),
+                        textAlign: TextAlign.end,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: t.bodySmall,
+                      ),
                     ),
-                    onPressed: () => context.push(
-                      '/orderTrackingScreen?orderId=${order.id}',
-                    ),
-                    child: Text(
-                      order.etaMinutes == null
-                          ? 'trackOrder'.tr()
-                          : 'trackOrderEta'.tr(args: ['${order.etaMinutes}']),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
+                  ],
                 ),
-              ] else if (order.status == OrderStatus.delivered) ...[
                 const SizedBox(height: ZSpace.x3),
                 Row(
                   children: [
-                    Expanded(
-                      child: _ActionButton(
-                        icon: Icons.replay_rounded,
-                        label: 'reOrder'.tr(),
-                        primary: true,
-                        onTap: () => reorder(context, ref, order),
+                    SizedBox(
+                      width:
+                          _thumb +
+                          (thumbs.length - 1 + (extra > 0 ? 1 : 0)) * _overlap,
+                      height: _thumb,
+                      child: Stack(
+                        children: [
+                          for (var i = 0; i < thumbs.length; i++)
+                            Positioned(
+                              left: i * _overlap,
+                              child: _Thumb(
+                                child: thumbs[i].image == null
+                                    ? Icon(
+                                        Icons.shopping_basket_outlined,
+                                        size: 18,
+                                        color: z.ink3,
+                                      )
+                                    : CatalogImage(
+                                        image: thumbs[i].image,
+                                        fit: BoxFit.contain,
+                                      ),
+                              ),
+                            ),
+                          if (extra > 0)
+                            Positioned(
+                              left: thumbs.length * _overlap,
+                              child: _Thumb(
+                                child: Text(
+                                  '+$extra',
+                                  style: t.labelMedium!.copyWith(
+                                    color: z.ink2,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: ZSpace.x2),
+                    const SizedBox(width: ZSpace.x3),
+                    // Shrinks at large text sizes rather than overflow.
                     Expanded(
-                      child: _ActionButton(
-                        label: 'orderInfo'.tr(),
-                        onTap: () => context.push(
-                          '/orderDetailsScreen?orderId=${order.id}',
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                rupees(order.totalPaise),
+                                style: t.titleLarge,
+                              ),
+                              Text(
+                                'itemCount'.plural(itemCount),
+                                style: t.bodySmall,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
+                if (isActive) ...[
+                  const SizedBox(height: ZSpace.x3),
+                  _ActionButton(
+                    icon: Icons.delivery_dining_rounded,
+                    label: order.etaMinutes == null
+                        ? 'trackOrder'.tr()
+                        : 'trackOrderEta'.tr(args: ['${order.etaMinutes}']),
+                    primary: true,
+                    onTap: () => context.push(
+                      '/orderTrackingScreen?orderId=${order.id}',
+                    ),
+                  ),
+                ] else if (order.status == OrderStatus.delivered) ...[
+                  const SizedBox(height: ZSpace.x3),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _ActionButton(
+                          icon: Icons.replay_rounded,
+                          label: 'reOrder'.tr(),
+                          primary: true,
+                          onTap: () => reorder(context, ref, order),
+                        ),
+                      ),
+                      const SizedBox(width: ZSpace.x2),
+                      Expanded(
+                        child: _ActionButton(
+                          label: 'orderInfo'.tr(),
+                          onTap: () => context.push(
+                            '/orderDetailsScreen?orderId=${order.id}',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

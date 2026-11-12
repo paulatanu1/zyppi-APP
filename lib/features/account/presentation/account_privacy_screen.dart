@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:zippy/core/widgets/z_hero_header.dart';
 import 'package:zippy/core/account/account_repository.dart';
 import 'package:zippy/core/config/env.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
@@ -28,7 +29,7 @@ class AccountPrivacyScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: z.bg,
-      appBar: AppBar(title: Text('accountPrivacy'.tr())),
+      appBar: ZHeroAppBar(title: 'accountPrivacy'.tr()),
       body: ListView(
         padding: const EdgeInsets.all(ZSpace.screen),
         children: [

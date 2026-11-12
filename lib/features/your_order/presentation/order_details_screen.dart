@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/widgets/z_hero_header.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/common_widgets/help_sheet.dart';
 import 'package:zippy/core/common_widgets/price_tag.dart';
@@ -38,8 +39,8 @@ class OrderDetailsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: z.bg,
-      appBar: AppBar(
-        title: Text('orderDetails'.tr()),
+      appBar: ZHeroAppBar(
+        title: 'orderDetails'.tr(),
         actions: [
           TextButton(
             onPressed: () =>
@@ -213,7 +214,7 @@ class _OrderDetailsBody extends ConsumerWidget {
               if (order.tipPaise > 0) billRow('tipLabel'.tr(), order.tipPaise),
               if (order.discountPaise > 0)
                 billRow('discount'.tr(), order.discountPaise, negative: true),
-              Divider(color: z.line),
+              Divider(color: z.line, height: ZSpace.x6),
               Row(
                 children: [
                   Expanded(

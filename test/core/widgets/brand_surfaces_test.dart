@@ -77,6 +77,12 @@ void main() {
           ),
           findsNothing,
         );
+        // The label stays centred on the textured background.
+        final button = tester.getRect(find.byType(FilledButton).first);
+        final label = tester.getCenter(find.text('Go'));
+        expect((label.dx - button.center.dx).abs(), lessThan(1));
+        expect((label.dy - button.center.dy).abs(), lessThan(1));
+
         await tester.tap(find.text('Go'));
         await tester.pumpAndSettle();
         expect(taps, 1);

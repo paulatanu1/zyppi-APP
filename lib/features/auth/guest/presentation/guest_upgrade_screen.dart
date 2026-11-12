@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/widgets/z_hero_header.dart';
 import 'package:zippy/core/common_widgets/google_sign_in_button.dart';
 import 'package:zippy/core/data/provider/profile_provider.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
@@ -143,7 +144,7 @@ class _GuestUpgradeScreenState extends ConsumerState<GuestUpgradeScreen> {
     final codeStep = _sentTo != null;
 
     return Scaffold(
-      appBar: AppBar(title: Text('saveAccount'.tr())),
+      appBar: ZHeroAppBar(title: 'saveAccount'.tr()),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(ZSpace.x6),

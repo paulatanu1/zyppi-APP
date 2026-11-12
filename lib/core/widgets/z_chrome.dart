@@ -420,108 +420,127 @@ class ZNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final z = context.z;
     final t = Theme.of(context).textTheme;
-    return Container(
-      decoration: BoxDecoration(
-        color: z.surface,
-        border: Border(top: BorderSide(color: z.line)),
-      ),
+    // Floating rounded bar with a soft shadow, inset from the screen edges.
+    return ColoredBox(
+      color: z.bg,
       child: SafeArea(
         top: false,
-        // The bar has a fixed height, so labels stop growing at 1.2×.
-        child: MediaQuery.withClampedTextScaling(
-          maxScaleFactor: 1.2,
-          child: SizedBox(
-            height: 66,
-            child: Row(
-              children: [
-                for (var i = 0; i < _items.length; i++)
-                  Expanded(
-                    child: Semantics(
-                      selected: i == index,
-                      button: true,
-                      label: i == 2 && cartCount > 0
-                          ? '${_items[i].$3.tr()}, $cartCount'
-                          : null,
-                      excludeSemantics: i == 2 && cartCount > 0,
-                      child: InkWell(
-                        onTap: () => onTap(i),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                AnimatedContainer(
-                                  duration:
-                                      MediaQuery.disableAnimationsOf(context)
-                                      ? Duration.zero
-                                      : ZMotion.ui,
-                                  curve: ZMotion.standard,
-                                  width: 52,
-                                  height: 30,
-                                  decoration: BoxDecoration(
-                                    color: i == index
-                                        ? z.brandSoft
-                                        : Colors.transparent,
-                                    borderRadius: ZRadius.all(15),
+        minimum: const EdgeInsets.fromLTRB(
+          ZSpace.x3,
+          ZSpace.x1,
+          ZSpace.x3,
+          ZSpace.x2,
+        ),
+        child: Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: z.surface,
+            borderRadius: ZRadius.all(ZRadius.sheet),
+            border: Border.all(color: z.line),
+            boxShadow: [
+              BoxShadow(
+                color: z.shadow,
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          // The bar has a fixed height, so labels stop growing at 1.2×.
+          child: MediaQuery.withClampedTextScaling(
+            maxScaleFactor: 1.2,
+            child: SizedBox(
+              height: 66,
+              child: Row(
+                children: [
+                  for (var i = 0; i < _items.length; i++)
+                    Expanded(
+                      child: Semantics(
+                        selected: i == index,
+                        button: true,
+                        label: i == 2 && cartCount > 0
+                            ? '${_items[i].$3.tr()}, $cartCount'
+                            : null,
+                        excludeSemantics: i == 2 && cartCount > 0,
+                        child: InkWell(
+                          onTap: () => onTap(i),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  // Selected tab: a textured purple pill.
+                                  SizedBox(
+                                    width: 52,
+                                    height: 30,
+                                    child: i == index
+                                        ? ZBrandTexture(
+                                            color: z.brand,
+                                            borderRadius: ZRadius.all(15),
+                                            child: Icon(
+                                              _items[i].$2,
+                                              size: 20,
+                                              color: z.onBrand,
+                                            ),
+                                          )
+                                        : Icon(
+                                            _items[i].$1,
+                                            size: 22,
+                                            color: z.ink3,
+                                          ),
                                   ),
-                                  child: Icon(
-                                    i == index ? _items[i].$2 : _items[i].$1,
-                                    size: 22,
-                                    color: i == index ? z.brandText : z.ink3,
-                                  ),
-                                ),
-                                if (i == 2 && cartCount > 0)
-                                  Positioned(
-                                    right: 2,
-                                    top: -4,
-                                    child: Container(
-                                      constraints: const BoxConstraints(
-                                        minWidth: 18,
-                                      ),
-                                      height: 18,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 4,
-                                      ),
-                                      alignment: Alignment.center,
-                                      decoration: BoxDecoration(
-                                        color: z.brand,
-                                        borderRadius: ZRadius.all(9),
-                                        border: Border.all(
-                                          color: z.surface,
-                                          width: 2,
+                                  if (i == 2 && cartCount > 0)
+                                    Positioned(
+                                      right: 2,
+                                      top: -4,
+                                      child: Container(
+                                        constraints: const BoxConstraints(
+                                          minWidth: 18,
                                         ),
-                                      ),
-                                      child: Text(
-                                        cartCount > 99 ? '99+' : '$cartCount',
-                                        style: t.labelSmall!.copyWith(
-                                          color: z.onBrand,
-                                          fontSize: 10,
-                                          letterSpacing: 0,
+                                        height: 18,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                        ),
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                          color: z.brand,
+                                          borderRadius: ZRadius.all(9),
+                                          border: Border.all(
+                                            color: z.surface,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          cartCount > 99 ? '99+' : '$cartCount',
+                                          style: t.labelSmall!.copyWith(
+                                            color: z.onBrand,
+                                            fontSize: 10,
+                                            letterSpacing: 0,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _items[i].$3.tr(),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: t.labelSmall!.copyWith(
-                                fontSize: 11,
-                                letterSpacing: 0,
-                                fontWeight: FontWeight.w700,
-                                color: i == index ? z.ink : z.ink3,
+                                ],
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 4),
+                              Text(
+                                _items[i].$3.tr(),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: t.labelSmall!.copyWith(
+                                  fontSize: 11,
+                                  letterSpacing: 0,
+                                  fontWeight: FontWeight.w700,
+                                  color: i == index ? z.brandText : z.ink3,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -553,7 +572,7 @@ class ZChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final z = context.z;
-    final fg = selected ? z.surface : z.ink;
+    final fg = selected ? z.onBrand : z.ink;
     final text = Theme.of(context).textTheme.labelMedium!
         .copyWith(color: fg, fontWeight: FontWeight.w700);
 
@@ -572,9 +591,9 @@ class ZChip extends StatelessWidget {
               vertical: ZSpace.x2,
             ),
             decoration: BoxDecoration(
-              color: selected ? z.ink : z.surface,
+              color: selected ? z.brand : z.surface,
               borderRadius: ZRadius.all(ZRadius.chip),
-              border: Border.all(color: selected ? z.ink : z.line),
+              border: Border.all(color: selected ? z.brand : z.line),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -590,13 +609,15 @@ class ZChip extends StatelessWidget {
                     constraints: const BoxConstraints(minWidth: 18),
                     padding: const EdgeInsets.symmetric(horizontal: 5),
                     decoration: BoxDecoration(
-                      color: z.brand,
+                      color: selected ? z.onBrand : z.brand,
                       borderRadius: ZRadius.all(ZRadius.chip),
                     ),
                     child: Text(
                       '$count',
                       textAlign: TextAlign.center,
-                      style: text.copyWith(color: z.onBrand),
+                      style: text.copyWith(
+                        color: selected ? z.brand : z.onBrand,
+                      ),
                     ),
                   ),
                 ],

@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/widgets/z_hero_header.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/common_widgets/price_tag.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
@@ -51,18 +52,31 @@ class CheckoutScreen extends ConsumerWidget {
       canPop: !state.placingOrder,
       child: Scaffold(
         backgroundColor: z.bg,
-        appBar: AppBar(
-          title: Text('checkout'.tr()),
+        appBar: ZHeroAppBar(
+          title: 'checkout'.tr(),
           actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: ZSpace.screen),
+            // White glass pill: green would be hard to read on purple.
+            Container(
+              margin: const EdgeInsets.only(right: ZSpace.x2),
+              padding: const EdgeInsets.symmetric(
+                horizontal: ZSpace.x3,
+                vertical: ZSpace.x1 + 2,
+              ),
+              decoration: BoxDecoration(
+                color: z.onBrand.withValues(alpha: .16),
+                borderRadius: ZRadius.all(ZRadius.chip),
+                border: Border.all(color: z.onBrand.withValues(alpha: .22)),
+              ),
               child: Row(
                 children: [
-                  Icon(Icons.lock_outline_rounded, size: 18, color: z.ok),
+                  Icon(Icons.lock_rounded, size: 16, color: z.onBrand),
                   const SizedBox(width: ZSpace.x1),
                   Text(
                     'secure'.tr(),
-                    style: text.labelMedium?.copyWith(color: z.ok),
+                    style: text.labelMedium?.copyWith(
+                      color: z.onBrand,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ],
               ),

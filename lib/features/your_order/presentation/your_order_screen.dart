@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:zippy/core/widgets/z_hero_header.dart';
 import 'package:zippy/core/domain/order.dart';
 import 'package:zippy/core/domain/order_status.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
@@ -62,7 +63,7 @@ class _YourOrderScreenState extends ConsumerState<YourOrderScreen> {
 
     return Scaffold(
       backgroundColor: z.bg,
-      appBar: AppBar(title: Text('yourOrder'.tr())),
+      appBar: ZHeroAppBar(title: 'yourOrder'.tr()),
       body: SafeArea(
         top: false,
         child: ordersAsync.when(
