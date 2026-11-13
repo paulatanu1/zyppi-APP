@@ -236,6 +236,28 @@ service cloud.firestore {
     // Admin panel (written only by Cloud Functions)
     // ---------------------------------------------------------------
 
+    // Delivery partners (functions/src/riders). The rider reads their own
+    // application; operations reviews it; finance settles cash and sees
+    // payout details. Only the callables write.
+    match /riders/{uid} {
+      allow read: if isOwner(uid) || hasRole(['ops', 'finance']);
+      allow write: if false;
+
+      match /events/{id} {
+        allow read: if isOwner(uid) || hasRole(['ops']);
+        allow write: if false;
+      }
+      match /cash/{id} {
+        allow read: if isOwner(uid) || hasRole(['ops', 'finance']);
+        allow write: if false;
+      }
+      // Bank account / UPI for payouts.
+      match /private/{doc} {
+        allow read: if isOwner(uid) || hasRole(['finance']);
+        allow write: if false;
+      }
+    }
+
     // Kill switches (functions/src/shared/features.ts): the app reads them
     // to hide what's off; only adminUpdateFeatures writes them.
     match /config/features {

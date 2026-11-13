@@ -1,4 +1,4 @@
-import { FieldValue, type Transaction } from "firebase-admin/firestore";
+import { FieldValue, Timestamp, type Transaction } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/https";
 import { auth, db } from "../shared/firebase";
 import { requireString } from "../shared/callable";
@@ -6,6 +6,7 @@ import { type Actor, requireRole } from "../shared/roles";
 import { writeAudit } from "../shared/audit";
 import { PAYU_SECRETS, type PayURefunds, payURefunds } from "../payments/payu";
 import { createRefund } from "../payments/refunds";
+import { RIDERS } from "../riders/model";
 
 export const ORDER_STATUSES = ["placed", "packed", "out_for_delivery", "delivered", "cancelled"];
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
@@ -25,6 +26,8 @@ export interface StatusInput {
   reason?: unknown;
   riderName?: unknown;
   riderPhone?: unknown;
+  /** An approved rider's uid to assign, or null to unassign. */
+  riderId?: unknown;
 }
 
 interface Allocation {
@@ -42,6 +45,8 @@ interface Allocation {
  *   from (inventoryMovements "order_cancel"), and refunds an online
  *   payment in full right after.
  * - Delivering a cash order marks the cash as collected.
+ * - `riderId` assigns an approved rider (name and phone come from their
+ *   profile); on delivery the rider's counters and cash-in-hand go up.
  * Exported for the emulator tests.
  */
 export async function updateOrderStatus(
@@ -69,6 +74,32 @@ export async function updateOrderStatus(
       if (typeof value === "string") update[field] = value.trim().slice(0, 80) || null;
     }
 
+    // Rider: read before any write (transaction rule).
+    let riderId = (d.riderId as string | null | undefined) ?? null;
+    let riderSnap = null;
+    if (input.riderId !== undefined) {
+      if (from === "delivered" || from === "cancelled") {
+        throw new HttpsError("failed-precondition", "This order is closed");
+      }
+      if (input.riderId === null || input.riderId === "") {
+        riderId = null;
+        update.riderId = null;
+      } else if (typeof input.riderId === "string") {
+        riderSnap = await tx.get(db.collection(RIDERS).doc(input.riderId));
+        if (riderSnap.get("status") !== "approved") {
+          throw new HttpsError("failed-precondition", "Only approved riders can be assigned");
+        }
+        riderId = riderSnap.id;
+        update.riderId = riderId;
+        update.riderName = riderSnap.get("fullName") ?? null;
+        update.riderPhone = riderSnap.get("phone") ?? null;
+        update.riderAssignedAt = FieldValue.serverTimestamp();
+      }
+    }
+    if (status === "delivered" && riderId && !riderSnap) {
+      riderSnap = await tx.get(db.collection(RIDERS).doc(riderId));
+    }
+
     if (status === from) {
       tx.update(orderRef, update);
       return 0;
@@ -91,8 +122,31 @@ export async function updateOrderStatus(
         if (due > 0) update.refundStatus = "pending";
       }
     }
-    if (status === "delivered" && d.payment?.method === "Cash on delivery") {
+    const cod = d.payment?.method === "Cash on delivery";
+    if (status === "delivered" && cod) {
       update["payment.status"] = "succeeded";
+    }
+    if (status === "delivered" && riderSnap?.exists) {
+      const placed = (d.placedAt as Timestamp | undefined)?.toMillis() ?? Date.now();
+      const onTime = Date.now() - placed <= ((d.etaMinutes as number | null) ?? 30) * 60_000;
+      const total = (d.totalPaise as number) ?? 0;
+      tx.update(riderSnap.ref, {
+        deliveredCount: FieldValue.increment(1),
+        ...(onTime ? { onTimeCount: FieldValue.increment(1) } : {}),
+        ...(cod ? { codBalancePaise: FieldValue.increment(total) } : {}),
+        lastDeliveredAt: FieldValue.serverTimestamp(),
+      });
+      if (cod) {
+        tx.create(riderSnap.ref.collection("cash").doc(), {
+          type: "collected",
+          amountPaise: total,
+          balanceAfterPaise: ((riderSnap.get("codBalancePaise") as number) ?? 0) + total,
+          orderId: orderRef.id,
+          note: null,
+          by: actor.uid,
+          at: FieldValue.serverTimestamp(),
+        });
+      }
     }
 
     tx.update(orderRef, update);
@@ -185,7 +239,7 @@ async function restock(
 
 /**
  * Orders board → status / rider / cancel (ops).
- * Request: {orderId, status, reason?, riderName?, riderPhone?}
+ * Request: {orderId, status, reason?, riderName?, riderPhone?, riderId?}
  */
 export const adminUpdateOrderStatus = onCall({ secrets: PAYU_SECRETS }, async (request) =>
   updateOrderStatus(requireRole(request, ["ops"]), request.data ?? {}),

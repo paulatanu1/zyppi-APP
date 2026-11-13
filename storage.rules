@@ -11,6 +11,21 @@ service firebase.storage {
             || request.auth.token.get('role', null) in ['super_admin', 'catalog']);
     }
 
+    // Rider KYC (Aadhaar, licence, RC, selfie): never public. The rider
+    // uploads their own; operations staff can view them for verification.
+    match /riders/{uid}/kyc/{file} {
+      allow read: if request.auth != null
+        && (request.auth.uid == uid
+            || request.auth.token.get('admin', false) == true
+            || request.auth.token.get('role', '') in ['super_admin', 'ops']);
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size < 5 * 1024 * 1024
+        && (request.resource.contentType.matches('image/.*')
+            || request.resource.contentType == 'application/pdf');
+      allow delete: if false;
+    }
+
     match /catalog/{path=**} {
       allow read: if true;
       allow write: if catalogStaff()
