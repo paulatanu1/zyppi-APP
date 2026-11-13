@@ -49,14 +49,17 @@ service cloud.firestore {
     // Catalog (public read, admin write)
     // ---------------------------------------------------------------
 
+    // Products and categories are written only by the admin callables
+    // (functions/src/catalog): they validate, keep variant ids stable,
+    // build the search keywords and write the audit log.
     match /categories/{id} {
       allow read: if true;
-      allow write: if hasRole(['catalog']);
+      allow write: if false;
     }
 
     match /products/{id} {
       allow read: if true;
-      allow write: if hasRole(['catalog']);
+      allow write: if false;
     }
 
     match /serviceAreas/{id} {
@@ -80,10 +83,16 @@ service cloud.firestore {
     }
 
     // Stock levels are internal; the app never reads them (quoteOrder
-    // checks stock server-side).
+    // checks stock server-side). Changed only by adminAdjustStock (which
+    // records inventoryMovements) and by orders.
     match /inventory/{id} {
       allow read: if isAdmin();
-      allow write: if hasRole(['ops', 'catalog']);
+      allow write: if false;
+    }
+
+    match /inventoryMovements/{id} {
+      allow read: if hasRole(['ops', 'catalog']);
+      allow write: if false;
     }
 
     // Customers may look up one active, unexpired coupon by its code

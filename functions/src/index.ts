@@ -13,6 +13,14 @@ export { onOrderEventCreated } from "./push";
 export { adminUpdateOrderStatus, adminListUsers } from "./admin/orders";
 export { adminUpdateFeatures } from "./admin/features";
 export { adminSetRole } from "./admin/staff";
+export { adminSaveProduct, onProductWritten } from "./catalog/products";
+export {
+  adminSaveCategory,
+  adminDeleteCategory,
+  adminReorderCategories,
+} from "./catalog/categories";
+export { adminAdjustStock } from "./catalog/inventory";
+export { adminImportProducts } from "./catalog/import";
 export { onSupportMessageCreated } from "./support/bot";
 export {
   openSupportChat,

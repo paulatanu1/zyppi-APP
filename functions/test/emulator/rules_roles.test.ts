@@ -37,6 +37,7 @@ beforeEach(async () => {
     await setDoc(doc(db, "staff/u1"), { role: "ops" });
     await setDoc(doc(db, "auditLogs/a1"), { action: "x" });
     await setDoc(doc(db, "supportKb/k1"), { topic: "refund" });
+    await setDoc(doc(db, "inventoryMovements/m1"), { delta: 1 });
   });
 });
 
@@ -44,26 +45,37 @@ const as = (claims: Record<string, unknown>) =>
   env.authenticatedContext("staff-1", claims).firestore();
 
 describe("staff roles in firestore.rules", () => {
-  it("gives each role only its own catalog / ops collections", async () => {
+  it("gives each role only its own collections", async () => {
     const catalog = as({ role: "catalog" });
-    await assertSucceeds(updateDoc(doc(catalog, "products/p1"), { name: "Milk 1L" }));
     await assertFails(updateDoc(doc(catalog, "stores/s1"), { name: "B" }));
 
     const ops = as({ role: "ops" });
     await assertSucceeds(updateDoc(doc(ops, "stores/s1"), { name: "B" }));
-    await assertFails(updateDoc(doc(ops, "products/p1"), { name: "x" }));
-    await assertSucceeds(updateDoc(doc(ops, "inventory/s_v"), { quantity: 9 }));
 
     const finance = as({ role: "finance" });
     await assertSucceeds(updateDoc(doc(finance, "coupons/ON"), { isActive: false }));
-    await assertFails(updateDoc(doc(finance, "inventory/s_v"), { quantity: 1 }));
     await assertSucceeds(getDoc(doc(finance, "inventory/s_v")));
+  });
+
+  it("routes product, category and stock writes through the callables", async () => {
+    for (const claims of [{ role: "catalog" }, { role: "ops" }, { role: "super_admin" }]) {
+      const db = as(claims);
+      await assertFails(updateDoc(doc(db, "products/p1"), { name: "x" }));
+      await assertFails(setDoc(doc(db, "categories/c1"), { name: "x" }));
+      await assertFails(updateDoc(doc(db, "inventory/s_v"), { quantity: 9 }));
+    }
+  });
+
+  it("shows stock history to ops and catalog only", async () => {
+    await assertSucceeds(getDoc(doc(as({ role: "ops" }), "inventoryMovements/m1")));
+    await assertSucceeds(getDoc(doc(as({ role: "catalog" }), "inventoryMovements/m1")));
+    await assertFails(getDoc(doc(as({ role: "support" }), "inventoryMovements/m1")));
+    await assertFails(setDoc(doc(as({ role: "ops" }), "inventoryMovements/m2"), { delta: 1 }));
   });
 
   it("treats super_admin and the legacy admin claim as everything", async () => {
     for (const claims of [{ role: "super_admin" }, { admin: true }]) {
       const db = as(claims);
-      await assertSucceeds(updateDoc(doc(db, "products/p1"), { name: "y" }));
       await assertSucceeds(updateDoc(doc(db, "stores/s1"), { name: "y" }));
       await assertSucceeds(getDoc(doc(db, "auditLogs/a1")));
     }
