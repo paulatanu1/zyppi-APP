@@ -1,18 +1,22 @@
 rules_version = '2';
 
 // Catalog images (products, categories, home banners) are public; only
-// admins (custom claim `admin: true`, granted by
-// functions/scripts/set-admin.ts) may upload or replace them. Nothing
-// else lives in Storage.
+// catalog staff (custom claim `role`, or the legacy `admin: true` =
+// super_admin — see firestore.rules) may upload or replace them.
 service firebase.storage {
   match /b/{bucket}/o {
+    function catalogStaff() {
+      return request.auth != null
+        && (request.auth.token.get('admin', false) == true
+            || request.auth.token.get('role', null) in ['super_admin', 'catalog']);
+    }
+
     match /catalog/{path=**} {
       allow read: if true;
-      allow write: if request.auth != null
-        && request.auth.token.admin == true
+      allow write: if catalogStaff()
         && request.resource.size < 5 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
-      allow delete: if request.auth != null && request.auth.token.admin == true;
+      allow delete: if catalogStaff();
     }
   }
 }

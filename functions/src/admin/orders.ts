@@ -1,7 +1,8 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/https";
 import { auth, db } from "../shared/firebase";
-import { requireAdmin, requireString } from "../shared/callable";
+import { requireString } from "../shared/callable";
+import { requireRole } from "../shared/roles";
 
 export const ORDER_STATUSES = ["placed", "packed", "out_for_delivery", "delivered", "cancelled"];
 
@@ -12,7 +13,7 @@ export const ORDER_STATUSES = ["placed", "packed", "out_for_delivery", "delivere
  * Request: {orderId, status, riderName?, riderPhone?}
  */
 export const adminUpdateOrderStatus = onCall(async (request) => {
-  requireAdmin(request);
+  requireRole(request, ["ops"]);
   const orderId = requireString(request.data?.orderId, "orderId");
   const status = requireString(request.data?.status, "status");
   if (!ORDER_STATUSES.includes(status)) {
@@ -45,7 +46,7 @@ export const adminUpdateOrderStatus = onCall(async (request) => {
  * Response: [{id, email, phone, fullName, createdAt}] newest first.
  */
 export const adminListUsers = onCall(async (request) => {
-  requireAdmin(request);
+  requireRole(request, ["ops", "support"]);
 
   const authUsers = new Map<string, { email: string | null; phone: string | null; created: string }>();
   let pageToken: string | undefined;

@@ -1,7 +1,8 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 import { HttpsError, onCall } from "firebase-functions/https";
-import { requireAdmin, requireString, requireUid } from "../shared/callable";
+import { requireString, requireUid } from "../shared/callable";
+import { requireRole } from "../shared/roles";
 import { db, messaging } from "../shared/firebase";
 import { CHATS, postMessages } from "./bot";
 import { COPY, shortOrderId } from "./copy";
@@ -131,7 +132,7 @@ async function pushToCustomer(
  * Request: {chatId, text}.
  */
 export const adminReplySupport = onCall(async (request) => {
-  const agentId = requireAdmin(request);
+  const agentId = requireRole(request, ["support", "ops"]).uid;
   const chatRef = db.collection(CHATS).doc(requireString(request.data?.chatId, "chatId"));
   const text = requireString(request.data?.text, "text").trim().slice(0, 2000);
   const chat = await chatRef.get();
@@ -164,7 +165,7 @@ export const adminReplySupport = onCall(async (request) => {
 
 /** Closes a chat; the customer's next openSupportChat reopens it with the bot. */
 export const adminCloseSupport = onCall(async (request) => {
-  requireAdmin(request);
+  requireRole(request, ["support", "ops"]);
   const chatRef = db.collection(CHATS).doc(requireString(request.data?.chatId, "chatId"));
   if (!(await chatRef.get()).exists) throw new HttpsError("not-found", "Chat not found");
   await chatRef.update({ status: "closed", updatedAt: FieldValue.serverTimestamp() });

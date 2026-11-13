@@ -8,8 +8,10 @@ rules_version = '2';
 // - Orders, order events, payment intents and inventory are written only
 //   by Cloud Functions (Admin SDK bypasses these rules), so prices,
 //   stock and payment state can't be forged from the app.
-// - Admins carry the custom claim `admin: true`
-//   (functions/scripts/set-admin.ts).
+// - Staff carry the custom claim `role` (super_admin | ops | catalog |
+//   support | finance), set by the adminSetRole function or
+//   functions/scripts/set-admin.ts. The legacy `admin: true` claim counts
+//   as super_admin. super_admin passes every role check.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -17,8 +19,26 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function staffRole() {
+      return !signedIn() ? null
+        : request.auth.token.get('role', null) in ['super_admin', 'ops', 'catalog', 'support', 'finance']
+          ? request.auth.token.role
+        : request.auth.token.get('admin', false) == true ? 'super_admin'
+        : null;
+    }
+
+    // Any staff role.
     function isAdmin() {
-      return signedIn() && request.auth.token.admin == true;
+      return staffRole() != null;
+    }
+
+    // One of `roles`, or super_admin.
+    function hasRole(roles) {
+      return staffRole() == 'super_admin' || staffRole() in roles;
+    }
+
+    function isSuperAdmin() {
+      return staffRole() == 'super_admin';
     }
 
     function isOwner(uid) {
@@ -31,38 +51,39 @@ service cloud.firestore {
 
     match /categories/{id} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if hasRole(['catalog']);
     }
 
     match /products/{id} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if hasRole(['catalog']);
     }
 
     match /serviceAreas/{id} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if hasRole(['ops']);
     }
 
     match /stores/{id} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if hasRole(['ops']);
     }
 
     match /deliverySlots/{id} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if hasRole(['ops']);
     }
 
     match /homeSections/{id} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if hasRole(['catalog']);
     }
 
     // Stock levels are internal; the app never reads them (quoteOrder
     // checks stock server-side).
     match /inventory/{id} {
-      allow read, write: if isAdmin();
+      allow read: if isAdmin();
+      allow write: if hasRole(['ops', 'catalog']);
     }
 
     // Customers may look up one active, unexpired coupon by its code
@@ -71,7 +92,8 @@ service cloud.firestore {
       allow get: if resource.data.isActive == true
         && (resource.data.expiresAt == null
             || resource.data.expiresAt > request.time);
-      allow read, write: if isAdmin();
+      allow read: if isAdmin();
+      allow write: if hasRole(['catalog', 'finance']);
     }
 
     // ---------------------------------------------------------------
@@ -190,7 +212,30 @@ service cloud.firestore {
     // Bot knowledge base: written by functions/scripts/seed-support-kb.ts,
     // read only by the bot.
     match /supportKb/{entryId} {
-      allow read, write: if isAdmin();
+      allow read, write: if hasRole(['support']);
+    }
+
+    // ---------------------------------------------------------------
+    // Admin panel (written only by Cloud Functions)
+    // ---------------------------------------------------------------
+
+    // Kill switches (functions/src/shared/features.ts): the app reads them
+    // to hide what's off; only adminUpdateFeatures writes them.
+    match /config/features {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Who has which role (mirror of the claims, kept by adminSetRole).
+    match /staff/{uid} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // Every admin change, append-only.
+    match /auditLogs/{id} {
+      allow read: if isSuperAdmin();
+      allow write: if false;
     }
 
     // Everything else is closed.
