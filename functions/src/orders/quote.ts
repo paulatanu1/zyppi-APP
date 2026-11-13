@@ -25,6 +25,11 @@ export class OrderError extends Error {}
 
 export interface OrderParams {
   uid: string;
+  /**
+   * Areas where new orders are paused (config/features). Only the entry
+   * points pass it: a customer who has already paid is never refused.
+   */
+  closedAreaIds?: readonly string[];
   addressId: string;
   deliverySlotId: string;
   couponCode?: string | null;
@@ -107,6 +112,9 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
   }));
   const area = findServiceableArea(areas, address.lat, address.lng);
   if (!area) throw new OrderError("Address not found or not serviceable");
+  if (p.closedAreaIds?.includes(area.id)) {
+    throw new OrderError("Ordering is paused in your area right now");
+  }
 
   const storesSnap = await tx.get(
     db.collection("stores")

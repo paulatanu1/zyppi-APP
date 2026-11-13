@@ -11,6 +11,8 @@ export { placesProxy } from "./places";
 export { deleteAccount } from "./account";
 export { onOrderEventCreated } from "./push";
 export { adminUpdateOrderStatus, adminListUsers } from "./admin/orders";
+export { adminUpdateFeatures } from "./admin/features";
+export { adminSetRole } from "./admin/staff";
 export { onSupportMessageCreated } from "./support/bot";
 export {
   openSupportChat,

@@ -2,6 +2,7 @@ import { HttpsError, onCall } from "firebase-functions/https";
 import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions";
 import { requireUid } from "./shared/callable";
+import { getFeatures } from "./shared/features";
 
 // Server-side key restricted to "Places API (New)"; never shipped in the app.
 //   firebase functions:secrets:set GOOGLE_PLACES_API_KEY
@@ -24,6 +25,9 @@ const BASE = "https://places.googleapis.com/v1";
  */
 export const placesProxy = onCall({ secrets: [GOOGLE_PLACES_API_KEY] }, async (request) => {
   requireUid(request);
+  // Switched off in Settings → Services: the app falls back to the phone's
+  // geocoder exactly as it does on any Places error, and nothing is billed.
+  if (!(await getFeatures()).placesSearch) return { status: "ERROR", disabled: true };
   const data = (request.data ?? {}) as { action?: string; input?: string; placeId?: string };
   const key = GOOGLE_PLACES_API_KEY.value();
 

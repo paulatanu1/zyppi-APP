@@ -3,6 +3,7 @@ import { logger } from "firebase-functions";
 import { HttpsError, onCall } from "firebase-functions/https";
 import { db } from "../shared/firebase";
 import { requireString, requireUid, toHttpsError } from "../shared/callable";
+import { assertCanOrder, getFeatures } from "../shared/features";
 import { ONLINE_METHODS, quoteOrder } from "../orders/quote";
 import {
   PAYU_SECRETS,
@@ -53,8 +54,12 @@ export const createPayUOrder = onCall({ secrets: PAYU_SECRETS }, async (request)
   if (!ONLINE_METHODS.includes(paymentMethod)) {
     throw new HttpsError("invalid-argument", "Invalid request");
   }
+  const features = await getFeatures();
+  assertCanOrder(features, paymentMethod);
+
   const params = {
     uid,
+    closedAreaIds: features.closedAreaIds,
     addressId: requireString(data.addressId, "addressId"),
     deliverySlotId: requireString(data.deliverySlotId, "deliverySlotId"),
     couponCode: typeof data.couponCode === "string" ? data.couponCode : null,
