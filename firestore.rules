@@ -19,17 +19,18 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // The caller's staff role, or '' for customers and signed-out users.
     function staffRole() {
-      return !signedIn() ? null
-        : request.auth.token.get('role', null) in ['super_admin', 'ops', 'catalog', 'support', 'finance']
-          ? request.auth.token.role
+      return !signedIn() ? ''
+        : request.auth.token.get('role', '') in ['super_admin', 'ops', 'catalog', 'support', 'finance']
+          ? request.auth.token.get('role', '')
         : request.auth.token.get('admin', false) == true ? 'super_admin'
-        : null;
+        : '';
     }
 
     // Any staff role.
     function isAdmin() {
-      return staffRole() != null;
+      return staffRole() != '';
     }
 
     // One of `roles`, or super_admin.

@@ -168,7 +168,14 @@ export async function handleUserMessage(
  * while the chat's status is `bot`. 1 GiB for the embedding model.
  */
 export const onSupportMessageCreated = onDocumentCreated(
-  { document: `${CHATS}/{chatId}/messages/{messageId}`, memory: "1GiB", timeoutSeconds: 120 },
+  {
+    document: `${CHATS}/{chatId}/messages/{messageId}`,
+    memory: "1GiB",
+    // A full vCPU for the embedding model; few instances (chat volume is low).
+    cpu: 1,
+    maxInstances: 3,
+    timeoutSeconds: 120,
+  },
   async (event) => {
     const data = event.data?.data();
     if (!data || data.from !== "user" || typeof data.text !== "string") return;

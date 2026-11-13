@@ -1,7 +1,11 @@
 import { setGlobalOptions } from "firebase-functions/options";
 import { REGION } from "./shared/firebase";
 
-setGlobalOptions({ region: REGION, maxInstances: 10 });
+// Small, short functions: a fraction of a vCPU ("gcf_gen1" = 1st-gen sizing,
+// ~0.17 vCPU at 256 MiB, one request per instance) and at most 5 instances
+// each. Cloud Run counts cpu x maxInstances of every service against the
+// project's regional CPU quota; 29 functions at 1 vCPU x 10 hit it.
+setGlobalOptions({ region: REGION, maxInstances: 5, cpu: "gcf_gen1" });
 
 export { placeOrder } from "./orders/place_order";
 export { createPayUOrder, signPayUHash, verifyPayUPayment } from "./payments/callables";
