@@ -351,3 +351,80 @@ export async function verifyPayUTxn(txnid: string): Promise<PayUOutcome> {
   });
   return outcome;
 }
+
+// ---------------------------------------------------------------------------
+// Refunds (admin panel). Server-only: these commands are never signed for the
+// app (see SIGNABLE_COMMANDS).
+// ---------------------------------------------------------------------------
+
+export type RefundRequestResult =
+  | { ok: true; requestId: string }
+  | { ok: false; reason: string };
+
+export type RefundState = "succeeded" | "failed" | "pending";
+
+/** PayU's answer to cancel_refund_transaction. */
+export function mapRefundRequest(data: Record<string, unknown>): RefundRequestResult {
+  const requestId = data.request_id != null ? String(data.request_id) : "";
+  if (Number(data.status) === 1 && requestId) return { ok: true, requestId };
+  return { ok: false, reason: String(data.msg ?? data.error_code ?? "Refund refused by PayU") };
+}
+
+/**
+ * PayU's answer to check_action_status for one request id:
+ * transaction_details[requestId][mihpayid].status.
+ */
+export function mapRefundStatus(data: Record<string, unknown>, requestId: string): RefundState {
+  const details = (data.transaction_details ?? {}) as Record<string, unknown>;
+  const byPayment = (details[requestId] ?? {}) as Record<string, Record<string, unknown>>;
+  const entry = Object.values(byPayment)[0];
+  const status = String(entry?.status ?? "").toLowerCase();
+  if (status === "success") return "succeeded";
+  if (status === "failure" || status === "failed") return "failed";
+  return "pending";
+}
+
+async function postService(command: string, vars: Record<string, string>) {
+  const key = merchantKey();
+  const response = await fetch(`${payUBase()}/merchant/postservice.php?form=2`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      key,
+      command,
+      ...vars,
+      hash: sha512(`${key}|${command}|${vars.var1}|${merchantSalt()}`),
+    }),
+  });
+  if (!response.ok) throw new Error(`PayU ${command} HTTP ${response.status}`);
+  return (await response.json()) as Record<string, unknown>;
+}
+
+/** Full or partial refund of a captured payment. `token` must be unique per refund. */
+export async function requestPayURefund(
+  mihpayid: string,
+  token: string,
+  amountPaise: number,
+): Promise<RefundRequestResult> {
+  const data = await postService("cancel_refund_transaction", {
+    var1: mihpayid,
+    var2: token,
+    var3: amountString(amountPaise),
+  });
+  const result = mapRefundRequest(data);
+  logger.info("PayU refund request", { mihpayid, token, ok: result.ok, msg: data.msg });
+  return result;
+}
+
+export async function checkPayURefund(requestId: string): Promise<RefundState> {
+  const data = await postService("check_action_status", { var1: requestId });
+  return mapRefundStatus(data, requestId);
+}
+
+/** Swappable in tests. */
+export interface PayURefunds {
+  request: typeof requestPayURefund;
+  check: typeof checkPayURefund;
+}
+
+export const payURefunds: PayURefunds = { request: requestPayURefund, check: checkPayURefund };

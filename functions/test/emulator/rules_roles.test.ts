@@ -107,3 +107,15 @@ describe("staff roles in firestore.rules", () => {
     await assertFails(getDoc(doc(as({ role: "catalog" }), "supportKb/k1")));
   });
 });
+
+describe("refunds in firestore.rules", () => {
+  it("are readable by finance and ops, writable by nobody", async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "refunds/r1"), { amountPaise: 100 });
+    });
+    await assertSucceeds(getDoc(doc(as({ role: "finance" }), "refunds/r1")));
+    await assertSucceeds(getDoc(doc(as({ role: "ops" }), "refunds/r1")));
+    await assertFails(getDoc(doc(as({ role: "catalog" }), "refunds/r1")));
+    await assertFails(setDoc(doc(as({ role: "finance" }), "refunds/r2"), { amountPaise: 1 }));
+  });
+});

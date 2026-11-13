@@ -179,6 +179,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Refunds (functions/src/payments/refunds.ts): staff who handle money
+    // or orders can see them; only the admin callables create them.
+    match /refunds/{id} {
+      allow read: if hasRole(['finance', 'ops']);
+      allow write: if false;
+    }
+
     // ---------------------------------------------------------------
     // Support chat (functions/src/support). Chats are opened by the
     // openSupportChat function; bot, agent and system messages and every

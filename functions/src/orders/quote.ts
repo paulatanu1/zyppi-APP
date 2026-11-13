@@ -53,7 +53,7 @@ export interface QuoteLine {
   quantity: number;
   pricePaise: number;
   /** Stock taken from each store: [inventory doc ref, units, current qty]. */
-  allocations: { ref: DocumentReference; take: number; current: number }[];
+  allocations: { ref: DocumentReference; storeId: string; take: number; current: number }[];
 }
 
 export interface AddressSnapshot {
@@ -172,7 +172,7 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
     const candidates = storesSnap.docs
       .map((s) => {
         const ref = db.collection("inventory").doc(`${s.id}_${item.variantId}`);
-        return { ref, current: stock.get(ref.path) ?? 0 };
+        return { ref, storeId: s.id, current: stock.get(ref.path) ?? 0 };
       })
       .sort((a, b) => b.current - a.current);
     const available = candidates.reduce((sum, c) => sum + Math.max(c.current, 0), 0);
@@ -185,7 +185,7 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
       if (remaining === 0) break;
       const take = Math.min(remaining, c.current);
       if (take <= 0) continue;
-      allocations.push({ ref: c.ref, take, current: c.current });
+      allocations.push({ ref: c.ref, storeId: c.storeId, take, current: c.current });
       remaining -= take;
     }
 
@@ -275,6 +275,21 @@ export async function placeOrderInTx(
   for (const line of quote.lines) {
     for (const a of line.allocations) {
       tx.update(a.ref, { quantity: a.current - a.take, updatedAt: now });
+      // Stock history (admin Inventory): sales show next to adjustments.
+      tx.create(db.collection("inventoryMovements").doc(), {
+        storeId: a.storeId,
+        productId: line.productId,
+        variantId: line.variantId,
+        delta: -a.take,
+        before: a.current,
+        after: a.current - a.take,
+        reason: "order",
+        note: null,
+        orderId: orderRef.id,
+        actorUid: null,
+        actorEmail: null,
+        at: now,
+      });
     }
   }
 
@@ -307,6 +322,16 @@ export async function placeOrderInTx(
     totalPaise: quote.totalPaise,
     riderName: null,
     riderPhone: null,
+    // Which store's stock filled each line, so a cancellation puts it back
+    // where it came from.
+    allocations: quote.lines.flatMap((l) =>
+      l.allocations.map((a) => ({
+        storeId: a.storeId,
+        productId: l.productId,
+        variantId: l.variantId,
+        quantity: a.take,
+      })),
+    ),
     items: quote.lines.map((l) => ({
       productId: l.productId,
       variantId: l.variantId,

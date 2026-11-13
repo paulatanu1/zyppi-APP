@@ -3,6 +3,9 @@ import { logger } from "firebase-functions";
 import { db } from "../shared/firebase";
 import { OrderError, placeOrderInTx } from "../orders/quote";
 
+/** Intent statuses a person has taken over: no order is ever made from them. */
+export const CLOSED_BY_ADMIN = ["needs_review", "refunded", "dismissed"];
+
 /**
  * Turns a verified PayU payment into an order (port of
  * `place_paid_order`). Idempotent: a repeat call returns the order already
@@ -27,7 +30,7 @@ export async function placePaidOrder(
       const intent = intentSnap.data();
       if (!intent) throw new Error("Unknown payment");
       if (intent.orderId) return intent.orderId as string;
-      if (intent.status === "needs_review") return null;
+      if (CLOSED_BY_ADMIN.includes(intent.status)) return null;
       if (referenceSnap.exists) {
         throw new OrderError("Payment reference already used");
       }

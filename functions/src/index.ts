@@ -20,6 +20,12 @@ export {
   adminReorderCategories,
 } from "./catalog/categories";
 export { adminAdjustStock } from "./catalog/inventory";
+export {
+  adminRefundPayment,
+  adminRefreshRefund,
+  adminResolveIntent,
+  reconcileRefunds,
+} from "./payments/refunds";
 export { adminImportProducts } from "./catalog/import";
 export { onSupportMessageCreated } from "./support/bot";
 export {
