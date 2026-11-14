@@ -14,7 +14,8 @@
     "seed:support": "tsx scripts/seed-support-kb.ts",
     "smoke:support": "tsx scripts/support-smoke.ts",
     "set-admin": "tsx scripts/set-admin.ts",
-    "deploy": "firebase deploy --only functions"
+    "deploy": "firebase deploy --only functions",
+    "backfill-user-stats": "tsx scripts/backfill-user-stats.ts"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.3.2",

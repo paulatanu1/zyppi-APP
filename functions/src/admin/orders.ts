@@ -120,6 +120,17 @@ export async function updateOrderStatus(
       if (d.couponRedeemed === true && typeof d.couponCode === "string") {
         releaseRedemption(tx, d.couponCode, d.userId as string, (d.discountPaise as number) ?? 0);
       }
+      // Orders placed since segments existed carry `countedForUser`.
+      if (d.countedForUser === true && typeof d.userId === "string") {
+        tx.set(
+          db.collection("users").doc(d.userId),
+          {
+            orderCount: FieldValue.increment(-1),
+            totalSpentPaise: FieldValue.increment(-((d.totalPaise as number) ?? 0)),
+          },
+          { merge: true },
+        );
+      }
       const online = d.payment?.method && d.payment.method !== "Cash on delivery";
       if (online && d.payment?.status === "succeeded") {
         due = (d.payment.amountPaise as number) - ((d.refundedPaise as number) ?? 0);

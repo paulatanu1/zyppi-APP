@@ -46,6 +46,15 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
+    // What the app itself writes to users/{uid}.
+    function profileFields() {
+      return [
+        'phone', 'fullName', 'email', 'dob', 'gender',
+        'preferredPaymentMethod', 'notifyOrderUpdates', 'notifyOffers',
+        'fcmToken', 'lang', 'createdAt', 'updatedAt'
+      ];
+    }
+
     // ---------------------------------------------------------------
     // Catalog (public read, admin write)
     // ---------------------------------------------------------------
@@ -83,6 +92,18 @@ service cloud.firestore {
     // their own schedule and areas; the app filters them.
     match /homeSections/{id} {
       allow read: if true;
+      allow write: if false;
+    }
+
+    // Push campaigns and their templates: written only by the admin
+    // callables (functions/src/notifications), which audit every send.
+    match /campaigns/{id} {
+      allow read: if hasRole(['catalog']);
+      allow write: if false;
+    }
+
+    match /notificationTemplates/{id} {
+      allow read: if hasRole(['catalog']);
       allow write: if false;
     }
 
@@ -128,14 +149,16 @@ service cloud.firestore {
     // Users and their private data
     // ---------------------------------------------------------------
 
+    // The app may change only its own profile fields. Orders keep the
+    // segment counters (orderCount, totalSpentPaise, lastOrderAt,
+    // serviceAreaId) up to date from the server, so updates check only
+    // the keys they change.
     match /users/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      allow create, update: if isOwner(uid)
-        && request.resource.data.keys().hasOnly([
-          'phone', 'fullName', 'email', 'dob', 'gender',
-          'preferredPaymentMethod', 'notifyOrderUpdates', 'notifyOffers',
-          'fcmToken', 'createdAt', 'updatedAt'
-        ]);
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(profileFields());
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(profileFields());
       // Account deletion goes through the deleteAccount function.
       allow delete: if false;
 

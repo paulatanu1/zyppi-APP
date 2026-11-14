@@ -43,6 +43,17 @@ export {
   trackBannerClick,
 } from "./home/home";
 export { checkCoupon, adminSaveCoupon, adminDeleteCoupon } from "./coupons/coupons";
+export {
+  adminSaveCampaign,
+  adminEstimateAudience,
+  adminScheduleCampaign,
+  adminCancelCampaign,
+  adminTestCampaign,
+  adminSaveTemplate,
+  adminDeleteTemplate,
+  trackCampaignOpen,
+  dispatchCampaigns,
+} from "./notifications/campaigns";
 export { onSupportMessageCreated } from "./support/bot";
 export {
   openSupportChat,

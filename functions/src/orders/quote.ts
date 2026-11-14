@@ -326,6 +326,8 @@ export async function placeOrderInTx(
     totalPaise: quote.totalPaise,
     // Counted against the coupon's limits; cancelling gives the use back.
     couponRedeemed: quote.couponCode != null,
+    // Added to users/{uid}.orderCount / totalSpentPaise (see below).
+    countedForUser: true,
     riderName: null,
     riderPhone: null,
     // Which store's stock filled each line, so a cancellation puts it back
@@ -353,6 +355,18 @@ export async function placeOrderInTx(
   if (quote.couponCode) {
     recordRedemption(tx, quote.couponCode, p.uid, orderRef.id, quote.discountPaise);
   }
+  // Customer aggregates for notification segments (cancelling takes the
+  // order back off; lastOrderAt stays).
+  tx.set(
+    db.collection("users").doc(p.uid),
+    {
+      orderCount: FieldValue.increment(1),
+      totalSpentPaise: FieldValue.increment(quote.totalPaise),
+      lastOrderAt: now,
+      serviceAreaId: quote.serviceAreaId,
+    },
+    { merge: true },
+  );
 
   return orderRef.id;
 }

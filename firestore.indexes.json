@@ -1,6 +1,14 @@
 {
   "indexes": [
     {
+      "collectionGroup": "campaigns",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "sendAt", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "paymentIntents",
       "queryScope": "COLLECTION",
       "fields": [

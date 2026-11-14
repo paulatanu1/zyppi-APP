@@ -35,6 +35,15 @@ service firebase.storage {
       allow delete: if catalogStaff();
     }
 
+    // Push notification pictures (shown in the notification shade).
+    match /notifications/{file} {
+      allow read: if true;
+      allow write: if catalogStaff()
+        && request.resource.size < 1 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if catalogStaff();
+    }
+
     match /catalog/{path=**} {
       allow read: if true;
       allow write: if catalogStaff()
