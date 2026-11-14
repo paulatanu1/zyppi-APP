@@ -4,17 +4,24 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/config/env.dart';
+import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/push/data/push_token_repository_impl.dart';
 import 'package:zippy/core/push/domain/push_token_repository.dart';
+import 'package:zippy/core/push/push_destination.dart';
+import 'package:zippy/core/utils/launch.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
 
 /// Wires FCM: permission + token registration (push_token_repository_impl
-/// writes it to `profiles.fcm_token`), a SnackBar for foreground
-/// notifications, and deep-linking into order tracking when the user
-/// taps one (background or cold-start). The push-on-order-event Edge
-/// Function is what actually sends these (PLAN.md Phase 4).
+/// writes it to `users/{uid}.fcmToken`), a SnackBar for foreground
+/// notifications, and deep links when the user taps one (background or
+/// cold-start): order tracking, support chat, or an offer's product,
+/// category, coupon or web page (push_destination.dart).
 class PushNotificationService {
   PushNotificationService._();
+
+  /// The app language (`en`, `bn`, `hi`, `pa`), kept current by the app
+  /// root, so offer pushes arrive in it.
+  static String? languageCode;
 
   static Future<void> initialize(
     ProviderContainer container,
@@ -34,12 +41,12 @@ class PushNotificationService {
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen(
-      (message) => _openTracking(router, message),
+      (message) => _open(container, router, message),
     );
 
     try {
       final initialMessage = await messaging.getInitialMessage();
-      if (initialMessage != null) _openTracking(router, initialMessage);
+      if (initialMessage != null) _open(container, router, initialMessage);
     } catch (_) {}
 
     try {
@@ -63,24 +70,41 @@ class PushNotificationService {
   static Future<void> _register(PushTokenRepository repository) async {
     try {
       final token = await FirebaseMessaging.instance.getToken();
-      if (token != null) await repository.registerToken(token);
+      if (token != null) {
+        await repository.registerToken(token, languageCode: languageCode);
+      }
     } catch (_) {
       // Retried on the next token refresh / login.
     }
   }
 
-  static void _openTracking(GoRouter router, RemoteMessage message) {
-    // Support team replies (functions/src/support/chat.ts).
-    if (message.data['chatId'] != null) {
-      final orderId = message.data['chatOrderId'] as String? ?? '';
-      router.push(
-        orderId.isEmpty ? '/supportChat' : '/supportChat?orderId=$orderId',
+  /// A tapped notification: open what it points at, and count the tap
+  /// for offer campaigns.
+  static void _open(
+    ProviderContainer container,
+    GoRouter router,
+    RemoteMessage message,
+  ) {
+    if (message.data['campaignId'] case final String id when id.isNotEmpty) {
+      unawaited(
+        container
+            .read(pushTokenRepositoryProvider)
+            .recordCampaignOpen(id)
+            .catchError((Object _) {}),
       );
-      return;
     }
-    final orderId = message.data['orderId'] as String?;
-    if (orderId != null) {
-      router.go('/orderTrackingScreen?orderId=$orderId');
+    switch (pushDestination(message.data)) {
+      case OpenRoute(:final location, replace: true):
+        router.go(location);
+      case OpenRoute(:final location):
+        router.push(location);
+      case OpenUrl(:final url):
+        unawaited(openExternal(url));
+      case ApplyCoupon(:final code):
+        router.push('/myCartScreen');
+        unawaited(container.read(cartProvider.notifier).applyCoupon(code));
+      case null:
+        break;
     }
   }
 }

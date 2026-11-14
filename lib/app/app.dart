@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/push/push_notification_service.dart';
 import 'package:zippy/core/theme/theme_mode_provider.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
@@ -16,6 +17,8 @@ class Zyppi extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
+    // Offer pushes are sent in the app's language (registered with the token).
+    PushNotificationService.languageCode = context.locale.languageCode;
 
     return ScreenUtilInit(
       designSize: const Size(390, 844),
