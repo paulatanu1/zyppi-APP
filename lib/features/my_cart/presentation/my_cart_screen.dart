@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/cart/application/cart_state.dart';
 import 'package:zippy/core/domain/coupon.dart';
-import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/utils/address_label.dart';
 import 'package:zippy/core/widgets/z_commerce.dart';
@@ -13,6 +12,7 @@ import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/my_cart/widgets/bill_details.dart';
 import 'package:zippy/features/my_cart/widgets/my_cart_item.dart';
 import 'package:zippy/features/my_cart/widgets/tip_selector.dart';
+import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
 
 /// docs/screens/light/09-cart.png. Both a tab and a pushed route
 /// (`/myCartScreen`); the back arrow only shows when pushed. Left out
@@ -319,7 +319,12 @@ class _CouponFieldState extends ConsumerState<_CouponField> {
     final code = _controller.text.trim();
     if (code.isEmpty) return;
     setState(() => _applying = true);
-    await ref.read(cartProvider.notifier).applyCoupon(code);
+    await ref
+        .read(cartProvider.notifier)
+        .applyCoupon(
+          code,
+          serviceAreaId: ref.read(currentLocation).serviceArea?.id,
+        );
     if (mounted) setState(() => _applying = false);
   }
 

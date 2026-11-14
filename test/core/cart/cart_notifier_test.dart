@@ -60,7 +60,8 @@ class _CountingCatalog implements CatalogRepository {
 
 class _FakeCoupons implements CouponRepository {
   @override
-  Future<Coupon?> findByCode(String code) async => null;
+  Future<Coupon?> findByCode(String code, {String? serviceAreaId}) async =>
+      null;
 }
 
 /// The server cart, in memory.

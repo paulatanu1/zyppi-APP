@@ -14,6 +14,7 @@ import 'package:zippy/core/data/catalog_repository.dart';
 import 'package:zippy/core/data/catalog_repository_impl.dart';
 import 'package:zippy/core/data/coupon_repository.dart';
 import 'package:zippy/core/data/coupon_repository_impl.dart';
+import 'package:zippy/core/domain/coupon.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
 import 'package:zippy/core/domain/cart_item.dart';
 import 'package:zippy/core/domain/product.dart';
@@ -302,11 +303,16 @@ class CartNotifier extends StateNotifier<CartState> {
     );
   }
 
-  Future<void> applyCoupon(String code) async {
+  /// [serviceAreaId] is where the customer is shopping, when known (an
+  /// area-only coupon is refused elsewhere).
+  Future<void> applyCoupon(String code, {String? serviceAreaId}) async {
     state = state.copyWith(couponError: null);
 
     try {
-      final coupon = await couponRepository.findByCode(code);
+      final coupon = await couponRepository.findByCode(
+        code,
+        serviceAreaId: serviceAreaId,
+      );
 
       if (coupon == null) {
         state = state.copyWith(couponError: 'invalidCoupon');
@@ -321,6 +327,8 @@ class CartNotifier extends StateNotifier<CartState> {
           coupon: coupon,
         ),
       );
+    } on CouponRejected catch (rejected) {
+      state = state.copyWith(couponError: rejected.problem.messageKey);
     } catch (_) {
       // A translation key, like 'invalidCoupon' — never a raw exception.
       state = state.copyWith(couponError: 'couponCheckFailed');

@@ -1,6 +1,9 @@
 import 'package:zippy/core/domain/coupon.dart';
 
 abstract class CouponRepository {
-  /// Returns the active coupon matching [code] (case-insensitive), or null.
-  Future<Coupon?> findByCode(String code);
+  /// The coupon matching [code] (case-insensitive) if this customer can use
+  /// it, or null if there's no such coupon. Throws [CouponRejected] when it
+  /// exists but can't be used (expired, used up, first order only, not in
+  /// [serviceAreaId]…).
+  Future<Coupon?> findByCode(String code, {String? serviceAreaId});
 }
