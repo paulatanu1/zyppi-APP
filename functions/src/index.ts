@@ -36,6 +36,13 @@ export {
   reconcileRefunds,
 } from "./payments/refunds";
 export { adminImportProducts } from "./catalog/import";
+export {
+  adminSaveHomeSection,
+  adminReorderHomeSections,
+  adminDeleteHomeSection,
+  trackBannerClick,
+} from "./home/home";
+export { checkCoupon, adminSaveCoupon, adminDeleteCoupon } from "./coupons/coupons";
 export { onSupportMessageCreated } from "./support/bot";
 export {
   openSupportChat,

@@ -52,6 +52,7 @@ export async function placePaidOrder(
           addressId: intent.addressId,
           deliverySlotId: intent.deliverySlotId,
           couponCode: intent.couponCode,
+          honourCoupon: true,
           tipPaise: intent.tipPaise,
           paymentMethod: intent.paymentMethod,
         },

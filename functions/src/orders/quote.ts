@@ -1,9 +1,6 @@
-import {
-  DocumentReference,
-  FieldValue,
-  Timestamp,
-  Transaction,
-} from "firebase-admin/firestore";
+import { DocumentReference, FieldValue, Transaction } from "firebase-admin/firestore";
+import { COUPON_MESSAGES, discountFor, normalizeCode } from "../coupons/model";
+import { lookupCoupon, problemOf, recordRedemption } from "../coupons/usage";
 import { db } from "../shared/firebase";
 import { AreaLike, findServiceableArea } from "../shared/geo";
 
@@ -33,6 +30,12 @@ export interface OrderParams {
   addressId: string;
   deliverySlotId: string;
   couponCode?: string | null;
+  /**
+   * The customer has already paid the price quoted with this coupon, so
+   * its limits (expiry, uses) are not re-checked; the discount still has
+   * to come out the same or the payment goes to review.
+   */
+  honourCoupon?: boolean;
   tipPaise: number;
   paymentMethod: string;
 }
@@ -74,6 +77,7 @@ export interface Quote {
   addressLabel: string;
   addressText: string;
   etaMinutes: number | null;
+  /** Set only when it takes something off (counted as a use). */
   couponCode: string | null;
   lines: QuoteLine[];
   cartRefs: DocumentReference[];
@@ -202,20 +206,20 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
     });
   }
 
+  // Coupons: below the minimum it just gives nothing (the cart says "add
+  // ₹X more"); any other problem refuses the order, so the customer never
+  // pays a different total from the one they saw.
   let discount = 0;
   let couponCode: string | null = null;
-  const code = p.couponCode?.trim().toUpperCase();
-  if (code) {
-    const coupon = await tx.get(db.collection("coupons").doc(code));
-    const expiresAt = coupon.get("expiresAt") as Timestamp | null | undefined;
-    if (
-      coupon.exists &&
-      coupon.get("isActive") === true &&
-      (expiresAt == null || expiresAt.toMillis() > Date.now()) &&
-      itemTotal >= ((coupon.get("minOrderPaise") as number | undefined) ?? 0)
-    ) {
-      discount = Math.min(coupon.get("discountPaise") as number, itemTotal);
-      couponCode = code;
+  const rawCode = p.couponCode?.trim();
+  if (rawCode) {
+    const code = normalizeCode(rawCode);
+    const lookup = code ? await lookupCoupon(tx, code, p.uid) : null;
+    const problem = lookup ? problemOf(lookup, area.id) : "invalid";
+    if (problem && !p.honourCoupon) throw new OrderError(COUPON_MESSAGES[problem]);
+    if (lookup?.terms) {
+      discount = discountFor(lookup.terms, itemTotal);
+      if (discount > 0) couponCode = lookup.code;
     }
   }
 
@@ -320,6 +324,8 @@ export async function placeOrderInTx(
     tipPaise: quote.tipPaise,
     discountPaise: quote.discountPaise,
     totalPaise: quote.totalPaise,
+    // Counted against the coupon's limits; cancelling gives the use back.
+    couponRedeemed: quote.couponCode != null,
     riderName: null,
     riderPhone: null,
     // Which store's stock filled each line, so a cancellation puts it back
@@ -344,6 +350,9 @@ export async function placeOrderInTx(
   });
   tx.create(orderRef.collection("events").doc(), { status: "placed", createdAt: now });
   for (const ref of quote.cartRefs) tx.delete(ref);
+  if (quote.couponCode) {
+    recordRedemption(tx, quote.couponCode, p.uid, orderRef.id, quote.discountPaise);
+  }
 
   return orderRef.id;
 }

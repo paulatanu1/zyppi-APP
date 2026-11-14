@@ -26,6 +26,15 @@ service firebase.storage {
       allow delete: if false;
     }
 
+    // Home banners: public, uploaded from the admin Banners page.
+    match /banners/{file} {
+      allow read: if true;
+      allow write: if catalogStaff()
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if catalogStaff();
+    }
+
     match /catalog/{path=**} {
       allow read: if true;
       allow write: if catalogStaff()

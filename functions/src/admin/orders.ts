@@ -7,6 +7,7 @@ import { writeAudit } from "../shared/audit";
 import { PAYU_SECRETS, type PayURefunds, payURefunds } from "../payments/payu";
 import { createRefund } from "../payments/refunds";
 import { RIDERS } from "../riders/model";
+import { releaseRedemption } from "../coupons/usage";
 
 export const ORDER_STATUSES = ["placed", "packed", "out_for_delivery", "delivered", "cancelled"];
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
@@ -116,6 +117,9 @@ export async function updateOrderStatus(
       update.cancelReason = reason.slice(0, 300);
       update.cancelledBy = actor.uid;
       await restock(tx, orderRef.id, d, actor);
+      if (d.couponRedeemed === true && typeof d.couponCode === "string") {
+        releaseRedemption(tx, d.couponCode, d.userId as string, (d.discountPaise as number) ?? 0);
+      }
       const online = d.payment?.method && d.payment.method !== "Cash on delivery";
       if (online && d.payment?.status === "succeeded") {
         due = (d.payment.amountPaise as number) - ((d.refundedPaise as number) ?? 0);

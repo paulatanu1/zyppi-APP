@@ -78,9 +78,18 @@ service cloud.firestore {
       allow write: if hasRole(['ops']);
     }
 
+    // Written only by the adminSaveHomeSection / adminReorderHomeSections /
+    // adminDeleteHomeSection callables (validated, audited). Items carry
+    // their own schedule and areas; the app filters them.
     match /homeSections/{id} {
       allow read: if true;
-      allow write: if hasRole(['catalog']);
+      allow write: if false;
+    }
+
+    // Banner taps, counted by the trackBannerClick callable.
+    match /bannerStats/{id} {
+      allow read: if hasRole(['catalog']);
+      allow write: if false;
     }
 
     // Stock levels are internal; the app never reads them (quoteOrder
@@ -97,13 +106,22 @@ service cloud.firestore {
     }
 
     // Customers may look up one active, unexpired coupon by its code
-    // (doc id = upper-cased code); they can't list them all.
+    // (doc id = upper-cased code); they can't list them all. The app
+    // checks eligibility (per-customer limits, first order, area) with the
+    // checkCoupon callable. Written only by adminSaveCoupon /
+    // adminDeleteCoupon (validated, audited) and by orders (usage counts).
     match /coupons/{code} {
       allow get: if resource.data.isActive == true
         && (resource.data.expiresAt == null
             || resource.data.expiresAt > request.time);
       allow read: if isAdmin();
-      allow write: if hasRole(['catalog', 'finance']);
+      allow write: if false;
+
+      // Uses per customer; written only by orders.
+      match /redemptions/{uid} {
+        allow read: if hasRole(['catalog', 'finance']);
+        allow write: if false;
+      }
     }
 
     // ---------------------------------------------------------------

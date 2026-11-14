@@ -53,7 +53,13 @@ describe("staff roles in firestore.rules", () => {
     await assertSucceeds(updateDoc(doc(ops, "stores/s1"), { name: "B" }));
 
     const finance = as({ role: "finance" });
-    await assertSucceeds(updateDoc(doc(finance, "coupons/ON"), { isActive: false }));
+    await assertSucceeds(getDoc(doc(finance, "coupons/ON")));
+    // Coupons and home sections change only through the audited callables.
+    await assertFails(updateDoc(doc(finance, "coupons/ON"), { isActive: false }));
+    await assertFails(setDoc(doc(catalog, "homeSections/h1"), { isActive: false }));
+    await assertSucceeds(getDoc(doc(catalog, "bannerStats/h1__b1")));
+    await assertFails(setDoc(doc(catalog, "bannerStats/h1__b1"), { clicks: 9 }));
+    await assertFails(getDoc(doc(ops, "bannerStats/h1__b1")));
     await assertSucceeds(getDoc(doc(finance, "inventory/s_v")));
   });
 
