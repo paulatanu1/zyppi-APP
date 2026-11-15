@@ -1,3 +1,4 @@
+import { requireUid } from "../shared/callable";
 import { randomUUID } from "node:crypto";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/https";
@@ -282,6 +283,6 @@ export const adminDeleteHomeSection = onCall(async (request) =>
 );
 
 export const trackBannerClick = onCall(async (request) => {
-  if (!request.auth?.uid) throw new HttpsError("unauthenticated", "Not authenticated");
+  requireUid(request);
   return recordBannerClick(request.data?.sectionId, request.data?.itemId);
 });

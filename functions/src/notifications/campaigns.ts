@@ -1,3 +1,4 @@
+import { requireUid } from "../shared/callable";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import type { MulticastMessage } from "firebase-admin/messaging";
 import { logger } from "firebase-functions";
@@ -317,8 +318,7 @@ export const adminDeleteTemplate = onCall(async (request) => {
 });
 
 export const trackCampaignOpen = onCall(async (request) => {
-  const uid = request.auth?.uid;
-  if (!uid) throw new HttpsError("unauthenticated", "Not authenticated");
+  const uid = requireUid(request);
   return recordOpen(uid, request.data?.campaignId);
 });
 
