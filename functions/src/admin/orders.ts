@@ -1,4 +1,4 @@
-import { FieldValue, Timestamp, type Transaction } from "firebase-admin/firestore";
+import { FieldValue, type Transaction } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/https";
 import { auth, db } from "../shared/firebase";
 import { requireString } from "../shared/callable";
@@ -8,6 +8,8 @@ import { PAYU_SECRETS, type PayURefunds, payURefunds } from "../payments/payu";
 import { createRefund } from "../payments/refunds";
 import { RIDERS } from "../riders/model";
 import { releaseRedemption } from "../coupons/usage";
+import { bindRider, creditRiderDelivery, releaseRider, withdrawOffer } from "../dispatch/effects";
+import { deliveryEarning } from "../dispatch/earnings";
 
 export const ORDER_STATUSES = ["placed", "packed", "out_for_delivery", "delivered", "cancelled"];
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
@@ -102,6 +104,23 @@ export async function updateOrderStatus(
     }
 
     if (status === from) {
+      const prevRider = (d.riderId as string | null | undefined) ?? null;
+      const offeredTo = (d.offer as { riderId?: string } | undefined)?.riderId ?? null;
+      if (input.riderId !== undefined && riderId !== prevRider) {
+        if (offeredTo) {
+          withdrawOffer(tx, orderRef.id, offeredTo);
+          update.offer = FieldValue.delete();
+        }
+        if (prevRider) releaseRider(tx, prevRider);
+        if (riderId) {
+          bindRider(tx, orderRef.id, riderId);
+          update.riderStage = "accepted";
+          update.dispatch = { state: "manual", updatedAt: FieldValue.serverTimestamp() };
+        } else {
+          update.riderStage = FieldValue.delete();
+          update.dispatch = { state: "unassigned", updatedAt: FieldValue.serverTimestamp() };
+        }
+      }
       tx.update(orderRef, update);
       return 0;
     }
@@ -142,27 +161,29 @@ export async function updateOrderStatus(
       update["payment.status"] = "succeeded";
     }
     if (status === "delivered" && riderSnap?.exists) {
-      const placed = (d.placedAt as Timestamp | undefined)?.toMillis() ?? Date.now();
-      const onTime = Date.now() - placed <= ((d.etaMinutes as number | null) ?? 30) * 60_000;
-      const total = (d.totalPaise as number) ?? 0;
-      tx.update(riderSnap.ref, {
-        deliveredCount: FieldValue.increment(1),
-        ...(onTime ? { onTimeCount: FieldValue.increment(1) } : {}),
-        ...(cod ? { codBalancePaise: FieldValue.increment(total) } : {}),
-        lastDeliveredAt: FieldValue.serverTimestamp(),
-      });
-      if (cod) {
-        tx.create(riderSnap.ref.collection("cash").doc(), {
-          type: "collected",
-          amountPaise: total,
-          balanceAfterPaise: ((riderSnap.get("codBalancePaise") as number) ?? 0) + total,
-          orderId: orderRef.id,
-          note: null,
-          by: actor.uid,
-          at: FieldValue.serverTimestamp(),
-        });
+      update.riderStage = "delivered";
+      creditRiderDelivery(tx, orderRef, d, riderSnap, actor.uid, await deliveryEarning(tx, orderRef, d, riderSnap));
+    }
+    // Rider app: whoever holds the order (or an open offer for it) follows
+    // ops' change.
+    const prevRider = (d.riderId as string | null | undefined) ?? null;
+    const offeredTo = (d.offer as { riderId?: string } | undefined)?.riderId ?? null;
+    if (offeredTo && (input.riderId !== undefined || status === "cancelled")) {
+      withdrawOffer(tx, orderRef.id, offeredTo);
+      update.offer = FieldValue.delete();
+    }
+    if (input.riderId !== undefined && riderId !== prevRider) {
+      if (prevRider) releaseRider(tx, prevRider);
+      if (riderId) {
+        bindRider(tx, orderRef.id, riderId);
+        update.riderStage = "accepted";
+        update.dispatch = { state: "manual", updatedAt: FieldValue.serverTimestamp() };
+      } else {
+        update.riderStage = FieldValue.delete();
+        update.dispatch = { state: "unassigned", updatedAt: FieldValue.serverTimestamp() };
       }
     }
+    if (status === "cancelled" && riderId) releaseRider(tx, riderId);
 
     tx.update(orderRef, update);
     tx.create(orderRef.collection("events").doc(), {

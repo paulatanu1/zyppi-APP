@@ -91,6 +91,9 @@ export interface StoreInput {
   phone: string | null;
   /** null = open all day. */
   hours: Hours | null;
+  /** Where riders pick up (navigation, dispatch distance); null = area centre. */
+  lat: number | null;
+  lng: number | null;
   isActive: boolean;
 }
 
@@ -111,8 +114,14 @@ export function validateStore(raw: unknown): StoreInput {
     address: optionalText(d.address, "Address", 300),
     phone: phoneOrNull(d.phone, "Phone"),
     hours,
+    ...storePoint(d),
     isActive: bool(d.isActive, true),
   };
+}
+
+function storePoint(d: Record<string, unknown>): { lat: number | null; lng: number | null } {
+  if (d.lat == null && d.lng == null) return { lat: null, lng: null };
+  return { lat: numIn(d.lat, "Latitude", 6, 37), lng: numIn(d.lng, "Longitude", 68, 98) };
 }
 
 export interface SlotInput {

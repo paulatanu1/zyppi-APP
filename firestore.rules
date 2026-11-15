@@ -219,16 +219,32 @@ service cloud.firestore {
     // Orders and payments (written only by Cloud Functions)
     // ---------------------------------------------------------------
 
+    // The customer, staff, and the delivery partner who holds the order
+    // (rider app; offers are summarised in riders/{uid}/offers instead).
     match /orders/{orderId} {
       allow read: if isAdmin()
-        || (signedIn() && resource.data.userId == request.auth.uid);
+        || (signedIn() && resource.data.userId == request.auth.uid)
+        || (signedIn() && resource.data.get('riderId', '') == request.auth.uid);
       allow write: if false;
 
+      function orderCustomer() {
+        return signedIn()
+          && get(/databases/$(database)/documents/orders/$(orderId)).data.userId
+             == request.auth.uid;
+      }
+
       match /events/{eventId} {
-        allow read: if isAdmin()
-          || (signedIn()
-              && get(/databases/$(database)/documents/orders/$(orderId)).data.userId
-                 == request.auth.uid);
+        allow read: if isAdmin() || orderCustomer();
+        allow write: if false;
+      }
+      // The delivery code: the customer and staff only, never the rider.
+      match /private/{doc} {
+        allow read: if isAdmin() || orderCustomer();
+        allow write: if false;
+      }
+      // Rider's live distance / ETA, written by riderPing.
+      match /tracking/{doc} {
+        allow read: if isAdmin() || orderCustomer();
         allow write: if false;
       }
     }
@@ -322,6 +338,45 @@ service cloud.firestore {
         allow read: if isOwner(uid) || hasRole(['finance']);
         allow write: if false;
       }
+      // Rider app (functions/src/dispatch): open order offers, earnings
+      // ledger, payouts, daily login minutes, booked slots, inbox.
+      match /offers/{id} {
+        allow read: if isOwner(uid) || hasRole(['ops']);
+        allow write: if false;
+      }
+      match /earnings/{id} {
+        allow read: if isOwner(uid) || hasRole(['ops', 'finance']);
+        allow write: if false;
+      }
+      match /payouts/{id} {
+        allow read: if isOwner(uid) || hasRole(['finance']);
+        allow write: if false;
+      }
+      match /days/{id} {
+        allow read: if isOwner(uid) || hasRole(['ops', 'finance']);
+        allow write: if false;
+      }
+      match /slots/{id} {
+        allow read: if isOwner(uid) || hasRole(['ops']);
+        allow write: if false;
+      }
+      match /inbox/{id} {
+        allow read: if isOwner(uid) || hasRole(['ops']);
+        allow write: if false;
+      }
+    }
+
+    // Rider settings (pay, dispatch, emergency numbers): riders read them;
+    // only the admin callables write.
+    match /config/riders {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // Rider emergency alerts (riderSos), handled by ops.
+    match /sosAlerts/{id} {
+      allow read: if hasRole(['ops', 'support']);
+      allow write: if false;
     }
 
     // Kill switches (functions/src/shared/features.ts): the app reads them
