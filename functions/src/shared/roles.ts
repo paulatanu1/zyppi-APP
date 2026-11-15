@@ -1,4 +1,4 @@
-import { checkAppCheck, checkSuperAdminMfa } from "./hardening";
+import { checkAppCheck } from "./hardening";
 import { CallableRequest, HttpsError } from "firebase-functions/https";
 
 /**
@@ -40,11 +40,9 @@ export interface Actor {
 export function requireRole(request: CallableRequest, allowed: readonly Role[]): Actor {
   const uid = request.auth?.uid;
   if (!uid) throw new HttpsError("unauthenticated", "Not authenticated");
-  const token = request.auth?.token as Record<string, unknown> | undefined;
-  const role = roleOf(token);
+  const role = roleOf(request.auth?.token as Record<string, unknown> | undefined);
   if (!roleAllows(role, allowed)) throw new HttpsError("permission-denied", "Not authorized");
   checkAppCheck(request);
-  checkSuperAdminMfa(role, token);
   const email = request.auth?.token.email;
   return { uid, role: role!, email: typeof email === "string" ? email : null };
 }

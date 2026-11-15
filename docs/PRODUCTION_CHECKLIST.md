@@ -44,36 +44,17 @@ Nothing here is done automatically: every step changes production.
        - App Check → APIs → Cloud Firestore and Storage → **Enforce**.
        Also raise `minAppVersion` so installs without App Check get the update screen.
 
-## 5. 2-step sign-in for super admins (TOTP)
-
-1. [ ] Firebase console → Authentication → Settings → **Upgrade to Identity Platform**
-       (free up to 50k monthly users; SMS billed as before).
-2. [ ] Enable TOTP:
-       ```sh
-       curl -X PATCH \
-         "https://identitytoolkit.googleapis.com/admin/v2/projects/zippy-app-2024/config?updateMask=mfa" \
-         -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-         -H "X-Goog-User-Project: zippy-app-2024" \
-         -H "Content-Type: application/json" \
-         -d '{"mfa":{"providerConfigs":[{"state":"ENABLED","totpProviderConfig":{"adjacentIntervals":5}}]}}'
-       ```
-3. [ ] Every super admin: verify their email, then open admin → Account security →
-       **Set up 2-step sign-in**, sign out and sign back in with the code.
-4. [ ] Then set `SUPER_ADMIN_MFA=required` in `functions/.env.zippy-app-2024` and redeploy
-       functions. Super-admin sessions without the code now get `MFA_REQUIRED`.
-5. [ ] Keep a second super admin with 2-step sign-in, so one lost phone can't lock everyone out.
-
-## 6. Admin on Firebase Hosting
+## 5. Admin on Firebase Hosting
 
 1. [ ] `firebase hosting:sites:create zyppi-admin` (run in `zyppi-delivery-admin`).
 2. [ ] Authentication → Settings → Authorized domains → add `zyppi-admin.web.app`.
 3. [ ] `npm run deploy` in `zyppi-delivery-admin` (check, build, `hosting:admin`).
-4. [ ] Open https://zyppi-admin.web.app. Check sign in (with code), the dashboard, and
+4. [ ] Open https://zyppi-admin.web.app. Check sign in, the dashboard, and
        deep links such as `/orders/<id>` after a reload.
 5. [ ] Rider sign-up link for applicants: https://zyppi-admin.web.app/rider.
 6. [ ] Retire the old Netlify site, if it's still up.
 
-## 7. Real-phone checks (new release build on Android)
+## 6. Real-phone checks (new release build on Android)
 
 - [ ] **A5:** a scheduled banner appears and expires; an area-only banner shows only in its area.
 - [ ] **A6:** a segment push reaches the phone and opens the product.
@@ -84,8 +65,10 @@ Nothing here is done automatically: every step changes production.
       closed area · announcement · blocked customer · store outside hours.
 - [ ] Support: "Talk to a person" reaches the inbox. The reply arrives as a push and in the chat.
 
-## 8. Known limits (accepted for launch)
+## 7. Known limits (accepted for launch)
 
+- No 2-step sign-in for staff: it needs the Identity Platform upgrade, which was declined
+  (2026-11-15). Use strong, unique staff passwords and keep the super-admin list short.
 - No scheduled Firestore backups (decided 2026-11-15). Reconsider before real order volume:
   `gcloud firestore backups schedules create --database='(default)' --recurrence=daily --retention=14d`.
 - `npm run seed:support` replaces the whole knowledge base. Don't run it after the KB editor is in use.
