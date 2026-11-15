@@ -51,8 +51,9 @@ describe("staff roles in firestore.rules", () => {
     const catalog = as({ role: "catalog" });
     await assertFails(updateDoc(doc(catalog, "stores/s1"), { name: "B" }));
 
+    // Stores, areas and slots change only through the audited callables.
     const ops = as({ role: "ops" });
-    await assertSucceeds(updateDoc(doc(ops, "stores/s1"), { name: "B" }));
+    await assertFails(updateDoc(doc(ops, "stores/s1"), { name: "B" }));
 
     const finance = as({ role: "finance" });
     await assertSucceeds(getDoc(doc(finance, "coupons/ON")));
@@ -84,7 +85,7 @@ describe("staff roles in firestore.rules", () => {
   it("treats super_admin and the legacy admin claim as everything", async () => {
     for (const claims of [{ role: "super_admin" }, { admin: true }]) {
       const db = as(claims);
-      await assertSucceeds(updateDoc(doc(db, "stores/s1"), { name: "y" }));
+      await assertSucceeds(getDoc(doc(db, "staff/u1")));
       await assertSucceeds(getDoc(doc(db, "auditLogs/a1")));
     }
   });
@@ -119,6 +120,8 @@ describe("staff roles in firestore.rules", () => {
 
   it("gives the knowledge base to support only", async () => {
     await assertSucceeds(getDoc(doc(as({ role: "support" }), "supportKb/k1")));
+    // Edits go through adminSaveKbEntry, which re-embeds the questions.
+    await assertFails(setDoc(doc(as({ role: "support" }), "supportKb/k2"), { title: {} }));
     await assertFails(getDoc(doc(as({ role: "catalog" }), "supportKb/k1")));
   });
 });

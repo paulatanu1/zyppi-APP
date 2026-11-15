@@ -17,6 +17,18 @@ export { onOrderEventCreated } from "./push";
 export { adminUpdateOrderStatus, adminListUsers } from "./admin/orders";
 export { adminUpdateFeatures } from "./admin/features";
 export { adminSetRole } from "./admin/staff";
+export {
+  adminSaveServiceArea,
+  adminSaveStore,
+  adminSaveDeliverySlot,
+  adminSaveDeliveryConfig,
+  adminSaveAppConfig,
+} from "./admin/settings";
+export {
+  adminGetCustomerAuth,
+  adminSetCustomerBlocked,
+  adminPushCustomer,
+} from "./admin/customers";
 export { adminSaveProduct, onProductWritten } from "./catalog/products";
 export {
   adminSaveCategory,
@@ -56,6 +68,7 @@ export {
 } from "./notifications/campaigns";
 export { onOrderWritten } from "./stats/stats";
 export { onSupportMessageCreated } from "./support/bot";
+export { adminSaveKbEntry, adminDeleteKbEntry } from "./support/kb/admin";
 export {
   openSupportChat,
   requestSupportAgent,

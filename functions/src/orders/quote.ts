@@ -1,3 +1,4 @@
+import { isOpenAt, parseHours } from "../shared/hours";
 import { DocumentReference, FieldValue, Transaction } from "firebase-admin/firestore";
 import { COUPON_MESSAGES, discountFor, normalizeCode } from "../coupons/model";
 import { lookupCoupon, problemOf, recordRedemption } from "../coupons/usage";
@@ -27,6 +28,11 @@ export interface OrderParams {
    * points pass it: a customer who has already paid is never refused.
    */
   closedAreaIds?: readonly string[];
+  /**
+   * Set by the entry points only: stores closed at this time (their
+   * `hours`) can't take the order. A paid order is never refused.
+   */
+  openAt?: Date;
   addressId: string;
   deliverySlotId: string;
   couponCode?: string | null;
@@ -126,6 +132,10 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
       .where("isActive", "==", true),
   );
   if (storesSnap.empty) throw new OrderError("We do not deliver to this address yet");
+  const stores = p.openAt
+    ? storesSnap.docs.filter((st) => isOpenAt(parseHours(st.get("hours")), p.openAt!))
+    : storesSnap.docs;
+  if (stores.length === 0) throw new OrderError("STORES_CLOSED");
 
   const slotSnap = await tx.get(db.collection("deliverySlots").doc(p.deliverySlotId));
   if (slotSnap.get("isActive") !== true) {
@@ -151,7 +161,7 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
 
   // Every (store, variant) stock row, read up front.
   const inventoryRefs = cart.flatMap((c) =>
-    storesSnap.docs.map((s) => db.collection("inventory").doc(`${s.id}_${c.variantId}`)),
+    stores.map((s) => db.collection("inventory").doc(`${s.id}_${c.variantId}`)),
   );
   const inventorySnaps = await tx.getAll(...inventoryRefs);
   const stock = new Map(
@@ -173,7 +183,7 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
 
     // Take from the fullest store first, spilling over to the next, so
     // stock spread across stores in the area can still fill the order.
-    const candidates = storesSnap.docs
+    const candidates = stores
       .map((s) => {
         const ref = db.collection("inventory").doc(`${s.id}_${item.variantId}`);
         return { ref, storeId: s.id, current: stock.get(ref.path) ?? 0 };
