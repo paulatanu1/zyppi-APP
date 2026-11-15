@@ -5,7 +5,7 @@ import { pushOrderCustomer } from "../push";
 import { creditRiderDelivery } from "./effects";
 import { deliveryEarning } from "./earnings";
 import { CANNOT_DELIVER_REASONS, MAX_CODE_ATTEMPTS, type RiderStage } from "./model";
-import { requireRider } from "./presence";
+import { requireRider } from "./rider_auth";
 
 /**
  * The rider's steps on their active order:

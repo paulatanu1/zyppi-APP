@@ -373,6 +373,21 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Gig slot capacity (riderBookSlot) and incentive campaigns: riders
+    // read them to book and to see their progress.
+    match /gigSlots/{id} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+    match /riderOffers/{id} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+    // Finance: every rider's payout requests in one list.
+    match /{path=**}/payouts/{id} {
+      allow read: if hasRole(['finance']);
+    }
+
     // Rider emergency alerts (riderSos), handled by ops.
     match /sosAlerts/{id} {
       allow read: if hasRole(['ops', 'support']);

@@ -54,6 +54,17 @@ export interface RiderConfig {
   surge: { enabled: boolean; extraPaise: number; label: string };
   peak: { start: string; end: string; extraPaise: number }[];
   slots: { cancelHours: number; bookDaysAhead: number };
+  /** Gig slots per service area id, plus "default". */
+  slotTemplates: Record<string, SlotTemplate[]>;
+}
+
+export interface SlotTemplate {
+  /** HH:MM India time; `end` after `start` (no slots past midnight). */
+  start: string;
+  end: string;
+  capacity: number;
+  /** Paid once for being online within 15 min of the start. */
+  bonusPaise: number;
 }
 
 export const DEFAULT_RATE: PayRate = { basePaise: 2500, perKmPaise: 600, minPaise: 2500, maxPaise: 12000 };
@@ -74,7 +85,30 @@ export const DEFAULT_RIDER_CONFIG: RiderConfig = {
   surge: { enabled: false, extraPaise: 1000, label: "Rain bonus" },
   peak: [],
   slots: { cancelHours: 2, bookDaysAhead: 7 },
+  slotTemplates: {
+    default: [
+      { start: "07:00", end: "11:00", capacity: 5, bonusPaise: 0 },
+      { start: "11:00", end: "15:00", capacity: 5, bonusPaise: 0 },
+      { start: "15:00", end: "19:00", capacity: 5, bonusPaise: 0 },
+      { start: "19:00", end: "23:00", capacity: 5, bonusPaise: 0 },
+    ],
+  },
 };
+
+function templates(v: unknown, fallback: SlotTemplate[]): SlotTemplate[] {
+  if (!Array.isArray(v)) return fallback;
+  return v
+    .map(obj)
+    .filter((t) => HHMM.test(String(t.start)) && HHMM.test(String(t.end)) && String(t.start) < String(t.end))
+    .slice(0, 12)
+    .map((t) => ({
+      start: String(t.start),
+      end: String(t.end),
+      capacity: num(t.capacity, 5, 1, 100),
+      bonusPaise: num(t.bonusPaise, 0, 0, 100000),
+    }))
+    .sort((a, b) => a.start.localeCompare(b.start));
+}
 
 const num = (v: unknown, fb: number, min: number, max: number) =>
   typeof v === "number" && Number.isFinite(v) ? Math.min(max, Math.max(min, Math.round(v))) : fb;
@@ -137,7 +171,18 @@ export function parseRiderConfig(raw: Record<string, unknown> | undefined): Ride
       cancelHours: num(slots.cancelHours, d.slots.cancelHours, 0, 48),
       bookDaysAhead: num(slots.bookDaysAhead, d.slots.bookDaysAhead, 1, 14),
     },
+    slotTemplates: Object.fromEntries([
+      ["default", templates(obj(r.slotTemplates).default, d.slotTemplates.default)],
+      ...Object.entries(obj(r.slotTemplates))
+        .filter(([k]) => k !== "default")
+        .map(([k, v]) => [k, templates(v, [])]),
+    ]),
   };
+}
+
+/** India-time Date for yyyy-mm-dd + HH:MM. */
+export function istInstant(day: string, hhmm: string): Date {
+  return new Date(`${day}T${hhmm}:00+05:30`);
 }
 
 // ------------------------------------------------------------------ geo

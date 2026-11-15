@@ -142,3 +142,51 @@ describe("earningFor", () => {
 it("handover codes are 4 digits", () => {
   for (let i = 0; i < 50; i++) expect(newHandoverCode()).toMatch(/^\d{4}$/);
 });
+
+describe("pay and gigs", async () => {
+  const { payable, validateRiderOffer, endedPeriod } = await import("../../src/dispatch/pay");
+  const { bookingProblem, slotKey, templatesFor } = await import("../../src/dispatch/gigs");
+
+  it("pays out earnings minus cash still held", () => {
+    expect(payable(50000, 12000)).toBe(38000);
+    expect(payable(5000, 12000)).toBe(0);
+    expect(payable(5000, -100)).toBe(5000);
+  });
+
+  it("validates incentive campaigns", () => {
+    const o = validateRiderOffer({
+      title: "15 orders today",
+      kind: "daily_target",
+      target: 15,
+      rewardPaise: 15000,
+      startDate: "2026-11-16",
+      endDate: "2026-11-30",
+    });
+    expect(o).toMatchObject({ kind: "daily_target", target: 15, active: true, serviceAreaIds: [] });
+    expect(() => validateRiderOffer({ ...o, endDate: "2026-11-01" })).toThrow(/date/);
+  });
+
+  it("settles yesterday for daily offers and last week on Mondays", () => {
+    const daily = { kind: "daily_target" as const, startDate: "2026-11-10", endDate: "2026-11-20" };
+    expect(endedPeriod(daily, "2026-11-16", "2026-11-16")).toBe("2026-11-15");
+    expect(endedPeriod(daily, "2026-11-10", "2026-11-09")).toBeNull(); // started today
+    const weekly = { kind: "weekly_target" as const, startDate: "2026-11-01", endDate: "2026-11-30" };
+    expect(endedPeriod(weekly, "2026-11-16", "2026-11-16")).toBe("2026-11-09");
+    expect(endedPeriod(weekly, "2026-11-17", "2026-11-16")).toBeNull(); // not Monday
+  });
+
+  it("books slots only ahead of time and within the window", () => {
+    const t = { start: "19:00", end: "23:00", capacity: 5, bonusPaise: 0 };
+    const now = Date.UTC(2026, 10, 16, 6, 0); // 11:30 IST
+    expect(bookingProblem("2026-11-16", t, now, 7)).toBeNull();
+    expect(bookingProblem("2026-11-16", { ...t, start: "07:00" }, now, 7)).toBe("SLOT_STARTED");
+    expect(bookingProblem("2026-11-30", t, now, 7)).toBe("TOO_FAR_AHEAD");
+    expect(slotKey("2026-11-16", "19:00")).toBe("2026-11-16_1900");
+  });
+
+  it("uses an area's own slot templates, else the defaults", () => {
+    const c = parseRiderConfig({ slotTemplates: { a1: [{ start: "08:00", end: "12:00", capacity: 3 }] } });
+    expect(templatesFor(c, "a1")).toEqual([{ start: "08:00", end: "12:00", capacity: 3, bonusPaise: 0 }]);
+    expect(templatesFor(c, "a2")).toHaveLength(4);
+  });
+});

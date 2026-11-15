@@ -84,6 +84,15 @@ export {
 } from "./dispatch/delivery";
 export { riderSos, adminResolveSos } from "./dispatch/sos";
 export { adminSaveRiderConfig } from "./dispatch/admin";
+export {
+  riderRequestPayout,
+  adminRecordPayout,
+  adminAdjustEarnings,
+  adminSaveRiderOffer,
+  settleIncentives,
+} from "./dispatch/pay";
+export { riderBookSlot, riderCancelSlot } from "./dispatch/gigs";
+export { rateRider } from "./dispatch/rating";
 export { onSupportMessageCreated } from "./support/bot";
 export { adminSaveKbEntry, adminDeleteKbEntry } from "./support/kb/admin";
 export {

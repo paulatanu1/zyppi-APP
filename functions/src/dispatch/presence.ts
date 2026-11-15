@@ -1,20 +1,13 @@
 import { type DocumentSnapshot, FieldValue, Timestamp } from "firebase-admin/firestore";
-import { type CallableRequest, HttpsError, onCall } from "firebase-functions/https";
+import { requireRider } from "./rider_auth";
+import { slotPresence } from "./gigs";
+import { HttpsError, onCall } from "firebase-functions/https";
 import { requireUid } from "../shared/callable";
 import { db } from "../shared/firebase";
 import { RIDERS } from "../riders/model";
 import { dispatchWaiting, respondOffer } from "./dispatch";
 import { istDayAndWeek } from "./earnings";
 import { distanceM, etaMinutes, impossibleJump, isPoint, requirePoint } from "./model";
-
-/** The caller as an approved rider (suspended / pending riders can't work). */
-export async function requireRider(request: CallableRequest): Promise<DocumentSnapshot> {
-  const uid = requireUid(request);
-  const rider = await db.collection(RIDERS).doc(uid).get();
-  if (!rider.exists) throw new HttpsError("permission-denied", "NOT_A_RIDER");
-  if (rider.get("status") !== "approved") throw new HttpsError("permission-denied", "RIDER_NOT_APPROVED");
-  return rider;
-}
 
 const ms = (v: unknown) => (v instanceof Timestamp ? v.toMillis() : null);
 
@@ -46,6 +39,7 @@ export const riderSetOnline = onCall(async (request) => {
       "presence.offlineReason": null,
       ...(wasOnline ? {} : { "presence.onlineSince": FieldValue.serverTimestamp() }),
       ...(rider.get("presence.activeOrderId") ? {} : { "presence.idleSince": FieldValue.serverTimestamp() }),
+      ...(await slotPresence(rider)),
     });
     await batch.commit();
     await dispatchWaiting((rider.get("serviceAreaId") as string) ?? "");
@@ -94,11 +88,15 @@ export const riderPing = onCall(async (request) => {
     await rider.ref.update({ "presence.at": FieldValue.serverTimestamp(), "presence.jumps": FieldValue.increment(1) });
     return state;
   }
+  const slotCheckedMs = ms(presence.slotCheckedAt) ?? 0;
+  const slotEndsMs = ms(presence.slotEndsAt);
+  const recheckSlot = now - slotCheckedMs > 5 * 60_000 || (slotEndsMs != null && slotEndsMs <= now);
   await rider.ref.update({
     "presence.lat": p.lat,
     "presence.lng": p.lng,
     "presence.accuracy": p.accuracy,
     "presence.at": FieldValue.serverTimestamp(),
+    ...(recheckSlot ? await slotPresence(rider, now) : {}),
   });
   if (state.activeOrderId) {
     const order = await db.collection("orders").doc(state.activeOrderId).get();
