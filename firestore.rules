@@ -72,19 +72,22 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Written only by adminSaveServiceArea (validated, audited).
     match /serviceAreas/{id} {
       allow read: if true;
-      allow write: if hasRole(['ops']);
+      allow write: if false;
     }
 
+    // Written only by adminSaveStore (validated, audited).
     match /stores/{id} {
       allow read: if true;
-      allow write: if hasRole(['ops']);
+      allow write: if false;
     }
 
+    // Written only by adminSaveDeliverySlot (validated, audited).
     match /deliverySlots/{id} {
       allow read: if true;
-      allow write: if hasRole(['ops']);
+      allow write: if false;
     }
 
     // Written only by the adminSaveHomeSection / adminReorderHomeSections /
@@ -115,9 +118,17 @@ service cloud.firestore {
 
     // Delivery pricing (fee, free-above threshold, minimum order): the app
     // shows it; quoteOrder enforces it server-side.
+    // Written only by adminSaveDeliveryConfig (validated, audited).
     match /config/delivery {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if false;
+    }
+
+    // Support contacts and the in-app announcement; the app shows them.
+    // Written only by adminSaveAppConfig.
+    match /config/app {
+      allow read: if true;
+      allow write: if false;
     }
 
     // Stock levels are internal; the app never reads them (quoteOrder
@@ -245,10 +256,14 @@ service cloud.firestore {
     match /supportChats/{chatId} {
       allow read: if isAdmin()
         || (signedIn() && resource.data.userId == request.auth.uid);
-      allow update: if signedIn()
-        && resource.data.userId == request.auth.uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['unreadByUser'])
-        && request.resource.data.unreadByUser == 0;
+      // The customer and the support team each clear their own unread count.
+      allow update: if (signedIn()
+          && resource.data.userId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['unreadByUser'])
+          && request.resource.data.unreadByUser == 0)
+        || (hasRole(['support', 'ops'])
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['unreadByAgent'])
+          && request.resource.data.unreadByAgent == 0);
       allow create, delete: if false;
 
       function chatOwner() {
@@ -276,8 +291,11 @@ service cloud.firestore {
 
     // Bot knowledge base: written by functions/scripts/seed-support-kb.ts,
     // read only by the bot.
+    // Written only by adminSaveKbEntry / adminDeleteKbEntry, which
+    // re-embed the questions for the bot.
     match /supportKb/{entryId} {
-      allow read, write: if hasRole(['support']);
+      allow read: if hasRole(['support']);
+      allow write: if false;
     }
 
     // ---------------------------------------------------------------
