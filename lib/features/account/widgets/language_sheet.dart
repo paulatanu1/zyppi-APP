@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:zippy/core/push/domain/push_token_repository.dart';
+import 'package:zippy/core/push/push_notification_service.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 
 /// The four supported locales (bootstrap.dart), each named in its own
@@ -18,7 +22,11 @@ String currentLanguageName(BuildContext context) =>
         .firstOrNull ??
     appLanguages.first.name;
 
-Future<void> showLanguageSheet(BuildContext context) {
+/// [pushTokens] saves the choice so offer pushes arrive in it.
+Future<void> showLanguageSheet(
+  BuildContext context, {
+  required PushTokenRepository pushTokens,
+}) {
   return showModalBottomSheet<void>(
     context: context,
     shape: const RoundedRectangleBorder(borderRadius: ZRadius.sheetTop),
@@ -49,6 +57,12 @@ Future<void> showLanguageSheet(BuildContext context) {
                       : null,
                   onTap: () async {
                     await sheetContext.setLocale(language.locale);
+                    final code = language.locale.languageCode;
+                    PushNotificationService.languageCode = code;
+                    // Offer pushes follow the app language. Best effort.
+                    unawaited(
+                      pushTokens.setLanguage(code).catchError((Object _) {}),
+                    );
                     if (sheetContext.mounted) Navigator.pop(sheetContext);
                   },
                 ),

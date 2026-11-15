@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/domain/home_section.dart';
+import 'package:zippy/core/domain/home_section_item.dart';
 import 'package:zippy/core/utils/launch.dart';
 import 'package:zippy/features/home_screen/widgets/sections/section_data.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
@@ -13,7 +14,10 @@ import 'package:zippy/core/theme/zyppi_theme.dart';
 class BannerCarouselSection extends StatefulWidget {
   final HomeSection section;
 
-  const BannerCarouselSection({super.key, required this.section});
+  /// Called when a banner that opens something is tapped (click stats).
+  final void Function(HomeSectionItem item)? onOpen;
+
+  const BannerCarouselSection({super.key, required this.section, this.onOpen});
 
   @override
   State<BannerCarouselSection> createState() => _BannerCarouselSectionState();
@@ -50,23 +54,28 @@ class _BannerCarouselSectionState extends State<BannerCarouselSection> {
             final linkType = item.data.string('link_type');
             final linkTarget = item.data.string('link_target');
             final imageUrl = item.data.string('image_url');
+            final void Function()? open = switch ((linkType, linkTarget)) {
+              ('category', final String id) => () => context.push(
+                '/categoryDetailsScreen?categoryId=$id',
+              ),
+              ('product', final String id) => () => context.push(
+                '/productDetailsScreen?productId=$id',
+              ),
+              ('url', final String url) => () => openExternal(Uri.parse(url)),
+              _ => null,
+            };
 
             // The carousel hands each slide loose constraints; without an
             // explicit width the card shrinks to its content.
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: ZSpace.x4),
               child: InkWell(
-                onTap: switch ((linkType, linkTarget)) {
-                  ('category', final String id) => () => context.push(
-                    '/categoryDetailsScreen?categoryId=$id',
-                  ),
-                  ('product', final String id) => () => context.push(
-                    '/productDetailsScreen?productId=$id',
-                  ),
-                  ('url', final String url) => () => openExternal(
-                    Uri.parse(url),
-                  ),
-                  _ => null,
+                onTap: switch (open) {
+                  final open? => () {
+                    widget.onOpen?.call(item);
+                    open();
+                  },
+                  null => null,
                 },
                 borderRadius: BorderRadius.circular(ZRadius.banner),
                 child: Container(

@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:zippy/core/push/data/push_token_repository_impl.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/constants/constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -202,7 +203,12 @@ class AccountScreen extends ConsumerWidget {
                                 icon: Icons.language_rounded,
                                 label: 'language'.tr(),
                                 trailingText: currentLanguageName(context),
-                                onTap: () => showLanguageSheet(context),
+                                onTap: () => showLanguageSheet(
+                                  context,
+                                  pushTokens: ref.read(
+                                    pushTokenRepositoryProvider,
+                                  ),
+                                ),
                               ),
                               _GroupItem(
                                 icon: Icons.notifications_none_rounded,

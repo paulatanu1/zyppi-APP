@@ -27,10 +27,7 @@ class BillCalculator {
     );
     final savingsPaise = mrpTotalPaise - itemTotalPaise;
 
-    var discountPaise = 0;
-    if (coupon != null && itemTotalPaise >= (coupon.minOrderPaise ?? 0)) {
-      discountPaise = coupon.discountPaise.clamp(0, itemTotalPaise);
-    }
+    final discountPaise = coupon?.discountFor(itemTotalPaise) ?? 0;
 
     final totalPaise =
         itemTotalPaise +

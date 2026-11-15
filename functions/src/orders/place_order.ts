@@ -1,6 +1,7 @@
 import { HttpsError, onCall } from "firebase-functions/https";
 import { db } from "../shared/firebase";
 import { requireString, requireUid, toHttpsError } from "../shared/callable";
+import { assertCanOrder, getFeatures } from "../shared/features";
 import { COD, placeOrderInTx } from "./quote";
 
 /**
@@ -22,8 +23,12 @@ export const placeOrder = onCall(async (request) => {
     );
   }
 
+  const features = await getFeatures();
+  assertCanOrder(features, paymentMethod);
+
   const params = {
     uid,
+    closedAreaIds: features.closedAreaIds,
     addressId: requireString(data.addressId, "addressId"),
     deliverySlotId: requireString(data.deliverySlotId, "deliverySlotId"),
     couponCode: typeof data.couponCode === "string" ? data.couponCode : null,

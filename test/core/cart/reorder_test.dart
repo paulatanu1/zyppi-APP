@@ -42,7 +42,8 @@ class _Catalog implements CatalogRepository {
 
 class _Coupons implements CouponRepository {
   @override
-  Future<Coupon?> findByCode(String code) async => null;
+  Future<Coupon?> findByCode(String code, {String? serviceAreaId}) async =>
+      null;
 }
 
 OrderItem _item(String product, String variant, int qty) => OrderItem(

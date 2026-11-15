@@ -50,13 +50,13 @@ beforeEach(async () => {
 });
 
 describe("firestore.rules", () => {
-  it("lets anyone read the catalog but only admins write it", async () => {
+  it("lets anyone read the catalog; only the admin callables write it", async () => {
     const anon = env.unauthenticatedContext().firestore();
     await assertSucceeds(getDoc(doc(anon, "products/p1")));
     const alice = env.authenticatedContext("alice").firestore();
     await assertFails(setDoc(doc(alice, "products/p1"), { name: "Free" }));
     const admin = env.authenticatedContext("boss", { admin: true }).firestore();
-    await assertSucceeds(updateDoc(doc(admin, "products/p1"), { name: "Milk 1L" }));
+    await assertFails(updateDoc(doc(admin, "products/p1"), { name: "Milk 1L" }));
   });
 
   it("hides inactive coupons and the coupon list", async () => {

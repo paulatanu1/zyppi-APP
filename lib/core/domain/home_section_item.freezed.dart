@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$HomeSectionItem {
 
- String get id; Map<String, dynamic> get data;
+ String get id; Map<String, dynamic> get data; DateTime? get startAt; DateTime? get endAt; List<String> get serviceAreaIds; bool get isActive;
 /// Create a copy of HomeSectionItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +30,20 @@ $HomeSectionItemCopyWith<HomeSectionItem> get copyWith => _$HomeSectionItemCopyW
 @override
 bool operator ==(Object other) {
   final _this = this as HomeSectionItem;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is HomeSectionItem&&(identical(other.id, _this.id) || other.id == _this.id)&&const DeepCollectionEquality().equals(other.data, _this.data));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HomeSectionItem&&(identical(other.id, _this.id) || other.id == _this.id)&&const DeepCollectionEquality().equals(other.data, _this.data)&&(identical(other.startAt, _this.startAt) || other.startAt == _this.startAt)&&(identical(other.endAt, _this.endAt) || other.endAt == _this.endAt)&&const DeepCollectionEquality().equals(other.serviceAreaIds, _this.serviceAreaIds)&&(identical(other.isActive, _this.isActive) || other.isActive == _this.isActive));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as HomeSectionItem;
-  return Object.hash(runtimeType,_this.id,const DeepCollectionEquality().hash(_this.data));
+  return Object.hash(runtimeType,_this.id,const DeepCollectionEquality().hash(_this.data),_this.startAt,_this.endAt,const DeepCollectionEquality().hash(_this.serviceAreaIds),_this.isActive);
 }
 
 @override
 String toString() {
   final _this = this as HomeSectionItem;
-  return 'HomeSectionItem(id: ${_this.id}, data: ${_this.data})';
+  return 'HomeSectionItem(id: ${_this.id}, data: ${_this.data}, startAt: ${_this.startAt}, endAt: ${_this.endAt}, serviceAreaIds: ${_this.serviceAreaIds}, isActive: ${_this.isActive})';
 }
 
 
@@ -54,7 +54,7 @@ abstract mixin class $HomeSectionItemCopyWith<$Res>  {
   factory $HomeSectionItemCopyWith(HomeSectionItem value, $Res Function(HomeSectionItem) _then) = _$HomeSectionItemCopyWithImpl;
 @useResult
 $Res call({
- String id, Map<String, dynamic> data
+ String id, Map<String, dynamic> data, DateTime? startAt, DateTime? endAt, List<String> serviceAreaIds, bool isActive
 });
 
 
@@ -71,11 +71,15 @@ class _$HomeSectionItemCopyWithImpl<$Res>
 
 /// Create a copy of HomeSectionItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? data = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? data = null,Object? startAt = freezed,Object? endAt = freezed,Object? serviceAreaIds = null,Object? isActive = null,}) {
   return _then(HomeSectionItem(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,data: null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>,
+as Map<String, dynamic>,startAt: freezed == startAt ? _self.startAt : startAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,endAt: freezed == endAt ? _self.endAt : endAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,serviceAreaIds: null == serviceAreaIds ? _self.serviceAreaIds : serviceAreaIds // ignore: cast_nullable_to_non_nullable
+as List<String>,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -160,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  Map<String, dynamic> data)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  Map<String, dynamic> data,  DateTime? startAt,  DateTime? endAt,  List<String> serviceAreaIds,  bool isActive)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _HomeSectionItem() when $default != null:
-return $default(_that.id,_that.data);case _:
+return $default(_that.id,_that.data,_that.startAt,_that.endAt,_that.serviceAreaIds,_that.isActive);case _:
   return orElse();
 
 }
@@ -181,10 +185,10 @@ return $default(_that.id,_that.data);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  Map<String, dynamic> data)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  Map<String, dynamic> data,  DateTime? startAt,  DateTime? endAt,  List<String> serviceAreaIds,  bool isActive)  $default,) {final _that = this;
 switch (_that) {
 case _HomeSectionItem():
-return $default(_that.id,_that.data);case _:
+return $default(_that.id,_that.data,_that.startAt,_that.endAt,_that.serviceAreaIds,_that.isActive);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -201,10 +205,10 @@ return $default(_that.id,_that.data);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  Map<String, dynamic> data)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  Map<String, dynamic> data,  DateTime? startAt,  DateTime? endAt,  List<String> serviceAreaIds,  bool isActive)?  $default,) {final _that = this;
 switch (_that) {
 case _HomeSectionItem() when $default != null:
-return $default(_that.id,_that.data);case _:
+return $default(_that.id,_that.data,_that.startAt,_that.endAt,_that.serviceAreaIds,_that.isActive);case _:
   return null;
 
 }
@@ -215,8 +219,8 @@ return $default(_that.id,_that.data);case _:
 /// @nodoc
 @JsonSerializable()
 
-class _HomeSectionItem implements HomeSectionItem {
-   _HomeSectionItem({required this.id, required  Map<String, dynamic> data}): _data = data;
+class _HomeSectionItem extends HomeSectionItem {
+   _HomeSectionItem({required this.id, required  Map<String, dynamic> data, this.startAt, this.endAt,  List<String> serviceAreaIds = const [], this.isActive = true}): _data = data,_serviceAreaIds = serviceAreaIds,super._();
   factory _HomeSectionItem.fromJson(Map<String, dynamic> json) => _$HomeSectionItemFromJson(json);
 
 @override final  String id;
@@ -227,6 +231,16 @@ class _HomeSectionItem implements HomeSectionItem {
   return EqualUnmodifiableMapView(_data);
 }
 
+@override final  DateTime? startAt;
+@override final  DateTime? endAt;
+ final  List<String> _serviceAreaIds;
+@override@JsonKey() List<String> get serviceAreaIds {
+  if (_serviceAreaIds is EqualUnmodifiableListView) return _serviceAreaIds;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_serviceAreaIds);
+}
+
+@override@JsonKey() final  bool isActive;
 
 /// Create a copy of HomeSectionItem
 /// with the given fields replaced by the non-null parameter values.
@@ -241,18 +255,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _HomeSectionItem&&(identical(other.id, id) || other.id == id)&&const DeepCollectionEquality().equals(other.data, _data));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _HomeSectionItem&&(identical(other.id, id) || other.id == id)&&const DeepCollectionEquality().equals(other.data, _data)&&(identical(other.startAt, startAt) || other.startAt == startAt)&&(identical(other.endAt, endAt) || other.endAt == endAt)&&const DeepCollectionEquality().equals(other.serviceAreaIds, _serviceAreaIds)&&(identical(other.isActive, isActive) || other.isActive == isActive));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,const DeepCollectionEquality().hash(_data));
+    return Object.hash(runtimeType,id,const DeepCollectionEquality().hash(_data),startAt,endAt,const DeepCollectionEquality().hash(_serviceAreaIds),isActive);
 }
 
 @override
 String toString() {
-    return 'HomeSectionItem(id: $id, data: $data)';
+    return 'HomeSectionItem(id: $id, data: $data, startAt: $startAt, endAt: $endAt, serviceAreaIds: $serviceAreaIds, isActive: $isActive)';
 }
 
 
@@ -263,7 +277,7 @@ abstract mixin class _$HomeSectionItemCopyWith<$Res> implements $HomeSectionItem
   factory _$HomeSectionItemCopyWith(_HomeSectionItem value, $Res Function(_HomeSectionItem) _then) = __$HomeSectionItemCopyWithImpl;
 @override @useResult
 $Res call({
- String id, Map<String, dynamic> data
+ String id, Map<String, dynamic> data, DateTime? startAt, DateTime? endAt, List<String> serviceAreaIds, bool isActive
 });
 
 
@@ -280,11 +294,15 @@ class __$HomeSectionItemCopyWithImpl<$Res>
 
 /// Create a copy of HomeSectionItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? data = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? data = null,Object? startAt = freezed,Object? endAt = freezed,Object? serviceAreaIds = null,Object? isActive = null,}) {
   return _then(_HomeSectionItem(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,data: null == data ? _self._data : data // ignore: cast_nullable_to_non_nullable
-as Map<String, dynamic>,
+as Map<String, dynamic>,startAt: freezed == startAt ? _self.startAt : startAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,endAt: freezed == endAt ? _self.endAt : endAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,serviceAreaIds: null == serviceAreaIds ? _self._serviceAreaIds : serviceAreaIds // ignore: cast_nullable_to_non_nullable
+as List<String>,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

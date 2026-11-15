@@ -1,12 +1,19 @@
 import { FieldValue, Timestamp, type DocumentReference, type Firestore } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 import { onDocumentCreated } from "firebase-functions/firestore";
+import { getFeatures } from "../shared/features";
 import { db } from "../shared/firebase";
 import { COPY } from "./copy";
 import { embed, type Embedder } from "./kb/embed";
 import { loadRetriever } from "./kb/store";
 import { detectLang, isLang, type Lang } from "./lang";
-import { AGENT_REPLY_ID, composeReply, type OrderSummary, type OutMessage } from "./reply";
+import {
+  AGENT_REPLY_ID,
+  composeReply,
+  handoffMessage,
+  type OrderSummary,
+  type OutMessage,
+} from "./reply";
 
 export const CHATS = "supportChats";
 
@@ -97,6 +104,15 @@ export async function handleUserMessage(
   if (!state || state.status !== "bot") return; // agent's turn (Phase 2 inbox)
 
   const { lang } = state;
+  // Bot switched off in Settings → Services: straight to the team, without
+  // loading the model.
+  if (!(await getFeatures(nowMs)).supportBot) {
+    await postMessages(chatRef, [handoffMessage(lang)], {
+      status: "waiting_agent",
+      handoffAt: FieldValue.serverTimestamp(),
+    });
+    return;
+  }
   if (state.count > RATE_LIMIT_PER_MINUTE) {
     // Say it once per window, then stay quiet.
     if (state.count === RATE_LIMIT_PER_MINUTE + 1) {
@@ -152,7 +168,14 @@ export async function handleUserMessage(
  * while the chat's status is `bot`. 1 GiB for the embedding model.
  */
 export const onSupportMessageCreated = onDocumentCreated(
-  { document: `${CHATS}/{chatId}/messages/{messageId}`, memory: "1GiB", timeoutSeconds: 120 },
+  {
+    document: `${CHATS}/{chatId}/messages/{messageId}`,
+    memory: "1GiB",
+    // A full vCPU for the embedding model; few instances (chat volume is low).
+    cpu: 1,
+    maxInstances: 3,
+    timeoutSeconds: 120,
+  },
   async (event) => {
     const data = event.data?.data();
     if (!data || data.from !== "user" || typeof data.text !== "string") return;

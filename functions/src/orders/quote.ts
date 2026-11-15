@@ -1,9 +1,6 @@
-import {
-  DocumentReference,
-  FieldValue,
-  Timestamp,
-  Transaction,
-} from "firebase-admin/firestore";
+import { DocumentReference, FieldValue, Transaction } from "firebase-admin/firestore";
+import { COUPON_MESSAGES, discountFor, normalizeCode } from "../coupons/model";
+import { lookupCoupon, problemOf, recordRedemption } from "../coupons/usage";
 import { db } from "../shared/firebase";
 import { AreaLike, findServiceableArea } from "../shared/geo";
 
@@ -25,9 +22,20 @@ export class OrderError extends Error {}
 
 export interface OrderParams {
   uid: string;
+  /**
+   * Areas where new orders are paused (config/features). Only the entry
+   * points pass it: a customer who has already paid is never refused.
+   */
+  closedAreaIds?: readonly string[];
   addressId: string;
   deliverySlotId: string;
   couponCode?: string | null;
+  /**
+   * The customer has already paid the price quoted with this coupon, so
+   * its limits (expiry, uses) are not re-checked; the discount still has
+   * to come out the same or the payment goes to review.
+   */
+  honourCoupon?: boolean;
   tipPaise: number;
   paymentMethod: string;
 }
@@ -48,7 +56,7 @@ export interface QuoteLine {
   quantity: number;
   pricePaise: number;
   /** Stock taken from each store: [inventory doc ref, units, current qty]. */
-  allocations: { ref: DocumentReference; take: number; current: number }[];
+  allocations: { ref: DocumentReference; storeId: string; take: number; current: number }[];
 }
 
 export interface AddressSnapshot {
@@ -69,6 +77,7 @@ export interface Quote {
   addressLabel: string;
   addressText: string;
   etaMinutes: number | null;
+  /** Set only when it takes something off (counted as a use). */
   couponCode: string | null;
   lines: QuoteLine[];
   cartRefs: DocumentReference[];
@@ -107,6 +116,9 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
   }));
   const area = findServiceableArea(areas, address.lat, address.lng);
   if (!area) throw new OrderError("Address not found or not serviceable");
+  if (p.closedAreaIds?.includes(area.id)) {
+    throw new OrderError("Ordering is paused in your area right now");
+  }
 
   const storesSnap = await tx.get(
     db.collection("stores")
@@ -164,7 +176,7 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
     const candidates = storesSnap.docs
       .map((s) => {
         const ref = db.collection("inventory").doc(`${s.id}_${item.variantId}`);
-        return { ref, current: stock.get(ref.path) ?? 0 };
+        return { ref, storeId: s.id, current: stock.get(ref.path) ?? 0 };
       })
       .sort((a, b) => b.current - a.current);
     const available = candidates.reduce((sum, c) => sum + Math.max(c.current, 0), 0);
@@ -177,7 +189,7 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
       if (remaining === 0) break;
       const take = Math.min(remaining, c.current);
       if (take <= 0) continue;
-      allocations.push({ ref: c.ref, take, current: c.current });
+      allocations.push({ ref: c.ref, storeId: c.storeId, take, current: c.current });
       remaining -= take;
     }
 
@@ -194,20 +206,20 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
     });
   }
 
+  // Coupons: below the minimum it just gives nothing (the cart says "add
+  // ₹X more"); any other problem refuses the order, so the customer never
+  // pays a different total from the one they saw.
   let discount = 0;
   let couponCode: string | null = null;
-  const code = p.couponCode?.trim().toUpperCase();
-  if (code) {
-    const coupon = await tx.get(db.collection("coupons").doc(code));
-    const expiresAt = coupon.get("expiresAt") as Timestamp | null | undefined;
-    if (
-      coupon.exists &&
-      coupon.get("isActive") === true &&
-      (expiresAt == null || expiresAt.toMillis() > Date.now()) &&
-      itemTotal >= ((coupon.get("minOrderPaise") as number | undefined) ?? 0)
-    ) {
-      discount = Math.min(coupon.get("discountPaise") as number, itemTotal);
-      couponCode = code;
+  const rawCode = p.couponCode?.trim();
+  if (rawCode) {
+    const code = normalizeCode(rawCode);
+    const lookup = code ? await lookupCoupon(tx, code, p.uid) : null;
+    const problem = lookup ? problemOf(lookup, area.id) : "invalid";
+    if (problem && !p.honourCoupon) throw new OrderError(COUPON_MESSAGES[problem]);
+    if (lookup?.terms) {
+      discount = discountFor(lookup.terms, itemTotal);
+      if (discount > 0) couponCode = lookup.code;
     }
   }
 
@@ -267,6 +279,21 @@ export async function placeOrderInTx(
   for (const line of quote.lines) {
     for (const a of line.allocations) {
       tx.update(a.ref, { quantity: a.current - a.take, updatedAt: now });
+      // Stock history (admin Inventory): sales show next to adjustments.
+      tx.create(db.collection("inventoryMovements").doc(), {
+        storeId: a.storeId,
+        productId: line.productId,
+        variantId: line.variantId,
+        delta: -a.take,
+        before: a.current,
+        after: a.current - a.take,
+        reason: "order",
+        note: null,
+        orderId: orderRef.id,
+        actorUid: null,
+        actorEmail: null,
+        at: now,
+      });
     }
   }
 
@@ -297,8 +324,22 @@ export async function placeOrderInTx(
     tipPaise: quote.tipPaise,
     discountPaise: quote.discountPaise,
     totalPaise: quote.totalPaise,
+    // Counted against the coupon's limits; cancelling gives the use back.
+    couponRedeemed: quote.couponCode != null,
+    // Added to users/{uid}.orderCount / totalSpentPaise (see below).
+    countedForUser: true,
     riderName: null,
     riderPhone: null,
+    // Which store's stock filled each line, so a cancellation puts it back
+    // where it came from.
+    allocations: quote.lines.flatMap((l) =>
+      l.allocations.map((a) => ({
+        storeId: a.storeId,
+        productId: l.productId,
+        variantId: l.variantId,
+        quantity: a.take,
+      })),
+    ),
     items: quote.lines.map((l) => ({
       productId: l.productId,
       variantId: l.variantId,
@@ -311,6 +352,21 @@ export async function placeOrderInTx(
   });
   tx.create(orderRef.collection("events").doc(), { status: "placed", createdAt: now });
   for (const ref of quote.cartRefs) tx.delete(ref);
+  if (quote.couponCode) {
+    recordRedemption(tx, quote.couponCode, p.uid, orderRef.id, quote.discountPaise);
+  }
+  // Customer aggregates for notification segments (cancelling takes the
+  // order back off; lastOrderAt stays).
+  tx.set(
+    db.collection("users").doc(p.uid),
+    {
+      orderCount: FieldValue.increment(1),
+      totalSpentPaise: FieldValue.increment(quote.totalPaise),
+      lastOrderAt: now,
+      serviceAreaId: quote.serviceAreaId,
+    },
+    { merge: true },
+  );
 
   return orderRef.id;
 }

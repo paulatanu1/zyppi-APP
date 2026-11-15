@@ -28,5 +28,16 @@ String friendlyOrderError(Object error) {
     return 'errorAddressUnserviceable'.tr();
   }
   if (message.contains('Cart is empty')) return 'errorCartEmpty'.tr();
+  // COUPON_MESSAGES in functions/src/coupons/model.ts.
+  final coupon = switch (message) {
+    'Coupon has expired' => 'couponExpired',
+    'Coupon has been fully used' => 'couponUsedUp',
+    'Coupon limit reached for your account' => 'couponUserLimit',
+    'Coupon is for first orders only' => 'couponFirstOrderOnly',
+    'Coupon is not available in your area' => 'couponNotInArea',
+    'Coupon is not valid' => 'invalidCoupon',
+    _ => null,
+  };
+  if (coupon != null) return coupon.tr();
   return 'errorOrderFailed'.tr();
 }

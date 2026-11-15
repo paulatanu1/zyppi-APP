@@ -8,6 +8,7 @@ import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/widgets/z_chrome.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/core/widgets/z_product_card.dart';
+import 'package:zippy/features/home_screen/application/home_schedule.dart';
 import 'package:zippy/features/home_screen/application/home_sections_provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:zippy/features/home_screen/widgets/sections/category_tabs_section.dart';
@@ -22,7 +23,7 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final sectionsAsync = ref.watch(homeSectionsProvider);
+    final sectionsAsync = ref.watch(visibleHomeSectionsProvider);
 
     return Scaffold(
       backgroundColor: context.z.bg,
