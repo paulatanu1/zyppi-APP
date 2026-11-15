@@ -42,6 +42,13 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
 
   CheckoutProvider(this.ref)
     : super(CheckoutState(paymentMethod: defaultPaymentMethod)) {
+    // A method switched off in Settings → Services moves the choice to the
+    // first one still offered (cash on delivery at worst).
+    ref.listen(enabledPaymentMethodsProvider, (_, methods) {
+      if (mounted && !methods.contains(state.paymentMethod)) {
+        state = state.copyWith(paymentMethod: methods.first);
+      }
+    }, fireImmediately: true);
     _load();
   }
 
@@ -141,7 +148,7 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
       final profile = await ref.read(profileRepositoryProvider).fetchProfile();
       final preferred = profile.preferredPaymentMethod;
       if (preferred != null &&
-          availablePaymentMethods.contains(preferred) &&
+          ref.read(enabledPaymentMethodsProvider).contains(preferred) &&
           mounted &&
           !_methodChosen) {
         state = state.copyWith(paymentMethod: preferred);

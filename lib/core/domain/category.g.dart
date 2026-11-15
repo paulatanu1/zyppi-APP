@@ -12,6 +12,7 @@ _Category _$CategoryFromJson(Map<String, dynamic> json) => _Category(
   image: json['image'] as String?,
   colorHex: json['colorHex'] as String,
   borderColorHex: json['borderColorHex'] as String,
+  parentId: json['parentId'] as String?,
 );
 
 Map<String, dynamic> _$CategoryToJson(_Category instance) => <String, dynamic>{
@@ -20,4 +21,5 @@ Map<String, dynamic> _$CategoryToJson(_Category instance) => <String, dynamic>{
   'image': instance.image,
   'colorHex': instance.colorHex,
   'borderColorHex': instance.borderColorHex,
+  'parentId': instance.parentId,
 };

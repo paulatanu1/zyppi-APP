@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:zippy/core/app_settings/data/app_settings_repository.dart';
 import 'package:zippy/core/utils/phone.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/common_widgets/google_sign_in_button.dart';
@@ -47,6 +48,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final googleToken = ref.watch(googleProvider);
     final otpState = ref.watch(otpProvider);
     final guestLoading = ref.watch(guestProvider);
+    // Settings → Services can switch SMS sign-in off (cost); Google and
+    // guest stay.
+    final phoneOtp = ref.watch(featureFlagsProvider).phoneOtp;
     final top = MediaQuery.paddingOf(context).top;
 
     return Scaffold(
@@ -122,100 +126,109 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 children: [
                   Text('logInOrSignUp'.tr(), style: t.headlineMedium),
                   const SizedBox(height: ZSpace.x2),
-                  Text('otpSentDescription'.tr(), style: t.bodyLarge),
-                  const SizedBox(height: ZSpace.x5),
-                  Text(
-                    'mobileNumber'.tr(),
-                    style: t.labelMedium!.copyWith(color: z.ink2),
-                  ),
-                  const SizedBox(height: ZSpace.x2),
-                  Container(
-                    constraints: const BoxConstraints(minHeight: ZSize.input),
-                    padding: const EdgeInsets.symmetric(horizontal: ZSpace.x4),
-                    decoration: BoxDecoration(
-                      color: z.surface,
-                      border: Border.all(
-                        color: _phoneError != null ? z.danger : z.brandText,
-                        width: 1.5,
-                      ),
-                      borderRadius: ZRadius.all(ZRadius.input),
+                  if (!phoneOtp) ...[
+                    Text('phoneOtpOff'.tr(), style: t.bodyLarge),
+                    const SizedBox(height: ZSpace.x5),
+                  ] else ...[
+                    Text('otpSentDescription'.tr(), style: t.bodyLarge),
+                    const SizedBox(height: ZSpace.x5),
+                    Text(
+                      'mobileNumber'.tr(),
+                      style: t.labelMedium!.copyWith(color: z.ink2),
                     ),
-                    child: Row(
-                      children: [
-                        Text('🇮🇳 +91', style: t.titleMedium),
-                        const SizedBox(width: ZSpace.x3),
-                        Container(width: 1, height: 24, color: z.line),
-                        const SizedBox(width: ZSpace.x3),
-                        Expanded(
-                          child: TextField(
-                            controller: _phoneController,
-                            keyboardType: TextInputType.phone,
-                            autofillHints: const [
-                              AutofillHints.telephoneNumberNational,
-                            ],
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(10),
-                            ],
-                            onChanged: (_) {
-                              if (_phoneError != null) {
-                                setState(() => _phoneError = null);
-                              }
-                            },
-                            onSubmitted: (_) => _continue(),
-                            style: t.titleMedium,
-                            decoration: InputDecoration(
-                              hintText: 'mobileNumber'.tr(),
-                              filled: false,
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              disabledBorder: InputBorder.none,
-                              errorBorder: InputBorder.none,
-                              focusedErrorBorder: InputBorder.none,
+                    const SizedBox(height: ZSpace.x2),
+                    Container(
+                      constraints: const BoxConstraints(minHeight: ZSize.input),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: ZSpace.x4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: z.surface,
+                        border: Border.all(
+                          color: _phoneError != null ? z.danger : z.brandText,
+                          width: 1.5,
+                        ),
+                        borderRadius: ZRadius.all(ZRadius.input),
+                      ),
+                      child: Row(
+                        children: [
+                          Text('🇮🇳 +91', style: t.titleMedium),
+                          const SizedBox(width: ZSpace.x3),
+                          Container(width: 1, height: 24, color: z.line),
+                          const SizedBox(width: ZSpace.x3),
+                          Expanded(
+                            child: TextField(
+                              controller: _phoneController,
+                              keyboardType: TextInputType.phone,
+                              autofillHints: const [
+                                AutofillHints.telephoneNumberNational,
+                              ],
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(10),
+                              ],
+                              onChanged: (_) {
+                                if (_phoneError != null) {
+                                  setState(() => _phoneError = null);
+                                }
+                              },
+                              onSubmitted: (_) => _continue(),
+                              style: t.titleMedium,
+                              decoration: InputDecoration(
+                                hintText: 'mobileNumber'.tr(),
+                                filled: false,
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                disabledBorder: InputBorder.none,
+                                errorBorder: InputBorder.none,
+                                focusedErrorBorder: InputBorder.none,
+                              ),
                             ),
                           ),
+                        ],
+                      ),
+                    ),
+                    if (_phoneError != null) ...[
+                      const SizedBox(height: ZSpace.x2),
+                      Text(
+                        _phoneError!,
+                        style: t.bodySmall!.copyWith(color: z.danger),
+                      ),
+                    ],
+                    const SizedBox(height: ZSpace.x4),
+                    FilledButton(
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(0, ZSize.button),
+                      ),
+                      onPressed: otpState.loading ? null : _continue,
+                      child: otpState.loading
+                          ? const SizedBox.square(
+                              dimension: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                              ),
+                            )
+                          : Text('continueLabel'.tr()),
+                    ),
+                    const SizedBox(height: ZSpace.x5),
+                    Row(
+                      children: [
+                        Expanded(child: Divider(color: z.line)),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: ZSpace.x3,
+                          ),
+                          child: Text(
+                            'orDivider'.tr(),
+                            style: t.labelMedium!.copyWith(color: z.ink3),
+                          ),
                         ),
+                        Expanded(child: Divider(color: z.line)),
                       ],
                     ),
-                  ),
-                  if (_phoneError != null) ...[
-                    const SizedBox(height: ZSpace.x2),
-                    Text(
-                      _phoneError!,
-                      style: t.bodySmall!.copyWith(color: z.danger),
-                    ),
+                    const SizedBox(height: ZSpace.x5),
                   ],
-                  const SizedBox(height: ZSpace.x4),
-                  FilledButton(
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size(0, ZSize.button),
-                    ),
-                    onPressed: otpState.loading ? null : _continue,
-                    child: otpState.loading
-                        ? const SizedBox.square(
-                            dimension: 22,
-                            child: CircularProgressIndicator(strokeWidth: 2.5),
-                          )
-                        : Text('continueLabel'.tr()),
-                  ),
-                  const SizedBox(height: ZSpace.x5),
-                  Row(
-                    children: [
-                      Expanded(child: Divider(color: z.line)),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: ZSpace.x3,
-                        ),
-                        child: Text(
-                          'orDivider'.tr(),
-                          style: t.labelMedium!.copyWith(color: z.ink3),
-                        ),
-                      ),
-                      Expanded(child: Divider(color: z.line)),
-                    ],
-                  ),
-                  const SizedBox(height: ZSpace.x5),
                   if (googleToken.loading == true)
                     const Center(child: CircularProgressIndicator())
                   else

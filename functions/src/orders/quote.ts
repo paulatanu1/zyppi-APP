@@ -1,12 +1,13 @@
+import { isOpenAt, parseHours } from "../shared/hours";
 import { DocumentReference, FieldValue, Transaction } from "firebase-admin/firestore";
 import { COUPON_MESSAGES, discountFor, normalizeCode } from "../coupons/model";
 import { lookupCoupon, problemOf, recordRedemption } from "../coupons/usage";
 import { db } from "../shared/firebase";
+import { DELIVERY_CONFIG_PATH, deliveryConfigFrom, deliveryFeeFor } from "./delivery_config";
 import { AreaLike, findServiceableArea } from "../shared/geo";
 
 /** ₹5 handling fee and free delivery, matching the app's BillCalculator. */
 export const HANDLING_FEE_PAISE = 500;
-export const DELIVERY_FEE_PAISE = 0;
 /** ₹500 tip cap, matching the app's tip selector. */
 export const MAX_TIP_PAISE = 50000;
 
@@ -27,6 +28,11 @@ export interface OrderParams {
    * points pass it: a customer who has already paid is never refused.
    */
   closedAreaIds?: readonly string[];
+  /**
+   * Set by the entry points only: stores closed at this time (their
+   * `hours`) can't take the order. A paid order is never refused.
+   */
+  openAt?: Date;
   addressId: string;
   deliverySlotId: string;
   couponCode?: string | null;
@@ -126,6 +132,10 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
       .where("isActive", "==", true),
   );
   if (storesSnap.empty) throw new OrderError("We do not deliver to this address yet");
+  const stores = p.openAt
+    ? storesSnap.docs.filter((st) => isOpenAt(parseHours(st.get("hours")), p.openAt!))
+    : storesSnap.docs;
+  if (stores.length === 0) throw new OrderError("STORES_CLOSED");
 
   const slotSnap = await tx.get(db.collection("deliverySlots").doc(p.deliverySlotId));
   if (slotSnap.get("isActive") !== true) {
@@ -151,7 +161,7 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
 
   // Every (store, variant) stock row, read up front.
   const inventoryRefs = cart.flatMap((c) =>
-    storesSnap.docs.map((s) => db.collection("inventory").doc(`${s.id}_${c.variantId}`)),
+    stores.map((s) => db.collection("inventory").doc(`${s.id}_${c.variantId}`)),
   );
   const inventorySnaps = await tx.getAll(...inventoryRefs);
   const stock = new Map(
@@ -173,7 +183,7 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
 
     // Take from the fullest store first, spilling over to the next, so
     // stock spread across stores in the area can still fill the order.
-    const candidates = storesSnap.docs
+    const candidates = stores
       .map((s) => {
         const ref = db.collection("inventory").doc(`${s.id}_${item.variantId}`);
         return { ref, storeId: s.id, current: stock.get(ref.path) ?? 0 };
@@ -223,6 +233,12 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
     }
   }
 
+  const delivery = deliveryConfigFrom(await tx.get(db.doc(DELIVERY_CONFIG_PATH)));
+  if (itemTotal < delivery.minOrderPaise) {
+    throw new OrderError(`MIN_ORDER_NOT_MET:${delivery.minOrderPaise}`);
+  }
+  const deliveryFee = deliveryFeeFor(itemTotal, delivery);
+
   const addressText = [address.line1, address.area, address.city, address.postalCode]
     .filter((part: unknown) => typeof part === "string" && part.trim() !== "")
     .join(", ");
@@ -247,11 +263,11 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
     lines,
     cartRefs: cartSnap.docs.map((d) => d.ref),
     itemTotalPaise: itemTotal,
-    deliveryFeePaise: DELIVERY_FEE_PAISE,
+    deliveryFeePaise: deliveryFee,
     handlingFeePaise: HANDLING_FEE_PAISE,
     discountPaise: discount,
     tipPaise: p.tipPaise,
-    totalPaise: itemTotal + DELIVERY_FEE_PAISE + HANDLING_FEE_PAISE + p.tipPaise - discount,
+    totalPaise: itemTotal + deliveryFee + HANDLING_FEE_PAISE + p.tipPaise - discount,
   };
 }
 

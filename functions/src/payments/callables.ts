@@ -1,3 +1,4 @@
+import { assertNotBlocked } from "../admin/customers";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 import { HttpsError, onCall } from "firebase-functions/https";
@@ -56,10 +57,12 @@ export const createPayUOrder = onCall({ secrets: PAYU_SECRETS }, async (request)
   }
   const features = await getFeatures();
   assertCanOrder(features, paymentMethod);
+  await assertNotBlocked(uid);
 
   const params = {
     uid,
     closedAreaIds: features.closedAreaIds,
+    openAt: new Date(),
     addressId: requireString(data.addressId, "addressId"),
     deliverySlotId: requireString(data.deliverySlotId, "deliverySlotId"),
     couponCode: typeof data.couponCode === "string" ? data.couponCode : null,
