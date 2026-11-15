@@ -1,19 +1,18 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/nav_bar/provider/nav_bar_provider.dart';
 import 'package:zippy/core/data/provider/profile_provider.dart';
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/utils/address_label.dart';
-import 'package:zippy/core/widgets/z_chrome.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/home_screen/widgets/address_sheet.dart';
 
 /// docs/screens/light/05-home.png's magenta header: "ZYPPI EXPRESS",
-/// ⚡ ETA, address row (opens the address sheet), avatar (Account tab) and
-/// the search bar (search screen). HomeScreen paints the status-bar strip
+/// ⚡ ETA, address row (opens the address sheet) and avatar (Account tab).
+/// The search bar lives in HomeScreen's pinned header just below, so it
+/// stays reachable while scrolling. HomeScreen paints the status-bar strip
 /// above it in the same colour.
 class HomeScreenHeader extends ConsumerWidget {
   const HomeScreenHeader({super.key});
@@ -28,9 +27,10 @@ class HomeScreenHeader extends ConsumerWidget {
       color: z.header,
       padding: EdgeInsets.fromLTRB(
         ZSpace.screen,
-        MediaQuery.paddingOf(context).top + ZSpace.x4,
+        // HomeScreen's SafeArea already clears the status bar.
+        ZSpace.x3,
         ZSpace.screen,
-        ZSpace.x5,
+        ZSpace.x3,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -80,8 +80,6 @@ class HomeScreenHeader extends ConsumerWidget {
               const _Avatar(),
             ],
           ),
-          const SizedBox(height: ZSpace.x3),
-          ZSearchBar(onTap: () => context.push('/searchScreen')),
         ],
       ),
     );

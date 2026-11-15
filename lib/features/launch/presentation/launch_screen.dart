@@ -88,64 +88,96 @@ class _LaunchScreenState extends ConsumerState<LaunchScreen>
       parent: _controller,
       curve: const Interval(0.45, 0.9, curve: ZMotion.standard),
     );
+    final glow = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.1, 0.7, curve: ZMotion.emphasized),
+    );
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
       child: Scaffold(
         backgroundColor: z.splashBg,
         // No SafeArea: the native splash centres on the whole window.
-        body: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, _) => Stack(
-            alignment: Alignment.center,
-            children: [
-              Transform.translate(
-                offset: Offset(0, -ZSpace.x8 * lift.value),
-                child: Transform.scale(
-                  scale: 1 - .14 * lift.value,
-                  child: Semantics(
-                    label: 'Zyppi',
-                    image: true,
-                    child: Image.asset(
-                      'assets/brand/zyppi_mark.png',
-                      width: LaunchScreen.markWidth,
-                      filterQuality: FilterQuality.medium,
+        // SizedBox.expand gives the Stack the whole window, so its centre
+        // is the window centre — the same point the native splash uses.
+        body: SizedBox.expand(
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, _) => Stack(
+              alignment: Alignment.center,
+              children: [
+                // Soft brand glow that blooms behind the mark as it lifts.
+                Transform.translate(
+                  offset: Offset(0, -ZSpace.x8 * lift.value),
+                  child: Opacity(
+                    opacity: glow.value * (dark ? .5 : .32),
+                    child: Transform.scale(
+                      scale: .6 + .8 * glow.value,
+                      child: Container(
+                        key: const ValueKey('launch-glow'),
+                        width: LaunchScreen.markWidth * 2.4,
+                        height: LaunchScreen.markWidth * 2.4,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [z.logo, z.logo.withValues(alpha: 0)],
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              // Wordmark + tagline sit just under where the mark settles.
-              Transform.translate(
-                offset: const Offset(0, LaunchScreen.markWidth * .62),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Opacity(
-                      opacity: word.value,
-                      child: Transform.translate(
-                        offset: Offset(0, ZSpace.x3 * (1 - word.value)),
-                        child: Text(
-                          'Zyppi',
-                          style: text.displaySmall!.copyWith(color: z.ink),
-                        ),
+                Transform.translate(
+                  offset: Offset(0, -ZSpace.x8 * lift.value),
+                  child: Transform.scale(
+                    // Settles at 0.86 of the native-splash size.
+                    scale: 1 - .14 * lift.value,
+                    child: Semantics(
+                      label: 'Zyppi',
+                      image: true,
+                      child: Image.asset(
+                        'assets/brand/zyppi_mark.png',
+                        key: const ValueKey('launch-mark'),
+                        width: LaunchScreen.markWidth,
+                        filterQuality: FilterQuality.medium,
                       ),
                     ),
-                    const SizedBox(height: ZSpace.x1),
-                    Opacity(
-                      opacity: tagline.value,
-                      child: Text(
-                        'launchTagline'.tr().toUpperCase(),
-                        textAlign: TextAlign.center,
-                        style: text.labelSmall!.copyWith(
-                          color: z.logo,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+                // Wordmark + tagline sit just under where the mark settles.
+                Transform.translate(
+                  offset: const Offset(0, LaunchScreen.markWidth * .72),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Opacity(
+                        opacity: word.value,
+                        child: Transform.translate(
+                          offset: Offset(0, ZSpace.x4 * (1 - word.value)),
+                          child: Text(
+                            'Zyppi',
+                            style: text.displaySmall!.copyWith(color: z.ink),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: ZSpace.x1),
+                      Opacity(
+                        opacity: tagline.value,
+                        child: Text(
+                          'launchTagline'.tr().toUpperCase(),
+                          textAlign: TextAlign.center,
+                          style: text.labelSmall!.copyWith(
+                            color: z.logo,
+                            // Tracking eases open as the tagline arrives.
+                            letterSpacing: 1 + 1.5 * tagline.value,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

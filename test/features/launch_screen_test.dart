@@ -94,4 +94,18 @@ void main() {
     expect(scaffold.backgroundColor, ZColors.dark.splashBg);
     await tester.pumpAndSettle();
   });
+
+  testWidgets('mark is centred on the whole window (matches native splash)', (
+    tester,
+  ) async {
+    await _pump(tester, disableAnimations: true);
+    final screen = tester.getSize(find.byType(Scaffold));
+    final mark = tester.getCenter(find.byKey(const ValueKey('launch-mark')));
+    expect(mark.dx, closeTo(screen.width / 2, 0.5));
+    // Final pose lifts by ZSpace.x8; still horizontally centred and well
+    // inside the screen (not clipped under the status bar).
+    expect(mark.dy, greaterThan(screen.height / 4));
+    await tester.pump(LaunchScreen.reducedMotionHold);
+    await tester.pump();
+  });
 }

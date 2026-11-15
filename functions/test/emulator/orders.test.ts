@@ -36,6 +36,26 @@ describe("quoteOrder", () => {
     expect(q.totalPaise).toBe(68000 + 500 - 5000);
   });
 
+  it("charges delivery below the free-delivery threshold only", async () => {
+    await db.doc("config/delivery").set({ feePaise: 2500, freeAbovePaise: 49900, minOrderPaise: 0 });
+    const below = await quote();
+    expect(below.deliveryFeePaise).toBe(2500);
+    expect(below.totalPaise).toBe(12800 + 2500 + 500);
+    await resetData({ "v-rice": 1 });
+    await db.doc("config/delivery").set({ feePaise: 2500, freeAbovePaise: 49900, minOrderPaise: 0 });
+    expect((await quote()).deliveryFeePaise).toBe(0);
+  });
+
+  it("rejects an order below the minimum", async () => {
+    await db.doc("config/delivery").set({ feePaise: 0, freeAbovePaise: 0, minOrderPaise: 20000 });
+    await expect(quote()).rejects.toThrow("MIN_ORDER_NOT_MET:20000");
+  });
+
+  it("delivers free with no minimum when config/delivery is missing", async () => {
+    const q = await quote();
+    expect(q.deliveryFeePaise).toBe(0);
+  });
+
   it("rejects an address outside every service area", async () => {
     await expect(quote(params({ addressId: "far" }))).rejects.toThrow(
       "Address not found or not serviceable",

@@ -68,7 +68,8 @@ void main() {
     expect(find.text('A'), findsOneWidget);
     expect(find.text('zyppiExpress'), findsOneWidget);
     expect(find.text('etaHeadline'), findsOneWidget);
-    expect(find.text('homeSearchHint'), findsOneWidget);
+    // Search moved to HomeScreen's pinned header.
+    expect(find.text('homeSearchHint'), findsNothing);
     expect(find.byIcon(Icons.mic_none_rounded), findsNothing);
   });
 
