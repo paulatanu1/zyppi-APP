@@ -38,6 +38,8 @@ beforeEach(async () => {
     await setDoc(doc(db, "auditLogs/a1"), { action: "x" });
     await setDoc(doc(db, "supportKb/k1"), { topic: "refund" });
     await setDoc(doc(db, "inventoryMovements/m1"), { delta: 1 });
+    await setDoc(doc(db, "stats/daily/days/2026-11-15"), { orders: 1 });
+    await setDoc(doc(db, "stats/events/ids/e1"), { orderId: "o1" });
   });
 });
 
@@ -106,6 +108,13 @@ describe("staff roles in firestore.rules", () => {
     await assertFails(getDoc(doc(as({ role: "ops" }), "auditLogs/a1")));
     await assertFails(setDoc(doc(as({ role: "super_admin" }), "auditLogs/a2"), { action: "fake" }));
     await assertFails(setDoc(doc(as({ role: "super_admin" }), "staff/u2"), { role: "ops" }));
+  });
+
+  it("lets any staff role read report counters, and nobody write them", async () => {
+    await assertSucceeds(getDoc(doc(as({ role: "catalog" }), "stats/daily/days/2026-11-15")));
+    await assertFails(getDoc(doc(env.authenticatedContext("u1").firestore(), "stats/daily/days/2026-11-15")));
+    await assertFails(getDoc(doc(as({ role: "super_admin" }), "stats/events/ids/e1")));
+    await assertFails(setDoc(doc(as({ role: "super_admin" }), "stats/daily/days/2026-11-16"), { orders: 9 }));
   });
 
   it("gives the knowledge base to support only", async () => {

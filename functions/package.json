@@ -15,7 +15,8 @@
     "smoke:support": "tsx scripts/support-smoke.ts",
     "set-admin": "tsx scripts/set-admin.ts",
     "deploy": "firebase deploy --only functions",
-    "backfill-user-stats": "tsx scripts/backfill-user-stats.ts"
+    "backfill-user-stats": "tsx scripts/backfill-user-stats.ts",
+    "backfill-stats": "tsx scripts/backfill-stats.ts"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.3.2",

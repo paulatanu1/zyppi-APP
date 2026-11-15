@@ -54,6 +54,7 @@ export {
   trackCampaignOpen,
   dispatchCampaigns,
 } from "./notifications/campaigns";
+export { onOrderWritten } from "./stats/stats";
 export { onSupportMessageCreated } from "./support/bot";
 export {
   openSupportChat,
