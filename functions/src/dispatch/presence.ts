@@ -28,6 +28,7 @@ export const riderSetOnline = onCall(async (request) => {
   const batch = db.batch();
   if (online) {
     const p = requirePoint(request.data);
+    if (request.data?.mocked === true) throw new HttpsError("failed-precondition", "MOCK_LOCATION");
     const wasOnline = rider.get("presence.online") === true;
     batch.update(rider.ref, {
       "presence.online": true,
@@ -84,7 +85,7 @@ export const riderPing = onCall(async (request) => {
   const prev = isPoint({ lat: presence.lat, lng: presence.lng })
     ? { lat: presence.lat as number, lng: presence.lng as number }
     : null;
-  if (impossibleJump(prev, p, lastMs ? (now - lastMs) / 1000 : 0)) {
+  if (request.data?.mocked === true || impossibleJump(prev, p, lastMs ? (now - lastMs) / 1000 : 0)) {
     await rider.ref.update({ "presence.at": FieldValue.serverTimestamp(), "presence.jumps": FieldValue.increment(1) });
     return state;
   }

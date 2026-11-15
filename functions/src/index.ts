@@ -93,6 +93,7 @@ export {
 } from "./dispatch/pay";
 export { riderBookSlot, riderCancelSlot } from "./dispatch/gigs";
 export { rateRider } from "./dispatch/rating";
+export { adminAnnounceToRiders } from "./dispatch/announce";
 export { onSupportMessageCreated } from "./support/bot";
 export { adminSaveKbEntry, adminDeleteKbEntry } from "./support/kb/admin";
 export {
