@@ -65,6 +65,7 @@ dependencies:
   cloud_firestore: ^6.10.2
   cloud_functions: ^6.5.1
   connectivity_plus: ^7.3.1
+  package_info_plus: ^10.2.2
 
 dev_dependencies:
   flutter_test:

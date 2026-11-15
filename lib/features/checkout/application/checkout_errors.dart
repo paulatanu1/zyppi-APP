@@ -33,6 +33,17 @@ String friendlyOrderError(Object error) {
     return 'errorAddressUnserviceable'.tr();
   }
   if (message.contains('Cart is empty')) return 'errorCartEmpty'.tr();
+  // functions/src: STORES_CLOSED (store hours), ACCOUNT_BLOCKED (admin),
+  // closed areas and switched-off payment methods (config/features).
+  if (message.contains('STORES_CLOSED')) return 'errorStoresClosed'.tr();
+  if (message.contains('ACCOUNT_BLOCKED')) return 'errorAccountBlocked'.tr();
+  if (message.contains('Ordering is paused')) return 'errorOrderingPaused'.tr();
+  if (message.contains('payment method is unavailable')) {
+    return 'errorPaymentMethodOff'.tr();
+  }
+  if (message.contains('taking a short break')) {
+    return 'maintenanceMessage'.tr();
+  }
   // COUPON_MESSAGES in functions/src/coupons/model.ts.
   final coupon = switch (message) {
     'Coupon has expired' => 'couponExpired',

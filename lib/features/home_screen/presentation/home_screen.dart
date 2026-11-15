@@ -17,6 +17,7 @@ import 'package:zippy/features/home_screen/application/home_sections_provider.da
 import 'package:zippy/features/home_screen/widgets/buy_again_section.dart';
 import 'package:zippy/core/data/search_suggestions_provider.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:zippy/core/app_settings/presentation/home_notices.dart';
 import 'package:zippy/features/home_screen/widgets/sections/category_tabs_section.dart';
 import 'package:zippy/features/home_screen/widgets/sections/home_section_widget.dart';
 import 'package:zippy/features/home_screen/widgets/sections/section_data.dart';
@@ -84,6 +85,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 slivers: [
                   const SliverToBoxAdapter(child: HomeScreenHeader()),
+                  SliverToBoxAdapter(
+                    child: HomeNotices(
+                      serviceAreaId: ref.watch(homeServiceAreaIdProvider),
+                    ),
+                  ),
                   SliverPersistentHeader(
                     pinned: true,
                     delegate: HomePinnedHeaderDelegate(
