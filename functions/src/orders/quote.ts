@@ -271,6 +271,11 @@ export async function placeOrderInTx(
   if (expectedTotalPaise != null && quote.totalPaise !== expectedTotalPaise) {
     throw new OrderError("PAYMENT_AMOUNT_MISMATCH");
   }
+  // Last read before the writes: which (non-cancelled) order this is for the
+  // customer, for the new-vs-repeat report.
+  const userSnap = await tx.get(db.collection("users").doc(p.uid));
+  const priorOrders = userSnap.get("orderCount");
+  const customerOrderNo = (typeof priorOrders === "number" && priorOrders > 0 ? priorOrders : 0) + 1;
 
   // UUID ids keep the app's shortOrderId ("#3F2A9C1B") format.
   const orderRef = db.collection("orders").doc(crypto.randomUUID());
@@ -328,6 +333,8 @@ export async function placeOrderInTx(
     couponRedeemed: quote.couponCode != null,
     // Added to users/{uid}.orderCount / totalSpentPaise (see below).
     countedForUser: true,
+    // 1 = the customer's first order (stats: new vs repeat).
+    customerOrderNo,
     riderName: null,
     riderPhone: null,
     // Which store's stock filled each line, so a cancellation puts it back
