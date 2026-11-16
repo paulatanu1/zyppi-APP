@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/cart/domain/cart_line.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
+import 'package:zippy/core/marketplace/presentation/sold_by.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/widgets/z_commerce.dart';
 
@@ -23,7 +24,14 @@ class MyCartItem extends ConsumerWidget {
       cart.setQuantity(
         product: line.product,
         variant: line.variant,
-        quantity: cart.quantityOf(line.product.id, line.variant.id) + delta,
+        offer: line.offer,
+        quantity:
+            cart.quantityOf(
+              line.product.id,
+              line.variant.id,
+              offer: line.offer,
+            ) +
+            delta,
       );
     }
 
@@ -52,6 +60,11 @@ class MyCartItem extends ConsumerWidget {
                     style: t.labelLarge,
                   ),
                   Text(line.variant.label, style: t.bodySmall),
+                  if (line.offer case final offer?)
+                    SoldByLink(
+                      sellerId: offer.sellerId,
+                      sellerName: offer.sellerName,
+                    ),
                 ],
               ),
             ),

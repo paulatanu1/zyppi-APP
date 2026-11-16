@@ -90,6 +90,8 @@ Order orderFromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
           unit: item['unit'] as String,
           quantity: item['quantity'] as int,
           pricePaise: item['pricePaise'] as int,
+          sellerId: item['sellerId'] as String?,
+          sellerName: item['sellerName'] as String?,
         ),
       )
       .toList();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/marketplace/application/marketplace_providers.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/domain/product.dart';
@@ -31,21 +32,36 @@ class ProductListRow extends ConsumerWidget {
       ),
     );
 
+    // The area's top offer (another seller may be cheaper or in stock).
+    final offer = cardPrice(
+      product,
+      variant,
+      ref.watch(shoppingAreaIdProvider),
+    );
+
     // Live quantity at tap time, so quick taps all count.
     void step(int delta) {
       final cart = ref.read(cartProvider.notifier);
-      final current = cart.quantityOf(product.id, variant.id);
-      current == 0 && delta > 0
-          ? cart.addItem(product: product, variant: variant)
+      if (delta < 0) {
+        cart.removeOne(product: product, variant: variant, prefer: offer.pick);
+        return;
+      }
+      final current = cart.quantityOf(
+        product.id,
+        variant.id,
+        offer: offer.pick,
+      );
+      current == 0
+          ? cart.addItem(product: product, variant: variant, offer: offer.pick)
           : cart.setQuantity(
               product: product,
               variant: variant,
+              offer: offer.pick,
               quantity: current + delta,
             );
     }
 
-    final hasMrp =
-        variant.mrpPaise != null && variant.mrpPaise! > variant.pricePaise;
+    final hasMrp = offer.mrp != null && offer.mrp! > offer.price;
 
     return InkWell(
       onTap: () =>
@@ -77,7 +93,7 @@ class ProductListRow extends ConsumerWidget {
                       children: [
                         TextSpan(text: '${variant.label} · '),
                         TextSpan(
-                          text: rupees(variant.pricePaise),
+                          text: rupees(offer.price),
                           style: t.labelMedium!.copyWith(
                             color: z.ink,
                             fontWeight: FontWeight.w800,
@@ -85,10 +101,7 @@ class ProductListRow extends ConsumerWidget {
                         ),
                         if (hasMrp) ...[
                           const TextSpan(text: ' '),
-                          TextSpan(
-                            text: rupees(variant.mrpPaise!),
-                            style: t.mrp,
-                          ),
+                          TextSpan(text: rupees(offer.mrp!), style: t.mrp),
                         ],
                       ],
                     ),

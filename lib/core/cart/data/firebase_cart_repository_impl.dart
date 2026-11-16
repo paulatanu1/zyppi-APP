@@ -3,7 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:zippy/core/cart/domain/cart_repository.dart';
 import 'package:zippy/core/domain/cart_item.dart';
 
-/// Server copy of the cart at `users/{uid}/cart/{variantId}` — the cart the
+/// Server copy of the cart at `users/{uid}/cart/{variantId}` (Zyppi's own
+/// stock) or `users/{uid}/cart/{offerId}` (a marketplace seller's) — the cart the
 /// placeOrder / createPayUOrder functions price. CartNotifier pushes
 /// local changes here in the background.
 class FirebaseCartRepository implements CartRepository {
@@ -25,8 +26,9 @@ class FirebaseCartRepository implements CartRepository {
         .map(
           (doc) => CartItem(
             productId: doc.data()['productId'] as String? ?? '',
-            variantId: doc.id,
+            variantId: doc.data()['variantId'] as String? ?? doc.id,
             quantity: doc.data()['quantity'] as int,
+            offerId: doc.data()['offerId'] as String?,
           ),
         )
         .toList();
@@ -34,12 +36,16 @@ class FirebaseCartRepository implements CartRepository {
 
   @override
   Future<void> setQuantity(CartItem item) {
-    final doc = _cart.doc(item.variantId);
+    final doc = _cart.doc(item.offerId ?? item.variantId);
     if (item.quantity <= 0) return doc.delete();
 
     return doc.set({
       'productId': item.productId,
       'quantity': item.quantity,
+      if (item.offerId != null) ...{
+        'offerId': item.offerId,
+        'variantId': item.variantId,
+      },
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }

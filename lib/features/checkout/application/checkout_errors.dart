@@ -27,6 +27,11 @@ String friendlyOrderError(Object error) {
   if (minOrder != null) {
     return 'errorMinOrder'.tr(args: [rupees(int.parse(minOrder.group(1)!))]);
   }
+  // functions/src/orders/quote.ts: a cart from too many marketplace sellers.
+  final sellers = RegExp(r'TOO_MANY_SELLERS:(\d+)').firstMatch(message);
+  if (sellers != null) {
+    return 'errorTooManySellers'.tr(args: [sellers.group(1)!]);
+  }
   if (message.contains('Delivery slot')) return 'errorSlotUnavailable'.tr();
   if (message.contains('not serviceable') ||
       message.contains('do not deliver')) {

@@ -148,5 +148,34 @@ Product productFromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
           },
         )
         .toList(),
+    'areaBest': _areaBest(data['areaBest']),
   });
+}
+
+/// products/{id}.areaBest → JSON for [Product.areaBest]; malformed
+/// entries are dropped (the variant price is shown instead).
+Map<String, dynamic> _areaBest(Object? raw) {
+  if (raw is! Map) return const {};
+  final out = <String, dynamic>{};
+  raw.forEach((area, variants) {
+    if (variants is! Map) return;
+    final byVariant = <String, dynamic>{};
+    variants.forEach((variant, best) {
+      if (best is Map &&
+          best['offerId'] is String &&
+          best['pricePaise'] is num) {
+        byVariant['$variant'] = {
+          'offerId': best['offerId'],
+          'sellerId': best['sellerId'] ?? 'zyppi',
+          'sellerName': best['sellerName'] ?? '',
+          'pricePaise': (best['pricePaise'] as num).toInt(),
+          'mrpPaise': ((best['mrpPaise'] ?? best['pricePaise']) as num).toInt(),
+          'inStock': best['inStock'] != false,
+          'offerCount': ((best['offerCount'] ?? 1) as num).toInt(),
+        };
+      }
+    });
+    if (byVariant.isNotEmpty) out['$area'] = byVariant;
+  });
+  return out;
 }

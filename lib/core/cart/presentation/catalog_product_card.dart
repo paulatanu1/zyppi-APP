@@ -6,6 +6,7 @@ import 'package:zippy/core/cart/presentation/cart_fly.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/domain/product.dart';
 import 'package:zippy/core/favourites/application/favourites_provider.dart';
+import 'package:zippy/core/marketplace/application/marketplace_providers.dart';
 import 'package:zippy/core/widgets/z_product_card.dart';
 
 /// [ZProductCard] for a catalog [Product], wired to the cart (first
@@ -20,6 +21,9 @@ class CatalogProductCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final variant = product.variants.isNotEmpty ? product.variants.first : null;
+    // The area's top offer: maybe another seller's price (docs/MARKETPLACE.md).
+    final areaId = ref.watch(shoppingAreaIdProvider);
+    final offer = variant == null ? null : cardPrice(product, variant, areaId);
     final quantity = variant == null
         ? 0
         : ref.watch(
@@ -43,8 +47,8 @@ class CatalogProductCard extends ConsumerWidget {
       name: product.name,
       weight: variant?.label ?? '',
       image: CatalogImage(image: product.image, fit: BoxFit.contain),
-      price: variant?.pricePaise,
-      mrp: variant?.mrpPaise,
+      price: offer?.price,
+      mrp: offer?.mrp,
       quantity: quantity,
       favourite: favourite,
       onTap: () =>
@@ -56,7 +60,12 @@ class CatalogProductCard extends ConsumerWidget {
       onAdd: variant == null
           ? null
           : () {
-              final current = cart.quantityOf(product.id, variant.id);
+              final pick = offer?.pick;
+              final current = cart.quantityOf(
+                product.id,
+                variant.id,
+                offer: pick,
+              );
               if (current == 0) {
                 // First add: the picture flies into the cart bar.
                 CartFly.launch(
@@ -65,19 +74,24 @@ class CatalogProductCard extends ConsumerWidget {
                 );
               }
               current == 0
-                  ? cart.addItem(product: product, variant: variant)
+                  ? cart.addItem(
+                      product: product,
+                      variant: variant,
+                      offer: pick,
+                    )
                   : cart.setQuantity(
                       product: product,
                       variant: variant,
+                      offer: pick,
                       quantity: current + 1,
                     );
             },
       onRemove: variant == null
           ? null
-          : () => cart.setQuantity(
+          : () => cart.removeOne(
               product: product,
               variant: variant,
-              quantity: cart.quantityOf(product.id, variant.id) - 1,
+              prefer: offer?.pick,
             ),
     );
   }

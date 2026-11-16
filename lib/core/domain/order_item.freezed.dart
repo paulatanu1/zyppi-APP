@@ -17,7 +17,9 @@ T _$identity<T>(T value) => value;
 mixin _$OrderItem {
 
  String get productId; String get variantId; String get name; String get unit; int get quantity; int get pricePaise;/// Product image (current catalog image; display only).
- String? get image;
+ String? get image;/// Marketplace: who sold it (order time). Null on older orders and
+/// for Zyppi's own stock before the marketplace.
+ String? get sellerId; String? get sellerName;
 /// Create a copy of OrderItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -31,20 +33,20 @@ $OrderItemCopyWith<OrderItem> get copyWith => _$OrderItemCopyWithImpl<OrderItem>
 @override
 bool operator ==(Object other) {
   final _this = this as OrderItem;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OrderItem&&(identical(other.productId, _this.productId) || other.productId == _this.productId)&&(identical(other.variantId, _this.variantId) || other.variantId == _this.variantId)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.unit, _this.unit) || other.unit == _this.unit)&&(identical(other.quantity, _this.quantity) || other.quantity == _this.quantity)&&(identical(other.pricePaise, _this.pricePaise) || other.pricePaise == _this.pricePaise)&&(identical(other.image, _this.image) || other.image == _this.image));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OrderItem&&(identical(other.productId, _this.productId) || other.productId == _this.productId)&&(identical(other.variantId, _this.variantId) || other.variantId == _this.variantId)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.unit, _this.unit) || other.unit == _this.unit)&&(identical(other.quantity, _this.quantity) || other.quantity == _this.quantity)&&(identical(other.pricePaise, _this.pricePaise) || other.pricePaise == _this.pricePaise)&&(identical(other.image, _this.image) || other.image == _this.image)&&(identical(other.sellerId, _this.sellerId) || other.sellerId == _this.sellerId)&&(identical(other.sellerName, _this.sellerName) || other.sellerName == _this.sellerName));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as OrderItem;
-  return Object.hash(runtimeType,_this.productId,_this.variantId,_this.name,_this.unit,_this.quantity,_this.pricePaise,_this.image);
+  return Object.hash(runtimeType,_this.productId,_this.variantId,_this.name,_this.unit,_this.quantity,_this.pricePaise,_this.image,_this.sellerId,_this.sellerName);
 }
 
 @override
 String toString() {
   final _this = this as OrderItem;
-  return 'OrderItem(productId: ${_this.productId}, variantId: ${_this.variantId}, name: ${_this.name}, unit: ${_this.unit}, quantity: ${_this.quantity}, pricePaise: ${_this.pricePaise}, image: ${_this.image})';
+  return 'OrderItem(productId: ${_this.productId}, variantId: ${_this.variantId}, name: ${_this.name}, unit: ${_this.unit}, quantity: ${_this.quantity}, pricePaise: ${_this.pricePaise}, image: ${_this.image}, sellerId: ${_this.sellerId}, sellerName: ${_this.sellerName})';
 }
 
 
@@ -55,7 +57,7 @@ abstract mixin class $OrderItemCopyWith<$Res>  {
   factory $OrderItemCopyWith(OrderItem value, $Res Function(OrderItem) _then) = _$OrderItemCopyWithImpl;
 @useResult
 $Res call({
- String productId, String variantId, String name, String unit, int quantity, int pricePaise, String? image
+ String productId, String variantId, String name, String unit, int quantity, int pricePaise, String? image, String? sellerId, String? sellerName
 });
 
 
@@ -72,7 +74,7 @@ class _$OrderItemCopyWithImpl<$Res>
 
 /// Create a copy of OrderItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? productId = null,Object? variantId = null,Object? name = null,Object? unit = null,Object? quantity = null,Object? pricePaise = null,Object? image = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? productId = null,Object? variantId = null,Object? name = null,Object? unit = null,Object? quantity = null,Object? pricePaise = null,Object? image = freezed,Object? sellerId = freezed,Object? sellerName = freezed,}) {
   return _then(OrderItem(
 productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
 as String,variantId: null == variantId ? _self.variantId : variantId // ignore: cast_nullable_to_non_nullable
@@ -81,6 +83,8 @@ as String,unit: null == unit ? _self.unit : unit // ignore: cast_nullable_to_non
 as String,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
 as int,pricePaise: null == pricePaise ? _self.pricePaise : pricePaise // ignore: cast_nullable_to_non_nullable
 as int,image: freezed == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
+as String?,sellerId: freezed == sellerId ? _self.sellerId : sellerId // ignore: cast_nullable_to_non_nullable
+as String?,sellerName: freezed == sellerName ? _self.sellerName : sellerName // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -166,10 +170,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String productId,  String variantId,  String name,  String unit,  int quantity,  int pricePaise,  String? image)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String productId,  String variantId,  String name,  String unit,  int quantity,  int pricePaise,  String? image,  String? sellerId,  String? sellerName)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _OrderItem() when $default != null:
-return $default(_that.productId,_that.variantId,_that.name,_that.unit,_that.quantity,_that.pricePaise,_that.image);case _:
+return $default(_that.productId,_that.variantId,_that.name,_that.unit,_that.quantity,_that.pricePaise,_that.image,_that.sellerId,_that.sellerName);case _:
   return orElse();
 
 }
@@ -187,10 +191,10 @@ return $default(_that.productId,_that.variantId,_that.name,_that.unit,_that.quan
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String productId,  String variantId,  String name,  String unit,  int quantity,  int pricePaise,  String? image)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String productId,  String variantId,  String name,  String unit,  int quantity,  int pricePaise,  String? image,  String? sellerId,  String? sellerName)  $default,) {final _that = this;
 switch (_that) {
 case _OrderItem():
-return $default(_that.productId,_that.variantId,_that.name,_that.unit,_that.quantity,_that.pricePaise,_that.image);case _:
+return $default(_that.productId,_that.variantId,_that.name,_that.unit,_that.quantity,_that.pricePaise,_that.image,_that.sellerId,_that.sellerName);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -207,10 +211,10 @@ return $default(_that.productId,_that.variantId,_that.name,_that.unit,_that.quan
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String productId,  String variantId,  String name,  String unit,  int quantity,  int pricePaise,  String? image)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String productId,  String variantId,  String name,  String unit,  int quantity,  int pricePaise,  String? image,  String? sellerId,  String? sellerName)?  $default,) {final _that = this;
 switch (_that) {
 case _OrderItem() when $default != null:
-return $default(_that.productId,_that.variantId,_that.name,_that.unit,_that.quantity,_that.pricePaise,_that.image);case _:
+return $default(_that.productId,_that.variantId,_that.name,_that.unit,_that.quantity,_that.pricePaise,_that.image,_that.sellerId,_that.sellerName);case _:
   return null;
 
 }
@@ -222,7 +226,7 @@ return $default(_that.productId,_that.variantId,_that.name,_that.unit,_that.quan
 @JsonSerializable()
 
 class _OrderItem implements OrderItem {
-   _OrderItem({required this.productId, required this.variantId, required this.name, required this.unit, required this.quantity, required this.pricePaise, this.image});
+   _OrderItem({required this.productId, required this.variantId, required this.name, required this.unit, required this.quantity, required this.pricePaise, this.image, this.sellerId, this.sellerName});
   factory _OrderItem.fromJson(Map<String, dynamic> json) => _$OrderItemFromJson(json);
 
 @override final  String productId;
@@ -233,6 +237,10 @@ class _OrderItem implements OrderItem {
 @override final  int pricePaise;
 /// Product image (current catalog image; display only).
 @override final  String? image;
+/// Marketplace: who sold it (order time). Null on older orders and
+/// for Zyppi's own stock before the marketplace.
+@override final  String? sellerId;
+@override final  String? sellerName;
 
 /// Create a copy of OrderItem
 /// with the given fields replaced by the non-null parameter values.
@@ -247,18 +255,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _OrderItem&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.variantId, variantId) || other.variantId == variantId)&&(identical(other.name, name) || other.name == name)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.pricePaise, pricePaise) || other.pricePaise == pricePaise)&&(identical(other.image, image) || other.image == image));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _OrderItem&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.variantId, variantId) || other.variantId == variantId)&&(identical(other.name, name) || other.name == name)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.pricePaise, pricePaise) || other.pricePaise == pricePaise)&&(identical(other.image, image) || other.image == image)&&(identical(other.sellerId, sellerId) || other.sellerId == sellerId)&&(identical(other.sellerName, sellerName) || other.sellerName == sellerName));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,productId,variantId,name,unit,quantity,pricePaise,image);
+    return Object.hash(runtimeType,productId,variantId,name,unit,quantity,pricePaise,image,sellerId,sellerName);
 }
 
 @override
 String toString() {
-    return 'OrderItem(productId: $productId, variantId: $variantId, name: $name, unit: $unit, quantity: $quantity, pricePaise: $pricePaise, image: $image)';
+    return 'OrderItem(productId: $productId, variantId: $variantId, name: $name, unit: $unit, quantity: $quantity, pricePaise: $pricePaise, image: $image, sellerId: $sellerId, sellerName: $sellerName)';
 }
 
 
@@ -269,7 +277,7 @@ abstract mixin class _$OrderItemCopyWith<$Res> implements $OrderItemCopyWith<$Re
   factory _$OrderItemCopyWith(_OrderItem value, $Res Function(_OrderItem) _then) = __$OrderItemCopyWithImpl;
 @override @useResult
 $Res call({
- String productId, String variantId, String name, String unit, int quantity, int pricePaise, String? image
+ String productId, String variantId, String name, String unit, int quantity, int pricePaise, String? image, String? sellerId, String? sellerName
 });
 
 
@@ -286,7 +294,7 @@ class __$OrderItemCopyWithImpl<$Res>
 
 /// Create a copy of OrderItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? productId = null,Object? variantId = null,Object? name = null,Object? unit = null,Object? quantity = null,Object? pricePaise = null,Object? image = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? productId = null,Object? variantId = null,Object? name = null,Object? unit = null,Object? quantity = null,Object? pricePaise = null,Object? image = freezed,Object? sellerId = freezed,Object? sellerName = freezed,}) {
   return _then(_OrderItem(
 productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
 as String,variantId: null == variantId ? _self.variantId : variantId // ignore: cast_nullable_to_non_nullable
@@ -295,6 +303,8 @@ as String,unit: null == unit ? _self.unit : unit // ignore: cast_nullable_to_non
 as String,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
 as int,pricePaise: null == pricePaise ? _self.pricePaise : pricePaise // ignore: cast_nullable_to_non_nullable
 as int,image: freezed == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
+as String?,sellerId: freezed == sellerId ? _self.sellerId : sellerId // ignore: cast_nullable_to_non_nullable
+as String?,sellerName: freezed == sellerName ? _self.sellerName : sellerName // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

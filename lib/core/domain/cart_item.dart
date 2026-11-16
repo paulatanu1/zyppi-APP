@@ -9,6 +9,10 @@ abstract class CartItem with _$CartItem {
     required String productId,
     required String variantId,
     required int quantity,
+
+    /// Marketplace seller's offer (offers/{id}); null = Zyppi's own stock.
+    /// The server cart doc id is this, or [variantId] for Zyppi's.
+    String? offerId,
   }) = _CartItem;
 
   factory CartItem.fromJson(Map<String, dynamic> json) =>

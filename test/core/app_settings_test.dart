@@ -117,6 +117,7 @@ void main() {
     );
     // Outside a localized app tr() returns the key.
     expect(msg('STORES_CLOSED'), 'errorStoresClosed');
+    expect(msg('TOO_MANY_SELLERS:3'), 'errorTooManySellers');
     expect(msg('ACCOUNT_BLOCKED'), 'errorAccountBlocked');
     expect(
       msg('Ordering is paused in your area right now'),

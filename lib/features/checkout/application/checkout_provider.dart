@@ -376,8 +376,10 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
               name: line.product.name,
               unit: line.variant.label,
               quantity: line.quantity,
-              pricePaise: line.variant.pricePaise,
+              pricePaise: line.unitPricePaise,
               image: line.product.image,
+              sellerId: line.offer?.sellerId,
+              sellerName: line.offer?.sellerName,
             ),
           )
           .toList(),

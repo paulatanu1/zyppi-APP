@@ -17,6 +17,17 @@ _Product _$ProductFromJson(Map<String, dynamic> json) => _Product(
       .map((e) => ProductVariant.fromJson(e as Map<String, dynamic>))
       .toList(),
   isFavourite: json['isFavourite'] as bool? ?? false,
+  areaBest:
+      (json['areaBest'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(
+          k,
+          (e as Map<String, dynamic>).map(
+            (k, e) =>
+                MapEntry(k, BestOffer.fromJson(e as Map<String, dynamic>)),
+          ),
+        ),
+      ) ??
+      const {},
 );
 
 Map<String, dynamic> _$ProductToJson(_Product instance) => <String, dynamic>{
@@ -28,4 +39,5 @@ Map<String, dynamic> _$ProductToJson(_Product instance) => <String, dynamic>{
   'subcategoryId': instance.subcategoryId,
   'variants': instance.variants,
   'isFavourite': instance.isFavourite,
+  'areaBest': instance.areaBest,
 };

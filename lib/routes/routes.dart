@@ -5,6 +5,7 @@ import 'package:zippy/core/config/env.dart';
 import 'package:zippy/core/legal/domain/legal_doc.dart';
 import 'package:zippy/core/legal/presentation/legal_doc_screen.dart';
 import 'package:zippy/core/legal/presentation/legal_gate.dart';
+import 'package:zippy/core/marketplace/presentation/seller_screen.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
 import 'package:zippy/routes/home_fallback_scope.dart';
 import 'package:zippy/routes/router_refresh_listenable.dart';
@@ -121,6 +122,15 @@ class Routes {
                 int.tryParse(state.uri.queryParameters['index'] ?? '') ?? 0;
             return _fade(state, LegalGate(child: NavBar(initialIndex: index)));
           },
+        ),
+        GoRoute(
+          path: '/seller',
+          name: 'Seller',
+          builder: withHomeFallback(
+            (context, state) => SellerScreen(
+              sellerId: state.uri.queryParameters['sellerId'] ?? '',
+            ),
+          ),
         ),
         GoRoute(
           path: '/legal',

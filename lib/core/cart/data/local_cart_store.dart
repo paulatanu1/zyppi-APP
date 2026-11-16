@@ -48,7 +48,8 @@ class LocalCartStore {
   void writeLines(List<CartLine> lines) =>
       box.put(_linesKey, jsonEncode(lines.map((l) => l.toJson()).toList()));
 
-  /// Variants changed locally that the server hasn't confirmed yet.
+  /// Lines ([CartLine.key]: variant id, or offer id for a seller's line)
+  /// changed locally that the server hasn't confirmed yet.
   /// Persisted so taps made offline survive an app restart.
   Set<String> dirtyVariantIds() =>
       (box.get(_dirtyKey) as List<dynamic>? ?? const []).cast<String>().toSet();

@@ -10,6 +10,10 @@ abstract class ProductDetailState with _$ProductDetailState {
     int? currentIndex,
     @Default(0) int selectedVariantIndex,
     @Default(1) int quantity,
+
+    /// The seller the customer picked for the selected pack size; null =
+    /// the marketplace's best match.
+    String? pickedOfferId,
     @Default(true) bool loading,
     String? error,
   }) = _ProductDetailState;

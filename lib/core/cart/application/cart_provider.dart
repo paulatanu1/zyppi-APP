@@ -21,6 +21,9 @@ import 'package:zippy/core/data/provider/shared_preference_provider.dart';
 import 'package:zippy/core/domain/cart_item.dart';
 import 'package:zippy/core/domain/product.dart';
 import 'package:zippy/core/domain/product_variant.dart';
+import 'package:zippy/core/marketplace/data/marketplace_repository_impl.dart';
+import 'package:zippy/core/marketplace/domain/marketplace_repository.dart';
+import 'package:zippy/core/marketplace/domain/offer.dart';
 
 /// Local-first cart. A tap changes [state] and [store] synchronously, so
 /// the UI updates on the same frame; the server ([remote], firebase data source
@@ -40,21 +43,25 @@ class CartNotifier extends StateNotifier<CartState> {
   final CatalogRepository catalogRepository;
   final CouponRepository couponRepository;
 
+  /// Current prices of sellers' lines on pull (firebase data source).
+  final MarketplaceRepository? marketplace;
+
   Timer? _pushTimer;
   Duration _retryDelay = _minRetry;
   Future<bool>? _pushInFlight;
   late final AppLifecycleListener _lifecycle;
 
-  /// Bumped on every local change to a variant, so a push that raced a
-  /// newer tap doesn't mark that newer value as synced.
+  /// Bumped on every local change to a line (by [CartLine.key]), so a
+  /// push that raced a newer tap doesn't mark that newer value as synced.
   final Map<String, int> _versions = {};
 
   CartNotifier(
     this.store,
     this.remote,
     this.catalogRepository,
-    this.couponRepository,
-  ) : super(CartState(loading: false)) {
+    this.couponRepository, {
+    this.marketplace,
+  }) : super(CartState(loading: false)) {
     final lines = store.readLines();
     _setLines(lines, persist: false);
     // Only a first-ever launch (nothing on the device yet) waits on the
@@ -67,12 +74,19 @@ class CartNotifier extends StateNotifier<CartState> {
 
   // ---- Reads -------------------------------------------------------------
 
-  int quantityOf(String productId, String variantId) {
+  /// The line buying [variantId] from [offer]'s seller (Zyppi's own stock
+  /// when null).
+  int quantityOf(String productId, String variantId, {OfferPick? offer}) {
+    final key = CartLine.keyFor(variantId, _seller(offer));
     final line = state.lines.where(
-      (l) => l.product.id == productId && l.variant.id == variantId,
+      (l) => l.product.id == productId && l.key == key,
     );
     return line.isEmpty ? 0 : line.first.quantity;
   }
+
+  /// Zyppi's own offer is kept as "no offer": its lines stay keyed by
+  /// variant id, which the server reads as Zyppi's stock.
+  static OfferPick? _seller(OfferPick? offer) => cartKeyPick(offer);
 
   // ---- Local writes (synchronous) ---------------------------------------
 
@@ -80,27 +94,38 @@ class CartNotifier extends StateNotifier<CartState> {
     required Product product,
     required ProductVariant variant,
     required int quantity,
+    OfferPick? offer,
   }) {
+    final seller = _seller(offer);
+    final key = CartLine.keyFor(variant.id, seller);
     final next = max(0, quantity);
     final lines = [...state.lines];
     final index = lines.indexWhere(
-      (l) => l.product.id == product.id && l.variant.id == variant.id,
+      (l) => l.product.id == product.id && l.key == key,
     );
 
     if (next == 0) {
       if (index < 0) return;
       lines.removeAt(index);
     } else if (index < 0) {
-      lines.add(CartLine(product: product, variant: variant, quantity: next));
+      lines.add(
+        CartLine(
+          product: product,
+          variant: variant,
+          quantity: next,
+          offer: seller,
+        ),
+      );
     } else {
-      lines[index] = lines[index].copyWith(quantity: next);
+      // The latest price seen for that seller.
+      lines[index] = lines[index].copyWith(quantity: next, offer: seller);
     }
 
     _setLines(lines);
 
     if (remote == null) return;
-    _versions[variant.id] = (_versions[variant.id] ?? 0) + 1;
-    store.markDirty(variant.id);
+    _versions[key] = (_versions[key] ?? 0) + 1;
+    store.markDirty(key);
     _schedulePush(pushDebounce);
   }
 
@@ -108,20 +133,44 @@ class CartNotifier extends StateNotifier<CartState> {
     required Product product,
     required ProductVariant variant,
     int quantity = 1,
+    OfferPick? offer,
   }) {
     setQuantity(
       product: product,
       variant: variant,
-      quantity: quantityOf(product.id, variant.id) + quantity,
+      offer: offer,
+      quantity: quantityOf(product.id, variant.id, offer: offer) + quantity,
     );
 
     unawaited(
       AnalyticsService.logAddToCart(
         itemId: variant.id,
         itemName: product.name,
-        pricePaise: variant.pricePaise,
+        pricePaise: _seller(offer)?.pricePaise ?? variant.pricePaise,
         quantity: quantity,
       ).catchError((_) {}),
+    );
+  }
+
+  /// Product cards show every seller's line of a variant as one count:
+  /// "−" takes one from [prefer]'s line, else from the last line added.
+  void removeOne({
+    required Product product,
+    required ProductVariant variant,
+    OfferPick? prefer,
+  }) {
+    final key = CartLine.keyFor(variant.id, _seller(prefer));
+    final lines = state.lines.where(
+      (l) => l.product.id == product.id && l.variant.id == variant.id,
+    );
+    final line =
+        lines.where((l) => l.key == key).firstOrNull ?? lines.lastOrNull;
+    if (line == null) return;
+    setQuantity(
+      product: product,
+      variant: variant,
+      offer: line.offer,
+      quantity: line.quantity - 1,
     );
   }
 
@@ -166,13 +215,15 @@ class CartNotifier extends StateNotifier<CartState> {
     final repo = remote;
     if (repo == null) return true;
 
-    for (final variantId in store.dirtyVariantIds()) {
-      final version = _versions[variantId];
-      final line = state.lines.where((l) => l.variant.id == variantId);
+    for (final key in store.dirtyVariantIds()) {
+      final version = _versions[key];
+      final line = state.lines.where((l) => l.key == key).firstOrNull;
+      // A removed line is deleted by its key (its server doc id).
       final item = CartItem(
-        productId: line.isEmpty ? '' : line.first.product.id,
-        variantId: variantId,
-        quantity: line.isEmpty ? 0 : line.first.quantity,
+        productId: line?.product.id ?? '',
+        variantId: line?.variant.id ?? key,
+        quantity: line?.quantity ?? 0,
+        offerId: line?.offer?.offerId,
       );
 
       try {
@@ -191,8 +242,8 @@ class CartNotifier extends StateNotifier<CartState> {
       }
 
       if (!mounted) return true;
-      // A newer tap on this variant is already queued; leave it dirty.
-      if (_versions[variantId] == version) store.markClean(variantId);
+      // A newer tap on this line is already queued; leave it dirty.
+      if (_versions[key] == version) store.markClean(key);
     }
 
     _retryDelay = _minRetry;
@@ -223,42 +274,68 @@ class CartNotifier extends StateNotifier<CartState> {
           known[p.id] = p;
         }
       }
+      // Sellers' current prices (their offers), for every seller line.
+      final offerIds = {
+        ...state.lines.map((l) => l.offer?.offerId),
+        ...serverItems.map((i) => i.offerId),
+      }.nonNulls.toList();
+      final offers = <String, OfferPick>{
+        if (offerIds.isNotEmpty && marketplace != null)
+          for (final o in await marketplace!.fetchOffersByIds(offerIds))
+            o.id: o.pick,
+      };
       if (!mounted) return;
 
       // Read after the awaits so taps made meanwhile are respected.
       final dirty = store.dirtyVariantIds();
-      final serverByVariant = {for (final i in serverItems) i.variantId: i};
+      final serverByKey = {
+        for (final i in serverItems) i.offerId ?? i.variantId: i,
+      };
       final merged = <CartLine>[];
 
-      // The line with current catalog data (price, name, image).
+      // The line with current catalog data (price, name, image) and, for
+      // a seller's line, that seller's current price.
       CartLine fresh(CartLine line, int quantity) {
         final product = known[line.product.id];
         final variant = product?.variants
             .where((v) => v.id == line.variant.id)
             .firstOrNull;
+        final offer = line.offer == null
+            ? null
+            : offers[line.offer!.offerId] ?? line.offer;
         return variant == null
-            ? line.copyWith(quantity: quantity)
-            : CartLine(product: product!, variant: variant, quantity: quantity);
+            ? line.copyWith(quantity: quantity, offer: offer)
+            : CartLine(
+                product: product!,
+                variant: variant,
+                quantity: quantity,
+                offer: offer,
+              );
       }
 
       for (final line in state.lines) {
-        if (dirty.contains(line.variant.id)) {
+        if (dirty.contains(line.key)) {
           merged.add(fresh(line, line.quantity));
-        } else if (serverByVariant.remove(line.variant.id) case final item?) {
+        } else if (serverByKey.remove(line.key) case final item?) {
           merged.add(fresh(line, item.quantity));
         }
         // Clean and gone from the server: removed elsewhere, drop it.
       }
-      for (final item in serverByVariant.values) {
-        if (dirty.contains(item.variantId)) continue;
+      for (final entry in serverByKey.entries) {
+        final item = entry.value;
+        if (dirty.contains(entry.key)) continue;
         final product = known[item.productId];
         final variant = product?.variants.where((v) => v.id == item.variantId);
         if (variant == null || variant.isEmpty) continue;
+        final offer = item.offerId == null ? null : offers[item.offerId];
+        // A seller's offer that no longer exists can't be bought.
+        if (item.offerId != null && offer == null) continue;
         merged.add(
           CartLine(
             product: product!,
             variant: variant.first,
             quantity: item.quantity,
+            offer: offer,
           ),
         );
       }
@@ -398,6 +475,7 @@ final cartProvider = StateNotifierProvider<CartNotifier, CartState>((ref) {
     ref.read(cartRepositoryProvider),
     ref.read(catalogRepositoryProvider),
     ref.read(couponRepositoryProvider),
+    marketplace: ref.read(marketplaceRepositoryProvider),
   );
   ref.listen(deliveryConfigProvider, (_, next) {
     final config = next.value;
