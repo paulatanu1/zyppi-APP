@@ -2,6 +2,9 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/config/env.dart';
+import 'package:zippy/core/legal/domain/legal_doc.dart';
+import 'package:zippy/core/legal/presentation/legal_doc_screen.dart';
+import 'package:zippy/core/legal/presentation/legal_gate.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
 import 'package:zippy/routes/home_fallback_scope.dart';
 import 'package:zippy/routes/router_refresh_listenable.dart';
@@ -35,6 +38,9 @@ import 'package:zippy/features/search/presentation/search_screen.dart';
 import 'package:zippy/features/search_address/presentation/search_address_screen.dart';
 import 'package:zippy/features/support_chat/presentation/support_chat_screen.dart';
 
+/// Open whether signed in or not (e.g. the terms from the login screen).
+const _publicRoutes = {'/legal'};
+
 const _unauthenticatedRoutes = {
   '/slider',
   '/loginScreen',
@@ -52,6 +58,8 @@ class Routes {
   String? _redirect(GoRouterState state) {
     // The launch animation picks Home or Onboarding itself when it ends.
     if (state.matchedLocation == '/launch') return null;
+
+    if (_publicRoutes.contains(state.matchedLocation)) return null;
 
     // Design playground: dev builds only, never an auth bypass elsewhere.
     if (state.matchedLocation == '/design-v2' && Env.flavor == 'dev') {
@@ -111,8 +119,15 @@ class Routes {
           pageBuilder: (context, state) {
             final index =
                 int.tryParse(state.uri.queryParameters['index'] ?? '') ?? 0;
-            return _fade(state, NavBar(initialIndex: index));
+            return _fade(state, LegalGate(child: NavBar(initialIndex: index)));
           },
+        ),
+        GoRoute(
+          path: '/legal',
+          name: 'Legal',
+          builder: (context, state) => LegalDocScreen(
+            type: state.uri.queryParameters['type'] ?? LegalTypes.customerTerms,
+          ),
         ),
         GoRoute(
           path: '/homeScreen',

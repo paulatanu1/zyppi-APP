@@ -8,6 +8,8 @@ import 'package:zippy/core/common_widgets/google_sign_in_button.dart';
 import 'package:zippy/features/auth/google_sign_in/application/google_provider.dart';
 import 'package:zippy/features/auth/guest/application/guest_provider.dart';
 import 'package:zippy/features/auth/otp_verification/application/otp_provider.dart';
+import 'package:zippy/core/legal/application/legal_providers.dart';
+import 'package:zippy/core/legal/presentation/legal_consent_row.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 
 /// docs/mockups/Login.dc.html.
@@ -24,6 +26,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _phoneController = TextEditingController();
   String? _phoneError;
 
+  // Terms, privacy and refund policy: unticked until the customer ticks it.
+  bool _agreed = false;
+  bool _triedWithoutAgreeing = false;
+
   @override
   void dispose() {
     _phoneController.dispose();
@@ -37,8 +43,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
     setState(() => _phoneError = null);
+    if (!_mustAgree()) return;
     FocusScope.of(context).unfocus();
     ref.read(otpProvider.notifier).generateOtp('+91$digits', context);
+  }
+
+  /// False (and the consent row turns red) until the box is ticked.
+  bool _mustAgree() {
+    if (_agreed) return true;
+    setState(() => _triedWithoutAgreeing = true);
+    return false;
+  }
+
+  void _setAgreed(bool value) {
+    setState(() => _agreed = value);
+    // The legal gate records the acceptance right after sign-in.
+    ref.read(legalAgreedAtLoginProvider.notifier).set(value);
   }
 
   @override
@@ -52,6 +72,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     // guest stay.
     final phoneOtp = ref.watch(featureFlagsProvider).phoneOtp;
     final top = MediaQuery.paddingOf(context).top;
+    final consent = LegalConsentRow(
+      value: _agreed,
+      showError: _triedWithoutAgreeing,
+      onChanged: _setAgreed,
+    );
 
     return Scaffold(
       backgroundColor: z.bg,
@@ -129,6 +154,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   if (!phoneOtp) ...[
                     Text('phoneOtpOff'.tr(), style: t.bodyLarge),
                     const SizedBox(height: ZSpace.x5),
+                    consent,
+                    const SizedBox(height: ZSpace.x4),
                   ] else ...[
                     Text('otpSentDescription'.tr(), style: t.bodyLarge),
                     const SizedBox(height: ZSpace.x5),
@@ -197,6 +224,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ],
                     const SizedBox(height: ZSpace.x4),
+                    consent,
+                    const SizedBox(height: ZSpace.x3),
                     FilledButton(
                       style: FilledButton.styleFrom(
                         minimumSize: const Size(0, ZSize.button),
@@ -233,25 +262,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const Center(child: CircularProgressIndicator())
                   else
                     GoogleSignInButton(
-                      action: () => ref
-                          .read(googleProvider.notifier)
-                          .generateGoogleToken(context),
+                      action: () {
+                        if (!_mustAgree()) return;
+                        ref
+                            .read(googleProvider.notifier)
+                            .generateGoogleToken(context);
+                      },
                     ),
                   const SizedBox(height: ZSpace.x2),
                   Center(
                     child: guestLoading
                         ? const CircularProgressIndicator()
                         : TextButton(
-                            onPressed: () =>
-                                ref.read(guestProvider.notifier).signIn(),
+                            onPressed: () {
+                              if (!_mustAgree()) return;
+                              ref.read(guestProvider.notifier).signIn();
+                            },
                             child: Text('continueAsGuest'.tr()),
                           ),
-                  ),
-                  const SizedBox(height: ZSpace.x6),
-                  Text(
-                    'termsAndPrivacy'.tr(),
-                    textAlign: TextAlign.center,
-                    style: t.bodySmall,
                   ),
                 ],
               ),
