@@ -203,7 +203,7 @@ Done when: on a real phone against `zippy-app-2024` — OTP, Google and guest si
 
 ### Phase 7 — Marketplace (sellers, offers, margins) · `feat/marketplace-<n>-…`
 Outside shops sell through Zyppi on a **subscription** (seller sets the price, admin may add an add-on that Zyppi keeps) or a **supply** deal (Zyppi sets the price and pays the agreed supply price). Full design: [MARKETPLACE.md](MARKETPLACE.md). Seller app repo: `paulatanu1/Zyppi-Marketplace`.
-- [ ] M0 Foundations — `functions/src/marketplace`: seller application + review (`sellerSaveApplication`, `adminReviewSeller`, `sellerId` claim, `sellerUsers`), plans (`adminSaveSellerPlan`), `requireSeller`, pure pricing (`priceListing`), rules for `sellers`/`sellerUsers`/`sellerPlans`/`listings`/`offers` + seller KYC storage, `scripts/backfill-zyppi-seller.ts`
+- [x] M0 Foundations — `functions/src/marketplace`: seller application + review (`sellerSaveApplication`, `adminReviewSeller`, `sellerId` claim, `sellerUsers`), plans (`adminSaveSellerPlan`), `requireSeller`, pure pricing (`priceListing`), rules for `sellers`/`sellerUsers`/`sellerPlans`/`listings`/`offers` + seller KYC storage, `scripts/backfill-zyppi-seller.ts`
 - [ ] L0 Legal & consent — `legalDocs`, `acceptLegal`, consent gating on every registration, `docs/legal/*` drafts (lawyer review before launch), signed agreement PDF
 - [ ] M1 Offers, ranking, offer-aware `quoteOrder`, order line snapshots (payout / margin / seller)
 - [ ] M1b Multi-store pickups with a pickup OTP per store (`storeConfirmPickup`, geofenced arrival, route pay)
