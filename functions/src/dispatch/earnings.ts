@@ -1,6 +1,7 @@
 import { type DocumentReference, type DocumentSnapshot, FieldValue, type Transaction } from "firebase-admin/firestore";
 import { db } from "../shared/firebase";
 import { type Point, RIDER_CONFIG_DOC, distanceM, earningFor, isPoint, parseRiderConfig } from "./model";
+import { type PickupStop, routeDistanceM } from "./pickups";
 
 export const EARNINGS = "earnings";
 
@@ -11,6 +12,13 @@ export function istDayAndWeek(at: Date): { day: string; week: string } {
   const dow = (ist.getUTCDay() + 6) % 7; // Monday = 0
   const week = new Date(ist.getTime() - dow * 86_400_000).toISOString().slice(0, 10);
   return { day, week };
+}
+
+/** An order's pickup stops in route order (none on older orders). */
+export function orderStops(order: Record<string, unknown>): (Partial<PickupStop> & { storeId: string })[] {
+  const pickups = (order.pickups ?? {}) as Record<string, Partial<PickupStop>>;
+  const ids = Array.isArray(order.pickupOrder) ? (order.pickupOrder as string[]) : [];
+  return ids.filter((id) => pickups[id]).map((id) => ({ ...pickups[id], storeId: id }));
 }
 
 /** Where an order was picked up: its first store, else its area's centre. */
@@ -41,13 +49,21 @@ export async function deliveryEarning(
   order: Record<string, unknown>,
   rider: DocumentSnapshot,
 ): Promise<Record<string, unknown>> {
-  const [configSnap, from] = [await tx.get(db.doc(RIDER_CONFIG_DOC)), await pickupPoint(tx, order)];
+  const configSnap = await tx.get(db.doc(RIDER_CONFIG_DOC));
   const config = parseRiderConfig(configSnap.data());
   const address = order.address as Partial<Point> | null | undefined;
   const to = address && isPoint({ lat: address.lat, lng: address.lng }) ? (address as Point) : null;
-  const straight = from && to ? distanceM(from, to) : 0;
+  // Marketplace orders: the whole route (every pickup stop → customer).
+  const stops = orderStops(order);
+  let straight = 0;
+  if (stops.length) {
+    straight = routeDistanceM(stops, to);
+  } else {
+    const from = await pickupPoint(tx, order);
+    straight = from && to ? distanceM(from, to) : 0;
+  }
   const now = new Date();
-  const pay = earningFor(config, (order.serviceAreaId as string) ?? "", straight, now);
+  const pay = earningFor(config, (order.serviceAreaId as string) ?? "", straight, now, Math.max(0, stops.length - 1));
   const tip = Math.max(0, Math.round((order.tipPaise as number | undefined) ?? 0));
   const { day, week } = istDayAndWeek(now);
   const ledger = rider.ref.collection(EARNINGS);
@@ -62,6 +78,7 @@ export async function deliveryEarning(
       distancePaise: pay.distancePaise,
       peakPaise: pay.peakPaise,
       surgePaise: pay.surgePaise,
+      pickupPaise: pay.pickupPaise,
       distanceM: pay.distanceM,
     },
     day,

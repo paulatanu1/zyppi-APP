@@ -49,6 +49,8 @@ export interface RiderConfig {
   cashLimitPaise: number;
   /** Minutes to wait at the door before "can't deliver" unlocks. */
   waitMinutes: number;
+  /** Paid per pickup stop after the first (marketplace orders; 0 = none). */
+  extraPickupPaise: number;
   /** Pay per service area id, plus "default". */
   pay: Record<string, PayRate>;
   surge: { enabled: boolean; extraPaise: number; label: string };
@@ -81,6 +83,7 @@ export const DEFAULT_RIDER_CONFIG: RiderConfig = {
   emergency: { ambulance: "108", police: "112", accident: "" },
   cashLimitPaise: 300000,
   waitMinutes: 10,
+  extraPickupPaise: 0,
   pay: { default: DEFAULT_RATE },
   surge: { enabled: false, extraPaise: 1000, label: "Rain bonus" },
   peak: [],
@@ -156,6 +159,7 @@ export function parseRiderConfig(raw: Record<string, unknown> | undefined): Ride
     },
     cashLimitPaise: num(r.cashLimitPaise, d.cashLimitPaise, 0, 10_000_00),
     waitMinutes: num(r.waitMinutes, d.waitMinutes, 2, 30),
+    extraPickupPaise: num(r.extraPickupPaise, d.extraPickupPaise, 0, 10000),
     pay,
     surge: {
       enabled: surge.enabled === true,
@@ -336,21 +340,24 @@ export interface OrderEarning {
   distancePaise: number;
   peakPaise: number;
   surgePaise: number;
-  /** Store → customer, by road (estimate), metres. */
+  /** Extra pickup stops (marketplace orders). */
+  pickupPaise: number;
+  /** Store(s) → customer, by road (estimate), metres. */
   distanceM: number;
   totalPaise: number;
 }
 
 /**
  * What the rider earns for one delivery (tips are credited separately):
- * base + per-km by road (store → customer, straight line × 1.3), clamped
- * to min/max, plus peak-hour and surge extras.
+ * base + per-km by road (store(s) → customer, straight line × 1.3),
+ * clamped to min/max, plus peak-hour, surge and extra-pickup extras.
  */
 export function earningFor(
   config: RiderConfig,
   serviceAreaId: string,
   straightM: number,
   deliveredAt: Date,
+  extraStops = 0,
 ): OrderEarning {
   const r = config.pay[serviceAreaId] ?? config.pay.default ?? DEFAULT_RATE;
   const roadM = Math.round(straightM * ROAD_FACTOR);
@@ -361,12 +368,14 @@ export function earningFor(
     .filter((p) => inWindow(hhmm, p.start, p.end))
     .reduce((m, p) => Math.max(m, p.extraPaise), 0);
   const surgePaise = config.surge.enabled ? config.surge.extraPaise : 0;
+  const pickupPaise = Math.max(0, Math.floor(extraStops)) * config.extraPickupPaise;
   return {
     basePaise: core - Math.min(distancePaise, core),
     distancePaise: Math.min(distancePaise, core),
     peakPaise,
     surgePaise,
+    pickupPaise,
     distanceM: roadM,
-    totalPaise: core + peakPaise + surgePaise,
+    totalPaise: core + peakPaise + surgePaise + pickupPaise,
   };
 }

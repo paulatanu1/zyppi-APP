@@ -21,7 +21,14 @@ import {
 import { priceListing } from "../marketplace/pricing";
 import { marketplaceConfigFrom } from "../marketplace/ranking";
 import { newHandoverCode } from "../dispatch/model";
-import { DocumentReference, FieldValue, Transaction } from "firebase-admin/firestore";
+import { DocumentReference, FieldValue, Timestamp, Transaction } from "firebase-admin/firestore";
+import {
+  PICKUP_CODES,
+  type StoreInfo,
+  buildPickupStops,
+  newPickupCode,
+  sellersToAccept,
+} from "../dispatch/pickups";
 import { COUPON_MESSAGES, discountFor, normalizeCode } from "../coupons/model";
 import { lookupCoupon, problemOf, recordRedemption } from "../coupons/usage";
 import { db } from "../shared/firebase";
@@ -109,6 +116,10 @@ export interface AddressSnapshot {
 
 export interface Quote {
   serviceAreaId: string;
+  /** The area's active stores (pickup stops: name, place, contact). */
+  stores: StoreInfo[];
+  /** config/marketplace.acceptSlaMinutes. */
+  acceptSlaMinutes: number;
   address: AddressSnapshot;
   addressLabel: string;
   addressText: string;
@@ -389,6 +400,16 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
 
   return {
     serviceAreaId: area.id,
+    stores: storesSnap.docs.map((st) => ({
+      id: st.id,
+      name: (st.get("name") as string | undefined) ?? "Store",
+      sellerId: (st.get("sellerId") as string | undefined) ?? null,
+      address: (st.get("address") as string | undefined) ?? null,
+      lat: (st.get("lat") as number | undefined) ?? null,
+      lng: (st.get("lng") as number | undefined) ?? null,
+      phone: (st.get("phone") as string | undefined) ?? null,
+    })),
+    acceptSlaMinutes: config.acceptSlaMinutes,
     address: {
       label: address.label,
       line1: address.line1,
@@ -417,8 +438,7 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
 
 /**
  * Per order: the outside sellers in it (seller app queries
- * `sellerIds array-contains`), each one's status (they accept / mark
- * ready in the seller app) and what each is owed. Zyppi's own lines only
+ * `sellerIds array-contains`) and what each is owed. Zyppi's own lines only
  * count towards the margin.
  */
 export function sellerSummary(lines: Pick<QuoteLine, "sellerId" | "quantity" | "pricePaise" | "payoutPaise" | "marginPaise">[]) {
@@ -432,7 +452,6 @@ export function sellerSummary(lines: Pick<QuoteLine, "sellerId" | "quantity" | "
   }
   return {
     sellerIds,
-    sellerStatus: Object.fromEntries(sellerIds.map((id) => [id, "pending"])),
     sellerTotals,
     payoutTotalPaise: Object.values(sellerTotals).reduce((a, t) => a + t.payoutPaise, 0),
     marginTotalPaise: lines.reduce((a, l) => a + l.marginPaise * l.quantity, 0),
@@ -464,6 +483,24 @@ export async function placeOrderInTx(
   // UUID ids keep the app's shortOrderId ("#3F2A9C1B") format.
   const orderRef = db.collection("orders").doc(crypto.randomUUID());
   const now = FieldValue.serverTimestamp();
+
+  // One pickup stop per store, in route order; sellers' shops get a code
+  // the rider shows there, and the seller has to accept in time.
+  const { stops, order: pickupOrder } = buildPickupStops(
+    quote.lines.flatMap((l) =>
+      l.allocations.map((a) => ({
+        storeId: a.storeId,
+        productId: l.productId,
+        variantId: l.variantId,
+        name: l.name,
+        unit: l.unit,
+        take: a.take,
+      })),
+    ),
+    new Map(quote.stores.map((st) => [st.id, st])),
+    { lat: quote.address.lat, lng: quote.address.lng },
+  );
+  const toAccept = sellersToAccept(stops);
 
   for (const line of quote.lines) {
     for (const a of line.allocations) {
@@ -553,7 +590,21 @@ export async function placeOrderInTx(
       marginPaise: l.marginPaise,
     })),
     ...sellerSummary(quote.lines),
+    pickups: stops,
+    pickupOrder,
+    pickupCount: pickupOrder.length,
+    // Sellers accept / mark ready in the seller app (seller_orders.ts).
+    sellerStatus: Object.fromEntries(toAccept.map((id) => [id, "pending"])),
+    sellersPending: toAccept.length > 0,
+    sellerAcceptDeadline: toAccept.length
+      ? Timestamp.fromMillis(Date.now() + quote.acceptSlaMinutes * 60_000)
+      : null,
   });
+  for (const [storeId, stop] of Object.entries(stops)) {
+    if (stop.otpRequired) {
+      tx.create(orderRef.collection(PICKUP_CODES).doc(storeId), { code: newPickupCode(), attempts: 0 });
+    }
+  }
   tx.create(orderRef.collection("events").doc(), { status: "placed", createdAt: now });
   // 4-digit code the customer tells the rider at the door (riderDeliver).
   // Only the customer and staff can read it (firestore.rules).

@@ -259,6 +259,15 @@ service cloud.firestore {
         allow read: if isAdmin() || orderCustomer();
         allow write: if false;
       }
+      // Pickup codes for sellers' shops: the assigned rider shows them; the
+      // seller types them in (storeConfirmPickup). Never the customer.
+      match /pickupCodes/{storeId} {
+        allow read: if isAdmin()
+          || (signedIn()
+              && get(/databases/$(database)/documents/orders/$(orderId)).data.get('riderId', '')
+                 == request.auth.uid);
+        allow write: if false;
+      }
     }
 
     match /paymentIntents/{id} {
@@ -436,7 +445,7 @@ service cloud.firestore {
       }
       // Ledger, payouts and subscription periods (Phase 7 M3), inbox.
       match /{sub}/{id} {
-        allow read: if sub in ['earnings', 'payouts', 'subscriptions', 'inbox', 'devices', 'consents']
+        allow read: if sub in ['earnings', 'payouts', 'subscriptions', 'inbox', 'devices', 'consents', 'orders']
           && (sellerMember(sellerId) || hasRole(['ops', 'finance']));
         allow write: if false;
       }

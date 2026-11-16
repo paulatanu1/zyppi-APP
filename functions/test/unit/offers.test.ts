@@ -250,7 +250,6 @@ describe("sellerSummary", () => {
     ];
     expect(sellerSummary(lines)).toEqual({
       sellerIds: ["sima"],
-      sellerStatus: { sima: "pending" },
       sellerTotals: { sima: { itemTotalPaise: 12600, payoutPaise: 11900 } },
       payoutTotalPaise: 11900,
       marginTotalPaise: 18000 + 600 + 100,

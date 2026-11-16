@@ -4,7 +4,9 @@ import { db } from "../shared/firebase";
 import { pushOrderCustomer } from "../push";
 import { creditRiderDelivery } from "./effects";
 import { deliveryEarning } from "./earnings";
-import { CANNOT_DELIVER_REASONS, MAX_CODE_ATTEMPTS, type RiderStage } from "./model";
+import { CANNOT_DELIVER_REASONS, MAX_CODE_ATTEMPTS, type Point, type RiderStage, distanceM, isPoint } from "./model";
+import { notifySeller } from "../marketplace/seller_notify";
+import { type PickupStop, STORE_GEOFENCE_M, allStopsPicked, stopReady } from "./pickups";
 import { requireRider } from "./rider_auth";
 
 /**
@@ -31,7 +33,7 @@ function orderIdOf(raw: unknown): string {
 }
 
 /** Runs `step` in a transaction on the rider's own, still-open order. */
-async function onMyOrder<T>(
+export async function onMyOrder<T>(
   riderId: string,
   orderIdRaw: unknown,
   step: (tx: Transaction, c: Ctx) => Promise<T>,
@@ -51,7 +53,7 @@ async function onMyOrder<T>(
 
 const stageOf = (d: Record<string, unknown>) => (d.riderStage as RiderStage | undefined) ?? "accepted";
 
-function event(tx: Transaction, order: DocumentSnapshot, status: string, by: string, note?: string) {
+export function event(tx: Transaction, order: DocumentSnapshot, status: string, by: string, note?: string) {
   tx.create(order.ref.collection("events").doc(), {
     status,
     createdAt: FieldValue.serverTimestamp(),
@@ -61,56 +63,107 @@ function event(tx: Transaction, order: DocumentSnapshot, status: string, by: str
 }
 
 /** Stores still to visit (an order can be filled from several). */
-function storesOf(d: Record<string, unknown>): string[] {
+export function storesOf(d: Record<string, unknown>): string[] {
+  if (Array.isArray(d.pickupOrder) && d.pickupOrder.length) return d.pickupOrder as string[];
   const allocations = (d.allocations as { storeId?: string }[] | undefined) ?? [];
   return [...new Set(allocations.map((a) => a.storeId).filter((s): s is string => !!s))];
 }
 
-/** Request: {orderId, storeId?}. */
+type Stops = Record<string, Partial<PickupStop> & { pickedAt?: unknown; reachedAt?: unknown }>;
+
+function storeIdFor(data: Record<string, unknown>, raw: unknown): string {
+  const stores = storesOf(data);
+  const storeId = typeof raw === "string" ? raw : stores[0];
+  if (stores.length && !stores.includes(storeId)) throw new HttpsError("invalid-argument", "Invalid store");
+  return storeId ?? "store";
+}
+
+/** The rider's position from their last accepted ping, if recent enough. */
+function freshPosition(rider: DocumentSnapshot, maxAgeMs: number): Point | null {
+  const p = (rider.get("presence") ?? {}) as Record<string, unknown>;
+  const at = p.at as { toMillis?: () => number } | undefined;
+  const fresh = typeof at?.toMillis === "function" && Date.now() - at.toMillis() <= maxAgeMs;
+  return fresh && isPoint({ lat: p.lat, lng: p.lng }) ? { lat: p.lat as number, lng: p.lng as number } : null;
+}
+
+const POSITION_MAX_AGE_MS = 3 * 60_000;
+
+/**
+ * Request: {orderId, storeId?}. At a marketplace seller's shop the rider
+ * must really be there (last ping within 150 m, mocked locations are
+ * already refused by riderPing); the seller is told the rider arrived.
+ */
 export const riderReachedStore = onCall(async (request) => {
   const rider = await requireRider(request);
-  return onMyOrder(rider.id, request.data?.orderId, async (tx, { order, data }) => {
+  const res = await onMyOrder(rider.id, request.data?.orderId, async (tx, { order, data, rider: r }) => {
     if (!["accepted", "at_store"].includes(stageOf(data))) throw new HttpsError("failed-precondition", "WRONG_STEP");
-    const stores = storesOf(data);
-    const storeId = typeof request.data?.storeId === "string" ? request.data.storeId : stores[0];
-    if (stores.length && !stores.includes(storeId)) throw new HttpsError("invalid-argument", "Invalid store");
+    const storeId = storeIdFor(data, request.data?.storeId);
+    const stop = ((data.pickups ?? {}) as Stops)[storeId];
+    if (stop?.otpRequired) {
+      const here = freshPosition(r, POSITION_MAX_AGE_MS);
+      if (!here) throw new HttpsError("failed-precondition", "LOCATION_NEEDED");
+      const shop = isPoint({ lat: stop.lat, lng: stop.lng }) ? { lat: stop.lat as number, lng: stop.lng as number } : null;
+      if (shop && distanceM(here, shop) > STORE_GEOFENCE_M) {
+        throw new HttpsError("failed-precondition", "NOT_AT_STORE", { distanceM: Math.round(distanceM(here, shop)) });
+      }
+    }
     tx.update(order.ref, {
       riderStage: "at_store",
-      [`pickups.${storeId ?? "store"}.reachedAt`]: FieldValue.serverTimestamp(),
+      [`pickups.${storeId}.reachedAt`]: FieldValue.serverTimestamp(),
     });
-    return { ok: true };
+    return { ok: true, sellerId: stop?.otpRequired ? (stop.sellerId ?? null) : null, orderId: order.id };
   });
+  if (res.sellerId) await notifySeller(res.sellerId, res.orderId, "rider_arrived");
+  return { ok: true };
 });
 
 /**
- * Request: {orderId, storeId?}. Allowed once the store marked the order
- * packed; when the last store is picked up the order goes out for delivery.
+ * Marks a stop collected inside a transaction and, after the last one,
+ * sends the order out for delivery. Shared by riderPickUp (Zyppi stores)
+ * and storeConfirmPickup (sellers' shops, after the pickup code).
+ */
+export function completePickup(
+  tx: Transaction,
+  order: DocumentSnapshot,
+  data: Record<string, unknown>,
+  storeId: string,
+  by: string,
+): { outForDelivery: boolean; remainingStores: string[] } {
+  const stores = storesOf(data);
+  const pickups = (data.pickups ?? {}) as Stops;
+  const done = new Set(Object.entries(pickups).filter(([, v]) => v?.pickedAt).map(([k]) => k));
+  done.add(storeId);
+  const allDone = allStopsPicked(stores, done);
+  tx.update(order.ref, {
+    [`pickups.${storeId}.pickedAt`]: FieldValue.serverTimestamp(),
+    ...(pickups[storeId] ? { [`pickups.${storeId}.status`]: "picked" } : {}),
+    ...(allDone
+      ? {
+          status: "out_for_delivery",
+          outForDeliveryAt: FieldValue.serverTimestamp(),
+          riderStage: "picked_up",
+          updatedAt: FieldValue.serverTimestamp(),
+        }
+      : { riderStage: "at_store" }),
+  });
+  if (allDone) event(tx, order, "out_for_delivery", by);
+  return { outForDelivery: allDone, remainingStores: stores.filter((s) => !done.has(s)) };
+}
+
+/**
+ * Request: {orderId, storeId?}. A Zyppi store's stop, once ops packed the
+ * order. A seller's shop is confirmed by the seller entering the rider's
+ * pickup code (storeConfirmPickup), never by the rider alone.
  */
 export const riderPickUp = onCall(async (request) => {
   const rider = await requireRider(request);
   return onMyOrder(rider.id, request.data?.orderId, async (tx, { order, data }) => {
     if (!["accepted", "at_store"].includes(stageOf(data))) throw new HttpsError("failed-precondition", "WRONG_STEP");
-    if (data.status !== "packed") throw new HttpsError("failed-precondition", "NOT_PACKED_YET");
-    const stores = storesOf(data);
-    const storeId = typeof request.data?.storeId === "string" ? request.data.storeId : stores[0];
-    if (stores.length && !stores.includes(storeId)) throw new HttpsError("invalid-argument", "Invalid store");
-    const pickups = (data.pickups ?? {}) as Record<string, { pickedAt?: unknown }>;
-    const done = new Set(Object.entries(pickups).filter(([, v]) => v?.pickedAt).map(([k]) => k));
-    done.add(storeId ?? "store");
-    const allDone = stores.every((s) => done.has(s));
-    tx.update(order.ref, {
-      [`pickups.${storeId ?? "store"}.pickedAt`]: FieldValue.serverTimestamp(),
-      ...(allDone
-        ? {
-            status: "out_for_delivery",
-            outForDeliveryAt: FieldValue.serverTimestamp(),
-            riderStage: "picked_up",
-            updatedAt: FieldValue.serverTimestamp(),
-          }
-        : { riderStage: "at_store" }),
-    });
-    if (allDone) event(tx, order, "out_for_delivery", rider.id);
-    return { ok: true, outForDelivery: allDone, remainingStores: stores.filter((s) => !done.has(s)) };
+    const storeId = storeIdFor(data, request.data?.storeId);
+    const stop = ((data.pickups ?? {}) as Stops)[storeId];
+    if (stop?.otpRequired) throw new HttpsError("failed-precondition", "PICKUP_CODE_REQUIRED");
+    if (!stopReady(stop, data.status as string)) throw new HttpsError("failed-precondition", "NOT_PACKED_YET");
+    return { ok: true, ...completePickup(tx, order, data, storeId, rider.id) };
   });
 });
 

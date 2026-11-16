@@ -23,6 +23,8 @@ export interface MarketplaceConfig {
   ratingPrior: number;
   /** Most different sellers in one order (pickups per delivery). */
   maxSellersPerOrder: number;
+  /** A seller has this long to accept a new order before ops is alerted. */
+  acceptSlaMinutes: number;
 }
 
 export const DEFAULT_MARKETPLACE_CONFIG: MarketplaceConfig = {
@@ -30,6 +32,7 @@ export const DEFAULT_MARKETPLACE_CONFIG: MarketplaceConfig = {
   ratingPriorCount: 20,
   ratingPrior: 4,
   maxSellersPerOrder: 3,
+  acceptSlaMinutes: 5,
 };
 
 const num = (v: unknown, min: number, max: number, fallback: number) =>
@@ -49,6 +52,7 @@ export function marketplaceConfigFrom(raw: Record<string, unknown> | undefined):
     ratingPriorCount: num(raw?.ratingPriorCount, 0, 1000, d.ratingPriorCount),
     ratingPrior: num(raw?.ratingPrior, 1, 5, d.ratingPrior),
     maxSellersPerOrder: Math.round(num(raw?.maxSellersPerOrder, 1, 10, d.maxSellersPerOrder)),
+    acceptSlaMinutes: num(raw?.acceptSlaMinutes, 1, 60, d.acceptSlaMinutes),
   };
 }
 

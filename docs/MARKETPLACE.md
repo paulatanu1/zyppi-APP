@@ -176,10 +176,11 @@ orders/{id}.pickups.{storeId} = {
   status: pending → accepted → ready → picked | issue,
   acceptedAt, readyAt, reachedAt, pickedAt, otpAttempts
 }
-orders/{id}/private/pickup_{storeId} = { code: 4-digit, attempts }   // never readable by the store
+orders/{id}/pickupCodes/{storeId} = { code: 4-digit, attempts }   // assigned rider + staff only; never the customer or the store
 ```
 - **Stop count.** The order has `pickupCount`; a single-store order is just one stop, so it follows the same flow.
-- **Order status.** The order becomes `packed` when every stop is `ready`.
+- **Order status.** A seller-only order becomes `packed` when every seller's stop is `ready`. Zyppi's own stores keep today's flow: ops marks the order packed, then the rider taps "picked up" (built in M1b).
+- **Ops alerts** (late accept, item issue) go in `opsAlerts.*`, not `dispatch.state`, so they never stop rider assignment.
 - **Where the code is shown.** The rider can read their own order's pickup codes (rule: the assigned rider only). The store never sees the code.
 
 ### OTP handover flow (each store)

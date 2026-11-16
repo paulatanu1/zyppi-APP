@@ -1,6 +1,14 @@
 {
   "indexes": [
     {
+      "collectionGroup": "orders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sellersPending", "order": "ASCENDING" },
+        { "fieldPath": "sellerAcceptDeadline", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "offers",
       "queryScope": "COLLECTION",
       "fields": [
