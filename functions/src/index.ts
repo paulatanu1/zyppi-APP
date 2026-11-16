@@ -131,3 +131,4 @@ export {
   adminAdjustSellerEarnings,
   sellerDaily,
 } from "./marketplace/settlement";
+export { rateSellers } from "./marketplace/ratings";

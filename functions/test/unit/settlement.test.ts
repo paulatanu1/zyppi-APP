@@ -76,3 +76,12 @@ describe("subscription fees", () => {
     expect(remindersDue(end, end + DAY, [])).toEqual([]);
   });
 });
+
+describe("seller ratings", () => {
+  it("keeps sum and count and a 3-decimal average", async () => {
+    const { nextRating } = await import("../../src/marketplace/ratings");
+    expect(nextRating(0, 0, 5)).toEqual({ sum: 5, count: 1, avg: 5 });
+    expect(nextRating(14, 3, 4)).toEqual({ sum: 18, count: 4, avg: 4.5 });
+    expect(nextRating(10, 3, 1).avg).toBe(2.75);
+  });
+});

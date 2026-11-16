@@ -106,6 +106,12 @@ export function orderContribution(order: Record<string, unknown> | undefined): C
   counts.deliveryFeePaise = int(order.deliveryFeePaise);
   counts.handlingFeePaise = int(order.handlingFeePaise);
   counts.tipPaise = int(order.tipPaise);
+  // Marketplace (Phase 7): what sellers are owed for their items and what
+  // Zyppi keeps of the item value (its own stock + add-ons + supply margin).
+  if (order.payoutTotalPaise != null || order.marginTotalPaise != null) {
+    counts.payoutPaise = int(order.payoutTotalPaise);
+    counts.marginPaise = int(order.marginTotalPaise);
+  }
   if (status === "delivered") counts.delivered = 1;
 
   // New vs repeat: customerOrderNo is set at checkout (orders from before
