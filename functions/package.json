@@ -17,7 +17,8 @@
     "deploy": "firebase deploy --only functions",
     "backfill-user-stats": "tsx scripts/backfill-user-stats.ts",
     "backfill-stats": "tsx scripts/backfill-stats.ts",
-    "backfill-zyppi-seller": "tsx scripts/backfill-zyppi-seller.ts"
+    "backfill-zyppi-seller": "tsx scripts/backfill-zyppi-seller.ts",
+    "publish-legal": "tsx scripts/publish-legal.ts"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.3.2",

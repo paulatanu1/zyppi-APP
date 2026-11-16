@@ -208,6 +208,12 @@ service cloud.firestore {
         allow create: if isOwner(uid)
           && request.resource.data.keys().hasOnly(['createdAt']);
       }
+
+      // Accepted terms / privacy / refund policy (acceptLegal only).
+      match /consents/{id} {
+        allow read: if isOwner(uid) || isAdmin();
+        allow write: if false;
+      }
     }
 
     // Admin panel: a customer's addresses across users.
@@ -364,6 +370,11 @@ service cloud.firestore {
         allow read: if isOwner(uid) || hasRole(['ops']);
         allow write: if false;
       }
+      // Signed rider agreement + privacy policy (acceptLegal only).
+      match /consents/{id} {
+        allow read: if isOwner(uid) || hasRole(['ops']);
+        allow write: if false;
+      }
     }
 
     // Rider settings (pay, dispatch, emergency numbers): riders read them;
@@ -419,7 +430,7 @@ service cloud.firestore {
       }
       // Ledger, payouts and subscription periods (Phase 7 M3), inbox.
       match /{sub}/{id} {
-        allow read: if sub in ['earnings', 'payouts', 'subscriptions', 'inbox', 'devices']
+        allow read: if sub in ['earnings', 'payouts', 'subscriptions', 'inbox', 'devices', 'consents']
           && (sellerMember(sellerId) || hasRole(['ops', 'finance']));
         allow write: if false;
       }
@@ -452,6 +463,19 @@ service cloud.firestore {
     match /offers/{id} {
       allow read: if true;
       allow write: if false;
+    }
+
+    // Terms, privacy and refund policy, rider and seller agreements
+    // (functions/src/legal): public, so the apps and the website show the
+    // exact published text. Only adminPublishLegalDoc writes.
+    match /legalDocs/{type} {
+      allow read: if true;
+      allow write: if false;
+
+      match /versions/{v} {
+        allow read: if true;
+        allow write: if false;
+      }
     }
 
     // Kill switches (functions/src/shared/features.ts): the app reads them

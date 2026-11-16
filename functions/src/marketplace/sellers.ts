@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { type DocumentSnapshot, FieldValue } from "firebase-admin/firestore";
 import { type CallableRequest, HttpsError, onCall } from "firebase-functions/https";
+import { assertConsented } from "../legal/legal";
 import { writeAudit } from "../shared/audit";
 import { requireUid } from "../shared/callable";
 import { auth, db } from "../shared/firebase";
@@ -55,6 +56,9 @@ export async function saveSellerApplication(
   if (member.exists && member.get("sellerId") !== uid) {
     throw new HttpsError("failed-precondition", "This number is already a staff login for another shop");
   }
+
+  // The seller agreement + privacy policy (once published; legal/legal.ts).
+  if (submit) await assertConsented("seller", uid);
 
   const ref = db.collection(SELLERS).doc(uid);
   return db.runTransaction(async (tx) => {

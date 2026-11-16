@@ -1,5 +1,6 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/https";
+import { assertConsented } from "../legal/legal";
 import { writeAudit } from "../shared/audit";
 import { requireUid } from "../shared/callable";
 import { auth, db } from "../shared/firebase";
@@ -37,6 +38,9 @@ export async function saveApplication(
       throw new HttpsError("invalid-argument", "That area isn’t open for riders");
     }
   }
+
+  // The rider agreement + privacy policy (once published; legal/legal.ts).
+  if (submit) await assertConsented("rider", uid);
 
   const ref = db.collection(RIDERS).doc(uid);
   return db.runTransaction(async (tx) => {
