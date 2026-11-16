@@ -3,6 +3,7 @@ import { type DocumentSnapshot, FieldValue } from "firebase-admin/firestore";
 import { type CallableRequest, HttpsError, onCall } from "firebase-functions/https";
 import { assertConsented } from "../legal/legal";
 import { writeAudit } from "../shared/audit";
+import { openPeriod, readPlan as readPlanTx } from "./periods";
 import { requireUid } from "../shared/callable";
 import { auth, db } from "../shared/firebase";
 import { type Actor, requireRole } from "../shared/roles";
@@ -158,6 +159,11 @@ export async function reviewSeller(
     }
     const owner = (snap.get("ownerUid") as string | undefined) ?? sellerId;
     const storeRef = db.collection("stores").doc(sellerStoreId(sellerId));
+    // A subscription seller's first period starts on first approval.
+    const planId = snap.get("planId") as string | undefined;
+    const startPlan =
+      move.to === "approved" && snap.get("model") === "subscription" && !!planId && !snap.get("subscription.periodEnd");
+    const plan = startPlan ? await readPlanTx(tx, planId!) : null;
     const touchesStore = move.to === "approved" || move.to === "suspended";
     const store = touchesStore && snap.get("fulfilment") === "seller_shop" ? await tx.get(storeRef) : null;
 
@@ -194,6 +200,7 @@ export async function reviewSeller(
         { merge: true },
       );
     }
+    if (plan) openPeriod(tx, ref, plan, Date.now());
     tx.create(ref.collection("events").doc(), { type: action, at: FieldValue.serverTimestamp(), by: actor.uid, note: reason || null });
     writeAudit(actor, { action: `seller.${action}`, target: ref.path, before: { status }, after: { status: move.to, reason: reason || null } }, tx);
     return { from: status, ownerUid: owner };

@@ -9,13 +9,23 @@ import { SELLERS } from "./model";
  * until accepted (docs/MARKETPLACE.md → Seller app). Best effort: a failed
  * push never fails the order step that triggered it.
  */
-export type SellerEvent = "new_order" | "escalate" | "rider_arrived" | "cancelled";
+export type SellerEvent =
+  | "new_order"
+  | "escalate"
+  | "rider_arrived"
+  | "cancelled"
+  | "subscription_reminder"
+  | "subscription_expired"
+  | "licence_expired";
 
 const TEXT: Record<SellerEvent, { title: string; body: string }> = {
   new_order: { title: "New order", body: "Accept it in the Zyppi Seller app." },
   escalate: { title: "Order waiting", body: "Accept the order now — Zyppi support has been alerted." },
   rider_arrived: { title: "Rider arrived", body: "Hand over after entering the rider's pickup code." },
   cancelled: { title: "Order cancelled", body: "Don't pack this order." },
+  subscription_reminder: { title: "Plan renews soon", body: "Your Zyppi plan renews in a few days. Keep the fee ready." },
+  subscription_expired: { title: "Products hidden", body: "Your plan fee is unpaid. Pay it to show your products again." },
+  licence_expired: { title: "FSSAI licence expired", body: "Your products are paused. Upload your renewed licence." },
 };
 
 export async function notifySeller(sellerId: string, orderId: string, kind: SellerEvent): Promise<void> {

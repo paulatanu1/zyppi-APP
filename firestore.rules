@@ -445,7 +445,7 @@ service cloud.firestore {
       }
       // Ledger, payouts and subscription periods (Phase 7 M3), inbox.
       match /{sub}/{id} {
-        allow read: if sub in ['earnings', 'payouts', 'subscriptions', 'inbox', 'devices', 'consents', 'orders']
+        allow read: if sub in ['earnings', 'payouts', 'subscriptions', 'inbox', 'devices', 'consents', 'orders', 'feePayments']
           && (sellerMember(sellerId) || hasRole(['ops', 'finance']));
         allow write: if false;
       }
