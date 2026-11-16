@@ -1,4 +1,5 @@
 import { isOpenAt, parseHours } from "../shared/hours";
+import { isZyppiStore } from "../marketplace/model";
 import { newHandoverCode } from "../dispatch/model";
 import { DocumentReference, FieldValue, Transaction } from "firebase-admin/firestore";
 import { COUPON_MESSAGES, discountFor, normalizeCode } from "../coupons/model";
@@ -132,10 +133,13 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
       .where("serviceAreaId", "==", area.id)
       .where("isActive", "==", true),
   );
-  if (storesSnap.empty) throw new OrderError("We do not deliver to this address yet");
+  // Marketplace seller shops (docs/MARKETPLACE.md) sell through offers,
+  // which this quote doesn't price yet (Phase 7 M1): only Zyppi's stores.
+  const zyppiStores = storesSnap.docs.filter((st) => isZyppiStore(st.get("sellerId")));
+  if (zyppiStores.length === 0) throw new OrderError("We do not deliver to this address yet");
   const stores = p.openAt
-    ? storesSnap.docs.filter((st) => isOpenAt(parseHours(st.get("hours")), p.openAt!))
-    : storesSnap.docs;
+    ? zyppiStores.filter((st) => isOpenAt(parseHours(st.get("hours")), p.openAt!))
+    : zyppiStores;
   if (stores.length === 0) throw new OrderError("STORES_CLOSED");
 
   const slotSnap = await tx.get(db.collection("deliverySlots").doc(p.deliverySlotId));

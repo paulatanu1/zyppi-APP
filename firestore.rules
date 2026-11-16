@@ -394,6 +394,66 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Marketplace sellers (functions/src/marketplace, docs/MARKETPLACE.md).
+    // A seller login carries the claim `sellerId`; the applicant (before
+    // approval) is the owner uid the seller doc is keyed by. Payout and
+    // margin fields stay in listings (private); offers are the public
+    // projection. Only the callables write.
+    function sellerMember(sellerId) {
+      return signedIn()
+        && (request.auth.token.get('sellerId', '') == sellerId || request.auth.uid == sellerId);
+    }
+
+    match /sellers/{sellerId} {
+      allow read: if sellerMember(sellerId) || hasRole(['ops', 'finance', 'support']);
+      allow write: if false;
+
+      match /events/{id} {
+        allow read: if sellerMember(sellerId) || hasRole(['ops']);
+        allow write: if false;
+      }
+      // Bank account / UPI for payouts.
+      match /private/{doc} {
+        allow read: if sellerMember(sellerId) || hasRole(['finance']);
+        allow write: if false;
+      }
+      // Ledger, payouts and subscription periods (Phase 7 M3), inbox.
+      match /{sub}/{id} {
+        allow read: if sub in ['earnings', 'payouts', 'subscriptions', 'inbox', 'devices']
+          && (sellerMember(sellerId) || hasRole(['ops', 'finance']));
+        allow write: if false;
+      }
+    }
+
+    match /sellerUsers/{uid} {
+      allow read: if isOwner(uid) || hasRole(['ops']);
+      allow write: if false;
+    }
+
+    // Plans are shown on the seller registration screen.
+    match /sellerPlans/{id} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // Seller price, add-on, payout: the seller and staff only.
+    match /listings/{id} {
+      allow read: if (signedIn() && request.auth.token.get('sellerId', '') == resource.data.sellerId)
+        || isAdmin();
+      allow write: if false;
+
+      match /priceHistory/{h} {
+        allow read: if isAdmin();
+        allow write: if false;
+      }
+    }
+
+    // What customers see: price, MRP, seller name / rating, stock flag.
+    match /offers/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Kill switches (functions/src/shared/features.ts): the app reads them
     // to hide what's off; only adminUpdateFeatures writes them.
     match /config/features {

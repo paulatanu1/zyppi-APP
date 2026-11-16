@@ -102,3 +102,4 @@ export {
   adminReplySupport,
   adminCloseSupport,
 } from "./support/chat";
+export { sellerSaveApplication, adminReviewSeller, adminSaveSellerPlan } from "./marketplace/sellers";
