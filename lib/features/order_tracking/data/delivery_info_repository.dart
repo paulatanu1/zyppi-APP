@@ -46,6 +46,12 @@ abstract class DeliveryInfoRepository {
   /// Whether the customer already rated this order's rider.
   Stream<bool> watchRated(String orderId);
   Future<void> rateRider(String orderId, int stars, List<String> tags);
+
+  /// Marketplace sellers of the order the customer already rated.
+  Stream<Set<String>> watchRatedSellers(String orderId);
+
+  /// 1–5 stars per seller (rateSellers; once per seller per order).
+  Future<void> rateSellers(String orderId, Map<String, int> stars);
 }
 
 class FirebaseDeliveryInfoRepository implements DeliveryInfoRepository {
@@ -83,6 +89,20 @@ class FirebaseDeliveryInfoRepository implements DeliveryInfoRepository {
         'stars': stars,
         'tags': tags,
       });
+
+  @override
+  Stream<Set<String>> watchRatedSellers(String orderId) => _order(orderId)
+      .snapshots()
+      .map(
+        (s) => ((s.data()?['sellerRatings'] as Map?) ?? const {}).keys
+            .cast<String>()
+            .toSet(),
+      );
+
+  @override
+  Future<void> rateSellers(String orderId, Map<String, int> stars) => functions
+      .httpsCallable('rateSellers')
+      .call<Object?>({'orderId': orderId, 'ratings': stars});
 }
 
 /// Mock data source: a fixed code, no live rider.
@@ -99,6 +119,14 @@ class MockDeliveryInfoRepository implements DeliveryInfoRepository {
   @override
   Future<void> rateRider(String orderId, int stars, List<String> tags) async =>
       _rated.add(orderId);
+
+  final _sellers = <String, Set<String>>{};
+  @override
+  Stream<Set<String>> watchRatedSellers(String orderId) =>
+      Stream.value(_sellers[orderId] ?? const {});
+  @override
+  Future<void> rateSellers(String orderId, Map<String, int> stars) async =>
+      (_sellers[orderId] ??= {}).addAll(stars.keys);
 }
 
 final deliveryInfoRepositoryProvider = Provider<DeliveryInfoRepository>(
@@ -121,3 +149,9 @@ final riderLiveProvider = StreamProvider.autoDispose.family<RiderLive?, String>(
 final riderRatedProvider = StreamProvider.autoDispose.family<bool, String>(
   (ref, id) => ref.watch(deliveryInfoRepositoryProvider).watchRated(id),
 );
+
+final ratedSellersProvider = StreamProvider.autoDispose
+    .family<Set<String>, String>(
+      (ref, id) =>
+          ref.watch(deliveryInfoRepositoryProvider).watchRatedSellers(id),
+    );

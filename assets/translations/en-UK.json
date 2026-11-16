@@ -1,4 +1,7 @@
 {
+  "rateSellersTitle": "Rate the sellers",
+  "rateSellerThanks": "Thanks! Your rating helps other customers.",
+  "rateNStars": {"one": "{} star", "other": "{} stars"},
   "errorTooManySellers": "Your basket has items from more than {} sellers. Remove some, or pick the same seller for them.",
   "soldBy": "Sold by {}",
   "moreSellers": {"one": "+{} more seller", "other": "+{} more sellers"},

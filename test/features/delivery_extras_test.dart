@@ -24,6 +24,13 @@ class _Repo implements DeliveryInfoRepository {
   @override
   Future<void> rateRider(String orderId, int stars, List<String> tags) async =>
       ratings.add((stars, tags));
+  final sellerStars = <String, int>{};
+  @override
+  Stream<Set<String>> watchRatedSellers(String orderId) =>
+      Stream.value(sellerStars.keys.toSet());
+  @override
+  Future<void> rateSellers(String orderId, Map<String, int> stars) async =>
+      sellerStars.addAll(stars);
 }
 
 Future<_Repo> _pump(
