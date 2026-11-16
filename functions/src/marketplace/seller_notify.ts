@@ -16,7 +16,9 @@ export type SellerEvent =
   | "cancelled"
   | "subscription_reminder"
   | "subscription_expired"
-  | "licence_expired";
+  | "licence_expired"
+  | "product_approved"
+  | "product_rejected";
 
 const TEXT: Record<SellerEvent, { title: string; body: string }> = {
   new_order: { title: "New order", body: "Accept it in the Zyppi Seller app." },
@@ -26,6 +28,8 @@ const TEXT: Record<SellerEvent, { title: string; body: string }> = {
   subscription_reminder: { title: "Plan renews soon", body: "Your Zyppi plan renews in a few days. Keep the fee ready." },
   subscription_expired: { title: "Products hidden", body: "Your plan fee is unpaid. Pay it to show your products again." },
   licence_expired: { title: "FSSAI licence expired", body: "Your products are paused. Upload your renewed licence." },
+  product_approved: { title: "Product approved", body: "Set your price and stock to start selling it." },
+  product_rejected: { title: "Product not approved", body: "Open the app to see why and fix it." },
 };
 
 export async function notifySeller(sellerId: string, orderId: string, kind: SellerEvent): Promise<void> {

@@ -102,7 +102,15 @@ export {
   adminReplySupport,
   adminCloseSupport,
 } from "./support/chat";
-export { sellerSaveApplication, adminReviewSeller, adminSaveSellerPlan } from "./marketplace/sellers";
+export {
+  sellerSaveApplication,
+  adminReviewSeller,
+  adminSaveSellerPlan,
+  sellerSetOnline,
+  sellerAddStaff,
+  sellerRemoveStaff,
+} from "./marketplace/sellers";
+export { sellerSubmitProduct, adminReviewProductRequest, adminSetSellerTrusted } from "./marketplace/product_requests";
 export { legalStatus, acceptLegal, adminPublishLegalDoc } from "./legal/legal";
 export { sellerSaveListing, adminSaveListing, sellerAdjustStock } from "./marketplace/listings";
 export {

@@ -481,6 +481,14 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Seller product submissions (sellerSubmitProduct): the seller sees
+    // its own; catalog staff review them.
+    match /productRequests/{id} {
+      allow read: if hasRole(['catalog', 'ops'])
+        || (signedIn() && request.auth.token.get('sellerId', '') == resource.data.sellerId);
+      allow write: if false;
+    }
+
     // What customers see: price, MRP, seller name / rating, stock flag.
     match /offers/{id} {
       allow read: if true;

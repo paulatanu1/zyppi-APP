@@ -50,6 +50,8 @@ export interface SellerLite {
   subscriptionStatus: string | null;
   /** Food sellers whose FSSAI licence ran out are paused (sellerDaily). */
   licenceExpired: boolean;
+  /** Seller app Online / Offline (their own shop only takes orders online). */
+  online: boolean;
 }
 
 export const ZYPPI_SELLER: SellerLite = {
@@ -63,6 +65,7 @@ export const ZYPPI_SELLER: SellerLite = {
   badOrders: 0,
   subscriptionStatus: null,
   licenceExpired: false,
+  online: true,
 };
 
 export interface OfferDoc {
@@ -108,6 +111,7 @@ export function sellerCanSell(s: SellerLite | undefined): boolean {
   if (!s || s.status !== "approved") return false;
   if (s.model === "subscription" && s.subscriptionStatus === "expired") return false;
   if (s.licenceExpired) return false;
+  if (s.fulfilment === "seller_shop" && !s.online) return false;
   return true;
 }
 
@@ -310,5 +314,6 @@ export function readSellerLite(d: Record<string, unknown> | undefined): SellerLi
     badOrders: n(stats.cancelled) + n(stats.lateAccepts),
     subscriptionStatus: typeof sub.status === "string" ? sub.status : null,
     licenceExpired: ((d.compliance ?? {}) as Record<string, unknown>).fssaiExpired === true,
+    online: d.isOnline === true,
   };
 }

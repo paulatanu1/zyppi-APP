@@ -278,3 +278,62 @@ export async function requireSeller(request: CallableRequest, roles: readonly Se
   }
   return { uid, sellerId, role, seller };
 }
+
+/**
+ * Seller app → Online / Offline. A seller's own shop only gets orders
+ * while online (offers are hidden otherwise); supply sellers' stock in
+ * Zyppi's stores sells regardless. Request: {online}.
+ */
+export const sellerSetOnline = onCall(async (request) => {
+  const me = await requireSeller(request);
+  const online = request.data?.online === true;
+  await me.seller.ref.update({ isOnline: online, onlineChangedAt: FieldValue.serverTimestamp(), onlineChangedBy: me.uid });
+  return { online };
+});
+
+/**
+ * Owner adds a staff login by phone number (the person must have signed
+ * in to the seller app once). Request: {phone}.
+ */
+export const sellerAddStaff = onCall(async (request) => {
+  const me = await requireSeller(request, ["owner"]);
+  const raw = typeof request.data?.phone === "string" ? request.data.phone.replace(/[\s-]/g, "") : "";
+  const phone = /^[6-9]\d{9}$/.test(raw) ? `+91${raw}` : raw;
+  if (!/^\+91[6-9]\d{9}$/.test(phone)) throw new HttpsError("invalid-argument", "Enter a 10-digit mobile number");
+  const user = await auth.getUserByPhoneNumber(phone).catch(() => null);
+  if (!user) throw new HttpsError("not-found", "Ask them to sign in to the Zyppi Seller app once first");
+  if (user.uid === me.uid) throw new HttpsError("invalid-argument", "That's you");
+  const ref = db.collection(SELLER_USERS).doc(user.uid);
+  await db.runTransaction(async (tx) => {
+    const existing = await tx.get(ref);
+    if (existing.exists && existing.get("sellerId") !== me.sellerId) {
+      throw new HttpsError("failed-precondition", "This number already works for another shop");
+    }
+    const team = await tx.get(db.collection(SELLER_USERS).where("sellerId", "==", me.sellerId));
+    if (team.size >= 10 && !existing.exists) throw new HttpsError("resource-exhausted", "At most 10 logins per shop");
+    tx.set(ref, { sellerId: me.sellerId, role: "staff" satisfies SellerRole, addedBy: me.uid, addedAt: FieldValue.serverTimestamp() });
+  });
+  await auth.setCustomUserClaims(user.uid, { ...(user.customClaims ?? {}), sellerId: me.sellerId, sellerRole: "staff" });
+  return { uid: user.uid };
+});
+
+/** Owner removes a staff login: claims removed and sessions ended. Request: {uid}. */
+export const sellerRemoveStaff = onCall(async (request) => {
+  const me = await requireSeller(request, ["owner"]);
+  const uid = typeof request.data?.uid === "string" ? request.data.uid : "";
+  const ref = db.collection(SELLER_USERS).doc(uid);
+  const member = await ref.get();
+  if (!member.exists || member.get("sellerId") !== me.sellerId || member.get("role") !== "staff") {
+    throw new HttpsError("not-found", "Not a staff login of your shop");
+  }
+  await ref.delete();
+  const user = await auth.getUser(uid).catch(() => null);
+  if (user) {
+    const claims: Record<string, unknown> = { ...(user.customClaims ?? {}) };
+    delete claims.sellerId;
+    delete claims.sellerRole;
+    await auth.setCustomUserClaims(uid, claims);
+    await auth.revokeRefreshTokens(uid);
+  }
+  return { ok: true };
+});

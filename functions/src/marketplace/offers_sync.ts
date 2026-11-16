@@ -153,7 +153,7 @@ export const onInventoryWritten = onDocumentWritten("inventory/{id}", async (eve
   if (id && had !== has) await rebuildProductOffers(id);
 });
 
-const SELLER_FIELDS = ["status", "shopName", "rating", "stats", "subscription", "model", "fulfilment", "compliance"];
+const SELLER_FIELDS = ["status", "shopName", "rating", "stats", "subscription", "model", "fulfilment", "compliance", "isOnline"];
 
 export const onSellerWritten = onDocumentWritten({ document: `${SELLERS}/{sellerId}`, timeoutSeconds: 540 }, async (event) => {
   const b = event.data?.before?.data() ?? {};
