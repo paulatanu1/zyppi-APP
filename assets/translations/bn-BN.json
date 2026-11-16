@@ -74,7 +74,6 @@
   "confirmLocation": "অবস্থান নিশ্চিত করুন",
   "fullName": "নাম",
   "emailAddress": "ইমেইল",
-  "phoneNumber": "ফোন নম্বর",
   "dateOfBirth": "জন্ম তারিখ",
   "gender": "লিঙ্গ",
   "save": "সংরক্ষণ করুন",
@@ -355,5 +354,25 @@
   "searchForItem": "\"{}\" খুঁজুন",
   "buyAgain": "আবার কিনুন",
   "offlineBanner": "আপনি অফলাইন — সংরক্ষিত তথ্য দেখানো হচ্ছে",
-  "backOnline": "আবার অনলাইন"
+  "backOnline": "আবার অনলাইন",
+  "rateYourRider": "ডেলিভারি পার্টনারকে রেটিং দিন",
+  "deliveryCodeTitle": "ডেলিভারি কোড",
+  "deliveryCodeHint": "দরজায় রাইডারকে এটি বলুন।",
+  "deliveryCodeSemantics": "ডেলিভারি কোড {}। রাইডারকে বলুন।",
+  "riderNearby": "রাইডার প্রায় পৌঁছে গেছেন",
+  "riderDistance": "রাইডার {} কিমি দূরে · ~{} মিনিট",
+  "riderSignalOld": "লোকেশন কয়েক মিনিট আগে আপডেট হয়েছে",
+  "seeOnMap": "ম্যাপে দেখুন",
+  "thanksForRating": "রেটিং দেওয়ার জন্য ধন্যবাদ!",
+  "sendRating": "রেটিং পাঠান",
+  "riderTag_polite": "ভদ্র",
+  "riderTag_on_time": "সময়মতো",
+  "riderTag_careful": "জিনিসে যত্নশীল",
+  "riderTag_late": "দেরি",
+  "riderTag_rude": "অভদ্র",
+  "riderTag_damaged": "জিনিস নষ্ট",
+  "starsLabel": {
+    "one": "{} তারা",
+    "other": "{} তারা"
+  }
 }

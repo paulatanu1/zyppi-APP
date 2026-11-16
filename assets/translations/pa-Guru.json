@@ -2,7 +2,7 @@
   "signInWithGoogle": "Google ਨਾਲ ਸਾਈਨ ਇਨ ਕਰੋ",
   "continueWith": "- ਜਾਂ ਨਾਲ ਜਾਰੀ ਰੱਖੋ -",
   "continueAsGuest": "ਮਹਿਮਾਨ ਵਜੋਂ ਜਾਰੀ ਰੱਖੋ",
-  "phoneNumber": "ਫੋਨ ਨੰਬਰ",
+  "phoneNumber": "ਫ਼ੋਨ ਨੰਬਰ",
   "login": "ਲਾਗਿਨ",
   "phoneVerification": "ਫ਼ੋਨ ਪੁਸ਼ਟੀਕਰਨ",
   "resendCode": "ਕੋਡ ਦੁਬਾਰਾ ਭੇਜੋ",
@@ -73,7 +73,6 @@
   "confirmLocation": "ਟਿਕਾਣਾ ਪੱਕਾ ਕਰੋ",
   "fullName": "ਨਾਮ",
   "emailAddress": "ਈਮੇਲ",
-  "phoneNumber": "ਫ਼ੋਨ ਨੰਬਰ",
   "dateOfBirth": "ਜਨਮ ਮਿਤੀ",
   "gender": "ਲਿੰਗ",
   "save": "ਸੰਭਾਲੋ",
@@ -355,5 +354,25 @@
   "searchForItem": "\"{}\" ਖੋਜੋ",
   "buyAgain": "ਦੁਬਾਰਾ ਖਰੀਦੋ",
   "offlineBanner": "ਤੁਸੀਂ ਆਫ਼ਲਾਈਨ ਹੋ — ਸੰਭਾਲੀ ਜਾਣਕਾਰੀ ਦਿਖ ਰਹੀ ਹੈ",
-  "backOnline": "ਮੁੜ ਆਨਲਾਈਨ"
+  "backOnline": "ਮੁੜ ਆਨਲਾਈਨ",
+  "rateYourRider": "ਡਿਲੀਵਰੀ ਪਾਰਟਨਰ ਨੂੰ ਰੇਟਿੰਗ ਦਿਓ",
+  "deliveryCodeTitle": "ਡਿਲੀਵਰੀ ਕੋਡ",
+  "deliveryCodeHint": "ਦਰਵਾਜ਼ੇ 'ਤੇ ਰਾਈਡਰ ਨੂੰ ਇਹ ਦੱਸੋ।",
+  "deliveryCodeSemantics": "ਡਿਲੀਵਰੀ ਕੋਡ {}। ਰਾਈਡਰ ਨੂੰ ਦੱਸੋ।",
+  "riderNearby": "ਰਾਈਡਰ ਲਗਭਗ ਪਹੁੰਚ ਗਏ ਹਨ",
+  "riderDistance": "ਰਾਈਡਰ {} ਕਿਮੀ ਦੂਰ · ~{} ਮਿੰਟ",
+  "riderSignalOld": "ਲੋਕੇਸ਼ਨ ਕੁਝ ਮਿੰਟ ਪਹਿਲਾਂ ਅੱਪਡੇਟ ਹੋਈ",
+  "seeOnMap": "ਨਕਸ਼ੇ 'ਤੇ ਵੇਖੋ",
+  "thanksForRating": "ਰੇਟਿੰਗ ਲਈ ਧੰਨਵਾਦ!",
+  "sendRating": "ਰੇਟਿੰਗ ਭੇਜੋ",
+  "riderTag_polite": "ਨਿਮਰ",
+  "riderTag_on_time": "ਸਮੇਂ ਸਿਰ",
+  "riderTag_careful": "ਸਮਾਨ ਦਾ ਧਿਆਨ ਰੱਖਿਆ",
+  "riderTag_late": "ਦੇਰ ਨਾਲ",
+  "riderTag_rude": "ਬਦਤਮੀਜ਼",
+  "riderTag_damaged": "ਸਮਾਨ ਖ਼ਰਾਬ",
+  "starsLabel": {
+    "one": "{} ਤਾਰਾ",
+    "other": "{} ਤਾਰੇ"
+  }
 }

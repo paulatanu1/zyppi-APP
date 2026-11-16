@@ -65,7 +65,44 @@ Nothing here is done automatically: every step changes production.
       closed area · announcement · blocked customer · store outside hours.
 - [ ] Support: "Talk to a person" reaches the inbox. The reply arrives as a push and in the chat.
 
-## 7. Known limits (accepted for launch)
+## 7. Zyppi Delivery (rider app, repo `zyppi-delivery-app`)
+
+**Backend**: the rider functions, rules and indexes ship with step 1 (`firebase deploy --only functions,firestore:rules,firestore:indexes`).
+Customer orders placed **before** that deploy have no delivery code; riders can deliver them without one.
+
+**Admin → Rider settings** (ops), before the first rider goes online:
+- [ ] Dispatch: auto-assign on, "look for a rider" (placed / packed), seconds to accept, riders to try, max distance.
+- [ ] Pay: default rate (base, per km, min, max), per-area rates if they differ, peak hours, surge.
+- [ ] Gig slots: book-ahead days, cancel window, slot times / riders per slot / on-time bonus per area.
+- [ ] Safety & cash: ambulance (108), police (112), **accident-team number**, door wait time, cash-in-hand warning.
+- [ ] Store settings → Stores: **pickup latitude / longitude** for each dark store (navigation and dispatch distance; else the area centre is used).
+
+**Firebase / Google**:
+- [ ] Android app `com.zyppi.delivery` is registered (done 2026-11-16). Add its **SHA-1 and SHA-256** (debug keystore for dev builds; Play app-signing key for release) in Project settings → needed for Google sign-in and Play Integrity / App Check.
+- [ ] App Check → Apps → Zyppi Delivery → Play Integrity (same as the customer app); register the debug token from logcat for dev phones.
+
+**Play Console** (new app listing "Zyppi Delivery"):
+- [ ] Release keystore: create one, keep it safe, and fill `android/key.properties` (gitignored) — `storeFile`, `storePassword`, `keyAlias`, `keyPassword`.
+- [ ] Build: `fvm flutter build appbundle --flavor prod --release --dart-define-from-file=env/prod.json` (fill `env/prod.json` from the example: real `SUPPORT_PHONE`, `RIDER_PORTAL_URL`, `PRIVACY_POLICY_URL`).
+- [ ] App content → **Foreground service: location** declaration (video of: go online → notification "You're online" → orders while the screen is off). The app never asks for background location.
+- [ ] App content → Data safety: precise location (collected while online, for dispatch and customer ETA, not shared for ads), phone number, name.
+- [ ] Privacy policy URL that covers rider location.
+- [ ] Internal testing track → install on 2 rider phones.
+
+**Phone checks** (2 rider phones + 1 customer phone, after the deploy):
+- [ ] Rider signs in (phone OTP), pending rider sees their application status, approved rider lands on Home.
+- [ ] Swipe online → location disclosure → permission → "You're online" notification; mock-location app on → refused.
+- [ ] Customer places an order → the **nearer** free rider gets the offer with a ring (app open and app closed); reject → the other rider gets it; nobody → Dispatch board "Needs a rider" with a chime.
+- [ ] Accept → navigate to store (phone's maps) → reached → checklist → swipe picked up only after ops marks it packed.
+- [ ] Customer tracking shows the code and "Rider is x km away"; See on map opens the phone's maps.
+- [ ] Swipe arrived → customer push "Your rider is here"; wrong code refused (5 tries max); right code + cash ticked → delivered.
+- [ ] Pocket shows order pay + tip; request payout → Admin → Rider payouts → record with UTR → Pocket shows it paid.
+- [ ] Book a slot → online in it → dispatch priority + on-time bonus; incentive target reached → paid after midnight.
+- [ ] Emergency → each button dials; Dispatch board shows the SOS with the rider's location and alarm; resolve.
+- [ ] Can't deliver → reason → Dispatch board shows the issue; ops cancels / reassigns.
+- [ ] Message riders from Dispatch → push + Messages in the app.
+
+## 8. Known limits (accepted for launch)
 
 - No 2-step sign-in for staff: it needs the Identity Platform upgrade, which was declined
   (2026-11-15). Use strong, unique staff passwords and keep the super-admin list short.
@@ -73,4 +110,6 @@ Nothing here is done automatically: every step changes production.
   `gcloud firestore backups schedules create --database='(default)' --recurrence=daily --retention=14d`.
 - `npm run seed:support` replaces the whole knowledge base. Don't run it after the KB editor is in use.
 - Customer name search matches from the start of the name only.
+- Rider app v2 (not built): batching 2 orders per trip, an in-app map, instant withdrawals (needs a paid payout API), masked calling, document-expiry reminders.
+- Riders' location stops if Android kills the app (aggressive battery savers on some phones): the server marks them offline after 10 minutes without a ping. Ask riders to exempt Zyppi Delivery from battery optimisation.
 - No Content-Security-Policy header on the admin yet (other security headers are set in `firebase.json`).

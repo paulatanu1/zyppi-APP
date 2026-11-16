@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:zippy/features/order_tracking/widgets/delivery_extras.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -442,6 +443,11 @@ class _SheetContent extends StatelessWidget {
               ],
             ],
           ),
+        ),
+        DeliveryExtras(
+          orderId: order.id,
+          status: order.status,
+          hasRider: order.riderName?.trim().isNotEmpty ?? false,
         ),
         const SizedBox(height: ZSpace.x3),
         Material(

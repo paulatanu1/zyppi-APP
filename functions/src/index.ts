@@ -67,6 +67,33 @@ export {
   dispatchCampaigns,
 } from "./notifications/campaigns";
 export { onOrderWritten } from "./stats/stats";
+export { onOrderDispatch, dispatchSweep } from "./dispatch/dispatch";
+export {
+  riderSetOnline,
+  riderPing,
+  riderBreak,
+  riderRegisterDevice,
+  riderRespondOffer,
+} from "./dispatch/presence";
+export {
+  riderReachedStore,
+  riderPickUp,
+  riderArrived,
+  riderDeliver,
+  riderCannotDeliver,
+} from "./dispatch/delivery";
+export { riderSos, adminResolveSos } from "./dispatch/sos";
+export { adminSaveRiderConfig } from "./dispatch/admin";
+export {
+  riderRequestPayout,
+  adminRecordPayout,
+  adminAdjustEarnings,
+  adminSaveRiderOffer,
+  settleIncentives,
+} from "./dispatch/pay";
+export { riderBookSlot, riderCancelSlot } from "./dispatch/gigs";
+export { rateRider } from "./dispatch/rating";
+export { adminAnnounceToRiders } from "./dispatch/announce";
 export { onSupportMessageCreated } from "./support/bot";
 export { adminSaveKbEntry, adminDeleteKbEntry } from "./support/kb/admin";
 export {

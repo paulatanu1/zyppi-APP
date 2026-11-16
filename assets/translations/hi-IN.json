@@ -74,7 +74,6 @@
   "confirmLocation": "स्थान की पुष्टि करें",
   "fullName": "नाम",
   "emailAddress": "ईमेल",
-  "phoneNumber": "फ़ोन नंबर",
   "dateOfBirth": "जन्म तिथि",
   "gender": "लिंग",
   "save": "सहेजें",
@@ -355,5 +354,25 @@
   "searchForItem": "\"{}\" खोजें",
   "buyAgain": "फिर से खरीदें",
   "offlineBanner": "आप ऑफ़लाइन हैं — सहेजी गई जानकारी दिख रही है",
-  "backOnline": "फिर से ऑनलाइन"
+  "backOnline": "फिर से ऑनलाइन",
+  "rateYourRider": "डिलीवरी पार्टनर को रेटिंग दें",
+  "deliveryCodeTitle": "डिलीवरी कोड",
+  "deliveryCodeHint": "दरवाज़े पर राइडर को यह बताएँ।",
+  "deliveryCodeSemantics": "डिलीवरी कोड {}। राइडर को बताएँ।",
+  "riderNearby": "राइडर लगभग पहुँच गए हैं",
+  "riderDistance": "राइडर {} किमी दूर · ~{} मिनट",
+  "riderSignalOld": "लोकेशन कुछ मिनट पहले अपडेट हुई",
+  "seeOnMap": "मैप पर देखें",
+  "thanksForRating": "रेटिंग के लिए धन्यवाद!",
+  "sendRating": "रेटिंग भेजें",
+  "riderTag_polite": "विनम्र",
+  "riderTag_on_time": "समय पर",
+  "riderTag_careful": "सामान का ध्यान रखा",
+  "riderTag_late": "देर से",
+  "riderTag_rude": "बदतमीज़",
+  "riderTag_damaged": "सामान खराब",
+  "starsLabel": {
+    "one": "{} स्टार",
+    "other": "{} स्टार"
+  }
 }

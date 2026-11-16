@@ -2,7 +2,7 @@
   "signInWithGoogle": "Sign in with Google",
   "continueWith": "- OR Continue with -",
   "continueAsGuest": "Continue as guest",
-  "phoneNumber": "Phone Number",
+  "phoneNumber": "Phone No",
   "login": "Login",
   "phoneVerification": "Phone Verification",
   "resendCode": "Resend Code",
@@ -98,7 +98,6 @@
   "confirmLocation": "Confirm location",
   "fullName": "Name",
   "emailAddress": "Email",
-  "phoneNumber": "Phone No",
   "dateOfBirth": "Date of birth",
   "gender": "Gender",
   "save": "Save",
@@ -355,5 +354,25 @@
   "searchForItem": "Search \"{}\"",
   "buyAgain": "Buy again",
   "offlineBanner": "You're offline — showing saved items",
-  "backOnline": "Back online"
+  "backOnline": "Back online",
+  "rateYourRider": "Rate your delivery partner",
+  "deliveryCodeTitle": "Delivery code",
+  "deliveryCodeHint": "Tell this to your rider at the door.",
+  "deliveryCodeSemantics": "Delivery code {}. Tell this to your rider.",
+  "riderNearby": "Your rider is almost there",
+  "riderDistance": "Rider is {} km away · ~{} min",
+  "riderSignalOld": "Location updated a few minutes ago",
+  "seeOnMap": "See on map",
+  "thanksForRating": "Thanks for rating!",
+  "sendRating": "Send rating",
+  "riderTag_polite": "Polite",
+  "riderTag_on_time": "On time",
+  "riderTag_careful": "Careful with items",
+  "riderTag_late": "Late",
+  "riderTag_rude": "Rude",
+  "riderTag_damaged": "Items damaged",
+  "starsLabel": {
+    "one": "{} star",
+    "other": "{} stars"
+  }
 }

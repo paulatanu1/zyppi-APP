@@ -1,4 +1,5 @@
 import { isOpenAt, parseHours } from "../shared/hours";
+import { newHandoverCode } from "../dispatch/model";
 import { DocumentReference, FieldValue, Transaction } from "firebase-admin/firestore";
 import { COUPON_MESSAGES, discountFor, normalizeCode } from "../coupons/model";
 import { lookupCoupon, problemOf, recordRedemption } from "../coupons/usage";
@@ -351,6 +352,8 @@ export async function placeOrderInTx(
     countedForUser: true,
     // 1 = the customer's first order (stats: new vs repeat).
     customerOrderNo,
+    // Rider app: the delivery partner's call button.
+    contactPhone: (userSnap.get("phone") as string | undefined) ?? null,
     riderName: null,
     riderPhone: null,
     // Which store's stock filled each line, so a cancellation puts it back
@@ -374,6 +377,9 @@ export async function placeOrderInTx(
     })),
   });
   tx.create(orderRef.collection("events").doc(), { status: "placed", createdAt: now });
+  // 4-digit code the customer tells the rider at the door (riderDeliver).
+  // Only the customer and staff can read it (firestore.rules).
+  tx.create(orderRef.collection("private").doc("handover"), { code: newHandoverCode(), attempts: 0 });
   for (const ref of quote.cartRefs) tx.delete(ref);
   if (quote.couponCode) {
     recordRedemption(tx, quote.couponCode, p.uid, orderRef.id, quote.discountPaise);

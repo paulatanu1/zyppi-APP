@@ -15,6 +15,37 @@ const STATUS_COPY: Record<string, { title: string; body: string }> = {
  * placeOrder / placePaidOrder / adminUpdateOrderStatus, so nobody can
  * trigger a push for someone else's order. Deep links via `orderId`.
  */
+/**
+ * One push to an order's customer (rider app: "rider outside"). Respects
+ * the customer's order-update preference; forgets dead tokens.
+ */
+export async function pushOrderCustomer(
+  orderId: string,
+  copy: { title: string; body: string },
+  data: Record<string, string> = {},
+): Promise<void> {
+  const order = await db.collection("orders").doc(orderId).get();
+  const userId = order.get("userId") as string | null | undefined;
+  if (!userId) return;
+  const profile = await db.collection("users").doc(userId).get();
+  const token = profile.get("fcmToken") as string | null | undefined;
+  if (!token || profile.get("notifyOrderUpdates") === false) return;
+  try {
+    await messaging.send({
+      token,
+      notification: copy,
+      data: { orderId, ...data },
+      android: { priority: "high" },
+    });
+  } catch (error) {
+    if ((error as { code?: string }).code === "messaging/registration-token-not-registered") {
+      await profile.ref.update({ fcmToken: null });
+      return;
+    }
+    logger.error("Push failed", { orderId, error });
+  }
+}
+
 export const onOrderEventCreated = onDocumentCreated(
   "orders/{orderId}/events/{eventId}",
   async (event) => {
