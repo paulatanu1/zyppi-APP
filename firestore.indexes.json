@@ -1,6 +1,14 @@
 {
   "indexes": [
     {
+      "collectionGroup": "productRequests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sellerId", "order": "ASCENDING" },
+        { "fieldPath": "at", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "earnings",
       "queryScope": "COLLECTION_GROUP",
       "fields": [

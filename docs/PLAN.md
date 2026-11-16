@@ -213,7 +213,10 @@ Outside shops sell through Zyppi on a **subscription** (seller sets the price, a
 - [x] M2 Customer app — "Sold by", other sellers sheet, cart by offer (`lib/core/marketplace`, `Product.areaBest`, `CartLine.offer`, `/seller` page from public `sellerProfiles`). Reorder still buys from Zyppi
 - [x] M3 Settlement and subscriptions — `marketplace/settlement*.ts`, `periods.ts`: credit on delivery (net = seller price − TCS (GSTIN) − TDS, held `holdDays`), reversal on cancel, `sellerDaily` (release held, renew periods, grace → expired hides offers, 7/3/1-day reminders, FSSAI expiry pauses offers), `sellerRequestPayout` (dues first, min ₹100), `adminRecordSellerPayout` / `adminRecordSellerFee` / `adminAdjustSellerEarnings` / `adminSetSellerPlan` (finance, audited); first period opens on approval. Rates in `config/marketplace.settlement` (defaults TCS 0.5 %, TDS 0.1 %, hold 7 days, grace 3 days) — **confirm with the CA**
 - [x] M5 backend — `rateSellers` (per seller per delivered order, sum/count/avg feeds ranking; sellers can't rate themselves), `stats/*` now count `payoutPaise` / `marginPaise` per day (Zyppi's share)
-- [ ] M4 `zyppi-delivery-admin` seller management · R1 rider app pickups/permissions · S0–S4 Zyppi Seller app
+- [x] M4 `zyppi-delivery-admin` (branch `feat/marketplace-sellers`, merge after the backend deploy): Sellers (review with KYC photos and distance from the pin, balances, plan, fees, adjustments, trusted catalog, listings with the add-on / supply-price editor), Seller payouts, Seller plans, Product requests, Reports seller payouts / Zyppi share
+- [x] R1 `zyppi-delivery-app` (`main`): pickup stops in route order, pickup code at sellers' shops
+- [x] S0–S4 `Zyppi-Marketplace` (`main`): apply (selfie, geostamped shop photos, signature + OTP), ringing new-order alert with slide to accept (no reject), orders, products, earnings, account
+- [ ] Register Android app `com.zyppi.seller` in Firebase + SHA fingerprints + App Check (see Zyppi-Marketplace README); deploy functions / rules / indexes; publish legal docs after lawyer review
 
 Done when (per sub-phase, in MARKETPLACE.md → Verification): a ₹50 subscription listing with a ₹5 add-on shows ₹55 to the customer, settles ₹50 to the seller after the hold, and ₹5 shows in the margin report.
 

@@ -137,8 +137,8 @@ service cloud.firestore {
     // A seller login also reads its own stock rows (seller app).
     match /inventory/{id} {
       allow read: if isAdmin()
-        || (signedIn() && resource.data.get('sellerId', '') != ''
-            && request.auth.token.get('sellerId', '') == resource.data.sellerId);
+        || (signedIn() && request.auth.token.get('sellerId', '') != ''
+            && resource.data.sellerId == request.auth.token.sellerId);
       allow write: if false;
     }
 
@@ -451,8 +451,11 @@ service cloud.firestore {
       }
     }
 
+    // A shop's logins see the shop's team (Account → Logins).
     match /sellerUsers/{uid} {
-      allow read: if isOwner(uid) || hasRole(['ops']);
+      allow read: if isOwner(uid) || hasRole(['ops'])
+        || (signedIn() && request.auth.token.get('sellerId', '') != ''
+            && resource.data.sellerId == request.auth.token.sellerId);
       allow write: if false;
     }
 
