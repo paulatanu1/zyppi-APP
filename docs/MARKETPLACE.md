@@ -45,20 +45,22 @@ These are one pure, unit-tested function, `functions/src/marketplace/pricing.ts`
   - Subcollections: `private/bank` (finance and owner only), `earnings/`, `payouts/`, `subscriptions/` (billing periods), `inbox/`.
 - **`sellerUsers/{uid}` → `{sellerId, role: owner|staff}`** (new). Also set as custom claim `sellerId`, so security rules can check it.
 - **`sellerPlans/{planId}`** (new): `name, months (1|3|6), feePaise, maxListings, isActive`.
-- **`listings/{listingId}`** (new, private: readable only by that seller and staff).
-  - Fields: `sellerId, storeId, serviceAreaId, productId, variantId, model, sellerPricePaise, addon{type,value}, addonPaise, pricePaise, mrpPaise, payoutPaise, isActive, updatedBy, updatedAt`.
+- **`listings/{sellerId}_{areaId}_{variantId}`** (new, private: readable only by that seller and staff).
+  - One per seller, area and variant. It holds the price; stock stays per store in `inventory`.
+  - Fields: `sellerId, serviceAreaId, productId, variantId, model, sellerPricePaise, zyppiPricePaise, addon{type,value}, specialDiscount, allowNegativeMargin, isActive`, the computed `pricePaise / payoutPaise / marginPaise / addonPaise` at save time, `nextPriceChangeAt`, `updatedBy, updatedAt`.
   - Every price change is appended to `listings/{id}/priceHistory`, and staff changes also go through `writeAudit`.
-- **`offers/{listingId}`** (new, public-read).
-  - A trigger fills it from the listing, the seller and stock. It **never contains payout or margin fields**.
-  - Fields: `productId, variantId, serviceAreaId, sellerId, sellerName, sellerRating, ratingCount, pricePaise, mrpPaise, inStock, etaMinutes, rankScore, isActive`.
+  - **Zyppi's own stock has no listing docs.** Its offers are priced from the product's variants, which `adminSaveProduct` still edits (decided in M1).
+- **`offers/{sellerId}_{areaId}_{variantId}`** (new, public-read; Zyppi's are `zyppi_{areaId}_{variantId}`).
+  - The offers trigger (`marketplace/offers_sync.ts`) fills it from the product, the listings, the sellers and stock. It **never contains payout or margin fields**.
+  - Fields: `productId, variantId, serviceAreaId, sellerId, sellerName, sellerRating, ratingCount, fulfilment, pricePaise, mrpPaise, regularPricePaise, discountActive, inStock, rankScore, isActive`.
 - **`products/{id}`** gains `areaBest.{areaId}.{variantId} = {offerId, pricePaise, mrpPaise, offerCount}` and `rank.{areaId}`. The trigger keeps both up to date, so list screens still read one doc per product.
 - **`stores`** gains `sellerId` and `fulfilment`:
   - A seller's shop is a store with that seller's `sellerId`.
   - A supply seller's stock in a Zyppi dark store stays on the Zyppi store; the seller is attributed through the listing.
 - **`inventory`**
   - Existing rows `{storeId}_{variantId}` stay as Zyppi's own stock, so no migration is needed.
-  - Seller stock uses `{storeId}_{sellerId}_{variantId}` (= listingId) with an added `sellerId` field.
-  - `adminAdjustStock` and `inventoryMovements` are reused unchanged, plus a `sellerAdjustStock` callable scoped to the caller's own listings.
+  - Seller stock uses `{storeId}_{sellerId}_{variantId}` with an added `sellerId` field. It can be in the seller's shop, or in a Zyppi store for supply sellers.
+  - `adminAdjustStock` (now with an optional `sellerId` per row) and `inventoryMovements` are reused, plus `sellerAdjustStock`, which is scoped to the caller's own shop.
 - **Cart** `users/{uid}/cart/{offerId}` with `{productId, variantId, offerId, quantity}`. Old docs keyed by `variantId` are read as "best offer in the area".
 - **Order snapshot**
   - Each entry in `items[]` gains `offerId, sellerId, sellerName, payoutPaise, marginPaise` (frozen at order time).

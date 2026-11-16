@@ -39,8 +39,8 @@ describe("order placement", () => {
     const id = await place();
     const order = (await db.doc(`orders/${id}`).get()).data()!;
     expect(order.allocations).toEqual([
-      { storeId: STORE_A, productId: "p-milk", variantId: "v-milk", quantity: 3 },
-      { storeId: STORE_B, productId: "p-milk", variantId: "v-milk", quantity: 1 },
+      { storeId: STORE_A, sellerId: "zyppi", productId: "p-milk", variantId: "v-milk", quantity: 3 },
+      { storeId: STORE_B, sellerId: "zyppi", productId: "p-milk", variantId: "v-milk", quantity: 1 },
     ]);
     const moves = (await db.collection("inventoryMovements").where("orderId", "==", id).get()).docs.map((d) => d.data());
     expect(moves.map((m) => [m.storeId, m.delta, m.reason])).toEqual(

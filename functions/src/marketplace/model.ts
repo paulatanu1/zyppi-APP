@@ -307,10 +307,23 @@ export function planProblems(p: SellerPlanInput): string[] {
 // --------------------------------------------------------------- listings
 
 /**
- * A listing's id is also its inventory row's id: Zyppi's own stock keeps
- * the existing `{storeId}_{variantId}`; a seller's is
- * `{storeId}_{sellerId}_{variantId}`.
+ * One listing per (seller, area, variant): it holds the seller's price,
+ * Zyppi's add-on / price and the special discount. It is also the
+ * customer-facing offer's id (offers/{listingId}). Zyppi's own offers use
+ * the same shape with seller `zyppi` but take their price from the
+ * product (adminSaveProduct) rather than a listing doc.
  */
-export function listingIdFor(storeId: string, sellerId: string, variantId: string): string {
-  return sellerId === ZYPPI_SELLER_ID ? `${storeId}_${variantId}` : `${storeId}_${sellerId}_${variantId}`;
+export function listingIdFor(sellerId: string, areaId: string, variantId: string): string {
+  return `${sellerId}_${areaId}_${variantId}`;
 }
+
+/**
+ * A stock row (inventory/{id}), per store. Zyppi's own stock keeps the
+ * existing `{storeId}_{variantId}`; a seller's (in their shop, or supplied
+ * into a Zyppi store) is `{storeId}_{sellerId}_{variantId}`.
+ */
+export function inventoryIdFor(storeId: string, sellerId: string | null | undefined, variantId: string): string {
+  return isZyppiStore(sellerId) ? `${storeId}_${variantId}` : `${storeId}_${sellerId}_${variantId}`;
+}
+
+export const MARKETPLACE_CONFIG_DOC = "config/marketplace";

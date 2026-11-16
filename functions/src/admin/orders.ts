@@ -1,4 +1,5 @@
 import { FieldValue, type Transaction } from "firebase-admin/firestore";
+import { inventoryIdFor, isZyppiStore } from "../marketplace/model";
 import { HttpsError, onCall } from "firebase-functions/https";
 import { auth, db } from "../shared/firebase";
 import { requireString } from "../shared/callable";
@@ -35,6 +36,8 @@ export interface StatusInput {
 
 interface Allocation {
   storeId: string;
+  /** Marketplace orders; absent on older orders = Zyppi's own stock. */
+  sellerId?: string | null;
   productId: string;
   variantId: string;
   quantity: number;
@@ -241,7 +244,7 @@ async function restock(
       quantity: i.quantity,
     }));
   }
-  const refs = allocations.map((a) => db.collection("inventory").doc(`${a.storeId}_${a.variantId}`));
+  const refs = allocations.map((a) => db.collection("inventory").doc(inventoryIdFor(a.storeId, a.sellerId, a.variantId)));
   const snaps = refs.length ? await tx.getAll(...refs) : [];
   allocations.forEach((a, i) => {
     const before = (snaps[i].get("quantity") as number | undefined) ?? 0;
@@ -249,6 +252,7 @@ async function restock(
       refs[i],
       {
         storeId: a.storeId,
+        ...(isZyppiStore(a.sellerId) ? {} : { sellerId: a.sellerId }),
         productId: a.productId,
         variantId: a.variantId,
         quantity: before + a.quantity,
@@ -263,6 +267,7 @@ async function restock(
       delta: a.quantity,
       before,
       after: before + a.quantity,
+      sellerId: isZyppiStore(a.sellerId) ? null : a.sellerId,
       reason: "order_cancel",
       note: null,
       orderId,

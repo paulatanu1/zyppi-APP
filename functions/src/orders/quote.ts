@@ -1,5 +1,25 @@
 import { isOpenAt, parseHours } from "../shared/hours";
-import { isZyppiStore } from "../marketplace/model";
+import {
+  LISTINGS,
+  MARKETPLACE_CONFIG_DOC,
+  OFFERS,
+  SELLERS,
+  ZYPPI_SELLER_ID,
+  inventoryIdFor,
+  listingIdFor,
+} from "../marketplace/model";
+import {
+  type ListingLite,
+  type SellerLite,
+  type StoreLite,
+  candidateStores,
+  listingPriceInput,
+  readListing,
+  readSellerLite,
+  sellerCanSell,
+} from "../marketplace/offers";
+import { priceListing } from "../marketplace/pricing";
+import { marketplaceConfigFrom } from "../marketplace/ranking";
 import { newHandoverCode } from "../dispatch/model";
 import { DocumentReference, FieldValue, Transaction } from "firebase-admin/firestore";
 import { COUPON_MESSAGES, discountFor, normalizeCode } from "../coupons/model";
@@ -63,6 +83,14 @@ export interface QuoteLine {
   image: string | null;
   quantity: number;
   pricePaise: number;
+  /** Marketplace (docs/MARKETPLACE.md): who sells it and, per unit, what
+   * the seller is paid and what Zyppi keeps (pricePaise = payout + margin). */
+  offerId: string;
+  sellerId: string;
+  sellerName: string;
+  model: string;
+  payoutPaise: number;
+  marginPaise: number;
   /** Stock taken from each store: [inventory doc ref, units, current qty]. */
   allocations: { ref: DocumentReference; storeId: string; take: number; current: number }[];
 }
@@ -95,6 +123,94 @@ export interface Quote {
   discountPaise: number;
   tipPaise: number;
   totalPaise: number;
+}
+
+export interface PricingProduct {
+  name: string;
+  isActive: boolean;
+  imageUrl: string | null;
+  variants: Variant[];
+}
+
+/**
+ * Prices each cart line and picks the stock rows it takes (pure, so it is
+ * unit-tested; quoteOrder does the reads). Zyppi lines are priced from the
+ * product; a seller's from their listing at `now`. Stock comes from the
+ * fullest row first and spills over to the next.
+ */
+export function priceCartLines(input: {
+  cart: { offerId: string | null; productId: string; variantId: string; quantity: number }[];
+  products: Map<string, PricingProduct | null>;
+  sellerOf: string[];
+  listings: (ListingLite | null)[];
+  sellers: Map<string, SellerLite | undefined>;
+  candidates: { storeId: string; ref: DocumentReference; current: number }[][];
+  areaId: string;
+  now: Date;
+}): { lines: QuoteLine[]; itemTotal: number } {
+  const lines: QuoteLine[] = [];
+  let itemTotal = 0;
+  for (const [i, item] of input.cart.entries()) {
+    const product = input.products.get(item.productId) ?? null;
+    const name = product?.name ?? "item";
+    if (!product || !product.isActive) {
+      throw new OrderError(`Product unavailable: ${name}`);
+    }
+    const variant = product.variants.find((v) => v.id === item.variantId);
+    if (!variant) throw new OrderError(`Product unavailable: ${name}`);
+
+    const sellerId = input.sellerOf[i];
+    let price = { pricePaise: variant.pricePaise, payoutPaise: 0, marginPaise: variant.pricePaise };
+    let sellerName = "Zyppi";
+    let model = "own";
+    if (sellerId !== ZYPPI_SELLER_ID) {
+      const seller = input.sellers.get(sellerId);
+      const listing = input.listings[i];
+      if (!listing || !listing.isActive || !sellerCanSell(seller)) throw new OrderError(`Product unavailable: ${name}`);
+      try {
+        price = priceListing(listingPriceInput(listing, variant.mrpPaise ?? 0), input.now);
+      } catch {
+        throw new OrderError(`Product unavailable: ${name}`);
+      }
+      sellerName = seller!.name;
+      model = listing.model;
+    }
+
+    const candidates = [...input.candidates[i]].sort((a, b) => b.current - a.current);
+    if (candidates.length === 0) throw new OrderError("STORES_CLOSED");
+    const available = candidates.reduce((sum, c) => sum + Math.max(c.current, 0), 0);
+    if (available < item.quantity) {
+      throw new OrderError(`Insufficient stock for ${name}`);
+    }
+    let remaining = item.quantity;
+    const allocations: QuoteLine["allocations"] = [];
+    for (const c of candidates) {
+      if (remaining === 0) break;
+      const take = Math.min(remaining, c.current);
+      if (take <= 0) continue;
+      allocations.push({ ref: c.ref, storeId: c.storeId, take, current: c.current });
+      remaining -= take;
+    }
+
+    itemTotal += price.pricePaise * item.quantity;
+    lines.push({
+      productId: item.productId,
+      variantId: item.variantId,
+      name,
+      unit: variant.label,
+      image: product.imageUrl,
+      quantity: item.quantity,
+      pricePaise: price.pricePaise,
+      offerId: item.offerId ?? listingIdFor(ZYPPI_SELLER_ID, input.areaId, item.variantId),
+      sellerId,
+      sellerName,
+      model,
+      payoutPaise: price.payoutPaise,
+      marginPaise: price.marginPaise,
+      allocations,
+    });
+  }
+  return { lines, itemTotal };
 }
 
 /**
@@ -133,25 +249,34 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
       .where("serviceAreaId", "==", area.id)
       .where("isActive", "==", true),
   );
-  // Marketplace seller shops (docs/MARKETPLACE.md) sell through offers,
-  // which this quote doesn't price yet (Phase 7 M1): only Zyppi's stores.
-  const zyppiStores = storesSnap.docs.filter((st) => isZyppiStore(st.get("sellerId")));
-  if (zyppiStores.length === 0) throw new OrderError("We do not deliver to this address yet");
-  const stores = p.openAt
-    ? zyppiStores.filter((st) => isOpenAt(parseHours(st.get("hours")), p.openAt!))
-    : zyppiStores;
-  if (stores.length === 0) throw new OrderError("STORES_CLOSED");
+  if (storesSnap.empty) throw new OrderError("We do not deliver to this address yet");
+  const allStores: StoreLite[] = storesSnap.docs.map((st) => ({
+    id: st.id,
+    serviceAreaId: area.id,
+    isActive: true,
+    sellerId: (st.get("sellerId") as string | undefined) ?? null,
+  }));
+  const openIds = new Set(
+    (p.openAt
+      ? storesSnap.docs.filter((st) => isOpenAt(parseHours(st.get("hours")), p.openAt!))
+      : storesSnap.docs
+    ).map((st) => st.id),
+  );
+  if (openIds.size === 0) throw new OrderError("STORES_CLOSED");
 
   const slotSnap = await tx.get(db.collection("deliverySlots").doc(p.deliverySlotId));
   if (slotSnap.get("isActive") !== true) {
     throw new OrderError("Delivery slot is not available");
   }
 
+  // Cart rows: legacy ones are keyed by variant id (Zyppi's own stock);
+  // marketplace ones by offer id with `offerId` + `variantId` fields.
   const cartSnap = await tx.get(userRef.collection("cart"));
   const cart = cartSnap.docs
     .map((d) => ({
       ref: d.ref,
-      variantId: d.id,
+      offerId: (d.get("offerId") as string | undefined) ?? null,
+      variantId: (d.get("variantId") as string | undefined) ?? d.id,
       productId: d.get("productId") as string,
       quantity: d.get("quantity") as number,
     }))
@@ -164,62 +289,76 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
   );
   const products = new Map(productSnaps.map((s) => [s.id, s]));
 
-  // Every (store, variant) stock row, read up front.
-  const inventoryRefs = cart.flatMap((c) =>
-    stores.map((s) => db.collection("inventory").doc(`${s.id}_${c.variantId}`)),
+  // Which seller each line buys from (the offer says; legacy rows: Zyppi).
+  const offerIds = [...new Set(cart.flatMap((c) => (c.offerId ? [c.offerId] : [])))];
+  const offerSnaps = offerIds.length ? await tx.getAll(...offerIds.map((id) => db.collection(OFFERS).doc(id))) : [];
+  const offers = new Map(offerSnaps.map((s) => [s.id, s]));
+  const nameOf = (productId: string) => (products.get(productId)?.get("name") as string | undefined) ?? "item";
+  const sellerOf = cart.map((c) => {
+    if (!c.offerId) return ZYPPI_SELLER_ID;
+    const offer = offers.get(c.offerId);
+    if (
+      !offer?.exists ||
+      offer.get("variantId") !== c.variantId ||
+      offer.get("productId") !== c.productId ||
+      offer.get("serviceAreaId") !== area.id
+    ) {
+      throw new OrderError(`Product unavailable: ${nameOf(c.productId)}`);
+    }
+    return offer.get("sellerId") as string;
+  });
+  const outsideSellers = [...new Set(sellerOf.filter((id) => id !== ZYPPI_SELLER_ID))];
+  const config = marketplaceConfigFrom((await tx.get(db.doc(MARKETPLACE_CONFIG_DOC))).data());
+  if (new Set(sellerOf).size > config.maxSellersPerOrder) {
+    throw new OrderError(`TOO_MANY_SELLERS:${config.maxSellersPerOrder}`);
+  }
+  const sellerSnaps = outsideSellers.length
+    ? await tx.getAll(...outsideSellers.map((id) => db.collection(SELLERS).doc(id)))
+    : [];
+  const sellers = new Map(sellerSnaps.map((s) => [s.id, s]));
+  const listingSnaps = await Promise.all(
+    cart.map((c, i) =>
+      sellerOf[i] === ZYPPI_SELLER_ID
+        ? Promise.resolve(null)
+        : tx.get(db.collection(LISTINGS).doc(listingIdFor(sellerOf[i], area.id, c.variantId))),
+    ),
   );
-  const inventorySnaps = await tx.getAll(...inventoryRefs);
+
+  // Every stock row that could fill each line, read up front (same stores
+  // as the offers use, open now).
+  const candidatesOf = cart.map((c, i) =>
+    candidateStores(allStores, area.id, sellerOf[i])
+      .filter((st) => openIds.has(st.id))
+      .map((st) => ({ storeId: st.id, ref: db.collection("inventory").doc(inventoryIdFor(st.id, sellerOf[i], c.variantId)) })),
+  );
+  const inventoryRefs = candidatesOf.flat().map((c) => c.ref);
+  const inventorySnaps = inventoryRefs.length ? await tx.getAll(...inventoryRefs) : [];
   const stock = new Map(
     inventorySnaps.map((s) => [s.ref.path, (s.get("quantity") as number | undefined) ?? 0]),
   );
 
-  const lines: QuoteLine[] = [];
-  let itemTotal = 0;
-  for (const item of cart) {
-    const product = products.get(item.productId);
-    const name = (product?.get("name") as string | undefined) ?? "item";
-    if (!product?.exists || product.get("isActive") !== true) {
-      throw new OrderError(`Product unavailable: ${name}`);
-    }
-    const variant = ((product.get("variants") as Variant[] | undefined) ?? []).find(
-      (v) => v.id === item.variantId,
-    );
-    if (!variant) throw new OrderError(`Product unavailable: ${name}`);
-
-    // Take from the fullest store first, spilling over to the next, so
-    // stock spread across stores in the area can still fill the order.
-    const candidates = stores
-      .map((s) => {
-        const ref = db.collection("inventory").doc(`${s.id}_${item.variantId}`);
-        return { ref, storeId: s.id, current: stock.get(ref.path) ?? 0 };
-      })
-      .sort((a, b) => b.current - a.current);
-    const available = candidates.reduce((sum, c) => sum + Math.max(c.current, 0), 0);
-    if (available < item.quantity) {
-      throw new OrderError(`Insufficient stock for ${name}`);
-    }
-    let remaining = item.quantity;
-    const allocations: QuoteLine["allocations"] = [];
-    for (const c of candidates) {
-      if (remaining === 0) break;
-      const take = Math.min(remaining, c.current);
-      if (take <= 0) continue;
-      allocations.push({ ref: c.ref, storeId: c.storeId, take, current: c.current });
-      remaining -= take;
-    }
-
-    itemTotal += variant.pricePaise * item.quantity;
-    lines.push({
-      productId: item.productId,
-      variantId: item.variantId,
-      name,
-      unit: variant.label,
-      image: (product.get("imageUrl") as string | undefined) ?? null,
-      quantity: item.quantity,
-      pricePaise: variant.pricePaise,
-      allocations,
-    });
-  }
+  const { lines, itemTotal } = priceCartLines({
+    cart,
+    products: new Map(
+      [...products].map(([id, snap]) => [
+        id,
+        snap.exists
+          ? {
+              name: (snap.get("name") as string | undefined) ?? "item",
+              isActive: snap.get("isActive") === true,
+              imageUrl: (snap.get("imageUrl") as string | undefined) ?? null,
+              variants: (snap.get("variants") as Variant[] | undefined) ?? [],
+            }
+          : null,
+      ]),
+    ),
+    sellerOf,
+    listings: listingSnaps.map((l) => (l?.exists ? readListing(l.id, l.data()!) : null)),
+    sellers: new Map([...sellers].map(([id, snap]) => [id, readSellerLite(snap.data())])),
+    candidates: candidatesOf.map((list) => list.map((c) => ({ ...c, current: stock.get(c.ref.path) ?? 0 }))),
+    areaId: area.id,
+    now: p.openAt ?? new Date(),
+  });
 
   // Coupons: below the minimum it just gives nothing (the cart says "add
   // ₹X more"); any other problem refuses the order, so the customer never
@@ -277,6 +416,30 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
 }
 
 /**
+ * Per order: the outside sellers in it (seller app queries
+ * `sellerIds array-contains`), each one's status (they accept / mark
+ * ready in the seller app) and what each is owed. Zyppi's own lines only
+ * count towards the margin.
+ */
+export function sellerSummary(lines: Pick<QuoteLine, "sellerId" | "quantity" | "pricePaise" | "payoutPaise" | "marginPaise">[]) {
+  const sellerIds = [...new Set(lines.map((l) => l.sellerId).filter((id) => id !== ZYPPI_SELLER_ID))];
+  const sellerTotals: Record<string, { itemTotalPaise: number; payoutPaise: number }> = {};
+  for (const l of lines) {
+    if (l.sellerId === ZYPPI_SELLER_ID) continue;
+    const t = (sellerTotals[l.sellerId] ??= { itemTotalPaise: 0, payoutPaise: 0 });
+    t.itemTotalPaise += l.pricePaise * l.quantity;
+    t.payoutPaise += l.payoutPaise * l.quantity;
+  }
+  return {
+    sellerIds,
+    sellerStatus: Object.fromEntries(sellerIds.map((id) => [id, "pending"])),
+    sellerTotals,
+    payoutTotalPaise: Object.values(sellerTotals).reduce((a, t) => a + t.payoutPaise, 0),
+    marginTotalPaise: lines.reduce((a, l) => a + l.marginPaise * l.quantity, 0),
+  };
+}
+
+/**
  * Creates the order from the user's server cart inside [tx] (port of
  * `place_order_internal`): quotes it, decrements stock, writes the order
  * and its first event, and empties the cart. Every read happens in
@@ -308,6 +471,7 @@ export async function placeOrderInTx(
       // Stock history (admin Inventory): sales show next to adjustments.
       tx.create(db.collection("inventoryMovements").doc(), {
         storeId: a.storeId,
+        sellerId: line.sellerId === ZYPPI_SELLER_ID ? null : line.sellerId,
         productId: line.productId,
         variantId: line.variantId,
         delta: -a.take,
@@ -365,6 +529,7 @@ export async function placeOrderInTx(
     allocations: quote.lines.flatMap((l) =>
       l.allocations.map((a) => ({
         storeId: a.storeId,
+        sellerId: l.sellerId,
         productId: l.productId,
         variantId: l.variantId,
         quantity: a.take,
@@ -378,7 +543,16 @@ export async function placeOrderInTx(
       image: l.image,
       quantity: l.quantity,
       pricePaise: l.pricePaise,
+      // Frozen at order time: who sold it, what the seller is paid and
+      // what Zyppi keeps per unit (settlement, invoices, margin report).
+      offerId: l.offerId,
+      sellerId: l.sellerId,
+      sellerName: l.sellerName,
+      model: l.model,
+      payoutPaise: l.payoutPaise,
+      marginPaise: l.marginPaise,
     })),
+    ...sellerSummary(quote.lines),
   });
   tx.create(orderRef.collection("events").doc(), { status: "placed", createdAt: now });
   // 4-digit code the customer tells the rider at the door (riderDeliver).

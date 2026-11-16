@@ -207,7 +207,8 @@ Outside shops sell through Zyppi on a **subscription** (seller sets the price, a
 - [x] L0 Legal & consent — `functions/src/legal` (`legalDocs` + versions, `legalStatus`, `acceptLegal`, `adminPublishLegalDoc`, `scripts/publish-legal.ts`), consent gate on rider/seller application submit (active once that agreement is published), `docs/legal/*` drafts, customer app consent row + `LegalGate` + `/legal` reader
   - [ ] Lawyer review of `docs/legal/*`, fill the `[PLACEHOLDERS]`, then `publish-legal --write`; bn/hi/pa translations after review
   - [ ] Signed agreement PDF (needs a PDF package in `functions/` — ask first) · public web pages for the Play listing · `zyppi-admin` legal editor (M4)
-- [ ] M1 Offers, ranking, offer-aware `quoteOrder`, order line snapshots (payout / margin / seller)
+- [x] M1 Offers, ranking, offer-aware `quoteOrder`, order line snapshots (payout / margin / seller) — `marketplace/{listings,offers,offers_sync,ranking}.ts`; `sellerSaveListing`, `adminSaveListing`, `sellerAdjustStock`; triggers on listings / inventory / products / sellers / stores + `refreshTimedOffers` (15 min); legacy variant-keyed carts still buy from Zyppi
+  - [ ] Deploy, then `backfill-zyppi-seller --write` to build every product's offers
 - [ ] M1b Multi-store pickups with a pickup OTP per store (`storeConfirmPickup`, geofenced arrival, route pay)
 - [ ] M2 Customer app — "Sold by", other sellers sheet, cart by offer
 - [ ] M3 Settlement and subscriptions — seller ledger, hold/release, payouts, dues, TCS/TDS lines

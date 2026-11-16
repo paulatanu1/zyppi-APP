@@ -104,3 +104,11 @@ export {
 } from "./support/chat";
 export { sellerSaveApplication, adminReviewSeller, adminSaveSellerPlan } from "./marketplace/sellers";
 export { legalStatus, acceptLegal, adminPublishLegalDoc } from "./legal/legal";
+export { sellerSaveListing, adminSaveListing, sellerAdjustStock } from "./marketplace/listings";
+export {
+  onListingWritten,
+  onInventoryWritten,
+  onSellerWritten,
+  onStoreWritten,
+  refreshTimedOffers,
+} from "./marketplace/offers_sync";

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  inventoryIdFor,
   isZyppiStore,
   listingIdFor,
   metresBetween,
@@ -214,9 +215,11 @@ describe("plans, ids, geo", () => {
     ]);
   });
 
-  it("listing ids line up with inventory ids", () => {
-    expect(listingIdFor("s1", "zyppi", "v1")).toBe("s1_v1");
-    expect(listingIdFor("seller_u1", "u1", "v1")).toBe("seller_u1_u1_v1");
+  it("builds listing and stock ids (Zyppi's stock rows keep their old ids)", () => {
+    expect(listingIdFor("u1", "purulia", "v1")).toBe("u1_purulia_v1");
+    expect(inventoryIdFor("s1", "zyppi", "v1")).toBe("s1_v1");
+    expect(inventoryIdFor("s1", undefined, "v1")).toBe("s1_v1");
+    expect(inventoryIdFor("seller_u1", "u1", "v1")).toBe("seller_u1_u1_v1");
   });
 
   it("treats stores without a seller as Zyppi's", () => {

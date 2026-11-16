@@ -3,6 +3,7 @@ import { HttpsError, onCall } from "firebase-functions/https";
 import { writeAudit } from "../shared/audit";
 import { db } from "../shared/firebase";
 import { type Actor, requireRole } from "../shared/roles";
+import { inventoryIdFor, isZyppiStore } from "../marketplace/model";
 import { PRODUCTS, type Variant } from "./model";
 
 export const INVENTORY = "inventory";
@@ -14,6 +15,8 @@ export const MAX_QUANTITY = 100_000;
 
 export interface StockItem {
   storeId: string;
+  /** Whose stock: absent / "zyppi" = Zyppi's own; else a marketplace seller's. */
+  sellerId?: string | null;
   productId: string;
   variantId: string;
   /** add: change by `value` (may be negative); set: new absolute count. */
@@ -21,21 +24,30 @@ export interface StockItem {
   value: number;
 }
 
+/** Who is adjusting: staff (audited) or a seller login on its own shop. */
+export type StockActor =
+  | Actor
+  | { uid: string; email: string | null; seller: { sellerId: string; storeId: string } };
+
 /**
- * Adjusts stock for up to 200 (store, variant) rows in one transaction and
- * records each change in inventoryMovements (who, why, before → after).
- * Stock never goes below zero. Exported for the emulator tests.
+ * Adjusts stock for up to 200 (store, seller, variant) rows in one
+ * transaction and records each change in inventoryMovements (who, why,
+ * before → after). Stock never goes below zero. A seller can only change
+ * its own stock in its own shop. Exported for the emulator tests.
  */
 export async function adjustStock(
-  actor: Actor,
+  actor: StockActor,
   input: { items?: unknown; reason?: unknown; note?: unknown },
 ): Promise<{ updated: number }> {
+  const scope = "seller" in actor ? actor.seller : null;
   const reason = input.reason as StockReason;
   if (!(STOCK_REASONS as readonly string[]).includes(reason)) {
     throw new HttpsError("invalid-argument", "Pick a reason");
   }
   const note = typeof input.note === "string" ? input.note.trim().slice(0, 200) : "";
-  const items = Array.isArray(input.items) ? (input.items as StockItem[]) : [];
+  const items = (Array.isArray(input.items) ? (input.items as StockItem[]) : []).map((it) =>
+    scope && it && typeof it === "object" ? { ...it, storeId: scope.storeId, sellerId: scope.sellerId } : it,
+  );
   if (items.length === 0 || items.length > MAX_STOCK_ITEMS) {
     throw new HttpsError("invalid-argument", `Send 1–${MAX_STOCK_ITEMS} rows`);
   }
@@ -47,9 +59,10 @@ export async function adjustStock(
       typeof it.variantId === "string" && it.variantId &&
       (it.mode === "add" || it.mode === "set") &&
       Number.isInteger(it.value) && Math.abs(it.value) <= MAX_QUANTITY &&
-      (it.mode === "add" || it.value >= 0);
+      (it.mode === "add" || it.value >= 0) &&
+      (it.sellerId == null || (typeof it.sellerId === "string" && /^[\w-]{1,128}$/.test(it.sellerId)));
     if (!ok) throw new HttpsError("invalid-argument", "Invalid stock row");
-    const key = `${it.storeId}_${it.variantId}`;
+    const key = inventoryIdFor(it.storeId, it.sellerId, it.variantId);
     if (seen.has(key)) throw new HttpsError("invalid-argument", "A variant appears twice for one store");
     seen.add(key);
   }
@@ -60,7 +73,7 @@ export async function adjustStock(
     const [stores, products, rows] = await Promise.all([
       tx.getAll(...storeIds.map((id) => db.collection("stores").doc(id))),
       tx.getAll(...productIds.map((id) => db.collection(PRODUCTS).doc(id))),
-      tx.getAll(...items.map((i) => db.collection(INVENTORY).doc(`${i.storeId}_${i.variantId}`))),
+      tx.getAll(...items.map((i) => db.collection(INVENTORY).doc(inventoryIdFor(i.storeId, i.sellerId, i.variantId)))),
     ]);
     const missingStore = stores.find((s) => !s.exists);
     if (missingStore) throw new HttpsError("not-found", `Store not found: ${missingStore.id}`);
@@ -76,10 +89,12 @@ export async function adjustStock(
       const after = it.mode === "set" ? it.value : before + it.value;
       if (after < 0) throw new HttpsError("failed-precondition", "Stock can’t go below zero");
       if (after > MAX_QUANTITY) throw new HttpsError("invalid-argument", "Quantity too large");
+      const sellerId = isZyppiStore(it.sellerId) ? null : it.sellerId!;
       tx.set(
         rows[i].ref,
         {
           storeId: it.storeId,
+          ...(sellerId ? { sellerId } : {}),
           variantId: it.variantId,
           productId: it.productId,
           quantity: after,
@@ -89,6 +104,7 @@ export async function adjustStock(
       );
       tx.create(db.collection(MOVEMENTS).doc(), {
         storeId: it.storeId,
+        sellerId,
         productId: it.productId,
         variantId: it.variantId,
         delta: after - before,
@@ -101,6 +117,7 @@ export async function adjustStock(
         at: FieldValue.serverTimestamp(),
       });
     });
+    if (scope || !("role" in actor)) return { updated: items.length };
     writeAudit(
       actor,
       {

@@ -134,8 +134,11 @@ service cloud.firestore {
     // Stock levels are internal; the app never reads them (quoteOrder
     // checks stock server-side). Changed only by adminAdjustStock (which
     // records inventoryMovements) and by orders.
+    // A seller login also reads its own stock rows (seller app).
     match /inventory/{id} {
-      allow read: if isAdmin();
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.get('sellerId', '') != ''
+            && request.auth.token.get('sellerId', '') == resource.data.sellerId);
       allow write: if false;
     }
 
@@ -191,11 +194,14 @@ service cloud.firestore {
         allow delete: if isOwner(uid);
       }
 
-      // Doc id = product variant id.
+      // Doc id = product variant id (Zyppi's own stock), or an offer id
+      // (marketplace: offers/{offerId}) with `offerId` + `variantId`.
       match /cart/{variantId} {
         allow read, delete: if isOwner(uid);
         allow create, update: if isOwner(uid)
-          && request.resource.data.keys().hasOnly(['productId', 'quantity', 'updatedAt'])
+          && request.resource.data.keys().hasOnly(['productId', 'quantity', 'updatedAt', 'offerId', 'variantId'])
+          && (!('offerId' in request.resource.data)
+              || (request.resource.data.offerId == variantId && request.resource.data.variantId is string))
           && request.resource.data.productId is string
           && request.resource.data.quantity is int
           && request.resource.data.quantity > 0

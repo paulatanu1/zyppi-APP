@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { FieldValue } from "firebase-admin/firestore";
 import { onDocumentWritten } from "firebase-functions/firestore";
+import { rebuildProductOffers } from "../marketplace/offers_sync";
 import { HttpsError, onCall } from "firebase-functions/https";
 import { writeAudit } from "../shared/audit";
 import { db } from "../shared/firebase";
@@ -132,11 +133,30 @@ export const adminSaveProduct = onCall(async (request) => {
  * name and variants. Writes only when they differ, so it never loops.
  */
 export const onProductWritten = onDocumentWritten(`${PRODUCTS}/{productId}`, async (event) => {
+  const before = event.data?.before;
   const after = event.data?.after;
+  // Marketplace offers follow the product's prices, MRPs and active flag
+  // (Zyppi's own offers are priced from the variants). The offers rebuild
+  // writes areaBest/rank back here, which changes neither, so it settles.
+  if (offersDependOnChange(before?.data(), after?.data())) {
+    await rebuildProductOffers(event.params.productId);
+  }
   if (!after?.exists) return;
   const patch = searchFieldsPatch(after.data()!);
   if (patch) await after.ref.update(patch);
 });
+
+/** Variants (price, MRP, ids) or isActive changed, or the product came / went. */
+export function offersDependOnChange(
+  before: Record<string, unknown> | undefined,
+  after: Record<string, unknown> | undefined,
+): boolean {
+  if (!before || !after) return before !== after;
+  return (
+    before.isActive !== after.isActive ||
+    JSON.stringify(before.variants ?? null) !== JSON.stringify(after.variants ?? null)
+  );
+}
 
 /** The keywords / variantIds fix-up for a product, or null if in step. */
 export function searchFieldsPatch(

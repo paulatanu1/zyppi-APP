@@ -24,7 +24,7 @@ initializeApp(projectId ? { projectId } : undefined);
 
 (async () => {
   // After initializeApp: shared/firebase reuses this app.
-  const { publishLegalDoc } = await import("../src/legal/legal");
+  const { publishLegalDoc } = await import("../src/legal/legal.js");
   const files = readdirSync(dir).filter((f) => /^[a-z-]+\.md$/.test(f) && f !== "readme.md" && f !== "README.md");
   let blocked = false;
   for (const file of files) {

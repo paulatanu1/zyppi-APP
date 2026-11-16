@@ -181,6 +181,25 @@ export function readSpecialDiscount(raw: unknown): SpecialDiscount | null {
   return { ...a, startsAt: readDate(r.startsAt), endsAt: readDate(r.endsAt) };
 }
 
+/** A date from a client (ISO / epoch ms) or Firestore (Timestamp); null if absent or bad. */
+export function readDateLike(v: unknown): Date | null {
+  if (v && typeof v === "object" && typeof (v as { toDate?: unknown }).toDate === "function") {
+    return readDateLike((v as { toDate: () => Date }).toDate());
+  }
+  return readDate(v);
+}
+
+/**
+ * When the price next changes on its own (the discount starts or ends),
+ * so a schedule can refresh the offer then; null when it never does.
+ */
+export function nextPriceChangeAt(d: SpecialDiscount | null | undefined, now: Date): Date | null {
+  if (!d) return null;
+  if (d.startsAt && d.startsAt > now) return d.startsAt;
+  if (d.endsAt && d.endsAt > now) return d.endsAt;
+  return null;
+}
+
 function readDate(v: unknown): Date | null {
   if (v == null || v === "") return null;
   if (v instanceof Date) return Number.isNaN(v.getTime()) ? null : v;
