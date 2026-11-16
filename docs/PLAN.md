@@ -210,7 +210,7 @@ Outside shops sell through Zyppi on a **subscription** (seller sets the price, a
 - [x] M1 Offers, ranking, offer-aware `quoteOrder`, order line snapshots (payout / margin / seller) — `marketplace/{listings,offers,offers_sync,ranking}.ts`; `sellerSaveListing`, `adminSaveListing`, `sellerAdjustStock`; triggers on listings / inventory / products / sellers / stores + `refreshTimedOffers` (15 min); legacy variant-keyed carts still buy from Zyppi
   - [ ] Deploy, then `backfill-zyppi-seller --write` to build every product's offers
 - [ ] M1b Multi-store pickups with a pickup OTP per store (`storeConfirmPickup`, geofenced arrival, route pay)
-- [ ] M2 Customer app — "Sold by", other sellers sheet, cart by offer
+- [x] M2 Customer app — "Sold by", other sellers sheet, cart by offer (`lib/core/marketplace`, `Product.areaBest`, `CartLine.offer`, `/seller` page from public `sellerProfiles`). Reorder still buys from Zyppi
 - [ ] M3 Settlement and subscriptions — seller ledger, hold/release, payouts, dues, TCS/TDS lines
 - [ ] M4 `zyppi-admin` seller management · R1 rider app pickups/permissions · S0–S4 Zyppi Seller app · M5 ratings and reports
 
