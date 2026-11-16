@@ -70,7 +70,7 @@ Launch areas **Purulia, Raghunathpur, Chelyama**. INR. Languages en, bn, hi, pa.
 | 15 | Addresses | `MyAddress/` | Exists | restyle from `Location.dc.html` |
 | 16 | Favourites | `Favourite/` | Exists | restyle from `Category.dc.html` grid |
 
-Out of scope for MVP: subscriptions, wallet, referrals, multi-store marketplace, rider chat.
+Out of scope for MVP: subscriptions, wallet, referrals, rider chat. The multi-seller marketplace was added after the MVP as Phase 7 (2026-11-17, design in [MARKETPLACE.md](MARKETPLACE.md)).
 
 ## 4. Architecture
 
@@ -201,6 +201,18 @@ Supabase (Postgres, Auth, Storage, Realtime, Edge Functions) is replaced by Fire
 
 Done when: on a real phone against `zippy-app-2024` — OTP, Google and guest sign-in work; a COD order is placed and appears in the admin panel; an admin status change updates tracking live and sends a push; delete account works.
 
+### Phase 7 — Marketplace (sellers, offers, margins) · `feat/marketplace-<n>-…`
+Outside shops sell through Zyppi on a **subscription** (seller sets the price, admin may add an add-on that Zyppi keeps) or a **supply** deal (Zyppi sets the price and pays the agreed supply price). Full design: [MARKETPLACE.md](MARKETPLACE.md). Seller app repo: `paulatanu1/Zyppi-Marketplace`.
+- [ ] M0 Foundations — `functions/src/marketplace`: seller application + review (`sellerSaveApplication`, `adminReviewSeller`, `sellerId` claim, `sellerUsers`), plans (`adminSaveSellerPlan`), `requireSeller`, pure pricing (`priceListing`), rules for `sellers`/`sellerUsers`/`sellerPlans`/`listings`/`offers` + seller KYC storage, `scripts/backfill-zyppi-seller.ts`
+- [ ] L0 Legal & consent — `legalDocs`, `acceptLegal`, consent gating on every registration, `docs/legal/*` drafts (lawyer review before launch), signed agreement PDF
+- [ ] M1 Offers, ranking, offer-aware `quoteOrder`, order line snapshots (payout / margin / seller)
+- [ ] M1b Multi-store pickups with a pickup OTP per store (`storeConfirmPickup`, geofenced arrival, route pay)
+- [ ] M2 Customer app — "Sold by", other sellers sheet, cart by offer
+- [ ] M3 Settlement and subscriptions — seller ledger, hold/release, payouts, dues, TCS/TDS lines
+- [ ] M4 `zyppi-admin` seller management · R1 rider app pickups/permissions · S0–S4 Zyppi Seller app · M5 ratings and reports
+
+Done when (per sub-phase, in MARKETPLACE.md → Verification): a ₹50 subscription listing with a ₹5 add-on shows ₹55 to the customer, settles ₹50 to the seller after the hold, and ₹5 shows in the margin report.
+
 ## 6. Decisions
 
 | Decision | Value |
@@ -210,7 +222,8 @@ Done when: on a real phone against `zippy-app-2024` — OTP, Google and guest si
 | Scope | Customer app first, admin panel (`zyppi-admin`, Angular) alongside; rider later |
 | Backend | Firebase project `zippy-app-2024` for every flavor (Firestore + Cloud Functions in `asia-south1`, Auth, Storage) — Phase 6, 2026-11-03. Supabase (`dcgjsspymailbciqkhvq`) retired; started fresh, catalog re-seeded, no user data copied |
 | Launch areas | Purulia, Raghunathpur, Chelyama |
-| Delivery model | Dark store per area; express + scheduled slots |
+| Delivery model | Dark store per area; express + scheduled slots. From Phase 7 also seller shops (rider picks up there, OTP per store) |
+| Marketplace | Phase 7: sellers on subscription (own price + Zyppi add-on) or supply (Zyppi price, seller paid supply price); Zyppi's own stock is seller `zyppi`. Customer picks among offers ranked by price, rating, reliability |
 | Payments | PayU CheckoutPro + COD (PhonePe dropped 2026-11-07) |
 | SMS / OTP | Firebase Phone Auth (sends the SMS itself). Dev: Firebase test phone numbers |
 | Brand | Existing Zyppi brand (pink, blue, Poppins/Montserrat) — mockup re-themed |
