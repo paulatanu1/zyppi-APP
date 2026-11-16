@@ -145,7 +145,7 @@ describe("buildOffers", () => {
     expect(r.offers[0]).toMatchObject({ sellerName: "Sima Store", sellerRating: 4.8, mrpPaise: 6400, fulfilment: "seller_shop" });
     // Never public: payout or margin.
     expect(Object.keys(r.offers[0])).not.toContain("payoutPaise");
-    expect(r.areaBest.pur.v1).toEqual({ offerId: "sima_pur_v1", sellerId: "sima", pricePaise: 5800, mrpPaise: 6400, inStock: true, offerCount: 2 });
+    expect(r.areaBest.pur.v1).toEqual({ offerId: "sima_pur_v1", sellerId: "sima", sellerName: "Sima Store", pricePaise: 5800, mrpPaise: 6400, inStock: true, offerCount: 2 });
     expect(r.areaBest.rag.v1.offerId).toBe("zyppi_rag_v1");
     expect(r.rank.pur).toBeGreaterThan(0);
   });

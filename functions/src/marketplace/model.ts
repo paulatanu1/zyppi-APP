@@ -12,6 +12,8 @@ export const SELLER_USERS = "sellerUsers";
 export const SELLER_PLANS = "sellerPlans";
 export const LISTINGS = "listings";
 export const OFFERS = "offers";
+/** Public seller details customers must be able to see (Consumer Protection (E-Commerce) Rules 2020). */
+export const SELLER_PROFILES = "sellerProfiles";
 
 export const ZYPPI_SELLER_ID = "zyppi";
 
@@ -327,3 +329,23 @@ export function inventoryIdFor(storeId: string, sellerId: string | null | undefi
 }
 
 export const MARKETPLACE_CONFIG_DOC = "config/marketplace";
+
+/**
+ * sellerProfiles/{id}: what customers see about a seller (name, address,
+ * contact, licences, rating); null when the seller isn't selling (not
+ * approved), so the profile is removed. Pure, for the tests.
+ */
+export function publicSellerProfile(d: Record<string, unknown> | undefined): Record<string, unknown> | null {
+  if (!d || d.status !== "approved" || d.model === "own") return null;
+  const rating = (d.rating ?? {}) as Record<string, unknown>;
+  return {
+    shopName: d.shopName ?? "",
+    address: d.address ?? null,
+    phone: d.phone ?? null,
+    gstin: d.gstin || null,
+    fssaiNo: d.fssaiNo || null,
+    fulfilment: d.fulfilment ?? null,
+    serviceAreaId: d.serviceAreaId ?? null,
+    rating: { avg: typeof rating.avg === "number" ? rating.avg : 0, count: typeof rating.count === "number" ? rating.count : 0 },
+  };
+}

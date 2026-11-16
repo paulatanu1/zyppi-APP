@@ -465,6 +465,13 @@ service cloud.firestore {
       }
     }
 
+    // A seller's public details ("Sold by" → seller page): written only by
+    // the onSellerWritten trigger.
+    match /sellerProfiles/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // What customers see: price, MRP, seller name / rating, stock flag.
     match /offers/{id} {
       allow read: if true;

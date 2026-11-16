@@ -85,6 +85,7 @@ export interface OfferDoc {
 export interface AreaBest {
   offerId: string;
   sellerId: string;
+  sellerName: string;
   pricePaise: number;
   mrpPaise: number;
   inStock: boolean;
@@ -252,6 +253,7 @@ export function buildOffers(input: {
     (out.areaBest[area] ??= {})[best.variantId] = {
       offerId: best.id,
       sellerId: best.sellerId,
+      sellerName: best.sellerName,
       pricePaise: best.pricePaise,
       mrpPaise: best.mrpPaise,
       inStock: best.inStock,

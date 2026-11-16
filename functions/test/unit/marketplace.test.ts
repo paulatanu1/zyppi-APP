@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   inventoryIdFor,
+  publicSellerProfile,
   isZyppiStore,
   listingIdFor,
   metresBetween,
@@ -230,5 +231,18 @@ describe("plans, ids, geo", () => {
 
   it("measures distance", () => {
     expect(Math.round(metresBetween(pin, { lat: pin.lat + 0.0004, lng: pin.lng }))).toBe(44);
+  });
+});
+
+describe("publicSellerProfile", () => {
+  it("shows an approved seller's name, address, contact and licences, nothing private", () => {
+    const p = publicSellerProfile({ status: "approved", model: "subscription", shopName: "Sima", address: "Station Rd", phone: "+919800022222", gstin: "", fssaiNo: "12345678901234", pan: "ABCDE1234F", earningsBalancePaise: 9, rating: { avg: 4.5, count: 8 } });
+    expect(p).toEqual({ shopName: "Sima", address: "Station Rd", phone: "+919800022222", gstin: null, fssaiNo: "12345678901234", fulfilment: null, serviceAreaId: null, rating: { avg: 4.5, count: 8 } });
+  });
+
+  it("removes the profile when the seller isn't selling, and never for Zyppi", () => {
+    expect(publicSellerProfile({ status: "suspended", shopName: "x" })).toBeNull();
+    expect(publicSellerProfile({ status: "approved", model: "own" })).toBeNull();
+    expect(publicSellerProfile(undefined)).toBeNull();
   });
 });

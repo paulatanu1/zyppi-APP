@@ -8,7 +8,9 @@ import {
   MARKETPLACE_CONFIG_DOC,
   OFFERS,
   SELLERS,
+  SELLER_PROFILES,
   ZYPPI_SELLER_ID,
+  publicSellerProfile,
 } from "./model";
 import {
   type BuiltOffers,
@@ -156,6 +158,13 @@ const SELLER_FIELDS = ["status", "shopName", "rating", "stats", "subscription", 
 export const onSellerWritten = onDocumentWritten({ document: `${SELLERS}/{sellerId}`, timeoutSeconds: 540 }, async (event) => {
   const b = event.data?.before?.data() ?? {};
   const a = event.data?.after?.data() ?? {};
+  // The public profile customers open from "Sold by".
+  const profile = publicSellerProfile(event.data?.after?.data());
+  const before = publicSellerProfile(event.data?.before?.data());
+  if (stable(profile) !== stable(before)) {
+    const ref = db.collection(SELLER_PROFILES).doc(event.params.sellerId);
+    await (profile ? ref.set({ ...profile, updatedAt: FieldValue.serverTimestamp() }) : ref.delete());
+  }
   // Zyppi's rating / stats move with every order; rebuilding the whole
   // catalogue for that isn't worth it (other triggers pick it up).
   const fields = event.params.sellerId === ZYPPI_SELLER_ID ? ["status", "shopName"] : SELLER_FIELDS;
