@@ -2,7 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zippy/core/config/env.dart';
+import 'package:zippy/core/app_settings/data/app_settings_repository.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/utils/launch.dart';
 import 'package:zippy/core/utils/order_id.dart';
@@ -113,13 +113,16 @@ class _ChatViewState extends ConsumerState<_ChatView> {
 
     final status = chat?.status ?? SupportChatStatus.bot;
     final closed = status == SupportChatStatus.closed;
+    // With the bot switched off (Settings → Services) the server hands every
+    // message to the team: no "Talk to a person", no typing dots.
+    final botOn = ref.watch(featureFlagsProvider).supportBot;
 
     return Column(
       children: [
         _Header(
           orderId: widget.orderId,
           chat: chat,
-          onTalkToPerson: status == SupportChatStatus.bot
+          onTalkToPerson: botOn && status == SupportChatStatus.bot
               ? _requestAgent
               : null,
         ),
@@ -128,10 +131,11 @@ class _ChatViewState extends ConsumerState<_ChatView> {
               ? _Messages(
                   messages: messages,
                   typing:
+                      botOn &&
                       status == SupportChatStatus.bot &&
                       messages.isNotEmpty &&
                       messages.last.from == SupportSender.user,
-                  quickRepliesEnabled: status == SupportChatStatus.bot,
+                  quickRepliesEnabled: botOn && status == SupportChatStatus.bot,
                   onQuickReply: _onQuickReply,
                 )
               : messagesAsync.hasError
@@ -427,12 +431,13 @@ class _MessageTile extends StatelessWidget {
 
 /// WhatsApp / Call buttons under the hand-off message (same numbers as
 /// the Help sheet).
-class _ContactOptions extends StatelessWidget {
+class _ContactOptions extends ConsumerWidget {
   const _ContactOptions();
 
   @override
-  Widget build(BuildContext context) {
-    final phone = Env.supportPhone;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final phone = ref.watch(supportPhoneProvider);
+    final whatsApp = ref.watch(supportWhatsAppProvider);
     if (phone.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(top: ZSpace.x3),
@@ -442,8 +447,9 @@ class _ContactOptions extends StatelessWidget {
         runSpacing: ZSpace.x2,
         children: [
           OutlinedButton.icon(
-            onPressed: () =>
-                openExternal(whatsAppUri(phone, message: 'helpMessage'.tr())),
+            onPressed: () => openExternal(
+              whatsAppUri(whatsApp, message: 'helpMessage'.tr()),
+            ),
             icon: const Icon(Icons.chat_outlined),
             label: Text('helpWhatsApp'.tr()),
           ),

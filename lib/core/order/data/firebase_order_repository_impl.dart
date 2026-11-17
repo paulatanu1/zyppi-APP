@@ -28,10 +28,10 @@ class FirebaseOrderRepository implements OrderRepository {
   }
 
   @override
-  Future<List<Order>> getOrders() async {
+  Future<List<Order>> getOrders({int? limit}) async {
     final query = _mine;
     if (query == null) return const [];
-    final snap = await query.get();
+    final snap = await (limit == null ? query : query.limit(limit)).get();
     return snap.docs.map(orderFromDoc).toList();
   }
 
@@ -65,15 +65,21 @@ class FirebaseOrderRepository implements OrderRepository {
     );
   }
 
-  /// Fires whenever one of the signed-in user's orders changes (status
-  /// updates from the admin panel); callers re-read [getOrders].
   @override
-  Stream<void> watch() {
+  Stream<List<Order>> watchOrders({int limit = recentOrdersLimit}) {
     final query = _mine;
-    if (query == null) return const Stream.empty();
-    // The first snapshot is the current state, not a change.
-    return query.snapshots().skip(1).map((_) {});
+    if (query == null) return Stream.value(const []);
+    return query
+        .limit(limit)
+        .snapshots()
+        .map((snap) => snap.docs.map(orderFromDoc).toList());
   }
+
+  @override
+  Stream<Order?> watchOrder(String id) => _orders
+      .doc(id)
+      .snapshots()
+      .map((doc) => doc.exists ? orderFromDoc(doc) : null);
 }
 
 /// A Firestore order document → [Order].
@@ -90,6 +96,8 @@ Order orderFromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
           unit: item['unit'] as String,
           quantity: item['quantity'] as int,
           pricePaise: item['pricePaise'] as int,
+          sellerId: item['sellerId'] as String?,
+          sellerName: item['sellerName'] as String?,
         ),
       )
       .toList();

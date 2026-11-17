@@ -4,8 +4,9 @@
  * "Toned Milk" and "toned m" finds it too. Firestore has no full-text
  * search; this replaces Postgres `search_vector`.
  *
- * The admin panel keeps a copy of this function
- * (zyppi-admin/frontend/src/app/core/firebase/keywords.ts) — change both.
+ * Only the server generates these: the admin callables
+ * (src/catalog/products.ts, import.ts) and the onProductWritten trigger for
+ * edits made anywhere else.
  */
 export function productKeywords(name: string, extra: string[] = []): string[] {
   const out = new Set<string>();

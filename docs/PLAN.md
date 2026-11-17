@@ -39,7 +39,9 @@ Flutter **3.47.x stable** (Dart 3.13) pinned with **FVM** (`.fvmrc`). Upgrade wi
 | Localization | `easy_localization` | latest | 0 |
 | Location / maps | `geolocator`, `google_places_flutter` (client key) | `geolocator`, `geocoding`; Places API (New) via the `placesProxy` Cloud Function. `google_maps_flutter` was added in Phase 4 then removed (2026-10-26): delivery here only needs `lat`/`lng` for the rider to navigate externally, not an embedded map in the customer app — see decisions table | 4 |
 | Push / crash / analytics | `firebase_core` | + `firebase_messaging`, `firebase_crashlytics`, `firebase_analytics` | 4–5 |
+| App integrity / version | — | `firebase_app_check` (Play Integrity; debug provider in debug builds), `package_info_plus` (minimum-version check) — approved 2026-11-15, admin plan A8/A9 | A8–A9 |
 | Payments | — | `payu_checkoutpro_flutter` (PayU CheckoutPro) + COD — replaced `phonepe_payment_sdk` 2026-11-07 | 4 |
+| Connectivity | — | `connectivity_plus` (app-wide offline banner only; added 2026-11-11) | 2 |
 | Testing | `flutter_test` | + `mocktail`, `integration_test` | all |
 | Release assets | `flutter_launcher_icons` | + `flutter_native_splash` | 5 |
 
@@ -68,7 +70,7 @@ Launch areas **Purulia, Raghunathpur, Chelyama**. INR. Languages en, bn, hi, pa.
 | 15 | Addresses | `MyAddress/` | Exists | restyle from `Location.dc.html` |
 | 16 | Favourites | `Favourite/` | Exists | restyle from `Category.dc.html` grid |
 
-Out of scope for MVP: subscriptions, wallet, referrals, multi-store marketplace, rider chat.
+Out of scope for MVP: subscriptions, wallet, referrals, rider chat. The multi-seller marketplace was added after the MVP as Phase 7 (2026-11-17, design in [MARKETPLACE.md](MARKETPLACE.md)).
 
 ## 4. Architecture
 
@@ -143,7 +145,7 @@ Done when: each flavor boots, existing screens use tokens, CI green.
 - [x] freezed entities: Category, Product, ProductVariant, CartItem, Address, DeliverySlot, Coupon, Order, OrderItem, OrderStatus, ServiceArea — all under `lib/core/domain/` (not a single feature's domain) since they're used by multiple features and CLAUDE.md restricts features to importing only `core/` and themselves
 - [x] `assets/mock/*.json` (categories, products, addresses, slots, orders, service_areas, coupons) + mock repositories via `MockDataSource` (300–800 ms delay, a `simulateErrors` toggle)
 - [x] Build missing screens 8 (search), 10 (checkout), 11 (order placed), 12 (order tracking)
-- [x] Restyle existing screens to the mockup — all 16 screens from §3's table: onboarding/slider, login, OTP verify, home, explore, category details, product details, search, cart, checkout, order placed, order tracking, orders history, account/profile, addresses, filter. A few sub-pieces are explicitly deferred to later phases rather than faked: category details' sub-category rail (no sub-category relationship in the catalog data model), filter's brand facet (no brand field), product details' "similar items" row (no recommendation logic), search's recent/trending chips (no search-history persistence), and addresses' map-pin picker (needs `google_maps_flutter`, Phase 4) — that screen is list-only for now.
+- [x] Restyle existing screens to the mockup — all 16 screens from §3's table: onboarding/slider, login, OTP verify, home, explore, category details, product details, search, cart, checkout, order placed, order tracking, orders history, account/profile, addresses, filter. A few sub-pieces are explicitly deferred to later phases rather than faked: filter's brand facet (no brand field), product details' "similar items" row (no recommendation logic), and addresses' map-pin picker (needs `google_maps_flutter`, Phase 4) — that screen is list-only for now. (Since shipped: search's recent searches + "Try searching" chips (on-device history). And the sub-category rail: `categories.parentId` + `products.subcategoryId`.)
 - [x] Cart in `hive_ce`: steppers, item total, savings, delivery fee, handling fee, tip, coupon — `core/cart/`
 - [x] Fake order lifecycle timer: placed → packed → out for delivery → delivered — `OrderTrackingProvider`, 5s/step
 - [x] Unit tests for bill math; widget tests for cart and product card — surfaced and fixed a real ItemCard layout overflow bug in the process
@@ -199,6 +201,25 @@ Supabase (Postgres, Auth, Storage, Realtime, Edge Functions) is replaced by Fire
 
 Done when: on a real phone against `zippy-app-2024` — OTP, Google and guest sign-in work; a COD order is placed and appears in the admin panel; an admin status change updates tracking live and sends a push; delete account works.
 
+### Phase 7 — Marketplace (sellers, offers, margins) · `feat/marketplace-<n>-…`
+Outside shops sell through Zyppi on a **subscription** (seller sets the price, admin may add an add-on that Zyppi keeps) or a **supply** deal (Zyppi sets the price and pays the agreed supply price). Full design: [MARKETPLACE.md](MARKETPLACE.md). Seller app repo: `paulatanu1/Zyppi-Marketplace`.
+- [x] M0 Foundations — `functions/src/marketplace`: seller application + review (`sellerSaveApplication`, `adminReviewSeller`, `sellerId` claim, `sellerUsers`), plans (`adminSaveSellerPlan`), `requireSeller`, pure pricing (`priceListing`), rules for `sellers`/`sellerUsers`/`sellerPlans`/`listings`/`offers` + seller KYC storage, `scripts/backfill-zyppi-seller.ts`
+- [x] L0 Legal & consent — `functions/src/legal` (`legalDocs` + versions, `legalStatus`, `acceptLegal`, `adminPublishLegalDoc`, `scripts/publish-legal.ts`), consent gate on rider/seller application submit (active once that agreement is published), `docs/legal/*` drafts, customer app consent row + `LegalGate` + `/legal` reader
+  - [ ] Lawyer review of `docs/legal/*`, fill the `[PLACEHOLDERS]`, then `publish-legal --write`; bn/hi/pa translations after review
+  - [ ] Signed agreement PDF (needs a PDF package in `functions/` — ask first) · public web pages for the Play listing · `zyppi-admin` legal editor (M4)
+- [x] M1 Offers, ranking, offer-aware `quoteOrder`, order line snapshots (payout / margin / seller) — `marketplace/{listings,offers,offers_sync,ranking}.ts`; `sellerSaveListing`, `adminSaveListing`, `sellerAdjustStock`; triggers on listings / inventory / products / sellers / stores + `refreshTimedOffers` (15 min); legacy variant-keyed carts still buy from Zyppi
+  - [ ] Deploy, then `backfill-zyppi-seller --write` to build every product's offers
+- [x] M1b Multi-store pickups with a pickup OTP per store — `dispatch/pickups.ts` (stops in route order at placement, `orders/{id}/pickupCodes/{storeId}` for sellers' shops: rider + staff only), `riderReachedStore` geofenced at sellers' shops (last ping within 150 m), `riderPickUp` refuses sellers' shops (`PICKUP_CODE_REQUIRED`), `marketplace/seller_orders.ts`: `sellerAcceptOrder` / `sellerMarkReady` / `storeConfirmPickup` / `sellerReportIssue` / `sellerRegisterDevice` / `adminForcePickup`, seller order projection `sellers/{id}/orders/{orderId}` + new-order push, `escalateLateSellers` (2 min, `opsAlerts.sellerLate`), route-distance rider pay + `config/riders.extraPickupPaise` (default 0). Zyppi's own stores keep today's flow (ops packs, rider taps picked up), so the current rider app keeps working until R1
+- [x] M2 Customer app — "Sold by", other sellers sheet, cart by offer (`lib/core/marketplace`, `Product.areaBest`, `CartLine.offer`, `/seller` page from public `sellerProfiles`). Reorder still buys from Zyppi
+- [x] M3 Settlement and subscriptions — `marketplace/settlement*.ts`, `periods.ts`: credit on delivery (net = seller price − TCS (GSTIN) − TDS, held `holdDays`), reversal on cancel, `sellerDaily` (release held, renew periods, grace → expired hides offers, 7/3/1-day reminders, FSSAI expiry pauses offers), `sellerRequestPayout` (dues first, min ₹100), `adminRecordSellerPayout` / `adminRecordSellerFee` / `adminAdjustSellerEarnings` / `adminSetSellerPlan` (finance, audited); first period opens on approval. Rates in `config/marketplace.settlement` (defaults TCS 0.5 %, TDS 0.1 %, hold 7 days, grace 3 days) — **confirm with the CA**
+- [x] M5 backend — `rateSellers` (per seller per delivered order, sum/count/avg feeds ranking; sellers can't rate themselves), `stats/*` now count `payoutPaise` / `marginPaise` per day (Zyppi's share)
+- [x] M4 `zyppi-delivery-admin` (branch `feat/marketplace-sellers`, merge after the backend deploy): Sellers (review with KYC photos and distance from the pin, balances, plan, fees, adjustments, trusted catalog, listings with the add-on / supply-price editor), Seller payouts, Seller plans, Product requests, Reports seller payouts / Zyppi share
+- [x] R1 `zyppi-delivery-app` (`main`): pickup stops in route order, pickup code at sellers' shops
+- [x] S0–S4 `Zyppi-Marketplace` (`main`): apply (selfie, geostamped shop photos, signature + OTP), ringing new-order alert with slide to accept (no reject), orders, products, earnings, account
+- [ ] Register Android app `com.zyppi.seller` in Firebase + SHA fingerprints + App Check (see Zyppi-Marketplace README); deploy functions / rules / indexes; publish legal docs after lawyer review
+
+Done when (per sub-phase, in MARKETPLACE.md → Verification): a ₹50 subscription listing with a ₹5 add-on shows ₹55 to the customer, settles ₹50 to the seller after the hold, and ₹5 shows in the margin report.
+
 ## 6. Decisions
 
 | Decision | Value |
@@ -208,7 +229,8 @@ Done when: on a real phone against `zippy-app-2024` — OTP, Google and guest si
 | Scope | Customer app first, admin panel (`zyppi-admin`, Angular) alongside; rider later |
 | Backend | Firebase project `zippy-app-2024` for every flavor (Firestore + Cloud Functions in `asia-south1`, Auth, Storage) — Phase 6, 2026-11-03. Supabase (`dcgjsspymailbciqkhvq`) retired; started fresh, catalog re-seeded, no user data copied |
 | Launch areas | Purulia, Raghunathpur, Chelyama |
-| Delivery model | Dark store per area; express + scheduled slots |
+| Delivery model | Dark store per area; express + scheduled slots. From Phase 7 also seller shops (rider picks up there, OTP per store) |
+| Marketplace | Phase 7: sellers on subscription (own price + Zyppi add-on) or supply (Zyppi price, seller paid supply price); Zyppi's own stock is seller `zyppi`. Customer picks among offers ranked by price, rating, reliability |
 | Payments | PayU CheckoutPro + COD (PhonePe dropped 2026-11-07) |
 | SMS / OTP | Firebase Phone Auth (sends the SMS itself). Dev: Firebase test phone numbers |
 | Brand | Existing Zyppi brand (pink, blue, Poppins/Montserrat) — mockup re-themed |

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:geocoding/geocoding.dart' as geocoding;
 import 'package:geolocator/geolocator.dart';
 import 'package:zippy/core/data/service_area_repository_impl.dart';
+import 'package:zippy/core/marketplace/application/marketplace_providers.dart';
 import 'package:zippy/core/shared_providers/location/provider/request_location_provider.dart';
 import 'package:zippy/core/domain/address.dart';
 import 'package:zippy/core/utils/parsed_address.dart';
@@ -238,6 +239,8 @@ class GetCurrentLocationProvider
         serviceArea: area,
         serviceabilityChecked: true,
       );
+      // Prices and sellers on every product card follow the area.
+      ref.read(shoppingAreaIdProvider.notifier).set(area?.id);
     } catch (_) {
       if (!mounted || seq != _checkSeq) return;
       state = state.copyWith(

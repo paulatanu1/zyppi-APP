@@ -1,16 +1,20 @@
 import { CallableRequest, HttpsError } from "firebase-functions/https";
 import { OrderError } from "../orders/quote";
+import { checkAppCheck } from "./hardening";
+import { roleOf } from "./roles";
 
 /** The caller's uid; anonymous (guest) users count as signed in. */
 export function requireUid(request: CallableRequest): string {
   const uid = request.auth?.uid;
   if (!uid) throw new HttpsError("unauthenticated", "Not authenticated");
+  checkAppCheck(request);
   return uid;
 }
 
+/** Any staff role (see shared/roles.ts; use requireRole to narrow it). */
 export function requireAdmin(request: CallableRequest): string {
   const uid = requireUid(request);
-  if (request.auth?.token.admin !== true) {
+  if (roleOf(request.auth?.token as Record<string, unknown> | undefined) === null) {
     throw new HttpsError("permission-denied", "Not authorized");
   }
   return uid;

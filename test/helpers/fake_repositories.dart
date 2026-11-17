@@ -39,7 +39,8 @@ class FakeCatalog implements CatalogRepository {
 
 class NoCoupons implements CouponRepository {
   @override
-  Future<Coupon?> findByCode(String code) async => null;
+  Future<Coupon?> findByCode(String code, {String? serviceAreaId}) async =>
+      null;
 }
 
 class MemoryFavourites implements FavouritesRepository {

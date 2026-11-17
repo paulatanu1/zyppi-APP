@@ -2,10 +2,10 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/account/account_repository.dart';
-import 'package:zippy/core/config/env.dart';
+import 'package:go_router/go_router.dart';
+import 'package:zippy/core/legal/domain/legal_doc.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
-import 'package:zippy/core/utils/launch.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
 import 'package:zippy/core/common_widgets/section_card.dart';
 
@@ -19,11 +19,14 @@ class AccountPrivacyScreen extends ConsumerWidget {
     final z = context.z;
     final text = Theme.of(context).textTheme;
 
-    Widget link(String label, String url) => ListTile(
+    // The live, versioned text from legalDocs (what the customer accepted).
+    Widget link(String type) => ListTile(
       contentPadding: EdgeInsets.zero,
-      title: Text(label, style: text.labelLarge),
-      trailing: Icon(Icons.open_in_new_rounded, size: 18, color: z.ink3),
-      onTap: () => openExternal(Uri.parse(url)),
+      title: Text(LegalTypes.labelKey(type).tr(), style: text.labelLarge),
+      trailing: Icon(Icons.chevron_right_rounded, color: z.ink3),
+      onTap: () => context.push(
+        Uri(path: '/legal', queryParameters: {'type': type}).toString(),
+      ),
     );
 
     return Scaffold(
@@ -32,19 +35,12 @@ class AccountPrivacyScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(ZSpace.screen),
         children: [
-          if (Env.privacyPolicyUrl.isNotEmpty || Env.termsUrl.isNotEmpty) ...[
-            SectionCard(
-              child: Column(
-                children: [
-                  if (Env.privacyPolicyUrl.isNotEmpty)
-                    link('privacyPolicy'.tr(), Env.privacyPolicyUrl),
-                  if (Env.termsUrl.isNotEmpty)
-                    link('termsOfService'.tr(), Env.termsUrl),
-                ],
-              ),
+          SectionCard(
+            child: Column(
+              children: [for (final type in LegalTypes.forCustomer) link(type)],
             ),
-            const SizedBox(height: ZSpace.x3),
-          ],
+          ),
+          const SizedBox(height: ZSpace.x3),
           SectionCard(
             title: 'deleteAccount'.tr(),
             child: Column(

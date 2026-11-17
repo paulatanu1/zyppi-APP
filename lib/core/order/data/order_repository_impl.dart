@@ -25,7 +25,7 @@ class HiveOrderRepository implements OrderRepository {
   HiveOrderRepository(this.box);
 
   @override
-  Future<List<Order>> getOrders() async {
+  Future<List<Order>> getOrders({int? limit}) async {
     final raw = box.get(_ordersKey) as List<dynamic>? ?? const [];
 
     final orders = raw
@@ -34,7 +34,7 @@ class HiveOrderRepository implements OrderRepository {
 
     orders.sort((a, b) => b.placedAt.compareTo(a.placedAt));
 
-    return orders;
+    return limit == null ? orders : orders.take(limit).toList();
   }
 
   @override
@@ -71,7 +71,20 @@ class HiveOrderRepository implements OrderRepository {
   }
 
   @override
-  Stream<void> watch() => box.watch(key: _ordersKey).map((_) {});
+  Stream<List<Order>> watchOrders({int limit = recentOrdersLimit}) async* {
+    yield await getOrders(limit: limit);
+    await for (final _ in box.watch(key: _ordersKey)) {
+      yield await getOrders(limit: limit);
+    }
+  }
+
+  @override
+  Stream<Order?> watchOrder(String id) async* {
+    yield await getOrderById(id);
+    await for (final _ in box.watch(key: _ordersKey)) {
+      yield await getOrderById(id);
+    }
+  }
 }
 
 final orderRepositoryProvider = Provider<OrderRepository>(

@@ -83,11 +83,50 @@ void main() {
     await pump(tester);
 
     await tester.enterText(find.byType(TextField), '9876543210');
+    await tester.tap(find.byType(Checkbox));
     await tester.tap(find.byType(FilledButton));
     await tester.pump();
 
     expect(otp.sent, ['+919876543210']);
     final field = tester.widget<TextField>(find.byType(TextField));
     expect(field.controller!.text, '9876543210');
+  });
+
+  testWidgets('needs the terms ticked before sending an OTP', (tester) async {
+    await pump(tester);
+
+    expect(tester.widget<Checkbox>(find.byType(Checkbox)).value, isFalse);
+    await tester.enterText(find.byType(TextField), '9876543210');
+    await tester.tap(find.byType(FilledButton));
+    await tester.pump();
+
+    expect(otp.sent, isEmpty);
+    expect(find.text('legalAgreeRequired'), findsOneWidget); // translation key
+
+    // Tapping the sentence ticks the box too.
+    await tester.tap(find.text('legalAgree'));
+    await tester.pump();
+    expect(find.text('legalAgreeRequired'), findsNothing);
+    await tester.tap(find.byType(FilledButton));
+    await tester.pump();
+    expect(otp.sent, ['+919876543210']);
+  });
+
+  testWidgets('guest sign-in also needs the terms ticked', (tester) async {
+    await pump(tester);
+
+    await tester.ensureVisible(find.text('continueAsGuest'));
+    await tester.tap(find.text('continueAsGuest'));
+    await tester.pump();
+
+    expect(find.text('legalAgreeRequired'), findsOneWidget);
+  });
+
+  testWidgets('shows a link to each customer document', (tester) async {
+    await pump(tester);
+
+    expect(find.text('legalTerms'), findsOneWidget);
+    expect(find.text('legalPrivacy'), findsOneWidget);
+    expect(find.text('legalRefund'), findsOneWidget);
   });
 }

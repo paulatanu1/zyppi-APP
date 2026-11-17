@@ -272,4 +272,59 @@ void main() {
       CategoryTabsSection.height,
     );
   });
+
+  for (final dark in [false, true]) {
+    testWidgets('pinned header: search + tabs on the brand surface '
+        '(${dark ? 'dark' : 'light'})', (tester) async {
+      final tabs = _section(
+        'category_tabs',
+        [
+          {'label': 'All', 'icon': 'grid_view'},
+          {'label': 'Fruits & Veg', 'icon': 'eco', 'category_id': 'c1'},
+          {'label': 'Dairy & Bakery', 'icon': 'bakery', 'category_id': 'c2'},
+        ],
+        config: {'sticky': true},
+      );
+      final delegate = HomePinnedHeaderDelegate(
+        tabs: tabs,
+        onSearch: () {},
+        onAllTap: () {},
+      );
+      await tester.pumpWidget(
+        _wrap(
+          theme: dark ? ZyppiTheme.dark : ZyppiTheme.light,
+          SizedBox(
+            height: 600,
+            child: CustomScrollView(
+              slivers: [
+                SliverPersistentHeader(pinned: true, delegate: delegate),
+                const SliverToBoxAdapter(child: SizedBox(height: 2000)),
+              ],
+            ),
+          ),
+        ),
+      );
+      final colors = dark ? ZColors.dark : ZColors.light;
+      final box = tester.widget<DecoratedBox>(
+        find
+            .descendant(
+              of: find.byType(CustomScrollView),
+              matching: find.byType(DecoratedBox),
+            )
+            .first,
+      );
+      expect((box.decoration as BoxDecoration).color, colors.header);
+      expect(find.byType(ZSearchBar), findsOneWidget);
+      expect(find.text('Dairy & Bakery'), findsOneWidget);
+      expect(
+        tester.getSize(find.byType(CategoryTabsSection)).height,
+        CategoryTabsSection.height,
+      );
+      // Stays pinned after scrolling.
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -400));
+      await tester.pumpAndSettle();
+      expect(find.byType(ZSearchBar), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
 }

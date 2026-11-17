@@ -1,8 +1,9 @@
 import { FieldValue } from "firebase-admin/firestore";
-import { logger } from "firebase-functions";
+import { pushToDevices } from "../notifications/tokens";
 import { HttpsError, onCall } from "firebase-functions/https";
-import { requireAdmin, requireString, requireUid } from "../shared/callable";
-import { db, messaging } from "../shared/firebase";
+import { requireString, requireUid } from "../shared/callable";
+import { requireRole } from "../shared/roles";
+import { db } from "../shared/firebase";
 import { CHATS, postMessages } from "./bot";
 import { COPY, shortOrderId } from "./copy";
 import { langFromLocale, type Lang } from "./lang";
@@ -107,22 +108,12 @@ async function pushToCustomer(
   text: string,
 ) {
   const profile = await db.collection("users").doc(userId).get();
-  const token = profile.get("fcmToken") as string | null | undefined;
-  if (!token || profile.get("notifyOrderUpdates") === false) return;
-  try {
-    await messaging.send({
-      token,
-      notification: { title: COPY[lang].agentReplyPush, body: text.slice(0, 140) },
-      data: { chatId: chat.id, chatOrderId: chat.orderId ?? "" },
-      android: { priority: "high" },
-    });
-  } catch (error) {
-    if ((error as { code?: string }).code === "messaging/registration-token-not-registered") {
-      await profile.ref.update({ fcmToken: null });
-      return;
-    }
-    logger.error("Support push failed", { chatId: chat.id, error });
-  }
+  if (profile.get("notifyOrderUpdates") === false) return;
+  await pushToDevices(profile.ref, profile.data(), {
+    notification: { title: COPY[lang].agentReplyPush, body: text.slice(0, 140) },
+    data: { chatId: chat.id, chatOrderId: chat.orderId ?? "" },
+    android: { priority: "high" },
+  });
 }
 
 /**
@@ -131,7 +122,7 @@ async function pushToCustomer(
  * Request: {chatId, text}.
  */
 export const adminReplySupport = onCall(async (request) => {
-  const agentId = requireAdmin(request);
+  const agentId = requireRole(request, ["support", "ops"]).uid;
   const chatRef = db.collection(CHATS).doc(requireString(request.data?.chatId, "chatId"));
   const text = requireString(request.data?.text, "text").trim().slice(0, 2000);
   const chat = await chatRef.get();
@@ -164,7 +155,7 @@ export const adminReplySupport = onCall(async (request) => {
 
 /** Closes a chat; the customer's next openSupportChat reopens it with the bot. */
 export const adminCloseSupport = onCall(async (request) => {
-  requireAdmin(request);
+  requireRole(request, ["support", "ops"]);
   const chatRef = db.collection(CHATS).doc(requireString(request.data?.chatId, "chatId"));
   if (!(await chatRef.get()).exists) throw new HttpsError("not-found", "Chat not found");
   await chatRef.update({ status: "closed", updatedAt: FieldValue.serverTimestamp() });

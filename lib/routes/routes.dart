@@ -1,8 +1,14 @@
+import 'package:zippy/features/notifications/presentation/notifications_screen.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/config/env.dart';
+import 'package:zippy/core/legal/domain/legal_doc.dart';
+import 'package:zippy/core/legal/presentation/legal_doc_screen.dart';
+import 'package:zippy/core/legal/presentation/legal_gate.dart';
+import 'package:zippy/core/marketplace/presentation/seller_screen.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
+import 'package:zippy/routes/home_fallback_scope.dart';
 import 'package:zippy/routes/router_refresh_listenable.dart';
 import 'package:zippy/features/edit_profile/presentation/edit_profile_screen.dart';
 import 'package:zippy/features/my_address/presentation/my_address_screen.dart';
@@ -34,6 +40,9 @@ import 'package:zippy/features/search/presentation/search_screen.dart';
 import 'package:zippy/features/search_address/presentation/search_address_screen.dart';
 import 'package:zippy/features/support_chat/presentation/support_chat_screen.dart';
 
+/// Open whether signed in or not (e.g. the terms from the login screen).
+const _publicRoutes = {'/legal'};
+
 const _unauthenticatedRoutes = {
   '/slider',
   '/loginScreen',
@@ -51,6 +60,8 @@ class Routes {
   String? _redirect(GoRouterState state) {
     // The launch animation picks Home or Onboarding itself when it ends.
     if (state.matchedLocation == '/launch') return null;
+
+    if (_publicRoutes.contains(state.matchedLocation)) return null;
 
     // Design playground: dev builds only, never an auth bypass elsewhere.
     if (state.matchedLocation == '/design-v2' && Env.flavor == 'dev') {
@@ -110,143 +121,181 @@ class Routes {
           pageBuilder: (context, state) {
             final index =
                 int.tryParse(state.uri.queryParameters['index'] ?? '') ?? 0;
-            return _fade(state, NavBar(initialIndex: index));
+            return _fade(state, LegalGate(child: NavBar(initialIndex: index)));
           },
+        ),
+        GoRoute(
+          path: '/seller',
+          name: 'Seller',
+          builder: withHomeFallback(
+            (context, state) => SellerScreen(
+              sellerId: state.uri.queryParameters['sellerId'] ?? '',
+            ),
+          ),
+        ),
+        GoRoute(
+          path: '/legal',
+          name: 'Legal',
+          builder: (context, state) => LegalDocScreen(
+            type: state.uri.queryParameters['type'] ?? LegalTypes.customerTerms,
+          ),
         ),
         GoRoute(
           path: '/homeScreen',
           name: 'HomeScreen',
-          builder: (context, state) => HomeScreen(),
+          builder: withHomeFallback((context, state) => HomeScreen()),
         ),
         GoRoute(
           path: '/exploreScreen',
           name: 'ExploreScreen',
-          builder: (context, state) => ExploreScreen(),
+          builder: withHomeFallback((context, state) => ExploreScreen()),
         ),
         GoRoute(
           path: '/productDetailsScreen',
           name: 'ProductDetailsScreen',
-          builder: (context, state) {
+          builder: withHomeFallback((context, state) {
             final productId = state.uri.queryParameters['productId'] ?? '';
             return ProductDetailsScreen(
               productId: productId,
               heroTag: state.uri.queryParameters['hero'],
             );
-          },
+          }),
         ),
         GoRoute(
           path: '/categoryDetailsScreen',
           name: 'CategoryDetailsScreen',
-          builder: (context, state) {
+          builder: withHomeFallback((context, state) {
             final categoryId = state.uri.queryParameters['categoryId'] ?? '';
             return CategoryDetailsScreen(categoryId: categoryId);
-          },
+          }),
         ),
         GoRoute(
           path: '/filterScreen',
           name: 'FilterScreen',
-          builder: (context, state) => FilterScreen(
-            categoryId: state.uri.queryParameters['categoryId'] ?? '',
+          builder: withHomeFallback(
+            (context, state) => FilterScreen(
+              categoryId: state.uri.queryParameters['categoryId'] ?? '',
+            ),
           ),
         ),
         GoRoute(
           path: '/favouriteScreen',
           name: 'FavouriteScreen',
-          builder: (context, state) => FavouriteScreen(),
+          builder: withHomeFallback((context, state) => FavouriteScreen()),
         ),
         GoRoute(
           path: '/myCartScreen',
           name: 'MyCartScreen',
-          builder: (context, state) => MyCartScreen(),
+          builder: withHomeFallback((context, state) => MyCartScreen()),
         ),
         GoRoute(
           path: '/accountScreen',
           name: 'AccountScreen',
-          builder: (context, state) => AccountScreen(),
+          builder: withHomeFallback((context, state) => AccountScreen()),
         ),
         GoRoute(
           path: '/searchAddressScreen',
           name: 'SearchAddressScreen',
-          builder: (context, state) {
+          builder: withHomeFallback((context, state) {
             // Missing extra (e.g. a deep link or a caller that forgot it)
             // must not crash the screen; default to "save a new address".
             final addLocation = state.extra as bool? ?? true;
             return SearchAddressScreen(addLocation: addLocation);
-          },
+          }),
         ),
         GoRoute(
           path: '/guestUpgradeScreen',
           name: 'GuestUpgradeScreen',
-          builder: (context, state) => const GuestUpgradeScreen(),
+          builder: withHomeFallback(
+            (context, state) => const GuestUpgradeScreen(),
+          ),
         ),
         GoRoute(
           path: '/paymentSettingsScreen',
           name: 'PaymentSettingsScreen',
-          builder: (context, state) => const PaymentSettingsScreen(),
+          builder: withHomeFallback(
+            (context, state) => const PaymentSettingsScreen(),
+          ),
         ),
         GoRoute(
           path: '/notificationSettingsScreen',
           name: 'NotificationSettingsScreen',
-          builder: (context, state) => const NotificationSettingsScreen(),
+          builder: withHomeFallback(
+            (context, state) => const NotificationSettingsScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/notificationsScreen',
+          name: 'NotificationsScreen',
+          builder: withHomeFallback(
+            (context, state) => const NotificationsScreen(),
+          ),
         ),
         GoRoute(
           path: '/accountPrivacyScreen',
           name: 'AccountPrivacyScreen',
-          builder: (context, state) => const AccountPrivacyScreen(),
+          builder: withHomeFallback(
+            (context, state) => const AccountPrivacyScreen(),
+          ),
         ),
         GoRoute(
           path: '/myAddressScreen',
           name: 'MyAddressScreen',
-          builder: (context, state) => MyAddressScreen(),
+          builder: withHomeFallback((context, state) => MyAddressScreen()),
         ),
         GoRoute(
           path: '/yourOrderScreen',
           name: 'YourOrderScreen',
-          builder: (context, state) => YourOrderScreen(),
+          builder: withHomeFallback((context, state) => YourOrderScreen()),
         ),
         GoRoute(
           path: '/editProfileScreen',
           name: 'EditProfileScreen',
-          builder: (context, state) => EditProfileScreen(),
+          builder: withHomeFallback((context, state) => EditProfileScreen()),
         ),
         GoRoute(
           path: '/searchScreen',
           name: 'SearchScreen',
-          builder: (context, state) => SearchScreen(),
+          builder: withHomeFallback((context, state) => SearchScreen()),
         ),
         GoRoute(
           path: '/checkoutScreen',
           name: 'CheckoutScreen',
-          builder: (context, state) => const CheckoutScreen(),
+          builder: withHomeFallback((context, state) => const CheckoutScreen()),
         ),
         GoRoute(
           path: '/orderPlacedScreen',
           name: 'OrderPlacedScreen',
-          builder: (context, state) {
+          builder: withHomeFallback((context, state) {
             final orderId = state.uri.queryParameters['orderId'] ?? '';
             return OrderPlacedScreen(orderId: orderId);
-          },
+          }),
         ),
         GoRoute(
           path: '/orderDetailsScreen',
           name: 'OrderDetailsScreen',
-          builder: (context, state) => OrderDetailsScreen(
-            orderId: state.uri.queryParameters['orderId'] ?? '',
+          builder: withHomeFallback(
+            (context, state) => OrderDetailsScreen(
+              orderId: state.uri.queryParameters['orderId'] ?? '',
+            ),
           ),
         ),
         GoRoute(
           path: '/orderTrackingScreen',
           name: 'OrderTrackingScreen',
-          builder: (context, state) {
+          builder: withHomeFallback((context, state) {
             final orderId = state.uri.queryParameters['orderId'] ?? '';
             return OrderTrackingScreen(orderId: orderId);
-          },
+          }),
         ),
         GoRoute(
           path: '/supportChat',
           name: 'SupportChatScreen',
-          builder: (context, state) =>
-              SupportChatScreen(orderId: state.uri.queryParameters['orderId']),
+          builder: withHomeFallback(
+            (context, state) => SupportChatScreen(
+              orderId: state.uri.queryParameters['orderId'],
+            ),
+          ),
         ),
         if (Env.flavor == 'dev')
           GoRoute(

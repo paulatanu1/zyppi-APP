@@ -1,5 +1,7 @@
+import 'package:zippy/features/notifications/application/notifications_providers.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:zippy/core/push/data/push_token_repository_impl.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/constants/constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,6 +24,7 @@ class AccountScreen extends ConsumerWidget {
     final profileAsync = ref.watch(profileProvider);
     final profile = profileAsync.value;
     final isGuest = profile?.isGuest ?? false;
+    final unreadNotifications = ref.watch(unreadNotificationsProvider);
     final name = profile?.fullName?.trim();
     final displayName = isGuest
         ? 'guestUser'.tr()
@@ -56,63 +59,91 @@ class AccountScreen extends ConsumerWidget {
                     ),
                     child: Row(
                       children: [
-                        CircleAvatar(
-                          radius: 28,
-                          backgroundColor: z.onBrand.withValues(alpha: .16),
-                          child: Text(
-                            initial,
-                            style: t.headlineSmall!.copyWith(color: z.onBrand),
-                          ),
-                        ),
-                        const SizedBox(width: ZSpace.x3),
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (profileAsync.isLoading && profile == null)
-                                const ZSkeleton(
-                                  width: 140,
-                                  height: 18,
-                                  radius: ZRadius.badge,
-                                )
-                              else
-                                Text(
-                                  displayName,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: t.headlineSmall!.copyWith(
-                                    color: z.headerInk,
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            // The whole identity block opens Edit Profile
+                            // (Save account for guests), not just the pill.
+                            onTap: !isGuest && profile == null
+                                ? null
+                                : () => context.pushNamed(
+                                    isGuest
+                                        ? 'GuestUpgradeScreen'
+                                        : 'EditProfileScreen',
                                   ),
-                                ),
-                              if (profileAsync.hasError && profile == null)
-                                GestureDetector(
-                                  onTap: () => ref.invalidate(profileProvider),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 28,
+                                  backgroundColor: z.onBrand.withValues(
+                                    alpha: .16,
+                                  ),
                                   child: Text(
-                                    'profileLoadFailed'.tr(),
-                                    style: t.bodySmall!.copyWith(
-                                      color: z.headerInk,
-                                      decoration: TextDecoration.underline,
-                                      decorationColor: z.headerInk,
+                                    initial,
+                                    style: t.headlineSmall!.copyWith(
+                                      color: z.onBrand,
                                     ),
                                   ),
-                                )
-                              else if (isGuest)
-                                Text(
-                                  'guestHint'.tr(),
-                                  style: t.bodySmall!.copyWith(
-                                    color: z.headerInk2,
-                                  ),
-                                )
-                              else if (phone.isNotEmpty)
-                                Text(
-                                  phone,
-                                  style: t.bodyMedium!.copyWith(
-                                    color: z.headerInk2,
+                                ),
+                                const SizedBox(width: ZSpace.x3),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      if (profileAsync.isLoading &&
+                                          profile == null)
+                                        const ZSkeleton(
+                                          width: 140,
+                                          height: 18,
+                                          radius: ZRadius.badge,
+                                        )
+                                      else
+                                        Text(
+                                          displayName,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: t.headlineSmall!.copyWith(
+                                            color: z.headerInk,
+                                          ),
+                                        ),
+                                      if (profileAsync.hasError &&
+                                          profile == null)
+                                        GestureDetector(
+                                          onTap: () =>
+                                              ref.invalidate(profileProvider),
+                                          child: Text(
+                                            'profileLoadFailed'.tr(),
+                                            style: t.bodySmall!.copyWith(
+                                              color: z.headerInk,
+                                              decoration:
+                                                  TextDecoration.underline,
+                                              decorationColor: z.headerInk,
+                                            ),
+                                          ),
+                                        )
+                                      else if (isGuest)
+                                        Text(
+                                          'guestHint'.tr(),
+                                          style: t.bodySmall!.copyWith(
+                                            color: z.headerInk2,
+                                          ),
+                                        )
+                                      else if (phone.isNotEmpty)
+                                        Text(
+                                          phone,
+                                          style: t.bodyMedium!.copyWith(
+                                            color: z.headerInk2,
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
+                        const SizedBox(width: ZSpace.x2),
                         // Flexible: a long label can't push the name out.
                         if (isGuest)
                           Flexible(
@@ -125,7 +156,9 @@ class AccountScreen extends ConsumerWidget {
                         else if (profile != null)
                           Flexible(
                             child: _HeaderPill(
-                              label: 'editProfile'.tr(),
+                              icon: Icons.edit_outlined,
+                              label: 'edit'.tr(),
+                              semanticLabel: 'editProfile'.tr(),
                               onTap: () =>
                                   context.pushNamed('EditProfileScreen'),
                             ),
@@ -187,6 +220,17 @@ class AccountScreen extends ConsumerWidget {
                           _Group(
                             items: [
                               _GroupItem(
+                                icon: Icons.notifications_active_outlined,
+                                label: 'notifications'.tr(),
+                                trailingText: unreadNotifications > 0
+                                    ? 'newCount'.tr(
+                                        args: ['$unreadNotifications'],
+                                      )
+                                    : null,
+                                onTap: () =>
+                                    context.pushNamed('NotificationsScreen'),
+                              ),
+                              _GroupItem(
                                 icon: Icons.location_on_outlined,
                                 label: 'addressBook'.tr(),
                                 onTap: () =>
@@ -202,7 +246,12 @@ class AccountScreen extends ConsumerWidget {
                                 icon: Icons.language_rounded,
                                 label: 'language'.tr(),
                                 trailingText: currentLanguageName(context),
-                                onTap: () => showLanguageSheet(context),
+                                onTap: () => showLanguageSheet(
+                                  context,
+                                  pushTokens: ref.read(
+                                    pushTokenRepositoryProvider,
+                                  ),
+                                ),
                               ),
                               _GroupItem(
                                 icon: Icons.notifications_none_rounded,
@@ -316,32 +365,65 @@ class _Card extends StatelessWidget {
 
 /// "Edit" / "Save account" on the magenta header.
 class _HeaderPill extends StatelessWidget {
-  const _HeaderPill({required this.label, required this.onTap});
+  const _HeaderPill({
+    required this.label,
+    required this.onTap,
+    this.icon,
+    this.semanticLabel,
+  });
 
   final String label;
   final VoidCallback onTap;
+  final IconData? icon;
+
+  /// Spoken label when [label] is shortened for display (e.g. "Edit").
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
     final z = context.z;
+    final style = Theme.of(context).textTheme.labelMedium!
+        .copyWith(color: z.onBrand, fontWeight: FontWeight.w800);
     return Semantics(
       button: true,
+      label: semanticLabel,
+      excludeSemantics: semanticLabel != null,
       child: ZPressable(
         onTap: onTap,
-        child: Container(
+        // Compact visual pill (Profile.dc.html: 8×12, radius 12) inside a
+        // full-size touch target.
+        child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: ZSize.touch),
-          alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: ZSpace.x4),
-          decoration: BoxDecoration(
-            color: z.onBrand.withValues(alpha: .16),
-            borderRadius: ZRadius.all(ZRadius.control),
-          ),
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelLarge!
-                .copyWith(color: z.onBrand),
+          child: Center(
+            widthFactor: 1,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: ZSpace.x3,
+                vertical: ZSpace.x2,
+              ),
+              decoration: BoxDecoration(
+                color: z.onBrand.withValues(alpha: .16),
+                borderRadius: ZRadius.all(ZRadius.control),
+                border: Border.all(color: z.onBrand.withValues(alpha: .24)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, size: ZSpace.x4, color: z.onBrand),
+                    const SizedBox(width: ZSpace.x1),
+                  ],
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: style,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

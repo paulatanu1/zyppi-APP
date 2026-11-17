@@ -1,7 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:zippy/core/config/env.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:zippy/core/app_settings/data/app_settings_repository.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/utils/launch.dart';
 import 'package:zippy/core/utils/order_id.dart';
@@ -17,7 +18,10 @@ Future<void> showHelpSheet(BuildContext context, {String? orderId}) {
     builder: (sheetContext) {
       final z = sheetContext.z;
       final text = Theme.of(sheetContext).textTheme;
-      final phone = Env.supportPhone;
+      // Store settings in the admin, else the build's SUPPORT_PHONE.
+      final settings = ProviderScope.containerOf(sheetContext, listen: false);
+      final phone = settings.read(supportPhoneProvider);
+      final whatsApp = settings.read(supportWhatsAppProvider);
 
       Widget option({
         required IconData icon,
@@ -81,7 +85,7 @@ Future<void> showHelpSheet(BuildContext context, {String? orderId}) {
                   subtitle: 'helpWhatsAppSubtitle'.tr(),
                   onTap: () => openExternal(
                     whatsAppUri(
-                      phone,
+                      whatsApp,
                       message: orderId == null
                           ? 'helpMessage'.tr()
                           : 'helpMessageOrder'.tr(

@@ -30,9 +30,11 @@ class PaymentSettingsScreen extends ConsumerWidget {
           const SizedBox(height: ZSpace.x4),
           PaymentOptions(
             selected:
-                availablePaymentMethods.contains(profile.preferredPaymentMethod)
+                ref
+                    .watch(enabledPaymentMethodsProvider)
+                    .contains(profile.preferredPaymentMethod)
                 ? profile.preferredPaymentMethod!
-                : defaultPaymentMethod,
+                : ref.watch(enabledPaymentMethodsProvider).first,
             onSelect: (method) =>
                 _save(ref, profile.copyWith(preferredPaymentMethod: method)),
           ),

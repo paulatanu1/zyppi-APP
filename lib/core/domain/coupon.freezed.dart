@@ -16,7 +16,10 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Coupon {
 
- String get code; String get description; int get discountPaise; int? get minOrderPaise;
+ String get code; String get description;/// Flat coupons: the amount off.
+ int get discountPaise; CouponType get type;/// Percent coupons: 1–90, rounded down to the paisa.
+ int get percent;/// Percent coupons: the most they take off (null = no cap).
+ int? get maxDiscountPaise; int? get minOrderPaise;
 /// Create a copy of Coupon
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +33,20 @@ $CouponCopyWith<Coupon> get copyWith => _$CouponCopyWithImpl<Coupon>(this as Cou
 @override
 bool operator ==(Object other) {
   final _this = this as Coupon;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Coupon&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.discountPaise, _this.discountPaise) || other.discountPaise == _this.discountPaise)&&(identical(other.minOrderPaise, _this.minOrderPaise) || other.minOrderPaise == _this.minOrderPaise));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Coupon&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.discountPaise, _this.discountPaise) || other.discountPaise == _this.discountPaise)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.percent, _this.percent) || other.percent == _this.percent)&&(identical(other.maxDiscountPaise, _this.maxDiscountPaise) || other.maxDiscountPaise == _this.maxDiscountPaise)&&(identical(other.minOrderPaise, _this.minOrderPaise) || other.minOrderPaise == _this.minOrderPaise));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Coupon;
-  return Object.hash(runtimeType,_this.code,_this.description,_this.discountPaise,_this.minOrderPaise);
+  return Object.hash(runtimeType,_this.code,_this.description,_this.discountPaise,_this.type,_this.percent,_this.maxDiscountPaise,_this.minOrderPaise);
 }
 
 @override
 String toString() {
   final _this = this as Coupon;
-  return 'Coupon(code: ${_this.code}, description: ${_this.description}, discountPaise: ${_this.discountPaise}, minOrderPaise: ${_this.minOrderPaise})';
+  return 'Coupon(code: ${_this.code}, description: ${_this.description}, discountPaise: ${_this.discountPaise}, type: ${_this.type}, percent: ${_this.percent}, maxDiscountPaise: ${_this.maxDiscountPaise}, minOrderPaise: ${_this.minOrderPaise})';
 }
 
 
@@ -54,7 +57,7 @@ abstract mixin class $CouponCopyWith<$Res>  {
   factory $CouponCopyWith(Coupon value, $Res Function(Coupon) _then) = _$CouponCopyWithImpl;
 @useResult
 $Res call({
- String code, String description, int discountPaise, int? minOrderPaise
+ String code, String description, int discountPaise, CouponType type, int percent, int? maxDiscountPaise, int? minOrderPaise
 });
 
 
@@ -71,12 +74,15 @@ class _$CouponCopyWithImpl<$Res>
 
 /// Create a copy of Coupon
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? description = null,Object? discountPaise = null,Object? minOrderPaise = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? description = null,Object? discountPaise = null,Object? type = null,Object? percent = null,Object? maxDiscountPaise = freezed,Object? minOrderPaise = freezed,}) {
   return _then(Coupon(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String,discountPaise: null == discountPaise ? _self.discountPaise : discountPaise // ignore: cast_nullable_to_non_nullable
-as int,minOrderPaise: freezed == minOrderPaise ? _self.minOrderPaise : minOrderPaise // ignore: cast_nullable_to_non_nullable
+as int,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as CouponType,percent: null == percent ? _self.percent : percent // ignore: cast_nullable_to_non_nullable
+as int,maxDiscountPaise: freezed == maxDiscountPaise ? _self.maxDiscountPaise : maxDiscountPaise // ignore: cast_nullable_to_non_nullable
+as int?,minOrderPaise: freezed == minOrderPaise ? _self.minOrderPaise : minOrderPaise // ignore: cast_nullable_to_non_nullable
 as int?,
   ));
 }
@@ -162,10 +168,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String code,  String description,  int discountPaise,  int? minOrderPaise)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String code,  String description,  int discountPaise,  CouponType type,  int percent,  int? maxDiscountPaise,  int? minOrderPaise)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Coupon() when $default != null:
-return $default(_that.code,_that.description,_that.discountPaise,_that.minOrderPaise);case _:
+return $default(_that.code,_that.description,_that.discountPaise,_that.type,_that.percent,_that.maxDiscountPaise,_that.minOrderPaise);case _:
   return orElse();
 
 }
@@ -183,10 +189,10 @@ return $default(_that.code,_that.description,_that.discountPaise,_that.minOrderP
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String code,  String description,  int discountPaise,  int? minOrderPaise)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String code,  String description,  int discountPaise,  CouponType type,  int percent,  int? maxDiscountPaise,  int? minOrderPaise)  $default,) {final _that = this;
 switch (_that) {
 case _Coupon():
-return $default(_that.code,_that.description,_that.discountPaise,_that.minOrderPaise);case _:
+return $default(_that.code,_that.description,_that.discountPaise,_that.type,_that.percent,_that.maxDiscountPaise,_that.minOrderPaise);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -203,10 +209,10 @@ return $default(_that.code,_that.description,_that.discountPaise,_that.minOrderP
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String code,  String description,  int discountPaise,  int? minOrderPaise)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String code,  String description,  int discountPaise,  CouponType type,  int percent,  int? maxDiscountPaise,  int? minOrderPaise)?  $default,) {final _that = this;
 switch (_that) {
 case _Coupon() when $default != null:
-return $default(_that.code,_that.description,_that.discountPaise,_that.minOrderPaise);case _:
+return $default(_that.code,_that.description,_that.discountPaise,_that.type,_that.percent,_that.maxDiscountPaise,_that.minOrderPaise);case _:
   return null;
 
 }
@@ -217,13 +223,19 @@ return $default(_that.code,_that.description,_that.discountPaise,_that.minOrderP
 /// @nodoc
 @JsonSerializable()
 
-class _Coupon implements Coupon {
-   _Coupon({required this.code, required this.description, required this.discountPaise, this.minOrderPaise});
+class _Coupon extends Coupon {
+   _Coupon({required this.code, required this.description, this.discountPaise = 0, this.type = CouponType.flat, this.percent = 0, this.maxDiscountPaise, this.minOrderPaise}): super._();
   factory _Coupon.fromJson(Map<String, dynamic> json) => _$CouponFromJson(json);
 
 @override final  String code;
 @override final  String description;
-@override final  int discountPaise;
+/// Flat coupons: the amount off.
+@override@JsonKey() final  int discountPaise;
+@override@JsonKey() final  CouponType type;
+/// Percent coupons: 1–90, rounded down to the paisa.
+@override@JsonKey() final  int percent;
+/// Percent coupons: the most they take off (null = no cap).
+@override final  int? maxDiscountPaise;
 @override final  int? minOrderPaise;
 
 /// Create a copy of Coupon
@@ -239,18 +251,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Coupon&&(identical(other.code, code) || other.code == code)&&(identical(other.description, description) || other.description == description)&&(identical(other.discountPaise, discountPaise) || other.discountPaise == discountPaise)&&(identical(other.minOrderPaise, minOrderPaise) || other.minOrderPaise == minOrderPaise));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Coupon&&(identical(other.code, code) || other.code == code)&&(identical(other.description, description) || other.description == description)&&(identical(other.discountPaise, discountPaise) || other.discountPaise == discountPaise)&&(identical(other.type, type) || other.type == type)&&(identical(other.percent, percent) || other.percent == percent)&&(identical(other.maxDiscountPaise, maxDiscountPaise) || other.maxDiscountPaise == maxDiscountPaise)&&(identical(other.minOrderPaise, minOrderPaise) || other.minOrderPaise == minOrderPaise));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,code,description,discountPaise,minOrderPaise);
+    return Object.hash(runtimeType,code,description,discountPaise,type,percent,maxDiscountPaise,minOrderPaise);
 }
 
 @override
 String toString() {
-    return 'Coupon(code: $code, description: $description, discountPaise: $discountPaise, minOrderPaise: $minOrderPaise)';
+    return 'Coupon(code: $code, description: $description, discountPaise: $discountPaise, type: $type, percent: $percent, maxDiscountPaise: $maxDiscountPaise, minOrderPaise: $minOrderPaise)';
 }
 
 
@@ -261,7 +273,7 @@ abstract mixin class _$CouponCopyWith<$Res> implements $CouponCopyWith<$Res> {
   factory _$CouponCopyWith(_Coupon value, $Res Function(_Coupon) _then) = __$CouponCopyWithImpl;
 @override @useResult
 $Res call({
- String code, String description, int discountPaise, int? minOrderPaise
+ String code, String description, int discountPaise, CouponType type, int percent, int? maxDiscountPaise, int? minOrderPaise
 });
 
 
@@ -278,12 +290,15 @@ class __$CouponCopyWithImpl<$Res>
 
 /// Create a copy of Coupon
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? code = null,Object? description = null,Object? discountPaise = null,Object? minOrderPaise = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? code = null,Object? description = null,Object? discountPaise = null,Object? type = null,Object? percent = null,Object? maxDiscountPaise = freezed,Object? minOrderPaise = freezed,}) {
   return _then(_Coupon(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String,discountPaise: null == discountPaise ? _self.discountPaise : discountPaise // ignore: cast_nullable_to_non_nullable
-as int,minOrderPaise: freezed == minOrderPaise ? _self.minOrderPaise : minOrderPaise // ignore: cast_nullable_to_non_nullable
+as int,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as CouponType,percent: null == percent ? _self.percent : percent // ignore: cast_nullable_to_non_nullable
+as int,maxDiscountPaise: freezed == maxDiscountPaise ? _self.maxDiscountPaise : maxDiscountPaise // ignore: cast_nullable_to_non_nullable
+as int?,minOrderPaise: freezed == minOrderPaise ? _self.minOrderPaise : minOrderPaise // ignore: cast_nullable_to_non_nullable
 as int?,
   ));
 }

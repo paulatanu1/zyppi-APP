@@ -1,4 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:zippy/features/order_tracking/widgets/delivery_extras.dart';
+import 'package:zippy/features/order_tracking/data/delivery_info_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -328,6 +330,9 @@ class _SheetContent extends StatelessWidget {
             ),
           ],
         ),
+        if (order.status == OrderStatus.placed ||
+            order.status == OrderStatus.packed)
+          _PickupProgressLine(orderId: order.id),
         const SizedBox(height: ZSpace.x4),
         if (order.status == OrderStatus.cancelled)
           Container(
@@ -443,6 +448,11 @@ class _SheetContent extends StatelessWidget {
             ],
           ),
         ),
+        DeliveryExtras(
+          orderId: order.id,
+          status: order.status,
+          hasRider: order.riderName?.trim().isNotEmpty ?? false,
+        ),
         const SizedBox(height: ZSpace.x3),
         Material(
           color: z.surface2,
@@ -493,6 +503,42 @@ class _SheetContent extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// "Collecting from 3 stores" / "Picked up from 1 of 3 stores" for orders
+/// with items from several shops (marketplace multi-store pickups).
+class _PickupProgressLine extends ConsumerWidget {
+  const _PickupProgressLine({required this.orderId});
+
+  final String orderId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final p = ref.watch(pickupProgressProvider(orderId)).value;
+    if (p == null) return const SizedBox.shrink();
+    final z = context.z;
+    final text = p.picked == 0
+        ? 'collectingFromStores'.tr(args: ['${p.total}'])
+        : 'pickedUpFromStores'.tr(
+            namedArgs: {'picked': '${p.picked}', 'total': '${p.total}'},
+          );
+    return Padding(
+      padding: const EdgeInsets.only(top: ZSpace.x2),
+      child: Row(
+        children: [
+          Icon(Icons.storefront_outlined, size: 18, color: z.brandText),
+          const SizedBox(width: ZSpace.x2),
+          Expanded(
+            child: Text(
+              text,
+              style: Theme.of(context).textTheme.bodyMedium!
+                  .copyWith(color: z.ink2),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

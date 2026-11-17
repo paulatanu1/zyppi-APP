@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +7,7 @@ import 'package:zippy/core/common_widgets/nav_bar/provider/nav_bar_provider.dart
 import 'package:zippy/core/theme/zyppi_tokens.dart';
 import 'package:zippy/core/widgets/z_chrome.dart';
 import 'package:zippy/core/domain/category.dart';
+import 'package:zippy/core/data/home_section_repository_impl.dart';
 import 'package:zippy/core/domain/home_section.dart';
 import 'package:zippy/core/domain/product.dart';
 import 'package:zippy/features/home_screen/widgets/sections/banner_carousel_section.dart';
@@ -34,7 +37,16 @@ class HomeSectionWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final body = switch (section.type) {
       'category_tabs' => CategoryTabsSection(section: section),
-      'banner_carousel' => BannerCarouselSection(section: section),
+      'banner_carousel' => BannerCarouselSection(
+        section: section,
+        // Fire and forget: a lost click count never blocks the banner.
+        onOpen: (item) => unawaited(
+          ref
+              .read(homeSectionRepositoryProvider)
+              .recordBannerClick(section.id, item.id)
+              .catchError((Object _) {}),
+        ),
+      ),
       'category_grid' => CategoryGridSection(
         section: section,
         categoriesById: categoriesById,

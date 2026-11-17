@@ -17,6 +17,11 @@ abstract class OrderItem with _$OrderItem {
 
     /// Product image (current catalog image; display only).
     String? image,
+
+    /// Marketplace: who sold it (order time). Null on older orders and
+    /// for Zyppi's own stock before the marketplace.
+    String? sellerId,
+    String? sellerName,
   }) = _OrderItem;
 
   factory OrderItem.fromJson(Map<String, dynamic> json) =>

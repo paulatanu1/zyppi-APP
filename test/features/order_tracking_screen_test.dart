@@ -18,11 +18,14 @@ class _Orders implements OrderRepository {
   @override
   Future<Order?> getOrderById(String id) async => order;
   @override
-  Future<List<Order>> getOrders() async => [?order];
+  Future<List<Order>> getOrders({int? limit}) async => [?order];
   @override
   Future<void> updateStatus(String orderId, OrderStatus status) async {}
   @override
-  Stream<void> watch() => const Stream.empty();
+  Stream<Order?> watchOrder(String id) => Stream.value(order);
+  @override
+  Stream<List<Order>> watchOrders({int limit = recentOrdersLimit}) =>
+      Stream.value([?order]);
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

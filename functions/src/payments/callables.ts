@@ -1,8 +1,10 @@
+import { assertNotBlocked } from "../admin/customers";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 import { HttpsError, onCall } from "firebase-functions/https";
 import { db } from "../shared/firebase";
 import { requireString, requireUid, toHttpsError } from "../shared/callable";
+import { assertCanOrder, getFeatures } from "../shared/features";
 import { ONLINE_METHODS, quoteOrder } from "../orders/quote";
 import {
   PAYU_SECRETS,
@@ -14,9 +16,8 @@ import {
   payUSdkEnvironment,
   signHash,
   userCredential,
-  verifyPayUTxn,
 } from "./payu";
-import { placePaidOrder } from "./place_paid_order";
+import { settleIntent } from "./settle";
 
 const PRODUCT_INFO = "Zyppi order";
 
@@ -54,8 +55,14 @@ export const createPayUOrder = onCall({ secrets: PAYU_SECRETS }, async (request)
   if (!ONLINE_METHODS.includes(paymentMethod)) {
     throw new HttpsError("invalid-argument", "Invalid request");
   }
+  const features = await getFeatures();
+  assertCanOrder(features, paymentMethod);
+  await assertNotBlocked(uid);
+
   const params = {
     uid,
+    closedAreaIds: features.closedAreaIds,
+    openAt: new Date(),
     addressId: requireString(data.addressId, "addressId"),
     deliverySlotId: requireString(data.deliverySlotId, "deliverySlotId"),
     couponCode: typeof data.couponCode === "string" ? data.couponCode : null,
@@ -213,41 +220,27 @@ export const verifyPayUPayment = onCall({ secrets: PAYU_SECRETS }, async (reques
   const txnid = requireString(request.data?.txnid, "txnid");
 
   // Only the payer may check (and complete) their own payment.
-  const intentRef = db.collection("paymentIntents").doc(txnid);
-  const intent = (await intentRef.get()).data();
+  const intent = (await db.collection("paymentIntents").doc(txnid).get()).data();
   if (!intent || intent.userId !== uid) {
     throw new HttpsError("not-found", "Unknown payment");
   }
-  if (intent.orderId) {
-    return { verified: true, pending: false, orderId: intent.orderId, needsReview: false };
-  }
-  if (intent.status === "needs_review") {
-    return { verified: true, pending: false, orderId: null, needsReview: true };
-  }
 
-  const outcome = await verifyPayUTxn(txnid).catch((error) => {
+  let settlement;
+  try {
+    settlement = await settleIntent(txnid);
+  } catch (error) {
     logger.error("PayU verify failed", { txnid, error: String(error) });
     throw new HttpsError("unavailable", "Could not check payment");
-  });
-
-  if (outcome.state === "pending") {
-    return { verified: false, pending: true, orderId: null, needsReview: false };
-  }
-  if (outcome.state === "failed") {
-    await db.runTransaction(async (tx) => {
-      const snap = await tx.get(intentRef);
-      if (snap.get("status") !== "created") return;
-      tx.update(intentRef, {
-        status: "failed",
-        failureReason: outcome.reason,
-        updatedAt: FieldValue.serverTimestamp(),
-      });
-    });
-    return { verified: false, pending: false, orderId: null, needsReview: false };
   }
 
-  const orderId = await placePaidOrder(txnid, outcome.mihpayid, outcome.amountPaise);
-  return orderId
-    ? { verified: true, pending: false, orderId, needsReview: false }
-    : { verified: true, pending: false, orderId: null, needsReview: true };
+  switch (settlement.state) {
+    case "completed":
+      return { verified: true, pending: false, orderId: settlement.orderId, needsReview: false };
+    case "needs_review":
+      return { verified: true, pending: false, orderId: null, needsReview: true };
+    case "pending":
+      return { verified: false, pending: true, orderId: null, needsReview: false };
+    case "failed":
+      return { verified: false, pending: false, orderId: null, needsReview: false };
+  }
 });

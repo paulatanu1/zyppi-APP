@@ -2,6 +2,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/features/your_order/widgets/rate_sellers_card.dart';
+import 'package:zippy/core/marketplace/domain/offer.dart';
+import 'package:zippy/core/marketplace/presentation/sold_by.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
 import 'package:zippy/core/common_widgets/help_sheet.dart';
 import 'package:zippy/core/common_widgets/price_tag.dart';
@@ -189,6 +192,14 @@ class _OrderDetailsBody extends ConsumerWidget {
                               '${item.unit} × ${item.quantity}',
                               style: text.bodySmall,
                             ),
+                            // Outside sellers only: legacy and Zyppi lines
+                            // have no seller to show.
+                            if (item.sellerId case final sellerId?
+                                when sellerId != zyppiSellerId)
+                              SoldByLink(
+                                sellerId: sellerId,
+                                sellerName: item.sellerName ?? '',
+                              ),
                           ],
                         ),
                       ),
@@ -202,6 +213,10 @@ class _OrderDetailsBody extends ConsumerWidget {
             ],
           ),
         ),
+        if (order.status == OrderStatus.delivered) ...[
+          const SizedBox(height: ZSpace.x3),
+          RateSellersCard(orderId: order.id, items: order.items),
+        ],
         const SizedBox(height: ZSpace.x3),
         SectionCard(
           title: 'billDetails'.tr(),

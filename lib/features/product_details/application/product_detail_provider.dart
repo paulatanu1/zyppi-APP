@@ -50,7 +50,15 @@ class ProductDetailProvider extends StateNotifier<ProductDetailState> {
   }
 
   void selectVariant(int index) {
-    state = state.copyWith(selectedVariantIndex: index, quantity: 1);
+    state = state.copyWith(
+      selectedVariantIndex: index,
+      quantity: 1,
+      pickedOfferId: null,
+    );
+  }
+
+  void pickOffer(String offerId) {
+    state = state.copyWith(pickedOfferId: offerId);
   }
 
   void incrementQuantity() {

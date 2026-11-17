@@ -9,6 +9,8 @@ import 'package:zippy/core/cart/presentation/catalog_product_card.dart';
 import 'package:zippy/core/domain/product.dart';
 import 'package:zippy/core/domain/product_variant.dart';
 import 'package:zippy/core/favourites/application/favourites_provider.dart';
+import 'package:zippy/core/marketplace/application/marketplace_providers.dart';
+import 'package:zippy/core/marketplace/domain/offer.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 
 import '../../helpers/fake_repositories.dart';
@@ -43,12 +45,14 @@ void main() {
 
   Future<ProviderContainer> pumpCard(
     WidgetTester tester,
-    Product product,
-  ) async {
+    Product product, {
+    String? area,
+  }) async {
     final container = ProviderContainer(
       overrides: await cartAndFavouritesOverrides(tester),
     );
     addTearDown(container.dispose);
+    container.read(shoppingAreaIdProvider.notifier).set(area);
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
@@ -151,5 +155,52 @@ void main() {
     expect(tags, hasLength(2));
     expect(tags.toSet(), hasLength(2));
     expect(tags.every((t) => '$t'.startsWith('product-p1-')), isTrue);
+  });
+
+  testWidgets("shows and adds the area's best offer (another seller)", (
+    tester,
+  ) async {
+    final sold = _apple.copyWith(
+      areaBest: {
+        'pur': {
+          'v1': const BestOffer(
+            offerId: 'sima_pur_v1',
+            sellerId: 'sima',
+            sellerName: 'Sima Store',
+            pricePaise: 16900,
+            mrpPaise: 19900,
+          ),
+        },
+      },
+    );
+    final container = await pumpCard(tester, sold, area: 'pur');
+    expect(find.text('₹169'), findsOneWidget);
+
+    await tester.tap(find.text('add'));
+    await tester.pumpAndSettle();
+    final line = container.read(cartProvider).lines.single;
+    expect(line.offer?.sellerName, 'Sima Store');
+    expect(line.lineTotalPaise, 16900);
+
+    await tester.tap(find.bySemanticsLabel('removeOne'));
+    await tester.pumpAndSettle();
+    expect(quantity(container), 0);
+  });
+
+  testWidgets('another area falls back to the product price', (tester) async {
+    final sold = _apple.copyWith(
+      areaBest: {
+        'pur': {
+          'v1': const BestOffer(
+            offerId: 'sima_pur_v1',
+            sellerId: 'sima',
+            pricePaise: 16900,
+            mrpPaise: 19900,
+          ),
+        },
+      },
+    );
+    await pumpCard(tester, sold, area: 'rag');
+    expect(find.text('₹179'), findsOneWidget);
   });
 }

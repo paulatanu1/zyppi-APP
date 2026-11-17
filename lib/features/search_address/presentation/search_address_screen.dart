@@ -7,6 +7,7 @@ import 'package:zippy/core/shared_providers/location/application/get_current_loc
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
 import 'package:zippy/core/utils/address_label.dart';
 import 'package:zippy/core/data/provider/addresses_provider.dart';
+import 'package:zippy/core/app_settings/data/app_settings_repository.dart';
 import 'package:zippy/features/search_address/application/place_prediction_provider.dart';
 import 'package:zippy/features/search_address/domain/place_prediction.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
@@ -76,6 +77,9 @@ class _SearchAddressScreenState extends ConsumerState<SearchAddressScreen> {
   @override
   Widget build(BuildContext context) {
     final location = ref.watch(currentLocation);
+    // Settings → Services can switch Places search off (billed per call);
+    // GPS and editing the address text still work.
+    final placesSearch = ref.watch(featureFlagsProvider).placesSearch;
     final predictions =
         ref.watch(placePredictionProvider).placePrediction?.predictions ??
         const [];
@@ -182,20 +186,25 @@ class _SearchAddressScreenState extends ConsumerState<SearchAddressScreen> {
                               ),
                               const SizedBox(width: ZSpace.x2),
                               Expanded(
-                                child: _SearchBar(
-                                  controller: _searchController,
-                                  focusNode: _searchFocus,
-                                  onChanged: (value) {
-                                    setState(() {});
-                                    ref
-                                        .read(placePredictionProvider.notifier)
-                                        .placePrediction(input: value);
-                                  },
-                                ),
+                                child: placesSearch
+                                    ? _SearchBar(
+                                        controller: _searchController,
+                                        focusNode: _searchFocus,
+                                        onChanged: (value) {
+                                          setState(() {});
+                                          ref
+                                              .read(
+                                                placePredictionProvider
+                                                    .notifier,
+                                              )
+                                              .placePrediction(input: value);
+                                        },
+                                      )
+                                    : const _SearchOff(),
                               ),
                             ],
                           ),
-                          if (showPredictions)
+                          if (showPredictions && placesSearch)
                             ConstrainedBox(
                               constraints: const BoxConstraints(
                                 maxHeight: _mapHeight - 100,
@@ -263,7 +272,7 @@ class _SearchAddressScreenState extends ConsumerState<SearchAddressScreen> {
                               duration: ZMotion.ui,
                               curve: ZMotion.standard,
                             );
-                            _searchFocus.requestFocus();
+                            if (placesSearch) _searchFocus.requestFocus();
                           },
                           saving: _saving,
                           onConfirm: () async {
@@ -355,6 +364,29 @@ class _MapPill extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Stands in for the search bar while Places search is switched off.
+class _SearchOff extends StatelessWidget {
+  const _SearchOff();
+
+  @override
+  Widget build(BuildContext context) {
+    final z = context.z;
+    return Container(
+      constraints: const BoxConstraints(minHeight: ZSize.search),
+      padding: const EdgeInsets.symmetric(horizontal: ZSpace.x4),
+      alignment: Alignment.centerLeft,
+      decoration: BoxDecoration(
+        color: z.surface,
+        borderRadius: ZRadius.all(ZRadius.input),
+      ),
+      child: Text(
+        'searchOffUseLocation'.tr(),
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: z.ink2),
       ),
     );
   }

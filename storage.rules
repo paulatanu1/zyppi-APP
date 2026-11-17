@@ -1,18 +1,84 @@
 rules_version = '2';
 
 // Catalog images (products, categories, home banners) are public; only
-// admins (custom claim `admin: true`, granted by
-// functions/scripts/set-admin.ts) may upload or replace them. Nothing
-// else lives in Storage.
+// catalog staff (custom claim `role`, or the legacy `admin: true` =
+// super_admin — see firestore.rules) may upload or replace them.
 service firebase.storage {
   match /b/{bucket}/o {
-    match /catalog/{path=**} {
+    function catalogStaff() {
+      return request.auth != null
+        && (request.auth.token.get('admin', false) == true
+            || request.auth.token.get('role', null) in ['super_admin', 'catalog']);
+    }
+
+    // Rider KYC (Aadhaar, licence, RC, selfie): never public. The rider
+    // uploads their own; operations staff can view them for verification.
+    match /riders/{uid}/kyc/{file} {
+      allow read: if request.auth != null
+        && (request.auth.uid == uid
+            || request.auth.token.get('admin', false) == true
+            || request.auth.token.get('role', '') in ['super_admin', 'ops']);
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size < 5 * 1024 * 1024
+        && (request.resource.contentType.matches('image/.*')
+            || request.resource.contentType == 'application/pdf');
+      allow delete: if false;
+    }
+
+    // Seller KYC (selfie, shop photos, FSSAI / GST certificate, drawn
+    // signature, signed agreement): never public. The applicant uploads
+    // into their own folder (sellers/{ownerUid}); operations and finance
+    // staff view them for verification. Nobody deletes (evidence).
+    match /sellers/{sellerId}/kyc/{file} {
+      allow read: if request.auth != null
+        && (request.auth.uid == sellerId
+            || request.auth.token.get('sellerId', '') == sellerId
+            || request.auth.token.get('admin', false) == true
+            || request.auth.token.get('role', '') in ['super_admin', 'ops', 'finance']);
+      allow create, update: if request.auth != null
+        && request.auth.uid == sellerId
+        && request.resource.size < 5 * 1024 * 1024
+        && (request.resource.contentType.matches('image/.*')
+            || request.resource.contentType == 'application/pdf');
+      allow delete: if false;
+    }
+
+    // Product photos a seller submits (productRequests): public like the
+    // catalog; only that seller's logins upload into its folder.
+    match /sellers/{sellerId}/products/{file} {
       allow read: if true;
-      allow write: if request.auth != null
-        && request.auth.token.admin == true
+      allow create, update: if request.auth != null
+        && request.auth.token.get('sellerId', '') == sellerId
+        && request.resource.size < 3 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if false;
+    }
+
+    // Home banners: public, uploaded from the admin Banners page.
+    match /banners/{file} {
+      allow read: if true;
+      allow write: if catalogStaff()
         && request.resource.size < 5 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
-      allow delete: if request.auth != null && request.auth.token.admin == true;
+      allow delete: if catalogStaff();
+    }
+
+    // Push notification pictures (shown in the notification shade).
+    match /notifications/{file} {
+      allow read: if true;
+      allow write: if catalogStaff()
+        && request.resource.size < 1 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if catalogStaff();
+    }
+
+    match /catalog/{path=**} {
+      allow read: if true;
+      allow write: if catalogStaff()
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if catalogStaff();
     }
   }
 }

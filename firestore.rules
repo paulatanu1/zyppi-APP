@@ -8,8 +8,10 @@ rules_version = '2';
 // - Orders, order events, payment intents and inventory are written only
 //   by Cloud Functions (Admin SDK bypasses these rules), so prices,
 //   stock and payment state can't be forged from the app.
-// - Admins carry the custom claim `admin: true`
-//   (functions/scripts/set-admin.ts).
+// - Staff carry the custom claim `role` (super_admin | ops | catalog |
+//   support | finance), set by the adminSetRole function or
+//   functions/scripts/set-admin.ts. The legacy `admin: true` claim counts
+//   as super_admin. super_admin passes every role check.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -17,75 +19,167 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // The caller's staff role, or '' for customers and signed-out users.
+    function staffRole() {
+      return !signedIn() ? ''
+        : request.auth.token.get('role', '') in ['super_admin', 'ops', 'catalog', 'support', 'finance']
+          ? request.auth.token.get('role', '')
+        : request.auth.token.get('admin', false) == true ? 'super_admin'
+        : '';
+    }
+
+    // Any staff role.
     function isAdmin() {
-      return signedIn() && request.auth.token.admin == true;
+      return staffRole() != '';
+    }
+
+    // One of `roles`, or super_admin.
+    function hasRole(roles) {
+      return staffRole() == 'super_admin' || staffRole() in roles;
+    }
+
+    function isSuperAdmin() {
+      return staffRole() == 'super_admin';
     }
 
     function isOwner(uid) {
       return signedIn() && request.auth.uid == uid;
     }
 
+    // What the app itself writes to users/{uid}.
+    function profileFields() {
+      return [
+        'phone', 'fullName', 'email', 'dob', 'gender',
+        'preferredPaymentMethod', 'notifyOrderUpdates', 'notifyOffers',
+        'fcmToken', 'lang', 'createdAt', 'updatedAt'
+      ];
+    }
+
     // ---------------------------------------------------------------
     // Catalog (public read, admin write)
     // ---------------------------------------------------------------
 
+    // Products and categories are written only by the admin callables
+    // (functions/src/catalog): they validate, keep variant ids stable,
+    // build the search keywords and write the audit log.
     match /categories/{id} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if false;
     }
 
     match /products/{id} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if false;
     }
 
+    // Written only by adminSaveServiceArea (validated, audited).
     match /serviceAreas/{id} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if false;
     }
 
+    // Written only by adminSaveStore (validated, audited).
     match /stores/{id} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if false;
     }
 
+    // Written only by adminSaveDeliverySlot (validated, audited).
     match /deliverySlots/{id} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if false;
     }
 
+    // Written only by the adminSaveHomeSection / adminReorderHomeSections /
+    // adminDeleteHomeSection callables (validated, audited). Items carry
+    // their own schedule and areas; the app filters them.
     match /homeSections/{id} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if false;
+    }
+
+    // Push campaigns and their templates: written only by the admin
+    // callables (functions/src/notifications), which audit every send.
+    match /campaigns/{id} {
+      allow read: if hasRole(['catalog']);
+      allow write: if false;
+    }
+
+    match /notificationTemplates/{id} {
+      allow read: if hasRole(['catalog']);
+      allow write: if false;
+    }
+
+    // Banner taps, counted by the trackBannerClick callable.
+    match /bannerStats/{id} {
+      allow read: if hasRole(['catalog']);
+      allow write: if false;
+    }
+
+    // Delivery pricing (fee, free-above threshold, minimum order): the app
+    // shows it; quoteOrder enforces it server-side.
+    // Written only by adminSaveDeliveryConfig (validated, audited).
+    match /config/delivery {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Support contacts and the in-app announcement; the app shows them.
+    // Written only by adminSaveAppConfig.
+    match /config/app {
+      allow read: if true;
+      allow write: if false;
     }
 
     // Stock levels are internal; the app never reads them (quoteOrder
-    // checks stock server-side).
+    // checks stock server-side). Changed only by adminAdjustStock (which
+    // records inventoryMovements) and by orders.
+    // A seller login also reads its own stock rows (seller app).
     match /inventory/{id} {
-      allow read, write: if isAdmin();
+      allow read: if isAdmin()
+        || (signedIn() && request.auth.token.get('sellerId', '') != ''
+            && resource.data.sellerId == request.auth.token.sellerId);
+      allow write: if false;
+    }
+
+    match /inventoryMovements/{id} {
+      allow read: if hasRole(['ops', 'catalog']);
+      allow write: if false;
     }
 
     // Customers may look up one active, unexpired coupon by its code
-    // (doc id = upper-cased code); they can't list them all.
+    // (doc id = upper-cased code); they can't list them all. The app
+    // checks eligibility (per-customer limits, first order, area) with the
+    // checkCoupon callable. Written only by adminSaveCoupon /
+    // adminDeleteCoupon (validated, audited) and by orders (usage counts).
     match /coupons/{code} {
       allow get: if resource.data.isActive == true
         && (resource.data.expiresAt == null
             || resource.data.expiresAt > request.time);
-      allow read, write: if isAdmin();
+      allow read: if isAdmin();
+      allow write: if false;
+
+      // Uses per customer; written only by orders.
+      match /redemptions/{uid} {
+        allow read: if hasRole(['catalog', 'finance']);
+        allow write: if false;
+      }
     }
 
     // ---------------------------------------------------------------
     // Users and their private data
     // ---------------------------------------------------------------
 
+    // The app may change only its own profile fields. Orders keep the
+    // segment counters (orderCount, totalSpentPaise, lastOrderAt,
+    // serviceAreaId) up to date from the server, so updates check only
+    // the keys they change.
     match /users/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      allow create, update: if isOwner(uid)
-        && request.resource.data.keys().hasOnly([
-          'phone', 'fullName', 'email', 'dob', 'gender',
-          'preferredPaymentMethod', 'notifyOrderUpdates', 'notifyOffers',
-          'fcmToken', 'createdAt', 'updatedAt'
-        ]);
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(profileFields());
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(profileFields());
       // Account deletion goes through the deleteAccount function.
       allow delete: if false;
 
@@ -100,15 +194,29 @@ service cloud.firestore {
         allow delete: if isOwner(uid);
       }
 
-      // Doc id = product variant id.
+      // Doc id = product variant id (Zyppi's own stock), or an offer id
+      // (marketplace: offers/{offerId}) with `offerId` + `variantId`.
       match /cart/{variantId} {
         allow read, delete: if isOwner(uid);
         allow create, update: if isOwner(uid)
-          && request.resource.data.keys().hasOnly(['productId', 'quantity', 'updatedAt'])
+          && request.resource.data.keys().hasOnly(['productId', 'quantity', 'updatedAt', 'offerId', 'variantId'])
+          && (!('offerId' in request.resource.data)
+              || (request.resource.data.offerId == variantId && request.resource.data.variantId is string))
           && request.resource.data.productId is string
           && request.resource.data.quantity is int
           && request.resource.data.quantity > 0
           && request.resource.data.quantity <= 99;
+      }
+
+      // In-app notification list, written only by functions
+      // (notifications/inbox.ts). The customer may mark entries read or
+      // remove them; `expireAt` lets the TTL policy delete old ones.
+      match /notifications/{id} {
+        allow read, delete: if isOwner(uid);
+        allow update: if isOwner(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
+          && request.resource.data.read == true;
+        allow create: if false;
       }
 
       // Doc id = product id.
@@ -116,6 +224,12 @@ service cloud.firestore {
         allow read, delete: if isOwner(uid);
         allow create: if isOwner(uid)
           && request.resource.data.keys().hasOnly(['createdAt']);
+      }
+
+      // Accepted terms / privacy / refund policy (acceptLegal only).
+      match /consents/{id} {
+        allow read: if isOwner(uid) || isAdmin();
+        allow write: if false;
       }
     }
 
@@ -128,15 +242,40 @@ service cloud.firestore {
     // Orders and payments (written only by Cloud Functions)
     // ---------------------------------------------------------------
 
+    // The customer, staff, and the delivery partner who holds the order
+    // (rider app; offers are summarised in riders/{uid}/offers instead).
     match /orders/{orderId} {
       allow read: if isAdmin()
-        || (signedIn() && resource.data.userId == request.auth.uid);
+        || (signedIn() && resource.data.userId == request.auth.uid)
+        || (signedIn() && resource.data.get('riderId', '') == request.auth.uid);
       allow write: if false;
 
+      function orderCustomer() {
+        return signedIn()
+          && get(/databases/$(database)/documents/orders/$(orderId)).data.userId
+             == request.auth.uid;
+      }
+
       match /events/{eventId} {
+        allow read: if isAdmin() || orderCustomer();
+        allow write: if false;
+      }
+      // The delivery code: the customer and staff only, never the rider.
+      match /private/{doc} {
+        allow read: if isAdmin() || orderCustomer();
+        allow write: if false;
+      }
+      // Rider's live distance / ETA, written by riderPing.
+      match /tracking/{doc} {
+        allow read: if isAdmin() || orderCustomer();
+        allow write: if false;
+      }
+      // Pickup codes for sellers' shops: the assigned rider shows them; the
+      // seller types them in (storeConfirmPickup). Never the customer.
+      match /pickupCodes/{storeId} {
         allow read: if isAdmin()
           || (signedIn()
-              && get(/databases/$(database)/documents/orders/$(orderId)).data.userId
+              && get(/databases/$(database)/documents/orders/$(orderId)).data.get('riderId', '')
                  == request.auth.uid);
         allow write: if false;
       }
@@ -145,6 +284,13 @@ service cloud.firestore {
     match /paymentIntents/{id} {
       allow read: if isAdmin()
         || (signedIn() && resource.data.userId == request.auth.uid);
+      allow write: if false;
+    }
+
+    // Refunds (functions/src/payments/refunds.ts): staff who handle money
+    // or orders can see them; only the admin callables create them.
+    match /refunds/{id} {
+      allow read: if hasRole(['finance', 'ops']);
       allow write: if false;
     }
 
@@ -158,10 +304,14 @@ service cloud.firestore {
     match /supportChats/{chatId} {
       allow read: if isAdmin()
         || (signedIn() && resource.data.userId == request.auth.uid);
-      allow update: if signedIn()
-        && resource.data.userId == request.auth.uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['unreadByUser'])
-        && request.resource.data.unreadByUser == 0;
+      // The customer and the support team each clear their own unread count.
+      allow update: if (signedIn()
+          && resource.data.userId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['unreadByUser'])
+          && request.resource.data.unreadByUser == 0)
+        || (hasRole(['support', 'ops'])
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['unreadByAgent'])
+          && request.resource.data.unreadByAgent == 0);
       allow create, delete: if false;
 
       function chatOwner() {
@@ -189,8 +339,219 @@ service cloud.firestore {
 
     // Bot knowledge base: written by functions/scripts/seed-support-kb.ts,
     // read only by the bot.
+    // Written only by adminSaveKbEntry / adminDeleteKbEntry, which
+    // re-embed the questions for the bot.
     match /supportKb/{entryId} {
-      allow read, write: if isAdmin();
+      allow read: if hasRole(['support']);
+      allow write: if false;
+    }
+
+    // ---------------------------------------------------------------
+    // Admin panel (written only by Cloud Functions)
+    // ---------------------------------------------------------------
+
+    // Delivery partners (functions/src/riders). The rider reads their own
+    // application; operations reviews it; finance settles cash and sees
+    // payout details. Only the callables write.
+    match /riders/{uid} {
+      allow read: if isOwner(uid) || hasRole(['ops', 'finance']);
+      allow write: if false;
+
+      match /events/{id} {
+        allow read: if isOwner(uid) || hasRole(['ops']);
+        allow write: if false;
+      }
+      match /cash/{id} {
+        allow read: if isOwner(uid) || hasRole(['ops', 'finance']);
+        allow write: if false;
+      }
+      // Bank account / UPI for payouts.
+      match /private/{doc} {
+        allow read: if isOwner(uid) || hasRole(['finance']);
+        allow write: if false;
+      }
+      // Rider app (functions/src/dispatch): open order offers, earnings
+      // ledger, payouts, daily login minutes, booked slots, inbox.
+      match /offers/{id} {
+        allow read: if isOwner(uid) || hasRole(['ops']);
+        allow write: if false;
+      }
+      match /earnings/{id} {
+        allow read: if isOwner(uid) || hasRole(['ops', 'finance']);
+        allow write: if false;
+      }
+      match /payouts/{id} {
+        allow read: if isOwner(uid) || hasRole(['finance']);
+        allow write: if false;
+      }
+      match /days/{id} {
+        allow read: if isOwner(uid) || hasRole(['ops', 'finance']);
+        allow write: if false;
+      }
+      match /slots/{id} {
+        allow read: if isOwner(uid) || hasRole(['ops']);
+        allow write: if false;
+      }
+      match /inbox/{id} {
+        allow read: if isOwner(uid) || hasRole(['ops']);
+        allow write: if false;
+      }
+      // Signed rider agreement + privacy policy (acceptLegal only).
+      match /consents/{id} {
+        allow read: if isOwner(uid) || hasRole(['ops']);
+        allow write: if false;
+      }
+    }
+
+    // Rider settings (pay, dispatch, emergency numbers): riders read them;
+    // only the admin callables write.
+    match /config/riders {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // Gig slot capacity (riderBookSlot) and incentive campaigns: riders
+    // read them to book and to see their progress.
+    match /gigSlots/{id} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+    match /riderOffers/{id} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+    // Finance: every rider's payout requests in one list.
+    match /{path=**}/payouts/{id} {
+      allow read: if hasRole(['finance']);
+    }
+
+    // Rider emergency alerts (riderSos), handled by ops.
+    match /sosAlerts/{id} {
+      allow read: if hasRole(['ops', 'support']);
+      allow write: if false;
+    }
+
+    // Marketplace sellers (functions/src/marketplace, docs/MARKETPLACE.md).
+    // A seller login carries the claim `sellerId`; the applicant (before
+    // approval) is the owner uid the seller doc is keyed by. Payout and
+    // margin fields stay in listings (private); offers are the public
+    // projection. Only the callables write.
+    function sellerMember(sellerId) {
+      return signedIn()
+        && (request.auth.token.get('sellerId', '') == sellerId || request.auth.uid == sellerId);
+    }
+
+    match /sellers/{sellerId} {
+      allow read: if sellerMember(sellerId) || hasRole(['ops', 'finance', 'support']);
+      allow write: if false;
+
+      match /events/{id} {
+        allow read: if sellerMember(sellerId) || hasRole(['ops']);
+        allow write: if false;
+      }
+      // Bank account / UPI for payouts.
+      match /private/{doc} {
+        allow read: if sellerMember(sellerId) || hasRole(['finance']);
+        allow write: if false;
+      }
+      // The shop's logins mark inbox entries read (seller app → Inbox).
+      match /inbox/{id} {
+        allow update: if sellerMember(sellerId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
+          && request.resource.data.read == true;
+      }
+      // Ledger, payouts and subscription periods (Phase 7 M3), inbox.
+      match /{sub}/{id} {
+        allow read: if sub in ['earnings', 'payouts', 'subscriptions', 'inbox', 'devices', 'consents', 'orders', 'feePayments']
+          && (sellerMember(sellerId) || hasRole(['ops', 'finance']));
+        allow write: if false;
+      }
+    }
+
+    // A shop's logins see the shop's team (Account → Logins).
+    match /sellerUsers/{uid} {
+      allow read: if isOwner(uid) || hasRole(['ops'])
+        || (signedIn() && request.auth.token.get('sellerId', '') != ''
+            && resource.data.sellerId == request.auth.token.sellerId);
+      allow write: if false;
+    }
+
+    // Plans are shown on the seller registration screen.
+    match /sellerPlans/{id} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // Seller price, add-on, payout: the seller and staff only.
+    match /listings/{id} {
+      allow read: if (signedIn() && request.auth.token.get('sellerId', '') == resource.data.sellerId)
+        || isAdmin();
+      allow write: if false;
+
+      match /priceHistory/{h} {
+        allow read: if isAdmin();
+        allow write: if false;
+      }
+    }
+
+    // A seller's public details ("Sold by" → seller page): written only by
+    // the onSellerWritten trigger.
+    match /sellerProfiles/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Seller product submissions (sellerSubmitProduct): the seller sees
+    // its own; catalog staff review them.
+    match /productRequests/{id} {
+      allow read: if hasRole(['catalog', 'ops'])
+        || (signedIn() && request.auth.token.get('sellerId', '') == resource.data.sellerId);
+      allow write: if false;
+    }
+
+    // What customers see: price, MRP, seller name / rating, stock flag.
+    match /offers/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Terms, privacy and refund policy, rider and seller agreements
+    // (functions/src/legal): public, so the apps and the website show the
+    // exact published text. Only adminPublishLegalDoc writes.
+    match /legalDocs/{type} {
+      allow read: if true;
+      allow write: if false;
+
+      match /versions/{v} {
+        allow read: if true;
+        allow write: if false;
+      }
+    }
+
+    // Kill switches (functions/src/shared/features.ts): the app reads them
+    // to hide what's off; only adminUpdateFeatures writes them.
+    match /config/features {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Who has which role (mirror of the claims, kept by adminSetRole).
+    match /staff/{uid} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // Every admin change, append-only.
+    match /auditLogs/{id} {
+      allow read: if isSuperAdmin();
+      allow write: if false;
+    }
+
+    // Report counters (functions/src/stats), written only by the
+    // onOrderWritten trigger. Every staff role sees the dashboard.
+    match /stats/{group}/days/{day} {
+      allow read: if isAdmin();
+      allow write: if false;
     }
 
     // Everything else is closed.

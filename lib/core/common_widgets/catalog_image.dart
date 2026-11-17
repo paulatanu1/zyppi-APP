@@ -6,17 +6,8 @@ import 'package:zippy/core/theme/zyppi_colors.dart';
 /// Firebase mode, or a bundled asset path in mock mode — the catalog
 /// repositories hand back whichever one applies, so this is the only
 /// place that needs to tell them apart.
-///
-/// Images are decoded at the size they're shown (× the screen's pixel
-/// ratio), not at the source's full resolution: a 1500 px photo in a 64 px
-/// tile otherwise costs a full-size decode and ~9 MB of memory per image,
-/// which is what made grids and carousels stutter while scrolling.
 class CatalogImage extends StatelessWidget {
   static const _fallbackAsset = 'assets/images/item.png';
-
-  /// Quick fade for images that weren't in memory yet; the package default
-  /// (500 ms in, 1 s placeholder out) left whole grids mid-fade.
-  static const _fadeIn = Duration(milliseconds: 150);
 
   final String? image;
   final BoxFit fit;
@@ -33,59 +24,41 @@ class CatalogImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (width != null && height != null) {
-      return _build(context, _decodeWidth(context, width!, height!));
-    }
-    return LayoutBuilder(
-      builder: (context, constraints) => _build(
-        context,
-        _decodeWidth(
-          context,
-          width ?? constraints.maxWidth,
-          height ?? constraints.maxHeight,
-        ),
-      ),
-    );
-  }
-
-  /// Decode width in physical pixels: the box's longer side, so a square
-  /// photo still fills it under [BoxFit.cover]. Only the width is fixed, so
-  /// the aspect ratio is kept. `null` (full size) when the box is unbounded.
-  static int? _decodeWidth(BuildContext context, double w, double h) {
-    final side = [w, h].where((v) => v.isFinite && v > 0).fold(0.0, _max);
-    if (side == 0) return null;
-    return (side * MediaQuery.devicePixelRatioOf(context)).round();
-  }
-
-  static double _max(double a, double b) => a > b ? a : b;
-
-  Widget _fallback(int? cacheWidth) => Image.asset(
-    _fallbackAsset,
-    fit: fit,
-    width: width,
-    height: height,
-    cacheWidth: cacheWidth,
-  );
-
-  Widget _build(BuildContext context, int? cacheWidth) {
     final source = image;
 
-    if (source == null || source.isEmpty) return _fallback(cacheWidth);
+    if (source == null || source.isEmpty) {
+      return Image.asset(
+        _fallbackAsset,
+        fit: fit,
+        width: width,
+        height: height,
+      );
+    }
 
     if (source.startsWith('http://') || source.startsWith('https://')) {
+      // Decode at the size it's drawn (never wider than the screen), not
+      // the uploaded size: a grid of full-size photos is what makes lists
+      // stutter and run out of memory on low-end phones. No LayoutBuilder:
+      // some tiles sit inside IntrinsicHeight.
+      final decodeWidth = _decodeWidth(
+        width ?? MediaQuery.sizeOf(context).width,
+        MediaQuery.devicePixelRatioOf(context),
+      );
       return CachedNetworkImage(
         imageUrl: source,
         fit: fit,
         width: width,
         height: height,
-        memCacheWidth: cacheWidth,
-        fadeInDuration: _fadeIn,
-        fadeOutDuration: Duration.zero,
+        memCacheWidth: decodeWidth,
+        fadeInDuration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 200),
         placeholder: (context, url) => ColoredBox(
           color: context.z.surface2,
           child: SizedBox(width: width, height: height),
         ),
-        errorWidget: (context, url, error) => _fallback(cacheWidth),
+        errorWidget: (context, url, error) =>
+            Image.asset(_fallbackAsset, fit: fit, width: width, height: height),
       );
     }
 
@@ -94,8 +67,17 @@ class CatalogImage extends StatelessWidget {
       fit: fit,
       width: width,
       height: height,
-      cacheWidth: cacheWidth,
-      errorBuilder: (context, error, stackTrace) => _fallback(cacheWidth),
+      errorBuilder: (context, error, stackTrace) =>
+          Image.asset(_fallbackAsset, fit: fit, width: width, height: height),
     );
   }
+}
+
+/// Pixels to decode for an image drawn [logicalWidth] wide, rounded up to
+/// a step of 100 so nearby sizes share one cached bitmap. Null (decode at
+/// full size) when the width isn't known.
+int? _decodeWidth(double logicalWidth, double pixelRatio) {
+  if (!logicalWidth.isFinite || logicalWidth <= 0) return null;
+  final px = (logicalWidth * pixelRatio / 100).ceil() * 100;
+  return px.clamp(100, 1600);
 }

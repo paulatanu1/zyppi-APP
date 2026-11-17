@@ -3,6 +3,7 @@ import 'package:zippy/core/cart/domain/bill_breakdown.dart';
 import 'package:zippy/core/cart/domain/bill_calculator.dart';
 import 'package:zippy/core/cart/domain/cart_line.dart';
 import 'package:zippy/core/domain/coupon.dart';
+import 'package:zippy/core/domain/delivery_config.dart';
 import 'package:zippy/core/domain/product.dart';
 import 'package:zippy/core/domain/product_variant.dart';
 
@@ -62,19 +63,59 @@ void main() {
       expect(bill.savingsPaise, 6000);
     });
 
-    test('adds the flat handling fee and free delivery', () {
+    test('adds the flat handling fee; delivery free with no config', () {
       final bill = BillCalculator.calculate(
         lines: [_line(pricePaise: 10000, quantity: 1)],
       );
 
-      expect(bill.deliveryFeePaise, BillCalculator.freeDeliveryPaise);
+      expect(bill.deliveryFeePaise, 0);
       expect(bill.handlingFeePaise, BillCalculator.handlingFeePaise);
-      expect(
-        bill.totalPaise,
-        10000 +
-            BillCalculator.freeDeliveryPaise +
-            BillCalculator.handlingFeePaise,
+      expect(bill.totalPaise, 10000 + BillCalculator.handlingFeePaise);
+    });
+
+    const delivery = DeliveryConfig(
+      feePaise: 2500,
+      freeAbovePaise: 49900,
+      minOrderPaise: 9900,
+    );
+
+    test('charges delivery below the free-delivery threshold', () {
+      final bill = BillCalculator.calculate(
+        lines: [_line(pricePaise: 10000, quantity: 1)],
+        delivery: delivery,
       );
+
+      expect(bill.deliveryFeePaise, 2500);
+      expect(bill.totalPaise, 10000 + 2500 + BillCalculator.handlingFeePaise);
+    });
+
+    test('delivery is free at and above the threshold', () {
+      final at = BillCalculator.calculate(
+        lines: [_line(pricePaise: 49900, quantity: 1)],
+        delivery: delivery,
+      );
+      expect(at.deliveryFeePaise, 0);
+    });
+  });
+
+  group('DeliveryConfig', () {
+    const delivery = DeliveryConfig(
+      feePaise: 2500,
+      freeAbovePaise: 49900,
+      minOrderPaise: 9900,
+    );
+
+    test('remaining amounts for free delivery and the minimum', () {
+      expect(delivery.remainingForMinimum(5000), 4900);
+      expect(delivery.remainingForMinimum(9900), 0);
+      expect(delivery.remainingForFree(30000), 19900);
+      expect(delivery.remainingForFree(60000), 0);
+    });
+
+    test('no goal when delivery is always free', () {
+      expect(DeliveryConfig.free.hasFreeDeliveryGoal, isFalse);
+      expect(DeliveryConfig.free.remainingForFree(100), 0);
+      expect(DeliveryConfig.free.feeFor(100), 0);
     });
 
     test('adds tip to the total', () {

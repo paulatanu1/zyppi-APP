@@ -1,5 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:zippy/core/app_settings/data/app_settings_repository.dart';
+import 'package:zippy/core/app_settings/domain/app_settings.dart';
 import 'package:zippy/core/config/env.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/common_widgets/section_card.dart';
@@ -44,6 +47,20 @@ List<String> get availablePaymentMethods => Env.onlinePaymentsEnabled
     ? [for (final o in _options) o.method]
     : const [codPaymentMethod];
 
+/// [availablePaymentMethods] minus what Settings → Services has switched
+/// off. Cash on delivery is always available.
+List<String> enabledPaymentMethods(FeatureFlags flags) => [
+  for (final m in availablePaymentMethods)
+    if ((m != upiPaymentMethod || flags.upi) &&
+        (m != cardPaymentMethod || flags.card))
+      m,
+];
+
+/// The methods to offer right now (live).
+final enabledPaymentMethodsProvider = Provider<List<String>>(
+  (ref) => enabledPaymentMethods(ref.watch(featureFlagsProvider)),
+);
+
 /// What checkout starts with when the user has no usable preference.
 String get defaultPaymentMethod =>
     Env.onlinePaymentsEnabled ? upiPaymentMethod : codPaymentMethod;
@@ -59,7 +76,7 @@ String paymentMethodTitle(String method) {
 
 /// Needs no network data, so it renders immediately while the address and
 /// slot cards are still loading.
-class PaymentOptions extends StatelessWidget {
+class PaymentOptions extends ConsumerWidget {
   final String selected;
   final ValueChanged<String> onSelect;
 
@@ -70,7 +87,8 @@ class PaymentOptions extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final methods = ref.watch(enabledPaymentMethodsProvider);
     final z = context.z;
     final text = Theme.of(context).textTheme;
 
@@ -79,9 +97,7 @@ class PaymentOptions extends StatelessWidget {
       child: Column(
         children: [
           for (final (index, option)
-              in _options
-                  .where((o) => availablePaymentMethods.contains(o.method))
-                  .indexed) ...[
+              in _options.where((o) => methods.contains(o.method)).indexed) ...[
             if (index > 0) const SizedBox(height: ZSpace.x3),
             SelectableTile(
               selected: option.method == selected,

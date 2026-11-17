@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:zippy/core/marketplace/application/marketplace_providers.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
@@ -61,10 +62,15 @@ class FavouriteScreen extends ConsumerWidget {
                         ),
                       )
                     // Tapping a card's heart removes it from this list.
-                    : _ProductGrid(
-                        itemCount: products.length,
-                        itemBuilder: (context, index) =>
-                            CatalogProductCard(product: products[index]),
+                    : RefreshIndicator(
+                        // Pull down for fresh prices/stock.
+                        onRefresh: () =>
+                            ref.refresh(favouriteProductsProvider.future),
+                        child: _ProductGrid(
+                          itemCount: products.length,
+                          itemBuilder: (context, index) =>
+                              CatalogProductCard(product: products[index]),
+                        ),
                       ),
               ),
             ),
@@ -81,12 +87,26 @@ class FavouriteScreen extends ConsumerWidget {
                           for (final product in products) {
                             if (product.variants.isEmpty) continue;
                             final variant = product.variants.first;
+                            final pick = cardPrice(
+                              product,
+                              variant,
+                              ref.read(shoppingAreaIdProvider),
+                            ).pick;
                             // Already in the cart: leave its quantity alone,
                             // so tapping twice doesn't double everything.
-                            if (cart.quantityOf(product.id, variant.id) > 0) {
+                            if (cart.quantityOf(
+                                  product.id,
+                                  variant.id,
+                                  offer: pick,
+                                ) >
+                                0) {
                               continue;
                             }
-                            cart.addItem(product: product, variant: variant);
+                            cart.addItem(
+                              product: product,
+                              variant: variant,
+                              offer: pick,
+                            );
                             added++;
                           }
                           showSuccessToast(
@@ -115,7 +135,9 @@ class _ProductGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => GridView.builder(
-    physics: const BouncingScrollPhysics(),
+    physics: const AlwaysScrollableScrollPhysics(
+      parent: BouncingScrollPhysics(),
+    ),
     padding: const EdgeInsets.all(ZSpace.screen),
     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
       crossAxisCount: 2,
