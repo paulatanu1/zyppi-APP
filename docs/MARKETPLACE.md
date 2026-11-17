@@ -453,3 +453,10 @@ Each phase gets its own branch from `Development` (`feat/marketplace-<n>-…`) a
   2. Place an order. The seller accepts it and it is delivered. The ledger should show ₹50 held, then available after the hold.
   3. Record the payout. The margin report should show ₹5.
   4. Let the subscription expire. That seller's offers should disappear.
+
+## Added on 2026-11-17
+- **Returns and damage.** Use `adminReturnSellerItem` from Orders → Return…. When the seller is at fault, it takes back their credit for those units: from held money first, otherwise from their balance. Later releases and cancellations then count only what is left. The customer refund stays a separate action (Refund…).
+- **Statements.** `sellerStatement` gives a month of one seller's ledger; the seller app shows it under Earnings → Monthly statement. `adminSellerTaxReport` (Money → Seller tax) gives net sales, TCS (GSTR-8) and TDS (194-O) per seller, with a CSV for the CA.
+- **Legal.** Admin → Settings → Legal documents edits and publishes versions; `publishProblems` refuses any text with `[PLACEHOLDERS]`. The rider portal's last step reads, agrees, draws a signature and confirms with an OTP, so the rider agreement can now be published.
+- **Phone setup** (rider and seller apps). Notifications, display over other apps, battery exemption, full-screen alerts and location, plus a test ring. Going online needs the required ones. The seller app also runs a `remoteMessaging` foreground service while online, which restarts after a reboot, and checks selfies on the phone with ML Kit.
+- **Play Console declarations.** The seller app needs the `specialUse` (overlay) and `remoteMessaging` foreground-service types, plus `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`. The rider app needs `specialUse` (overlay) and the existing background location.
