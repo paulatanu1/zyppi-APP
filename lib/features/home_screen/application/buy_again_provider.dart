@@ -10,7 +10,9 @@ import 'package:zippy/core/order/data/order_repository_impl.dart';
 /// is a convenience, so it hides rather than showing an error.
 final buyAgainProvider = FutureProvider.autoDispose<List<Product>>((ref) async {
   try {
-    final orders = await ref.watch(orderRepositoryProvider).getOrders();
+    final orders = await ref
+        .watch(orderRepositoryProvider)
+        .getOrders(limit: buyAgainOrders);
     final delivered =
         orders.where((o) => o.status == OrderStatus.delivered).toList()
           ..sort((a, b) => b.placedAt.compareTo(a.placedAt));
@@ -37,3 +39,6 @@ final buyAgainProvider = FutureProvider.autoDispose<List<Product>>((ref) async {
 });
 
 const buyAgainMax = 10;
+
+/// Only the newest orders are scanned, so Home never reads the whole history.
+const buyAgainOrders = 20;

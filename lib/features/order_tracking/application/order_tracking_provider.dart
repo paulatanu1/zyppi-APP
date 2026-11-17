@@ -26,15 +26,31 @@ class OrderTrackingProvider extends StateNotifier<OrderTrackingState> {
 
   OrderTrackingProvider(this.repository, this.orderId)
     : super(OrderTrackingState()) {
-    _load();
-
-    // Under Firebase, status changes come from the admin panel, not this
-    // client — a Firestore listener (repository.watch()) is what tells
-    // us to re-read the order. The mock flavor drives its own fake
-    // lifecycle timer below instead.
-    if (!Env.isMockDataSource) {
-      _watchSubscription = repository.watch().listen((_) => _load());
+    // Under Firebase, status changes come from the server: one listener
+    // on this order's document delivers each change (one read each).
+    // The mock flavor drives its own fake lifecycle timer below instead.
+    if (Env.isMockDataSource) {
+      _load();
+    } else {
+      _listen();
     }
+  }
+
+  void _listen() {
+    _watchSubscription?.cancel();
+    _watchSubscription = repository
+        .watchOrder(orderId)
+        .listen(
+          (order) {
+            if (!mounted) return;
+            state = state.copyWith(order: order, loading: false, error: null);
+          },
+          onError: (Object error) {
+            if (!mounted) return;
+            // Keep showing the last known order if the live update fails.
+            state = state.copyWith(loading: false, error: error.toString());
+          },
+        );
   }
 
   Future<void> _load() async {
@@ -54,15 +70,16 @@ class OrderTrackingProvider extends StateNotifier<OrderTrackingState> {
     _scheduleNextStep();
   }
 
-  Future<void> retry() {
-    state = state.copyWith(loading: state.order == null);
-    return _load();
+  Future<void> retry() async {
+    state = state.copyWith(loading: state.order == null, error: null);
+    if (Env.isMockDataSource) return _load();
+    _listen();
   }
 
   void _scheduleNextStep() {
     // The fake lifecycle timer only applies to the offline mock flavor —
     // under Firebase, status is server-controlled and arrives through
-    // repository.watch().
+    // repository.watchOrder().
     if (!Env.isMockDataSource) return;
 
     final order = state.order;

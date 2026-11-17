@@ -83,7 +83,8 @@ Customer orders placed **before** that deploy have no delivery code; riders can 
 
 **Play Console** (new app listing "Zyppi Delivery"):
 - [ ] Release keystore: create one, keep it safe, and fill `android/key.properties` (gitignored) — `storeFile`, `storePassword`, `keyAlias`, `keyPassword`.
-- [ ] Build: `fvm flutter build appbundle --flavor prod --release --dart-define-from-file=env/prod.json` (fill `env/prod.json` from the example: real `SUPPORT_PHONE`, `RIDER_PORTAL_URL`, `PRIVACY_POLICY_URL`).
+- [ ] Build: `fvm flutter build appbundle --flavor prod --release --obfuscate --split-debug-info=build/symbols --dart-define-from-file=env/prod.json` (fill `env/prod.json` from the example: real `SUPPORT_PHONE`, `RIDER_PORTAL_URL`, `PRIVACY_POLICY_URL`).
+- [ ] Release builds are obfuscated (class and method names scrambled, so the app is harder to read back). Keep `build/symbols` from each release and upload it so Crashlytics shows readable stack traces: `firebase crashlytics:symbols:upload --app=<Firebase Android app id> build/symbols`.
 - [ ] App content → **Foreground service: location** declaration (video of: go online → notification "You're online" → orders while the screen is off). The app never asks for background location.
 - [ ] App content → Data safety: precise location (collected while online, for dispatch and customer ETA, not shared for ads), phone number, name.
 - [ ] Privacy policy URL that covers rider location.
