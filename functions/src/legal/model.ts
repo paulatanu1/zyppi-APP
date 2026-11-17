@@ -91,6 +91,9 @@ export function publishProblems(raw: Record<string, unknown>): { input: PublishI
   for (const [l, v] of Object.entries(body)) {
     if (v.length > MAX_BODY) problems.push(`The ${l} text is too long`);
   }
+  // Template gaps a lawyer must fill must never go live.
+  const gaps = findPlaceholders(Object.values(body).join("\n"));
+  if (gaps.length) problems.push(`Fill the placeholders first: ${gaps.slice(0, 5).join(", ")}`);
   if (problems.length) return { input: null, problems };
   return {
     input: { type: raw.type as LegalType, title, body, requiresReaccept: raw.requiresReaccept === true },

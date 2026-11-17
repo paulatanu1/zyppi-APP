@@ -1,9 +1,10 @@
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import { pushToDevices, tokensOf } from "../notifications/tokens";
 import { logger } from "firebase-functions";
 import { onDocumentWritten } from "firebase-functions/firestore";
 import { HttpsError } from "firebase-functions/https";
 import { onSchedule } from "firebase-functions/scheduler";
-import { db, messaging } from "../shared/firebase";
+import { db } from "../shared/firebase";
 import { RIDERS } from "../riders/model";
 import { bindRider, withdrawOffer } from "./effects";
 import { pickupPoint } from "./earnings";
@@ -41,7 +42,7 @@ function candidateFrom(id: string, d: Record<string, unknown>): Candidate {
 
 interface Offered {
   riderId: string;
-  token: string | null;
+  tokens: string[];
   expiresAtMs: number;
 }
 
@@ -124,30 +125,23 @@ export async function offerOrder(orderId: string, nowMs = Date.now()): Promise<O
     });
     return {
       riderId: pick.uid,
-      token: (riderDoc.get("fcmToken") as string | null | undefined) ?? null,
+      tokens: tokensOf(riderDoc.data()),
       expiresAtMs: expiresAt.toMillis(),
     };
   });
-  if (offered?.token) await pushOffer(offered.token, orderId, offered.expiresAtMs, offered.riderId);
+  if (offered?.tokens.length) await pushOffer(offered.tokens, orderId, offered.expiresAtMs, offered.riderId);
   return offered;
 }
 
 /** Data-only, high priority: the app rings and shows the offer full-screen. */
-async function pushOffer(token: string, orderId: string, expiresAtMs: number, riderId: string): Promise<void> {
-  try {
-    await messaging.send({
-      token,
-      data: { type: "offer", orderId, expiresAt: String(expiresAtMs) },
-      android: { priority: "high", ttl: Math.max(1000, expiresAtMs - Date.now()) },
-    });
-  } catch (e) {
-    const code = (e as { code?: string }).code ?? "";
-    if (code.includes("registration-token")) {
-      await db.collection(RIDERS).doc(riderId).update({ fcmToken: null });
-    } else {
-      logger.warn("Offer push failed", { orderId, riderId, code });
-    }
-  }
+async function pushOffer(tokens: string[], orderId: string, expiresAtMs: number, riderId: string): Promise<void> {
+  const ref = db.collection(RIDERS).doc(riderId);
+  const rider = await ref.get();
+  const sent = await pushToDevices(ref, rider.data(), {
+    data: { type: "offer", orderId, expiresAt: String(expiresAtMs) },
+    android: { priority: "high", ttl: Math.max(1000, expiresAtMs - Date.now()) },
+  });
+  if (!sent) logger.warn("Offer push reached no device", { orderId, riderId, devices: tokens.length });
 }
 
 /** Accept (the order becomes theirs) or reject (it goes to the next rider). */

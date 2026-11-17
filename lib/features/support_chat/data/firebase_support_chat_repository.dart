@@ -40,6 +40,8 @@ class FirebaseSupportChatRepository implements SupportChatRepository {
       _chat(chatId)
           .collection('messages')
           .orderBy('createdAt')
+          // Long chats: only the latest messages are read and kept live.
+          .limitToLast(200)
           .snapshots()
           .map((snap) => snap.docs.map(_message).toList());
 

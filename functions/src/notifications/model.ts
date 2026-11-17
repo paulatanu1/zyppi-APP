@@ -1,5 +1,6 @@
 import { Timestamp } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/https";
+import { tokensOf } from "./tokens";
 
 /**
  * Push campaigns (`campaigns/{id}`) and reusable templates
@@ -57,7 +58,8 @@ export interface CampaignInput {
 /** The fields of a user doc a segment looks at. */
 export interface Recipient {
   uid: string;
-  token: string;
+  /** Every signed-in device (notifications/tokens.ts). */
+  tokens: string[];
   lang: Lang;
   serviceAreaId: string | null;
   orderCount: number;
@@ -76,12 +78,12 @@ export function isLang(v: unknown): v is Lang {
 /** Reads a users/{uid} doc; null when it can't receive a marketing push. */
 export function toRecipient(uid: string, d: Record<string, unknown>): Recipient | null {
   if (d.notifyOffers !== true || d.blocked === true) return null;
-  const token = typeof d.fcmToken === "string" && d.fcmToken ? d.fcmToken : null;
-  if (!token) return null;
+  const tokens = tokensOf(d);
+  if (!tokens.length) return null;
   const last = d.lastOrderAt;
   return {
     uid,
-    token,
+    tokens,
     lang: isLang(d.lang) ? d.lang : "en",
     serviceAreaId: typeof d.serviceAreaId === "string" ? d.serviceAreaId : null,
     orderCount: Math.max(Number(d.orderCount) || 0, 0),
@@ -193,4 +195,44 @@ export function pushData(campaignId: string, c: Pick<CampaignInput, "linkType" |
     linkType: c.linkType,
     linkTarget: c.linkTarget ?? "",
   };
+}
+
+/** One FCM call's worth of a campaign: same language, at most [maxTokens] devices. */
+export interface Chunk {
+  lang: Lang;
+  recipients: { uid: string; tokens: string[] }[];
+}
+
+/** Groups recipients by language into chunks of at most [maxTokens] devices. */
+export function planChunks(people: Recipient[], maxTokens = 500): Chunk[] {
+  const byLang = new Map<Lang, Recipient[]>();
+  for (const p of people) byLang.set(p.lang, [...(byLang.get(p.lang) ?? []), p]);
+  const chunks: Chunk[] = [];
+  for (const [lang, group] of byLang) {
+    let current: Chunk = { lang, recipients: [] };
+    let count = 0;
+    for (const p of group) {
+      const tokens = p.tokens.slice(0, maxTokens);
+      if (count + tokens.length > maxTokens && current.recipients.length) {
+        chunks.push(current);
+        current = { lang, recipients: [] };
+        count = 0;
+      }
+      current.recipients.push({ uid: p.uid, tokens });
+      count += tokens.length;
+    }
+    if (current.recipients.length) chunks.push(current);
+  }
+  return chunks;
+}
+
+/** Whether a queued "send at" task should send now (it may arrive early or twice). */
+export function campaignDue(
+  c: { status?: unknown; taskVersion?: unknown; sendAtMs: number | null },
+  version: number,
+  nowMs: number,
+  skewMs = 60_000,
+): "send" | "requeue" | "skip" {
+  if (c.status !== "scheduled" || c.taskVersion !== version || c.sendAtMs == null) return "skip";
+  return c.sendAtMs <= nowMs + skewMs ? "send" : "requeue";
 }

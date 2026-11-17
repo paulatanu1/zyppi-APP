@@ -53,7 +53,7 @@ void main() {
     final c = ProviderContainer(
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
-        ordersProvider.overrideWith((ref) async => _orders),
+        ordersProvider.overrideWith((ref) => Stream.value(_orders)),
         profileProvider.overrideWith(
           (ref) async =>
               Profile(id: 'u1', fullName: 'Atanu', phone: '+91 98765 43210'),

@@ -19,7 +19,7 @@ class _Orders implements OrderRepository {
   final bool fail;
 
   @override
-  Future<List<Order>> getOrders() async =>
+  Future<List<Order>> getOrders({int? limit}) async =>
       fail ? throw StateError('offline') : orders;
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

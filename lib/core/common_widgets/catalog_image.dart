@@ -36,11 +36,23 @@ class CatalogImage extends StatelessWidget {
     }
 
     if (source.startsWith('http://') || source.startsWith('https://')) {
+      // Decode at the size it's drawn (never wider than the screen), not
+      // the uploaded size: a grid of full-size photos is what makes lists
+      // stutter and run out of memory on low-end phones. No LayoutBuilder:
+      // some tiles sit inside IntrinsicHeight.
+      final decodeWidth = _decodeWidth(
+        width ?? MediaQuery.sizeOf(context).width,
+        MediaQuery.devicePixelRatioOf(context),
+      );
       return CachedNetworkImage(
         imageUrl: source,
         fit: fit,
         width: width,
         height: height,
+        memCacheWidth: decodeWidth,
+        fadeInDuration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 200),
         placeholder: (context, url) => ColoredBox(
           color: context.z.surface2,
           child: SizedBox(width: width, height: height),
@@ -59,4 +71,13 @@ class CatalogImage extends StatelessWidget {
           Image.asset(_fallbackAsset, fit: fit, width: width, height: height),
     );
   }
+}
+
+/// Pixels to decode for an image drawn [logicalWidth] wide, rounded up to
+/// a step of 100 so nearby sizes share one cached bitmap. Null (decode at
+/// full size) when the width isn't known.
+int? _decodeWidth(double logicalWidth, double pixelRatio) {
+  if (!logicalWidth.isFinite || logicalWidth <= 0) return null;
+  final px = (logicalWidth * pixelRatio / 100).ceil() * 100;
+  return px.clamp(100, 1600);
 }

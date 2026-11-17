@@ -6,7 +6,7 @@ import { istDayAndWeek } from "../dispatch/earnings";
 import { writeAudit } from "../shared/audit";
 import { db } from "../shared/firebase";
 import { type Actor, requireRole } from "../shared/roles";
-import { MARKETPLACE_CONFIG_DOC, SELLERS } from "./model";
+import { MARKETPLACE_CONFIG_DOC, SELLERS, ZYPPI_SELLER_ID } from "./model";
 import { PERIODS, openPeriod, readPlan } from "./periods";
 import { notifySeller } from "./seller_notify";
 import { requireSeller } from "./sellers";
@@ -16,6 +16,7 @@ import {
   applyFeePayment,
   payoutSplit,
   remindersDue,
+  returnDebit,
   sellerCredit,
   settlementConfigFrom,
   subscriptionStatus,
@@ -99,7 +100,9 @@ async function reverseSeller(sellerId: string, orderId: string, sellerAtFault: b
     if (!s.exists) return;
     if (sellerAtFault) tx.update(seller, { "stats.cancelled": FieldValue.increment(1) });
     if (!c.exists || r.exists) return;
-    const net = (c.get("amountPaise") as number) ?? 0;
+    // Units already returned were taken back by their own rows.
+    const share = 1 - ((c.get("returnedPaise") as number) ?? 0) / Math.max(1, (c.get("amountPaise") as number) ?? 0);
+    const net = ((c.get("amountPaise") as number) ?? 0) - ((c.get("returnedPaise") as number) ?? 0);
     const wasHeld = c.get("status") === "held";
     const { day, week } = istDayAndWeek(new Date());
     tx.create(reversal, {
@@ -107,8 +110,10 @@ async function reverseSeller(sellerId: string, orderId: string, sellerAtFault: b
       type: "reversal",
       orderId,
       amountPaise: -net,
-      tcsPaise: -((c.get("tcsPaise") as number) ?? 0),
-      tdsPaise: -((c.get("tdsPaise") as number) ?? 0),
+      grossPaise: -Math.round(((c.get("grossPaise") as number) ?? 0) * share),
+      payoutPaise: -Math.round(((c.get("payoutPaise") as number) ?? 0) * share),
+      tcsPaise: -Math.round(((c.get("tcsPaise") as number) ?? 0) * share),
+      tdsPaise: -Math.round(((c.get("tdsPaise") as number) ?? 0) * share),
       status: "applied",
       day,
       week,
@@ -119,8 +124,8 @@ async function reverseSeller(sellerId: string, orderId: string, sellerAtFault: b
     tx.update(seller, {
       ...(wasHeld ? { heldPaise: FieldValue.increment(-net) } : { earningsBalancePaise: FieldValue.increment(-net) }),
       earnedTotalPaise: FieldValue.increment(-net),
-      "taxTotals.tcsPaise": FieldValue.increment(-((c.get("tcsPaise") as number) ?? 0)),
-      "taxTotals.tdsPaise": FieldValue.increment(-((c.get("tdsPaise") as number) ?? 0)),
+      "taxTotals.tcsPaise": FieldValue.increment(-Math.round(((c.get("tcsPaise") as number) ?? 0) * share)),
+      "taxTotals.tdsPaise": FieldValue.increment(-Math.round(((c.get("tdsPaise") as number) ?? 0) * share)),
     });
   });
 }
@@ -242,6 +247,7 @@ export async function recordSellerPayout(actor: Actor, d: Record<string, unknown
       type: "payout",
       payoutId: payoutRef.id,
       amountPaise: -(amount + dues),
+      duesPaise: dues,
       status: "applied",
       day,
       week,
@@ -317,6 +323,80 @@ export const adminAdjustSellerEarnings = onCall(async (request) => {
   });
 });
 
+/**
+ * Orders → Return / damage (ops, finance): units of a delivered line came
+ * back or were damaged. When the seller is at fault (wrong, damaged or
+ * expired item) their credit for those units is taken back, from held
+ * money first, else the balance; otherwise Zyppi absorbs it. Refunding
+ * the customer is the separate Refund action. Request: {orderId, index,
+ * quantity, sellerAtFault, reason}.
+ */
+export const adminReturnSellerItem = onCall(async (request) => {
+  const actor = requireRole(request, ["ops", "finance"]);
+  const orderId = typeof request.data?.orderId === "string" ? request.data.orderId : "";
+  const index = Number(request.data?.index);
+  const quantity = Number(request.data?.quantity);
+  const atFault = request.data?.sellerAtFault === true;
+  const reason = typeof request.data?.reason === "string" ? request.data.reason.trim().slice(0, 300) : "";
+  if (!/^[\w-]{1,64}$/.test(orderId)) throw new HttpsError("invalid-argument", "Invalid order");
+  if (!Number.isInteger(index) || index < 0) throw new HttpsError("invalid-argument", "Invalid line");
+  if (!Number.isInteger(quantity) || quantity < 1) throw new HttpsError("invalid-argument", "Enter how many units");
+  if (reason.length < 3) throw new HttpsError("invalid-argument", "Give a reason (the seller sees it)");
+  const orderRef = db.collection("orders").doc(orderId);
+  return db.runTransaction(async (tx) => {
+    const order = await tx.get(orderRef);
+    if (!order.exists) throw new HttpsError("not-found", "Order not found");
+    if (order.get("status") !== "delivered") throw new HttpsError("failed-precondition", "Only delivered orders");
+    const items = (order.get("items") ?? []) as { sellerId?: string; pricePaise?: number; payoutPaise?: number; quantity?: number; name?: string }[];
+    const line = items[index];
+    if (!line?.sellerId || line.sellerId === ZYPPI_SELLER_ID) {
+      throw new HttpsError("failed-precondition", "Not a marketplace seller's item");
+    }
+    const returned = ((order.get("returns") ?? {}) as Record<string, number>)[String(index)] ?? 0;
+    if (returned + quantity > (line.quantity ?? 0)) {
+      throw new HttpsError("failed-precondition", `Only ${(line.quantity ?? 0) - returned} left to return`);
+    }
+    const seller = db.collection(SELLERS).doc(line.sellerId);
+    const credit = seller.collection(EARNINGS).doc(`${orderId}_order`);
+    const [cfg, s, c] = [await config(tx), await tx.get(seller), await tx.get(credit)];
+    let debitPaise = 0;
+    if (atFault && s.exists && c.exists && c.get("status") !== "reversed") {
+      const d = returnDebit(line, quantity, !!s.get("gstin"), cfg);
+      debitPaise = d.netPaise;
+      const { day, week } = istDayAndWeek(new Date());
+      tx.create(seller.collection(EARNINGS).doc(`${orderId}_return_${index}_${returned + quantity}`), {
+        ledger: "seller",
+        type: "return",
+        orderId,
+        amountPaise: -d.netPaise,
+        grossPaise: -d.grossPaise,
+        payoutPaise: -d.payoutPaise,
+        tcsPaise: -d.tcsPaise,
+        tdsPaise: -d.tdsPaise,
+        reason: `${quantity} × ${line.name ?? "item"}: ${reason}`,
+        by: actor.uid,
+        status: "applied",
+        day,
+        week,
+        at: FieldValue.serverTimestamp(),
+      });
+      const held = c.get("status") === "held";
+      tx.update(seller, {
+        ...(held ? { heldPaise: FieldValue.increment(-d.netPaise) } : { earningsBalancePaise: FieldValue.increment(-d.netPaise) }),
+        earnedTotalPaise: FieldValue.increment(-d.netPaise),
+        "taxTotals.tcsPaise": FieldValue.increment(-d.tcsPaise),
+        "taxTotals.tdsPaise": FieldValue.increment(-d.tdsPaise),
+        "stats.returns": FieldValue.increment(1),
+      });
+      // Taken back already: the credit releases (or reverses) only the rest.
+      tx.update(credit, { returnedPaise: FieldValue.increment(d.netPaise) });
+    }
+    tx.update(orderRef, { [`returns.${index}`]: returned + quantity });
+    writeAudit(actor, { action: "order.returnItem", target: orderRef.path, after: { index, quantity, atFault, debitPaise, reason } }, tx);
+    return { debitPaise };
+  });
+});
+
 // ------------------------------------------------------------ daily job
 
 /**
@@ -344,7 +424,8 @@ export async function releaseHeld(now = Timestamp.now()): Promise<number> {
     await db.runTransaction(async (tx) => {
       const r = await tx.get(row.ref);
       if (r.get("status") !== "held") return;
-      const net = (r.get("amountPaise") as number) ?? 0;
+      // Returns already came off the held money (adminReturnSellerItem).
+      const net = ((r.get("amountPaise") as number) ?? 0) - ((r.get("returnedPaise") as number) ?? 0);
       tx.update(row.ref, { status: "available", releasedAt: FieldValue.serverTimestamp() });
       tx.update(row.ref.parent.parent!, {
         heldPaise: FieldValue.increment(-net),

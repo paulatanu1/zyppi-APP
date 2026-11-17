@@ -1,10 +1,16 @@
 {
   "rateSellersTitle": "Rate the sellers",
   "rateSellerThanks": "Thanks! Your rating helps other customers.",
-  "rateNStars": {"one": "{} star", "other": "{} stars"},
+  "rateNStars": {
+    "one": "{} star",
+    "other": "{} stars"
+  },
   "errorTooManySellers": "Your basket has items from more than {} sellers. Remove some, or pick the same seller for them.",
   "soldBy": "Sold by {}",
-  "moreSellers": {"one": "+{} more seller", "other": "+{} more sellers"},
+  "moreSellers": {
+    "one": "+{} more seller",
+    "other": "+{} more sellers"
+  },
   "chooseSeller": "Choose a seller",
   "sellersRankedBy": "Sorted by price, ratings, reliability and stock",
   "bestMatch": "Best match",
@@ -401,5 +407,17 @@
   "starsLabel": {
     "one": "{} star",
     "other": "{} stars"
-  }
+  },
+  "notifications": "Notifications",
+  "markAllRead": "Mark all read",
+  "noNotifications": "No notifications yet",
+  "noNotificationsHint": "Order updates and offers will show up here.",
+  "justNow": "Just now",
+  "minutesAgo": "{} min ago",
+  "hoursAgo": "{} h ago",
+  "yesterday": "Yesterday",
+  "unread": "Unread",
+  "newCount": "{} new",
+  "collectingFromStores": "Collecting your order from {} stores",
+  "pickedUpFromStores": "Picked up from {picked} of {total} stores"
 }

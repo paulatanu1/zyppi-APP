@@ -3,6 +3,8 @@ import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { onDocumentWritten } from "firebase-functions/firestore";
 import { HttpsError, onCall } from "firebase-functions/https";
 import { onSchedule } from "firebase-functions/scheduler";
+import { onTaskDispatched } from "firebase-functions/tasks";
+import { enqueueSafely, taskId } from "../shared/tasks";
 import { completePickup, event } from "../dispatch/delivery";
 import { MAX_CODE_ATTEMPTS } from "../dispatch/model";
 import { PICKUP_CODES, type PickupStop, sellerOnlyOrderReady } from "../dispatch/pickups";
@@ -221,6 +223,14 @@ export const onOrderForSellers = onDocumentWritten(`${ORDERS}/{orderId}`, async 
   ]);
   if (!ids.size) return;
   const orderId = e.params.orderId;
+  const deadline = after?.sellerAcceptDeadline as Timestamp | null | undefined;
+  if (!before && after?.sellersPending === true && deadline) {
+    await enqueueSafely(
+      ACCEPT_TASK,
+      { orderId },
+      { id: taskId("seller-accept", orderId), scheduleTime: new Date(deadline.toMillis() + 2_000) },
+    );
+  }
   await Promise.all(
     [...ids].map(async (sellerId) => {
       const ref = db.collection(SELLERS).doc(sellerId).collection("orders").doc(orderId);
@@ -242,38 +252,64 @@ export const onOrderForSellers = onDocumentWritten(`${ORDERS}/{orderId}`, async 
   );
 });
 
+const ACCEPT_TASK = "checkSellerAccept";
+
 /**
- * Every 2 minutes: sellers who haven't accepted by the deadline. The order
- * gets an ops alert (opsAlerts.sellerLate), the seller's app rings again, and
- * it counts as a late accept (ranking: reliability).
+ * The accept deadline passed: sellers still "pending" get an ops alert
+ * (opsAlerts.sellerLate), their app rings again, and it counts as a late
+ * accept (ranking: reliability). Does nothing if they all accepted, the
+ * order was cancelled, or this already ran (at-least-once tasks).
+ */
+export async function escalateLate(orderId: string): Promise<string[]> {
+  const ref = db.collection(ORDERS).doc(orderId);
+  const late = await db.runTransaction(async (tx) => {
+    const order = await tx.get(ref);
+    if (!order.exists || order.get("sellersPending") !== true) return [];
+    const deadline = order.get("sellerAcceptDeadline") as Timestamp | null | undefined;
+    if (!deadline || deadline.toMillis() > Date.now() + 5_000) return [];
+    if (order.get("status") === "cancelled") {
+      tx.update(ref, { sellerAcceptDeadline: null, sellersPending: false });
+      return [];
+    }
+    const status = (order.get("sellerStatus") ?? {}) as Record<string, string>;
+    const pending = Object.entries(status).filter(([, s]) => s === "pending").map(([id]) => id);
+    tx.update(ref, {
+      sellerAcceptDeadline: null,
+      ...Object.fromEntries(pending.map((id) => [`sellerLate.${id}`, true])),
+      ...(pending.length ? { "opsAlerts.sellerLate": FieldValue.serverTimestamp() } : { sellersPending: false }),
+    });
+    for (const id of pending) {
+      tx.set(db.collection(SELLERS).doc(id), { stats: { lateAccepts: FieldValue.increment(1) } }, { merge: true });
+    }
+    return pending;
+  });
+  await Promise.all(late.map((id) => notifySeller(id, orderId, "escalate")));
+  return late;
+}
+
+/** Queued at placement for the order's accept deadline (onOrderForSellers). */
+export const checkSellerAccept = onTaskDispatched<{ orderId: string }>(
+  { retryConfig: { maxAttempts: 5, minBackoffSeconds: 15 }, rateLimits: { maxConcurrentDispatches: 10 } },
+  async (req) => {
+    const orderId = req.data?.orderId;
+    if (typeof orderId === "string" && /^[\w-]{1,64}$/.test(orderId)) await escalateLate(orderId);
+  },
+);
+
+/**
+ * Safety net, not the timer (checkSellerAccept is): deadlines whose task
+ * never ran, e.g. Cloud Tasks was briefly unavailable at placement.
  */
 export const escalateLateSellers = onSchedule(
-  { schedule: "every 2 minutes", timeZone: "Asia/Kolkata" },
+  { schedule: "every 15 minutes", timeZone: "Asia/Kolkata" },
   async () => {
     const due = await db
       .collection(ORDERS)
       .where("sellersPending", "==", true)
-      .where("sellerAcceptDeadline", "<=", Timestamp.now())
+      .where("sellerAcceptDeadline", "<=", Timestamp.fromMillis(Date.now() - 60_000))
       .limit(100)
       .get();
-    for (const o of due.docs) {
-      const late = await db.runTransaction(async (tx) => {
-        const order = await tx.get(o.ref);
-        if (order.get("sellersPending") !== true || order.get("status") === "cancelled") return [];
-        const status = (order.get("sellerStatus") ?? {}) as Record<string, string>;
-        const pending = Object.entries(status).filter(([, s]) => s === "pending").map(([id]) => id);
-        tx.update(o.ref, {
-          sellerAcceptDeadline: null,
-          ...Object.fromEntries(pending.map((id) => [`sellerLate.${id}`, true])),
-          ...(pending.length ? { "opsAlerts.sellerLate": FieldValue.serverTimestamp() } : { sellersPending: false }),
-        });
-        for (const id of pending) {
-          tx.set(db.collection(SELLERS).doc(id), { stats: { lateAccepts: FieldValue.increment(1) } }, { merge: true });
-        }
-        return pending;
-      });
-      await Promise.all(late.map((id) => notifySeller(id, o.id, "escalate")));
-    }
+    for (const o of due.docs) await escalateLate(o.id);
   },
 );
 

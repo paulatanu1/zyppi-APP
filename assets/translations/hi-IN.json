@@ -1,10 +1,16 @@
 {
   "rateSellersTitle": "विक्रेताओं को रेट करें",
   "rateSellerThanks": "धन्यवाद! आपकी रेटिंग दूसरों की मदद करती है।",
-  "rateNStars": {"one": "{} स्टार", "other": "{} स्टार"},
+  "rateNStars": {
+    "one": "{} स्टार",
+    "other": "{} स्टार"
+  },
   "errorTooManySellers": "आपकी टोकरी में {} से ज़्यादा विक्रेताओं का सामान है। कुछ हटाएँ, या उनके लिए एक ही विक्रेता चुनें।",
   "soldBy": "विक्रेता: {}",
-  "moreSellers": {"one": "+{} और विक्रेता", "other": "+{} और विक्रेता"},
+  "moreSellers": {
+    "one": "+{} और विक्रेता",
+    "other": "+{} और विक्रेता"
+  },
   "chooseSeller": "विक्रेता चुनें",
   "sellersRankedBy": "कीमत, रेटिंग, भरोसे और स्टॉक के अनुसार",
   "bestMatch": "सबसे अच्छा",
@@ -401,5 +407,17 @@
   "starsLabel": {
     "one": "{} स्टार",
     "other": "{} स्टार"
-  }
+  },
+  "notifications": "सूचनाएं",
+  "markAllRead": "सब पढ़ा हुआ करें",
+  "noNotifications": "अभी कोई सूचना नहीं",
+  "noNotificationsHint": "ऑर्डर अपडेट और ऑफ़र यहां दिखेंगे।",
+  "justNow": "अभी",
+  "minutesAgo": "{} मिनट पहले",
+  "hoursAgo": "{} घंटे पहले",
+  "yesterday": "कल",
+  "unread": "नहीं पढ़ा",
+  "newCount": "{} नई",
+  "collectingFromStores": "{} दुकानों से आपका ऑर्डर लिया जा रहा है",
+  "pickedUpFromStores": "{total} में से {picked} दुकानों से ले लिया"
 }

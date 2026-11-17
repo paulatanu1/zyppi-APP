@@ -44,6 +44,11 @@ Future<void> bootstrap() async {
   // test harness's own handler when running under flutter_test (replacing
   // it outright breaks expect()'s own error capturing), and in production
   // there may be other framework-installed handlers worth preserving too.
+  // Debug runs don't fill the production crash dashboard.
+  unawaited(
+    FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(!kDebugMode),
+  );
+
   final previousOnError = FlutterError.onError;
   FlutterError.onError = (details) {
     FirebaseCrashlytics.instance.recordFlutterFatalError(details);
@@ -61,11 +66,14 @@ Future<void> bootstrap() async {
     ErrorWidget.builder = (details) => const AppErrorWidget();
   }
 
+  // Opened together: each is a disk read, and the first frame waits on all.
   await Hive.initFlutter();
-  final cartBox = await Hive.openBox('cart');
-  final orderBox = await Hive.openBox('orders');
-  final favouritesBox = await Hive.openBox('favourites');
-  final sharedPreferences = await SharedPreferences.getInstance();
+  final (cartBox, orderBox, favouritesBox, sharedPreferences) = await (
+    Hive.openBox('cart'),
+    Hive.openBox('orders'),
+    Hive.openBox('favourites'),
+    SharedPreferences.getInstance(),
+  ).wait;
 
   final container = ProviderContainer(
     overrides: [

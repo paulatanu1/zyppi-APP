@@ -1,3 +1,4 @@
+import 'package:zippy/features/notifications/application/notifications_providers.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:zippy/core/push/data/push_token_repository_impl.dart';
@@ -23,6 +24,7 @@ class AccountScreen extends ConsumerWidget {
     final profileAsync = ref.watch(profileProvider);
     final profile = profileAsync.value;
     final isGuest = profile?.isGuest ?? false;
+    final unreadNotifications = ref.watch(unreadNotificationsProvider);
     final name = profile?.fullName?.trim();
     final displayName = isGuest
         ? 'guestUser'.tr()
@@ -217,6 +219,17 @@ class AccountScreen extends ConsumerWidget {
                           const SizedBox(height: ZSpace.x3),
                           _Group(
                             items: [
+                              _GroupItem(
+                                icon: Icons.notifications_active_outlined,
+                                label: 'notifications'.tr(),
+                                trailingText: unreadNotifications > 0
+                                    ? 'newCount'.tr(
+                                        args: ['$unreadNotifications'],
+                                      )
+                                    : null,
+                                onTap: () =>
+                                    context.pushNamed('NotificationsScreen'),
+                              ),
                               _GroupItem(
                                 icon: Icons.location_on_outlined,
                                 label: 'addressBook'.tr(),

@@ -1,4 +1,5 @@
 import { type DocumentSnapshot, FieldValue, Timestamp } from "firebase-admin/firestore";
+import { withToken } from "../notifications/tokens";
 import { requireRider } from "./rider_auth";
 import { slotPresence } from "./gigs";
 import { HttpsError, onCall } from "firebase-functions/https";
@@ -137,8 +138,10 @@ export const riderRegisterDevice = onCall(async (request) => {
   const appVersion = typeof request.data?.appVersion === "string" ? request.data.appVersion.slice(0, 20) : null;
   if (!token) throw new HttpsError("invalid-argument", "Invalid token");
   const ref = db.collection(RIDERS).doc(uid);
-  if (!(await ref.get()).exists) throw new HttpsError("permission-denied", "NOT_A_RIDER");
-  await ref.update({ fcmToken: token, appVersion });
+  const rider = await ref.get();
+  if (!rider.exists) throw new HttpsError("permission-denied", "NOT_A_RIDER");
+  // Every phone the rider is signed in on rings (newest last, at most 5).
+  await ref.update({ fcmToken: token, pushTokens: withToken(rider.get("pushTokens"), token), appVersion });
   return { ok: true };
 });
 

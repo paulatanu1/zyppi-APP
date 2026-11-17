@@ -1,10 +1,16 @@
 {
   "rateSellersTitle": "ਵਿਕਰੇਤਾਵਾਂ ਨੂੰ ਰੇਟ ਕਰੋ",
   "rateSellerThanks": "ਧੰਨਵਾਦ! ਤੁਹਾਡੀ ਰੇਟਿੰਗ ਦੂਜਿਆਂ ਦੀ ਮਦਦ ਕਰਦੀ ਹੈ।",
-  "rateNStars": {"one": "{} ਸਟਾਰ", "other": "{} ਸਟਾਰ"},
+  "rateNStars": {
+    "one": "{} ਸਟਾਰ",
+    "other": "{} ਸਟਾਰ"
+  },
   "errorTooManySellers": "ਤੁਹਾਡੀ ਟੋਕਰੀ ਵਿੱਚ {} ਤੋਂ ਵੱਧ ਵਿਕਰੇਤਾਵਾਂ ਦਾ ਸਮਾਨ ਹੈ। ਕੁਝ ਹਟਾਓ, ਜਾਂ ਉਹਨਾਂ ਲਈ ਇੱਕੋ ਵਿਕਰੇਤਾ ਚੁਣੋ।",
   "soldBy": "ਵਿਕਰੇਤਾ: {}",
-  "moreSellers": {"one": "+{} ਹੋਰ ਵਿਕਰੇਤਾ", "other": "+{} ਹੋਰ ਵਿਕਰੇਤਾ"},
+  "moreSellers": {
+    "one": "+{} ਹੋਰ ਵਿਕਰੇਤਾ",
+    "other": "+{} ਹੋਰ ਵਿਕਰੇਤਾ"
+  },
   "chooseSeller": "ਵਿਕਰੇਤਾ ਚੁਣੋ",
   "sellersRankedBy": "ਕੀਮਤ, ਰੇਟਿੰਗ, ਭਰੋਸੇ ਅਤੇ ਸਟਾਕ ਅਨੁਸਾਰ",
   "bestMatch": "ਸਭ ਤੋਂ ਵਧੀਆ",
@@ -401,5 +407,17 @@
   "starsLabel": {
     "one": "{} ਤਾਰਾ",
     "other": "{} ਤਾਰੇ"
-  }
+  },
+  "notifications": "ਸੂਚਨਾਵਾਂ",
+  "markAllRead": "ਸਭ ਪੜ੍ਹਿਆ ਕਰੋ",
+  "noNotifications": "ਹਾਲੇ ਕੋਈ ਸੂਚਨਾ ਨਹੀਂ",
+  "noNotificationsHint": "ਆਰਡਰ ਅੱਪਡੇਟ ਅਤੇ ਆਫ਼ਰ ਇੱਥੇ ਦਿਖਣਗੇ।",
+  "justNow": "ਹੁਣੇ",
+  "minutesAgo": "{} ਮਿੰਟ ਪਹਿਲਾਂ",
+  "hoursAgo": "{} ਘੰਟੇ ਪਹਿਲਾਂ",
+  "yesterday": "ਕੱਲ੍ਹ",
+  "unread": "ਨਹੀਂ ਪੜ੍ਹਿਆ",
+  "newCount": "{} ਨਵੀਆਂ",
+  "collectingFromStores": "{} ਦੁਕਾਨਾਂ ਤੋਂ ਤੁਹਾਡਾ ਆਰਡਰ ਲਿਆ ਜਾ ਰਿਹਾ ਹੈ",
+  "pickedUpFromStores": "{total} ਵਿੱਚੋਂ {picked} ਦੁਕਾਨਾਂ ਤੋਂ ਲੈ ਲਿਆ"
 }

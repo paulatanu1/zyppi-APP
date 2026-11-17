@@ -2,7 +2,8 @@ import 'package:zippy/core/domain/order.dart';
 import 'package:zippy/core/domain/order_status.dart';
 
 abstract class OrderRepository {
-  Future<List<Order>> getOrders();
+  /// The user's orders, newest first; at most [limit] when given.
+  Future<List<Order>> getOrders({int? limit});
 
   /// One order (the order-placed / details / tracking screens), or null.
   Future<Order?> getOrderById(String id);
@@ -22,6 +23,13 @@ abstract class OrderRepository {
 
   Future<void> updateStatus(String orderId, OrderStatus status);
 
-  /// Fires on every persisted change, so UIs can re-read [getOrders].
-  Stream<void> watch();
+  /// The newest [limit] orders, re-emitted on every change. One live
+  /// query: a change costs one read, not a re-read of the whole list.
+  Stream<List<Order>> watchOrders({int limit});
+
+  /// One order, re-emitted on every change (null if it doesn't exist).
+  Stream<Order?> watchOrder(String id);
 }
+
+/// How many orders "Your orders" shows.
+const recentOrdersLimit = 50;

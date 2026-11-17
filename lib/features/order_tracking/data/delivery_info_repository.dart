@@ -37,11 +37,31 @@ class RiderLive {
       at != null && now.difference(at!) > const Duration(minutes: 3);
 }
 
+/// How many of a multi-store order's pickups the rider has made
+/// (orders/{id}.pickups, one entry per store; dispatch/pickups.ts).
+class PickupProgress {
+  const PickupProgress({required this.total, required this.picked});
+  final int total;
+  final int picked;
+
+  /// Null for single-store orders (nothing to show).
+  static PickupProgress? tryFrom(Object? pickups) {
+    if (pickups is! Map || pickups.length < 2) return null;
+    final picked = pickups.values
+        .where((s) => s is Map && s['pickedAt'] != null)
+        .length;
+    return PickupProgress(total: pickups.length, picked: picked);
+  }
+}
+
 /// The delivery code, the rider's live distance, and rating the rider
 /// (functions/src/dispatch: handover code, riderPing, rateRider).
 abstract class DeliveryInfoRepository {
   Stream<String?> watchCode(String orderId);
   Stream<RiderLive?> watchRider(String orderId);
+
+  /// Null unless the order is collected from more than one store.
+  Stream<PickupProgress?> watchPickups(String orderId);
 
   /// Whether the customer already rated this order's rider.
   Stream<bool> watchRated(String orderId);
@@ -79,6 +99,12 @@ class FirebaseDeliveryInfoRepository implements DeliveryInfoRepository {
           .map((s) => RiderLive.tryFrom(s.data()));
 
   @override
+  Stream<PickupProgress?> watchPickups(String orderId) =>
+      _order(orderId)
+          .snapshots()
+          .map((s) => PickupProgress.tryFrom(s.data()?['pickups']));
+
+  @override
   Stream<bool> watchRated(String orderId) =>
       _order(orderId).snapshots().map((s) => s.data()?['riderRating'] != null);
 
@@ -113,6 +139,8 @@ class MockDeliveryInfoRepository implements DeliveryInfoRepository {
   Stream<String?> watchCode(String orderId) => Stream.value('4821');
   @override
   Stream<RiderLive?> watchRider(String orderId) => Stream.value(null);
+  @override
+  Stream<PickupProgress?> watchPickups(String orderId) => Stream.value(null);
   @override
   Stream<bool> watchRated(String orderId) =>
       Stream.value(_rated.contains(orderId));
@@ -154,4 +182,9 @@ final ratedSellersProvider = StreamProvider.autoDispose
     .family<Set<String>, String>(
       (ref, id) =>
           ref.watch(deliveryInfoRepositoryProvider).watchRatedSellers(id),
+    );
+
+final pickupProgressProvider = StreamProvider.autoDispose
+    .family<PickupProgress?, String>(
+      (ref, id) => ref.watch(deliveryInfoRepositoryProvider).watchPickups(id),
     );

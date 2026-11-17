@@ -208,6 +208,17 @@ service cloud.firestore {
           && request.resource.data.quantity <= 99;
       }
 
+      // In-app notification list, written only by functions
+      // (notifications/inbox.ts). The customer may mark entries read or
+      // remove them; `expireAt` lets the TTL policy delete old ones.
+      match /notifications/{id} {
+        allow read, delete: if isOwner(uid);
+        allow update: if isOwner(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
+          && request.resource.data.read == true;
+        allow create: if false;
+      }
+
       // Doc id = product id.
       match /favourites/{productId} {
         allow read, delete: if isOwner(uid);
@@ -442,6 +453,12 @@ service cloud.firestore {
       match /private/{doc} {
         allow read: if sellerMember(sellerId) || hasRole(['finance']);
         allow write: if false;
+      }
+      // The shop's logins mark inbox entries read (seller app → Inbox).
+      match /inbox/{id} {
+        allow update: if sellerMember(sellerId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
+          && request.resource.data.read == true;
       }
       // Ledger, payouts and subscription periods (Phase 7 M3), inbox.
       match /{sub}/{id} {

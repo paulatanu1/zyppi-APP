@@ -1,8 +1,10 @@
 import { FieldValue } from "firebase-admin/firestore";
+import { addToInbox } from "../notifications/inbox";
+import { pushToDevices, tokensOf } from "../notifications/tokens";
 import { HttpsError, onCall } from "firebase-functions/https";
 import { writeAudit } from "../shared/audit";
 import { requireString } from "../shared/callable";
-import { auth, db, messaging } from "../shared/firebase";
+import { auth, db } from "../shared/firebase";
 import { type Actor, requireRole } from "../shared/roles";
 
 /**
@@ -71,20 +73,12 @@ export async function pushCustomer(actor: Actor, raw: Record<string, unknown>) {
   const title = requireString(raw.title, "title").trim().slice(0, 65);
   const body = requireString(raw.body, "body").trim().slice(0, 240);
   const user = await db.collection("users").doc(uid).get();
-  const token = user.get("fcmToken") as string | null | undefined;
-  if (!token) {
+  if (!tokensOf(user.data()).length) {
     throw new HttpsError("failed-precondition", "This customer has no device registered for notifications");
   }
-  try {
-    await messaging.send({ token, notification: { title, body }, android: { priority: "high" } });
-  } catch (e) {
-    const code = (e as { code?: string }).code ?? "";
-    if (code.includes("registration-token")) {
-      await user.ref.update({ fcmToken: null });
-      throw new HttpsError("failed-precondition", "Their device is no longer registered");
-    }
-    throw e;
-  }
+  const sent = await pushToDevices(user.ref, user.data(), { notification: { title, body }, android: { priority: "high" } });
+  if (!sent) throw new HttpsError("failed-precondition", "Their device is no longer registered");
+  await addToInbox(uid, { kind: "account", title, body, data: {} });
   await writeAudit(actor, { action: "customer.push", target: `users/${uid}`, after: { title, body } });
   return { ok: true };
 }
