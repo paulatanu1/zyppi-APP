@@ -1,6 +1,7 @@
 import { onDocumentCreated } from "firebase-functions/firestore";
-import { logger } from "firebase-functions";
-import { db, messaging } from "./shared/firebase";
+import { db } from "./shared/firebase";
+import { addToInbox } from "./notifications/inbox";
+import { pushToDevices } from "./notifications/tokens";
 
 const STATUS_COPY: Record<string, { title: string; body: string }> = {
   placed: { title: "Order placed", body: "We've got your order!" },
@@ -11,13 +12,9 @@ const STATUS_COPY: Record<string, { title: string; body: string }> = {
 };
 
 /**
- * Sends an FCM push for every new order event. Events are only written by
- * placeOrder / placePaidOrder / adminUpdateOrderStatus, so nobody can
- * trigger a push for someone else's order. Deep links via `orderId`.
- */
-/**
- * One push to an order's customer (rider app: "rider outside"). Respects
- * the customer's order-update preference; forgets dead tokens.
+ * One push to an order's customer (rider app: "rider outside"), on every
+ * device they're signed in on, plus an entry in their notification list.
+ * Respects the customer's order-update preference; forgets dead tokens.
  */
 export async function pushOrderCustomer(
   orderId: string,
@@ -28,61 +25,43 @@ export async function pushOrderCustomer(
   const userId = order.get("userId") as string | null | undefined;
   if (!userId) return;
   const profile = await db.collection("users").doc(userId).get();
-  const token = profile.get("fcmToken") as string | null | undefined;
-  if (!token || profile.get("notifyOrderUpdates") === false) return;
-  try {
-    await messaging.send({
-      token,
-      notification: copy,
-      data: { orderId, ...data },
-      android: { priority: "high" },
-    });
-  } catch (error) {
-    if ((error as { code?: string }).code === "messaging/registration-token-not-registered") {
-      await profile.ref.update({ fcmToken: null });
-      return;
-    }
-    logger.error("Push failed", { orderId, error });
-  }
+  await addToInbox(userId, { kind: "order", ...copy, data: { orderId, ...data } });
+  if (profile.get("notifyOrderUpdates") === false) return;
+  await pushToDevices(profile.ref, profile.data(), {
+    notification: copy,
+    data: { orderId, ...data },
+    android: { priority: "high" },
+  });
 }
 
-export const onOrderEventCreated = onDocumentCreated(
-  "orders/{orderId}/events/{eventId}",
-  async (event) => {
-    const status = event.data?.get("status") as string | undefined;
-    const orderId = event.params.orderId;
-    if (!status) return;
+/**
+ * Sends an FCM push for every new order event. Events are only written by
+ * placeOrder / placePaidOrder / adminUpdateOrderStatus, so nobody can
+ * trigger a push for someone else's order. Deep links via `orderId`. The
+ * entry id is fixed per order and status, so a retried trigger doesn't
+ * list it twice.
+ */
+export const onOrderEventCreated = onDocumentCreated("orders/{orderId}/events/{eventId}", async (event) => {
+  const status = event.data?.get("status") as string | undefined;
+  const orderId = event.params.orderId;
+  if (!status) return;
 
-    const order = await db.collection("orders").doc(orderId).get();
-    const userId = order.get("userId") as string | null | undefined;
-    if (!userId) return;
+  const order = await db.collection("orders").doc(orderId).get();
+  const userId = order.get("userId") as string | null | undefined;
+  if (!userId) return;
 
-    const profile = await db.collection("users").doc(userId).get();
-    const token = profile.get("fcmToken") as string | null | undefined;
-    if (!token) return;
-    // Account → Notification preferences.
-    if (profile.get("notifyOrderUpdates") === false) return;
+  const copy = STATUS_COPY[status] ?? {
+    title: "Order update",
+    body: `Your order is now ${status}.`,
+  };
+  await addToInbox(userId, { kind: "order", ...copy, data: { orderId, status } }, `o_${orderId}_${status}`);
 
-    const copy = STATUS_COPY[status] ?? {
-      title: "Order update",
-      body: `Your order is now ${status}.`,
-    };
-
-    try {
-      await messaging.send({
-        token,
-        notification: copy,
-        data: { orderId, status },
-        android: { priority: "high" },
-      });
-    } catch (error) {
-      const code = (error as { code?: string }).code;
-      // Uninstalled app / rotated token: forget it.
-      if (code === "messaging/registration-token-not-registered") {
-        await profile.ref.update({ fcmToken: null });
-        return;
-      }
-      logger.error("Push failed", { orderId, status, error });
-    }
-  },
-);
+  const profile = await db.collection("users").doc(userId).get();
+  // Account → Notification preferences.
+  if (profile.get("notifyOrderUpdates") === false) return;
+  await pushToDevices(profile.ref, profile.data(), {
+    notification: copy,
+    data: { orderId, status },
+    android: { priority: "high" },
+  });
+});

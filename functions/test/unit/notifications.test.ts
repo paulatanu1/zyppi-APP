@@ -15,7 +15,7 @@ const NOW = Date.UTC(2026, 10, 14);
 const DAY = 86_400_000;
 const person = (over: Partial<Recipient> = {}): Recipient => ({
   uid: "u1",
-  token: "t1",
+  tokens: ["t1"],
   lang: "en",
   serviceAreaId: "a1",
   orderCount: 2,

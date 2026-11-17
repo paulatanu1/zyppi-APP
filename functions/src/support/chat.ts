@@ -1,9 +1,9 @@
 import { FieldValue } from "firebase-admin/firestore";
-import { logger } from "firebase-functions";
+import { pushToDevices } from "../notifications/tokens";
 import { HttpsError, onCall } from "firebase-functions/https";
 import { requireString, requireUid } from "../shared/callable";
 import { requireRole } from "../shared/roles";
-import { db, messaging } from "../shared/firebase";
+import { db } from "../shared/firebase";
 import { CHATS, postMessages } from "./bot";
 import { COPY, shortOrderId } from "./copy";
 import { langFromLocale, type Lang } from "./lang";
@@ -108,22 +108,12 @@ async function pushToCustomer(
   text: string,
 ) {
   const profile = await db.collection("users").doc(userId).get();
-  const token = profile.get("fcmToken") as string | null | undefined;
-  if (!token || profile.get("notifyOrderUpdates") === false) return;
-  try {
-    await messaging.send({
-      token,
-      notification: { title: COPY[lang].agentReplyPush, body: text.slice(0, 140) },
-      data: { chatId: chat.id, chatOrderId: chat.orderId ?? "" },
-      android: { priority: "high" },
-    });
-  } catch (error) {
-    if ((error as { code?: string }).code === "messaging/registration-token-not-registered") {
-      await profile.ref.update({ fcmToken: null });
-      return;
-    }
-    logger.error("Support push failed", { chatId: chat.id, error });
-  }
+  if (profile.get("notifyOrderUpdates") === false) return;
+  await pushToDevices(profile.ref, profile.data(), {
+    notification: { title: COPY[lang].agentReplyPush, body: text.slice(0, 140) },
+    data: { chatId: chat.id, chatOrderId: chat.orderId ?? "" },
+    android: { priority: "high" },
+  });
 }
 
 /**

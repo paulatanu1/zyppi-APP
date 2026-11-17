@@ -1,4 +1,5 @@
 import { FieldValue } from "firebase-admin/firestore";
+import { expireAt } from "../notifications/inbox";
 import { db, messaging } from "../shared/firebase";
 import { SELLERS } from "./model";
 
@@ -37,7 +38,14 @@ export async function notifySeller(sellerId: string, orderId: string, kind: Sell
     const seller = db.collection(SELLERS).doc(sellerId);
     const [devices] = await Promise.all([
       seller.collection("devices").get(),
-      seller.collection("inbox").add({ kind, orderId, ...TEXT[kind], read: false, at: FieldValue.serverTimestamp() }),
+      seller.collection("inbox").add({
+        kind,
+        orderId,
+        ...TEXT[kind],
+        read: false,
+        at: FieldValue.serverTimestamp(),
+        expireAt: expireAt(Date.now(), 90),
+      }),
     ]);
     const targets = devices.docs.flatMap((d) => {
       const token = d.get("token");

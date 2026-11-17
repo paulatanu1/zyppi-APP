@@ -1,4 +1,6 @@
 import { FieldValue } from "firebase-admin/firestore";
+import { expireAt } from "../notifications/inbox";
+import { tokensOf } from "../notifications/tokens";
 import { HttpsError, onCall } from "firebase-functions/https";
 import { writeAudit } from "../shared/audit";
 import { db, messaging } from "../shared/firebase";
@@ -27,11 +29,17 @@ export const adminAnnounceToRiders = onCall({ timeoutSeconds: 120 }, async (requ
   for (let i = 0; i < targets.length; i += 400) {
     const batch = db.batch();
     for (const r of targets.slice(i, i + 400)) {
-      batch.create(r.ref.collection("inbox").doc(), { title, body, at: FieldValue.serverTimestamp(), by: actor.uid });
+      batch.create(r.ref.collection("inbox").doc(), {
+        title,
+        body,
+        at: FieldValue.serverTimestamp(),
+        by: actor.uid,
+        expireAt: expireAt(Date.now(), 90),
+      });
     }
     await batch.commit();
   }
-  const tokens = targets.map((r) => r.get("fcmToken")).filter((t): t is string => typeof t === "string" && !!t);
+  const tokens = [...new Set(targets.flatMap((r) => tokensOf(r.data())))];
   let pushed = 0;
   for (let i = 0; i < tokens.length; i += BATCH) {
     const res = await messaging.sendEachForMulticast({

@@ -1,6 +1,8 @@
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { onDocumentWritten } from "firebase-functions/firestore";
 import { onSchedule } from "firebase-functions/scheduler";
+import { onTaskDispatched } from "firebase-functions/tasks";
+import { MAX_TASK_AHEAD_MS, enqueueSafely, scheduleFor, taskId } from "../shared/tasks";
 import { PRODUCTS, type Variant } from "../catalog/model";
 import { db } from "../shared/firebase";
 import {
@@ -143,6 +145,19 @@ const productIdOf = (e: { data?: { before?: { get(f: string): unknown }; after?:
 export const onListingWritten = onDocumentWritten(`${LISTINGS}/{id}`, async (event) => {
   const id = productIdOf(event);
   if (id) await rebuildProductOffers(id);
+  // A special discount starts or ends later: a task at that moment.
+  const next = event.data?.after?.get("nextPriceChangeAt") as Timestamp | null | undefined;
+  const prev = event.data?.before?.get("nextPriceChangeAt") as Timestamp | null | undefined;
+  if (next && next.toMillis() !== prev?.toMillis()) {
+    const at = scheduleFor(next.toMillis());
+    if (at) {
+      await enqueueSafely(
+        PRICE_TASK,
+        { listingId: event.params.id },
+        { id: taskId("price", event.params.id, next.toMillis()), scheduleTime: at },
+      );
+    }
+  }
 });
 
 /** Only when a row runs out or comes back (offers carry in stock / out of stock). */
@@ -184,24 +199,63 @@ export const onStoreWritten = onDocumentWritten({ document: "stores/{storeId}", 
   else await rebuildAllOffers();
 });
 
+const PRICE_TASK = "applyListingPriceChange";
+
 /**
- * Special discounts start and end on their own: every 15 minutes, touch
- * the listings whose price changes now (the listing trigger rebuilds the
- * offer) and set when they next change.
+ * A listing's special discount starts or ends now: touch it (the listing
+ * trigger rebuilds the offer and queues the next change). Does nothing
+ * if it isn't due (an older task, a discount edited since).
+ */
+export async function applyPriceChange(listingId: string, now = new Date()): Promise<boolean> {
+  const ref = db.collection(LISTINGS).doc(listingId);
+  return db.runTransaction(async (tx) => {
+    const d = await tx.get(ref);
+    const at = d.get("nextPriceChangeAt") as Timestamp | null | undefined;
+    if (!d.exists || !at || at.toMillis() > now.getTime() + 5_000) return false;
+    const next = nextPriceChangeAt(readListing(d.id, d.data()!).specialDiscount, now);
+    tx.update(ref, {
+      nextPriceChangeAt: next ? Timestamp.fromDate(next) : null,
+      priceRefreshedAt: FieldValue.serverTimestamp(),
+    });
+    return true;
+  });
+}
+
+/** Queued by onListingWritten for the moment a discount starts or ends. */
+export const applyListingPriceChange = onTaskDispatched<{ listingId: string }>(
+  { retryConfig: { maxAttempts: 5, minBackoffSeconds: 30 }, rateLimits: { maxConcurrentDispatches: 10 } },
+  async (req) => {
+    const id = req.data?.listingId;
+    if (typeof id === "string" && id && !id.includes("/")) await applyPriceChange(id);
+  },
+);
+
+/**
+ * Hourly safety net, not the timer (applyListingPriceChange is): listings
+ * whose task never ran, and changes more than 30 days ahead that are now
+ * inside the Cloud Tasks window.
  */
 export const refreshTimedOffers = onSchedule(
-  { schedule: "every 15 minutes", timeZone: "Asia/Kolkata" },
+  { schedule: "every 60 minutes", timeZone: "Asia/Kolkata" },
   async () => {
-    const now = new Date();
-    const due = await db.collection(LISTINGS).where("nextPriceChangeAt", "<=", Timestamp.fromDate(now)).limit(500).get();
-    const writer = db.bulkWriter();
-    for (const d of due.docs) {
-      const next = nextPriceChangeAt(readListing(d.id, d.data()).specialDiscount, now);
-      writer.update(d.ref, {
-        nextPriceChangeAt: next ? Timestamp.fromDate(next) : null,
-        priceRefreshedAt: FieldValue.serverTimestamp(),
-      });
+    const due = await db
+      .collection(LISTINGS)
+      .where("nextPriceChangeAt", "<=", Timestamp.fromMillis(Date.now() - 5 * 60_000))
+      .limit(500)
+      .get();
+    for (const d of due.docs) await applyPriceChange(d.id);
+    const soon = await db
+      .collection(LISTINGS)
+      .where("nextPriceChangeAt", ">", Timestamp.now())
+      .where("nextPriceChangeAt", "<=", Timestamp.fromMillis(Date.now() + MAX_TASK_AHEAD_MS))
+      .limit(500)
+      .get();
+    // Re-queueing is harmless: the id is fixed per listing and change time.
+    for (const d of soon.docs) {
+      const at = (d.get("nextPriceChangeAt") as Timestamp).toMillis();
+      if (at > Date.now() + MAX_TASK_AHEAD_MS - 2 * 3_600_000) {
+        await enqueueSafely(PRICE_TASK, { listingId: d.id }, { id: taskId("price", d.id, at), scheduleTime: new Date(at) });
+      }
     }
-    await writer.close();
   },
 );
