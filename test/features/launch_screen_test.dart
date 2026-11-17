@@ -45,6 +45,15 @@ Future<void> _pump(
   );
 }
 
+/// Opacity of the nearest fade around one wordmark letter.
+double _letterOpacity(WidgetTester tester, String letter) => tester
+    .widget<Opacity>(
+      find
+          .ancestor(of: find.text(letter).first, matching: find.byType(Opacity))
+          .first,
+    )
+    .opacity;
+
 void main() {
   testWidgets('signed out: shows the mark, then goes to onboarding', (
     tester,
@@ -53,8 +62,12 @@ void main() {
     expect(find.byType(Image), findsOneWidget);
     expect(find.text('onboarding'), findsNothing);
 
+    // Frame 0 is the native splash: wordmark not yet visible.
+    expect(_letterOpacity(tester, 'Z'), 0);
+
     await tester.pump(LaunchScreen.duration ~/ 2);
-    expect(find.text('Zyppi'), findsOneWidget);
+    expect(_letterOpacity(tester, 'Z'), greaterThan(0));
+    expect(find.bySemanticsLabel('Zyppi'), findsWidgets);
     expect(find.text('onboarding'), findsNothing);
 
     await tester.pumpAndSettle();
@@ -72,11 +85,10 @@ void main() {
     tester,
   ) async {
     await _pump(tester, disableAnimations: true);
-    // Already in its final pose: wordmark fully visible on the first frame.
-    final opacity = tester.widget<Opacity>(
-      find.ancestor(of: find.text('Zyppi'), matching: find.byType(Opacity)),
-    );
-    expect(opacity.opacity, 1);
+    // Already in its resting pose: every letter fully visible at once.
+    for (final letter in ['Z', 'y', 'p', 'i']) {
+      expect(_letterOpacity(tester, letter), 1);
+    }
 
     await tester.pump(LaunchScreen.reducedMotionHold);
     await tester.pump();
@@ -95,17 +107,15 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('mark is centred on the whole window (matches native splash)', (
+  testWidgets('the mark is centred on the window (native splash hand-off)', (
     tester,
   ) async {
-    await _pump(tester, disableAnimations: true);
-    final screen = tester.getSize(find.byType(Scaffold));
-    final mark = tester.getCenter(find.byKey(const ValueKey('launch-mark')));
-    expect(mark.dx, closeTo(screen.width / 2, 0.5));
-    // Final pose lifts by ZSpace.x8; still horizontally centred and well
-    // inside the screen (not clipped under the status bar).
-    expect(mark.dy, greaterThan(screen.height / 4));
-    await tester.pump(LaunchScreen.reducedMotionHold);
-    await tester.pump();
+    await _pump(tester);
+    final screen = tester.getRect(find.byType(Scaffold));
+    final mark = tester.getRect(find.byType(Image));
+    expect(mark.center.dx, moreOrLessEquals(screen.center.dx, epsilon: .5));
+    expect(mark.center.dy, moreOrLessEquals(screen.center.dy, epsilon: .5));
+    expect(mark.width, moreOrLessEquals(LaunchScreen.markWidth, epsilon: .5));
+    await tester.pumpAndSettle();
   });
 }

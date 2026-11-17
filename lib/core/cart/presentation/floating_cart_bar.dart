@@ -15,11 +15,29 @@ class FloatingCartBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cart = ref.watch(cartProvider);
+    // Only what the bar shows (records compare by value), so a change
+    // elsewhere in the cart state — tip, coupon text, sync flags — doesn't
+    // rebuild it and its thumbnails.
+    final bar = ref.watch(
+      cartProvider.select(
+        (cart) => cart.loading || cart.lines.isEmpty
+            ? null
+            : (
+                count: cart.lines.fold<int>(0, (sum, l) => sum + l.quantity),
+                total: cart.bill.totalPaise,
+                saved: cart.bill.savingsPaise,
+                itemTotal: cart.bill.itemTotalPaise,
+                delivery: cart.delivery,
+                // Joined so equal thumbnails compare equal.
+                images: cart.lines
+                    .take(3)
+                    .map((l) => l.product.image ?? '')
+                    .join('\n'),
+              ),
+      ),
+    );
 
-    if (cart.loading || cart.lines.isEmpty) return const SizedBox.shrink();
-
-    final itemCount = cart.lines.fold<int>(0, (sum, l) => sum + l.quantity);
+    if (bar == null) return const SizedBox.shrink();
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -29,23 +47,23 @@ class FloatingCartBar extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: ZSpace.x2),
           child: ZDeliveryProgress(
-            itemTotalPaise: cart.bill.itemTotalPaise,
-            delivery: cart.delivery,
+            itemTotalPaise: bar.itemTotal,
+            delivery: bar.delivery,
             compact: true,
           ),
         ),
-        if (cart.delivery.remainingForMinimum(cart.bill.itemTotalPaise) > 0 ||
-            cart.delivery.remainingForFree(cart.bill.itemTotalPaise) > 0)
+        if (bar.delivery.remainingForMinimum(bar.itemTotal) > 0 ||
+            bar.delivery.remainingForFree(bar.itemTotal) > 0)
           const SizedBox(height: ZSpace.x2),
         CartFlyTarget(
           child: ZCartBar(
             thumbnails: [
-              for (final line in cart.lines.take(3))
-                CatalogImage(image: line.product.image, fit: BoxFit.contain),
+              for (final image in bar.images.split('\n'))
+                CatalogImage(image: image, fit: BoxFit.contain),
             ],
-            itemCount: itemCount,
-            total: cart.bill.totalPaise,
-            saved: cart.bill.savingsPaise,
+            itemCount: bar.count,
+            total: bar.total,
+            saved: bar.saved,
             onTap: () => context.push('/myCartScreen'),
           ),
         ),

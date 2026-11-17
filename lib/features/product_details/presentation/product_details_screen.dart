@@ -22,7 +22,14 @@ import 'package:zippy/features/product_details/widgets/sellers_sheet.dart';
 class ProductDetailsScreen extends ConsumerWidget {
   final String productId;
 
-  const ProductDetailsScreen({super.key, required this.productId});
+  /// The tapped card's hero tag, so its photo flies into [ProductSlider].
+  final String? heroTag;
+
+  const ProductDetailsScreen({
+    super.key,
+    required this.productId,
+    this.heroTag,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -107,7 +114,9 @@ class ProductDetailsScreen extends ConsumerWidget {
       backgroundColor: z.surface,
       body: CustomScrollView(
         slivers: [
-          SliverToBoxAdapter(child: ProductSlider(productId: productId)),
+          SliverToBoxAdapter(
+            child: ProductSlider(productId: productId, heroTag: heroTag),
+          ),
           SliverToBoxAdapter(
             // The white sheet overlaps the photo panel by its corner radius.
             child: Transform.translate(

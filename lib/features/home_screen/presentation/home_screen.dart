@@ -155,14 +155,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                           ),
                         ),
-                      for (final section in data.sections.where(
-                        (s) => s != stickyTabs,
-                      )) ...[
+                      for (final (i, section)
+                          in data.sections
+                              .where((s) => s != stickyTabs)
+                              .indexed) ...[
                         SliverToBoxAdapter(
-                          child: HomeSectionWidget(
-                            section: section,
-                            categoriesById: data.categoriesById,
-                            productsById: data.productsById,
+                          // Sections rise in one after another when Home
+                          // first loads (Home stays mounted, so once).
+                          child: ZEntrance(
+                            index: i,
+                            child: HomeSectionWidget(
+                              section: section,
+                              categoriesById: data.categoriesById,
+                              productsById: data.productsById,
+                            ),
                           ),
                         ),
                         const SliverToBoxAdapter(

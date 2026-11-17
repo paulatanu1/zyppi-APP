@@ -17,6 +17,8 @@ class ExploreScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final exploreState = ref.watch(exploreNotifier);
     final t = Theme.of(context).textTheme;
+    // Tiles fade in once per visit to this screen, not on every scroll.
+    final screenId = identityHashCode(context);
 
     final Widget body;
     if (exploreState.error != null) {
@@ -66,12 +68,16 @@ class ExploreScreen extends ConsumerWidget {
             );
           }
           final category = exploreState.categories[index];
-          return ZCategoryTile(
-            label: category.name,
-            image: CatalogImage(image: category.image, fit: BoxFit.contain),
-            color: ZColors.fromHex(category.colorHex),
-            onTap: () => context.push(
-              '/categoryDetailsScreen?categoryId=${category.id}',
+          return ZEntrance(
+            index: index,
+            once: (screenId, category.id),
+            child: ZCategoryTile(
+              label: category.name,
+              image: CatalogImage(image: category.image, fit: BoxFit.contain),
+              color: ZColors.fromHex(category.colorHex),
+              onTap: () => context.push(
+                '/categoryDetailsScreen?categoryId=${category.id}',
+              ),
             ),
           );
         },
