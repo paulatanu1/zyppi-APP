@@ -1,10 +1,16 @@
 {
   "rateSellersTitle": "বিক্রেতাদের রেটিং দিন",
   "rateSellerThanks": "ধন্যবাদ! আপনার রেটিং অন্যদের সাহায্য করে।",
-  "rateNStars": {"one": "{} তারা", "other": "{} তারা"},
+  "rateNStars": {
+    "one": "{} তারা",
+    "other": "{} তারা"
+  },
   "errorTooManySellers": "আপনার বাস্কেটে {} জনের বেশি বিক্রেতার জিনিস আছে। কিছু সরিয়ে দিন, বা একই বিক্রেতা বেছে নিন।",
   "soldBy": "বিক্রেতা: {}",
-  "moreSellers": {"one": "আরও {} জন বিক্রেতা", "other": "আরও {} জন বিক্রেতা"},
+  "moreSellers": {
+    "one": "আরও {} জন বিক্রেতা",
+    "other": "আরও {} জন বিক্রেতা"
+  },
   "chooseSeller": "একজন বিক্রেতা বেছে নিন",
   "sellersRankedBy": "দাম, রেটিং, নির্ভরযোগ্যতা ও স্টক অনুযায়ী সাজানো",
   "bestMatch": "সেরা পছন্দ",
@@ -401,5 +407,15 @@
   "starsLabel": {
     "one": "{} তারা",
     "other": "{} তারা"
-  }
+  },
+  "notifications": "বিজ্ঞপ্তি",
+  "markAllRead": "সব পড়া হয়েছে",
+  "noNotifications": "এখনও কোনো বিজ্ঞপ্তি নেই",
+  "noNotificationsHint": "অর্ডারের আপডেট আর অফার এখানে দেখা যাবে।",
+  "justNow": "এইমাত্র",
+  "minutesAgo": "{} মিনিট আগে",
+  "hoursAgo": "{} ঘণ্টা আগে",
+  "yesterday": "গতকাল",
+  "unread": "পড়া হয়নি",
+  "newCount": "{}টি নতুন"
 }

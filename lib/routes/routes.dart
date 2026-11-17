@@ -1,3 +1,4 @@
+import 'package:zippy/features/notifications/presentation/notifications_screen.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -218,6 +219,13 @@ class Routes {
           name: 'NotificationSettingsScreen',
           builder: withHomeFallback(
             (context, state) => const NotificationSettingsScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/notificationsScreen',
+          name: 'NotificationsScreen',
+          builder: withHomeFallback(
+            (context, state) => const NotificationsScreen(),
           ),
         ),
         GoRoute(
