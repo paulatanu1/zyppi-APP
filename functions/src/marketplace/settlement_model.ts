@@ -150,3 +150,21 @@ export function remindersDue(periodEndMs: number, nowMs: number, sent: number[])
   const daysLeft = (periodEndMs - nowMs) / 86_400_000;
   return [7, 3, 1].filter((d) => daysLeft <= d && daysLeft > 0 && !sent.includes(d));
 }
+
+/**
+ * A returned or damaged line the seller is responsible for: the share of
+ * that line's credit to take back (payout, TCS and TDS for those units).
+ */
+export function returnDebit(
+  line: { pricePaise?: number; payoutPaise?: number; quantity?: number },
+  quantity: number,
+  hasGstin: boolean,
+  cfg: SettlementConfig,
+): SellerCredit {
+  const units = Math.max(0, Math.min(Math.floor(quantity), Math.floor(line.quantity ?? 0)));
+  return sellerCredit(
+    { itemTotalPaise: (line.pricePaise ?? 0) * units, payoutPaise: (line.payoutPaise ?? 0) * units },
+    hasGstin,
+    cfg,
+  );
+}

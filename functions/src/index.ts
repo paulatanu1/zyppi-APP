@@ -69,6 +69,7 @@ export {
   sendCampaignChunk,
 } from "./notifications/campaigns";
 export { registerPushToken, unregisterPushToken } from "./notifications/devices";
+export { adminSellerTaxReport, sellerStatement } from "./marketplace/statements";
 export { onOrderWritten } from "./stats/stats";
 export { onOrderDispatch, dispatchSweep } from "./dispatch/dispatch";
 export {
@@ -137,6 +138,7 @@ export {
 } from "./marketplace/seller_orders";
 export {
   onOrderSettleSellers,
+  adminReturnSellerItem,
   adminSetSellerPlan,
   sellerRequestPayout,
   adminRecordSellerPayout,

@@ -1,6 +1,14 @@
 {
   "indexes": [
     {
+      "collectionGroup": "earnings",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "ledger", "order": "ASCENDING" },
+        { "fieldPath": "day", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "campaigns",
       "queryScope": "COLLECTION",
       "fields": [

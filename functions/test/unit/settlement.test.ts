@@ -8,6 +8,7 @@ import {
   remindersDue,
   sellerCredit,
   settlementConfigFrom,
+  returnDebit,
   subscriptionStatus,
 } from "../../src/marketplace/settlement_model";
 import { ZYPPI_SELLER, sellerCanSell } from "../../src/marketplace/offers";
@@ -83,5 +84,22 @@ describe("seller ratings", () => {
     expect(nextRating(0, 0, 5)).toEqual({ sum: 5, count: 1, avg: 5 });
     expect(nextRating(14, 3, 4)).toEqual({ sum: 18, count: 4, avg: 4.5 });
     expect(nextRating(10, 3, 1).avg).toBe(2.75);
+  });
+});
+
+describe("returnDebit", () => {
+  it("takes back the payout and taxes of the returned units only", () => {
+    const line = { pricePaise: 5500, payoutPaise: 5000, quantity: 3 };
+    const d = returnDebit(line, 2, true, CFG);
+    expect(d.payoutPaise).toBe(10000);
+    expect(d.grossPaise).toBe(11000);
+    expect(d.netPaise).toBe(d.payoutPaise - d.tcsPaise - d.tdsPaise);
+    expect(d.tcsPaise).toBeGreaterThan(0);
+  });
+
+  it("never takes back more units than were sold, and no TCS without a GSTIN", () => {
+    const d = returnDebit({ pricePaise: 100, payoutPaise: 90, quantity: 1 }, 5, false, CFG);
+    expect(d.payoutPaise).toBe(90);
+    expect(d.tcsPaise).toBe(0);
   });
 });
