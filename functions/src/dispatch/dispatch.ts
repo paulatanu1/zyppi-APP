@@ -19,6 +19,7 @@ import {
   parseRiderConfig,
   pickRider,
 } from "./model";
+import { HOT } from "../shared/scaling";
 
 const ORDERS = "orders";
 const OPEN = ["placed", "packed"];
@@ -210,7 +211,7 @@ export async function dispatchWaiting(serviceAreaId: string): Promise<void> {
  * Starts the search when an order reaches the configured status
  * (placed or packed) without a rider.
  */
-export const onOrderDispatch = onDocumentWritten("orders/{orderId}", async (event) => {
+export const onOrderDispatch = onDocumentWritten({ ...HOT, document: "orders/{orderId}" }, async (event) => {
   const before = event.data?.before?.data();
   const after = event.data?.after?.data();
   if (!after || after.riderId || after.dispatch) return;

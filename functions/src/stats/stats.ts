@@ -2,6 +2,7 @@ import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { onDocumentWritten } from "firebase-functions/firestore";
 import { db } from "../shared/firebase";
 import { EVENTS, type Labels, STATS, type StatsDelta, type Tree, statsDeltas } from "./model";
+import { HOT } from "../shared/scaling";
 
 /** Applied-event markers are only needed while a retry could still come. */
 const EVENT_MARKER_TTL_MS = 7 * 24 * 3600_000;
@@ -31,7 +32,7 @@ function docData(d: StatsDelta): Record<string, unknown> {
  * Writes that change nothing counted cost no Firestore writes. Each event
  * is applied once: a marker doc is created in the same transaction.
  */
-export const onOrderWritten = onDocumentWritten("orders/{orderId}", async (event) => {
+export const onOrderWritten = onDocumentWritten({ ...HOT, document: "orders/{orderId}" }, async (event) => {
   const before = event.data?.before?.data();
   const after = event.data?.after?.data();
   const deltas = statsDeltas(before, after);

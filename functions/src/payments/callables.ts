@@ -18,6 +18,7 @@ import {
   userCredential,
 } from "./payu";
 import { settleIntent } from "./settle";
+import { HOT } from "../shared/scaling";
 
 const PRODUCT_INFO = "Zyppi order";
 
@@ -47,7 +48,7 @@ function payerDetails(user: Record<string, unknown>, authPhone: string | undefin
  * Response: {txnid, key, amount, productInfo, firstName, email, phone,
  *            environment, userCredential, amountPaise}
  */
-export const createPayUOrder = onCall({ secrets: PAYU_SECRETS }, async (request) => {
+export const createPayUOrder = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (request) => {
   const uid = requireUid(request);
   const data = (request.data ?? {}) as Record<string, unknown>;
 
@@ -127,7 +128,7 @@ const SDK_EVENT_INTENT_AGE_MS = 15 * 60 * 1000;
  * Request: {hashName, hashString, hashType?, postSalt?}
  * Response: {[hashName]: hash}
  */
-export const signPayUHash = onCall({ secrets: PAYU_SECRETS }, async (request) => {
+export const signPayUHash = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (request) => {
   const uid = requireUid(request);
   const data = (request.data ?? {}) as Record<string, unknown>;
   const hashRequest = {
@@ -215,7 +216,7 @@ export const signPayUHash = onCall({ secrets: PAYU_SECRETS }, async (request) =>
  * Request: {txnid}
  * Response: {verified, pending, orderId, needsReview}
  */
-export const verifyPayUPayment = onCall({ secrets: PAYU_SECRETS }, async (request) => {
+export const verifyPayUPayment = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (request) => {
   const uid = requireUid(request);
   const txnid = requireString(request.data?.txnid, "txnid");
 

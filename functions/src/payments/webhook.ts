@@ -3,6 +3,7 @@ import { onRequest } from "firebase-functions/https";
 import { db } from "../shared/firebase";
 import { PAYU_SECRETS } from "./payu";
 import { settleIntent } from "./settle";
+import { HOT } from "../shared/scaling";
 
 const TXNID = /^z[A-Za-z0-9]{24}$/;
 
@@ -12,7 +13,7 @@ const TXNID = /^z[A-Za-z0-9]{24}$/;
  * comes from PayU's verify_payment via settleIntent, so a forged call
  * can at most make us re-check a payment.
  */
-export const payuWebhook = onRequest({ secrets: PAYU_SECRETS }, async (req, res) => {
+export const payuWebhook = onRequest({ ...HOT, secrets: PAYU_SECRETS }, async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).send("Method not allowed");
     return;
