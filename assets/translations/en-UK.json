@@ -417,5 +417,7 @@
   "hoursAgo": "{} h ago",
   "yesterday": "Yesterday",
   "unread": "Unread",
-  "newCount": "{} new"
+  "newCount": "{} new",
+  "collectingFromStores": "Collecting your order from {} stores",
+  "pickedUpFromStores": "Picked up from {picked} of {total} stores"
 }

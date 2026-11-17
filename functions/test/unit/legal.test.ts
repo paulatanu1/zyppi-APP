@@ -76,8 +76,16 @@ describe("publishing", () => {
     for (const f of files) {
       const p = parseLegalMarkdown(readFileSync(join(dir, f), "utf8"));
       expect(p && isLegalType(p.type), f).toBe(true);
-      expect(publishProblems({ ...p, body: { en: p!.body } }).problems, f).toEqual([]);
+      // Drafts still carry [PLACEHOLDERS] for the lawyer; nothing else may be wrong.
+      const problems = publishProblems({ ...p, body: { en: p!.body } }).problems;
+      expect(problems.filter((x) => !x.startsWith("Fill the placeholders")), f).toEqual([]);
     }
+  });
+
+  it("refuses text that still has placeholders", () => {
+    const res = publishProblems({ type: "customer_terms", title: "Terms", body: { en: "Run by [COMPANY LEGAL NAME]." } });
+    expect(res.input).toBeNull();
+    expect(res.problems[0]).toContain("[COMPANY LEGAL NAME]");
   });
 });
 

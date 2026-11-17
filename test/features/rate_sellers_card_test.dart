@@ -16,6 +16,8 @@ class _Repo implements DeliveryInfoRepository {
   @override
   Stream<RiderLive?> watchRider(String orderId) => Stream.value(null);
   @override
+  Stream<PickupProgress?> watchPickups(String orderId) => Stream.value(null);
+  @override
   Stream<bool> watchRated(String orderId) => Stream.value(false);
   @override
   Future<void> rateRider(String orderId, int stars, List<String> tags) async {}

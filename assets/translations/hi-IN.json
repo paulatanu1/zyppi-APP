@@ -417,5 +417,7 @@
   "hoursAgo": "{} घंटे पहले",
   "yesterday": "कल",
   "unread": "नहीं पढ़ा",
-  "newCount": "{} नई"
+  "newCount": "{} नई",
+  "collectingFromStores": "{} दुकानों से आपका ऑर्डर लिया जा रहा है",
+  "pickedUpFromStores": "{total} में से {picked} दुकानों से ले लिया"
 }
