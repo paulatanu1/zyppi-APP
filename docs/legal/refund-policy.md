@@ -19,7 +19,9 @@ Use **Report a problem** on the order in the app **within 2 hours of delivery** 
 - a refund to your original payment (UPI or card orders only); or
 - a free replacement, where the item is in stock.
 
-Our team reviews every report and may approve, reduce or reject it; we tell you the reason if we reject it. If a replacement isn't possible, we refund the item to your Zyppi Wallet instead. We may ask you to hand a wrong or damaged item back to the rider.
+For wrong, damaged or expired items, a rider collects them from you; give the rider the pickup code shown in the app. Your refund (or replacement) is made as soon as the store receives the items. If nobody is available when the rider comes, on two visits, the return is cancelled. If the rider finds that the items don't match your report, our team reviews it instead.
+
+Missing items, larger claims and accounts with many recent claims are reviewed by our team, who may approve, reduce or reject them; we tell you the reason if we reject one. If a replacement isn't possible, we refund the item to your Zyppi Wallet instead.
 
 For a problem you find after the 2 hours, contact in-app support. We may then credit your Zyppi Wallet at our discretion.
 

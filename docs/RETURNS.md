@@ -31,7 +31,12 @@ Claims that go to ops keep the existing Claims-queue flow.
 
 The customer gets a push in their language at each step: booked, rider on the way, at the door, collected, refunded, under review, cancelled. When the claim started in the support chat, the same message is posted there.
 
-Ops can cancel a return, or send it to review, with `adminUpdateReturn`.
+Ops can cancel a return, or send it to review, with `adminUpdateReturn`. All of this is on the admin Returns page.
+
+## Settings and staff
+- **Limits.** Admin → Returns → Settings (ops, finance) writes `config/claims` through `adminSaveClaimsConfig`.
+- **Dark-store staff.** Zyppi's own stores have no owner login. Ops add the staff who receive returns there by phone number, on the same Settings tab (`adminSetZyppiStoreStaff`). Those staff then sign in to the Zyppi Seller app as staff of the `zyppi` seller. All of them get the return alerts for every Zyppi store.
+- **Rider pay.** Return trips are paid on the normal rate card, using the customer-to-store distance stored on the return as `legM`. There is no separate return rate yet.
 
 ## Deploying
 - Run `firebase deploy --only functions,firestore,storage`. This adds the functions, the rules and 3 `returns` indexes.
