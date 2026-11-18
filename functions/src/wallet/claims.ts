@@ -1,4 +1,5 @@
 import { FieldValue } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
 import { logger } from "firebase-functions";
 import { HttpsError, onCall } from "firebase-functions/https";
 import { ZYPPI_SELLER_ID, OFFERS } from "../marketplace/model";
@@ -15,7 +16,9 @@ import { type Actor, requireRole } from "../shared/roles";
 import { writeWalletEntry } from "./ledger";
 import {
   type ClaimLine,
+  MAX_CLAIM_PHOTOS,
   MAX_STAFF_CREDIT_PAISE,
+  decodeClaimPhoto,
   ORDER_ISSUES,
   onlineRefundable,
   orderRemaining,
@@ -41,12 +44,14 @@ const rupees = (p: number) => `₹${(p / 100).toFixed(p % 100 === 0 ? 0 : 2)}`;
 
 const issueRef = (id: string) => db.collection(ORDER_ISSUES).doc(id);
 
-/** Storage folder the customer uploads claim photos to (storage.rules). */
+/** Storage folder of one order's claim photos (written only by this function). */
 export const claimPhotoPrefix = (uid: string, orderId: string) => `users/${uid}/claims/${orderId}/`;
 
 /**
  * Customer: report missing / wrong / damaged / expired items.
- * Request: {orderId, lines: [{index, quantity, kind}], photos: [storage paths],
+ * Photos come in the request (base64, compressed on the phone) and are
+ * stored by the server, which checks each really is an image.
+ * Request: {orderId, lines: [{index, quantity, kind}], photos: [base64],
  *           note?, resolution: "wallet" | "original" | "replacement"}
  * Response: {issueId}
  */
@@ -56,50 +61,79 @@ export const reportOrderIssue = onCall(async (request) => {
   if (!/^[\w-]{1,64}$/.test(orderId)) throw new HttpsError("invalid-argument", "Invalid order");
   const orderRef = db.collection("orders").doc(orderId);
   const ref = db.collection(ORDER_ISSUES).doc();
-  await db.runTransaction(async (tx) => {
-    const order = await tx.get(orderRef);
-    if (!order.exists) throw new HttpsError("not-found", "NOT_YOUR_ORDER");
+
+  const rawPhotos = Array.isArray(request.data?.photos) ? (request.data.photos as unknown[]) : [];
+  if (rawPhotos.length > MAX_CLAIM_PHOTOS) throw new HttpsError("failed-precondition", "TOO_MANY_PHOTOS");
+  const photos = rawPhotos.map(decodeClaimPhoto);
+  if (photos.some((p) => p === null)) throw new HttpsError("failed-precondition", "INVALID_PHOTO");
+  const prefix = claimPhotoPrefix(uid, orderId);
+  const paths = photos.map((p, i) => `${prefix}${ref.id}_${i}.${p!.ext}`);
+  const check = (order: Record<string, unknown>) => {
     const v = validateClaim({
-      order: order.data()!,
+      order,
       uid,
       nowMs: Date.now(),
       lines: request.data?.lines,
-      photos: request.data?.photos,
+      photos: paths,
       note: request.data?.note,
       resolution: request.data?.resolution,
-      photoPrefix: claimPhotoPrefix(uid, orderId),
+      photoPrefix: prefix,
     });
     if (!v.ok) throw new HttpsError("failed-precondition", v.code);
-    tx.create(ref, {
-      orderId,
-      userId: uid,
-      status: "open",
-      lines: v.lines,
-      photos: v.photos,
-      note: v.note,
-      resolutionWanted: v.resolution,
-      amountPaise: v.amountPaise,
-      paymentMethod: order.get("paymentMethod") ?? null,
-      serviceAreaId: order.get("serviceAreaId") ?? null,
-      deliveredAt: order.get("deliveredAt") ?? null,
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
+    return v;
+  };
+
+  // Checked before uploading, so a refused claim stores nothing; checked
+  // again in the transaction below.
+  const before = await orderRef.get();
+  if (!before.exists) throw new HttpsError("not-found", "NOT_YOUR_ORDER");
+  check(before.data()!);
+  const bucket = getStorage().bucket();
+  await Promise.all(
+    photos.map((p, i) =>
+      bucket.file(paths[i]).save(p!.bytes, { contentType: p!.contentType, resumable: false, metadata: { cacheControl: "private, max-age=0" } }),
+    ),
+  );
+
+  try {
+    await db.runTransaction(async (tx) => {
+      const order = await tx.get(orderRef);
+      if (!order.exists) throw new HttpsError("not-found", "NOT_YOUR_ORDER");
+      const v = check(order.data()!);
+      tx.create(ref, {
+        orderId,
+        userId: uid,
+        status: "open",
+        lines: v.lines,
+        photos: v.photos,
+        note: v.note,
+        resolutionWanted: v.resolution,
+        amountPaise: v.amountPaise,
+        paymentMethod: order.get("paymentMethod") ?? null,
+        serviceAreaId: order.get("serviceAreaId") ?? null,
+        deliveredAt: order.get("deliveredAt") ?? null,
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      const update: Record<string, unknown> = {
+        openIssueId: ref.id,
+        issueStatus: "open",
+        // Ops alert (admin Dispatch board / Claims queue).
+        "opsAlerts.claim": FieldValue.serverTimestamp(),
+      };
+      for (const l of v.lines) update[`claimedQty.${l.index}`] = FieldValue.increment(l.quantity);
+      tx.update(orderRef, update);
+      // Shown to ops next to every claim (repeat claimers stand out).
+      tx.set(
+        db.collection("users").doc(uid),
+        { claimStats: { count: FieldValue.increment(1), lastAt: FieldValue.serverTimestamp() } },
+        { merge: true },
+      );
     });
-    const update: Record<string, unknown> = {
-      openIssueId: ref.id,
-      issueStatus: "open",
-      // Ops alert (admin Dispatch board / Claims queue).
-      "opsAlerts.claim": FieldValue.serverTimestamp(),
-    };
-    for (const l of v.lines) update[`claimedQty.${l.index}`] = FieldValue.increment(l.quantity);
-    tx.update(orderRef, update);
-    // Shown to ops next to every claim (repeat claimers stand out).
-    tx.set(
-      db.collection("users").doc(uid),
-      { claimStats: { count: FieldValue.increment(1), lastAt: FieldValue.serverTimestamp() } },
-      { merge: true },
-    );
-  });
+  } catch (error) {
+    await Promise.all(paths.map((p) => bucket.file(p).delete().catch(() => undefined)));
+    throw error;
+  }
   return { issueId: ref.id };
 });
 

@@ -5,6 +5,7 @@ import {
   WALLET_METHOD,
   cashToCollect,
   checkWalletOrder,
+  decodeClaimPhoto,
   lineRefundPaise,
   onlineRefundable,
   orderRemaining,
@@ -237,5 +238,20 @@ describe("replacement seller", () => {
   });
   it("the same seller out of stock: best ranked", () => {
     expect(replacementCandidates(offers, "s3")).toEqual(["a", "d", "b"]);
+  });
+});
+
+describe("claim photos", () => {
+  const jpeg = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(20)]).toString("base64");
+  const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(20)]).toString("base64");
+  it("accepts real JPEG and PNG files by their bytes", () => {
+    expect(decodeClaimPhoto(jpeg)).toMatchObject({ contentType: "image/jpeg", ext: "jpg" });
+    expect(decodeClaimPhoto(png)).toMatchObject({ contentType: "image/png", ext: "png" });
+  });
+  it("refuses anything else", () => {
+    expect(decodeClaimPhoto(Buffer.from("%PDF-1.7 fake pdf file").toString("base64"))).toBeNull();
+    expect(decodeClaimPhoto("not base64!")).toBeNull();
+    expect(decodeClaimPhoto(42)).toBeNull();
+    expect(decodeClaimPhoto(Buffer.concat([Buffer.from([0xff, 0xd8, 0xff]), Buffer.alloc(3 * 1024 * 1024)]).toString("base64"))).toBeNull();
   });
 });

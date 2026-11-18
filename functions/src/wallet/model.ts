@@ -276,6 +276,29 @@ export function replacementCandidates(
   return [...same, ...rest].map((o) => o.id);
 }
 
+/** One claim photo after compression on the phone is well under this. */
+export const MAX_CLAIM_PHOTO_BYTES = 2 * 1024 * 1024;
+
+/**
+ * A photo the app sent (base64). Only real JPEG, PNG or WebP files under
+ * [MAX_CLAIM_PHOTO_BYTES] are accepted: the type comes from the file's own
+ * first bytes, never from what the app says.
+ */
+export function decodeClaimPhoto(raw: unknown): { bytes: Buffer; contentType: string; ext: string } | null {
+  if (typeof raw !== "string" || raw.length === 0 || raw.length > Math.ceil((MAX_CLAIM_PHOTO_BYTES * 4) / 3) + 4) return null;
+  if (!/^[A-Za-z0-9+/]+={0,2}$/.test(raw)) return null;
+  const bytes = Buffer.from(raw, "base64");
+  if (bytes.length < 12 || bytes.length > MAX_CLAIM_PHOTO_BYTES) return null;
+  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return { bytes, contentType: "image/jpeg", ext: "jpg" };
+  if (bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) {
+    return { bytes, contentType: "image/png", ext: "png" };
+  }
+  if (bytes.subarray(0, 4).toString("latin1") === "RIFF" && bytes.subarray(8, 12).toString("latin1") === "WEBP") {
+    return { bytes, contentType: "image/webp", ext: "webp" };
+  }
+  return null;
+}
+
 function millis(v: unknown): number | null {
   if (v && typeof (v as { toMillis?: unknown }).toMillis === "function") return (v as { toMillis: () => number }).toMillis();
   return null;

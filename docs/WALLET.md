@@ -55,7 +55,7 @@ The balance is lost with the account. `deleteAccount` refuses with `WALLET_NOT_E
 ## Report a problem (`orderIssues/{id}`)
 - **Who and when.** The customer can report up to **2 hours after delivery**, with one open claim per order.
 - **What.** They choose the items and quantities, and for each item whether it was `missing`, `wrong`, `damaged` or `expired`.
-- **Photos.** 1–3 photos are required unless the item is missing. They are stored at `users/{uid}/claims/{orderId}/`, which only the customer and ops, support or finance staff can read.
+- **Photos.** 1–3 photos are required unless the item is missing. The app compresses them and sends them in the `reportOrderIssue` call. The server checks each one really is a JPEG, PNG or WebP of 2 MB or less, then stores it at `users/{uid}/claims/{orderId}/`. Nobody can write to that folder directly; only the customer and ops, support or finance staff can read it.
 - **What they can ask for.**
   - `wallet`: always available.
   - `original`: back to the online payment, for UPI or card orders only. Cash orders always get wallet credit.
