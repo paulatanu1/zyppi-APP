@@ -124,6 +124,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Automatic-return limits (functions/src/returns/admin.ts): staff read
+    // them in the admin panel; only adminSaveClaimsConfig writes.
+    match /config/claims {
+      allow read: if hasRole(['ops', 'finance', 'support']);
+      allow write: if false;
+    }
+
     // Support contacts and the in-app announcement; the app shows them.
     // Written only by adminSaveAppConfig.
     match /config/app {
