@@ -46,6 +46,8 @@ class FirebaseOrderRepository implements OrderRepository {
     Order order, {
     required String deliverySlotId,
     String? couponCode,
+    bool useWallet = false,
+    int? walletBalancePaise,
   }) async {
     final result = await functions.httpsCallable('placeOrder').call({
       'addressId': order.addressId,
@@ -53,6 +55,8 @@ class FirebaseOrderRepository implements OrderRepository {
       'paymentMethod': order.paymentMethod,
       'tipPaise': order.tipPaise,
       'couponCode': couponCode,
+      'useWallet': useWallet,
+      'walletBalancePaise': ?walletBalancePaise,
     });
     return (result.data as Map)['orderId'] as String;
   }
@@ -123,6 +127,15 @@ Order orderFromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     totalPaise: d['totalPaise'] as int,
     addressId: d['addressId'] as String?,
     paymentMethod: d['paymentMethod'] as String,
+    walletPaise: (d['walletPaise'] as num?)?.round() ?? 0,
+    payablePaise: ((d['payment'] as Map?)?['amountPaise'] as num?)?.round(),
+    deliveredAt: (d['deliveredAt'] as Timestamp?)?.toDate(),
+    openIssueId: d['openIssueId'] as String?,
+    claimedQty: {
+      for (final e in ((d['claimedQty'] as Map?) ?? const {}).entries)
+        if (e.value is num) '${e.key}': (e.value as num).round(),
+    },
+    replacementOf: d['replacementOf'] as String?,
   );
 }
 

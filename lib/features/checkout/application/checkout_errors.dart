@@ -38,6 +38,12 @@ String friendlyOrderError(Object error) {
     return 'errorAddressUnserviceable'.tr();
   }
   if (message.contains('Cart is empty')) return 'errorCartEmpty'.tr();
+  // functions/src/wallet/model.ts: the balance moved since checkout opened
+  // (the screen already shows the new one), or now pays for everything.
+  if (message.contains('WALLET_BALANCE_CHANGED')) {
+    return 'errorWalletChanged'.tr();
+  }
+  if (message.contains('WALLET_COVERS_ORDER')) return 'errorWalletCovers'.tr();
   // functions/src: STORES_CLOSED (store hours), ACCOUNT_BLOCKED (admin),
   // closed areas and switched-off payment methods (config/features).
   if (message.contains('STORES_CLOSED')) return 'errorStoresClosed'.tr();

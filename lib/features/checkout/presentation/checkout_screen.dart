@@ -13,6 +13,8 @@ import 'package:zippy/core/common_widgets/section_card.dart';
 import 'package:zippy/features/checkout/widgets/checkout_steps.dart';
 import 'package:zippy/features/checkout/widgets/delivery_time_card.dart';
 import 'package:zippy/core/payments/presentation/payment_options.dart';
+import 'package:zippy/features/checkout/widgets/wallet_pay_card.dart';
+import 'package:zippy/features/wallet/data/wallet_repository.dart';
 
 /// docs/screens/{light,dark}/10-checkout.png. Payment and the bill footer
 /// need no network data and render at once; only the address and delivery
@@ -26,6 +28,10 @@ class CheckoutScreen extends ConsumerWidget {
     final notifier = ref.read(checkoutProvider.notifier);
     final z = context.z;
     final text = Theme.of(context).textTheme;
+    final balance = ref.watch(walletBalanceProvider).value ?? 0;
+    final total = ref.watch(cartProvider.select((c) => c.bill.totalPaise));
+    final walletApplied = walletToApply(balance, total, use: state.useWallet);
+    final walletCoversAll = walletApplied > 0 && walletApplied >= total;
 
     ref.listen(checkoutProvider, (previous, next) {
       if (next.placedOrderId != null &&
@@ -81,18 +87,44 @@ class CheckoutScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: ZSpace.x3),
                   ContentFade(child: _timeSection(state, notifier)),
-                  const SizedBox(height: ZSpace.x3),
-                  ZEntrance(
-                    index: 2,
-                    child: PaymentOptions(
-                      selected: state.paymentMethod,
-                      onSelect: notifier.selectPaymentMethod,
+                  if (balance > 0) ...[
+                    const SizedBox(height: ZSpace.x3),
+                    ZEntrance(
+                      index: 2,
+                      child: WalletPayCard(
+                        balancePaise: balance,
+                        appliedPaise: walletApplied,
+                        use: state.useWallet,
+                        onChanged: state.placingOrder
+                            ? (_) {}
+                            : notifier.setUseWallet,
+                      ),
                     ),
-                  ),
+                  ],
+                  const SizedBox(height: ZSpace.x3),
+                  // Nothing left to pay outside the wallet: no method to pick.
+                  if (walletCoversAll)
+                    Text(
+                      'walletCoversOrder'.tr(),
+                      textAlign: TextAlign.center,
+                      style: text.bodyMedium?.copyWith(color: z.ok),
+                    )
+                  else
+                    ZEntrance(
+                      index: 3,
+                      child: PaymentOptions(
+                        selected: state.paymentMethod,
+                        onSelect: notifier.selectPaymentMethod,
+                      ),
+                    ),
                 ],
               ),
             ),
-            _CheckoutFooter(state: state, onPay: notifier.placeOrder),
+            _CheckoutFooter(
+              state: state,
+              walletPaise: walletApplied,
+              onPay: notifier.placeOrder,
+            ),
           ],
         ),
       ),
@@ -170,7 +202,14 @@ class _CheckoutFooter extends ConsumerWidget {
   final CheckoutState state;
   final VoidCallback onPay;
 
-  const _CheckoutFooter({required this.state, required this.onPay});
+  /// What the wallet pays; the rest is paid by [CheckoutState.paymentMethod].
+  final int walletPaise;
+
+  const _CheckoutFooter({
+    required this.state,
+    required this.onPay,
+    required this.walletPaise,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -179,7 +218,8 @@ class _CheckoutFooter extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
 
     final itemCount = cart.lines.fold<int>(0, (sum, l) => sum + l.quantity);
-    final total = PriceTag.format(cart.bill.totalPaise);
+    final payable = cart.bill.totalPaise - walletPaise;
+    final total = PriceTag.format(payable);
     final canPay =
         !state.loading &&
         !state.placingOrder &&
@@ -217,6 +257,20 @@ class _CheckoutFooter extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (walletPaise > 0) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: Text('paidFromWallet'.tr(), style: text.bodySmall),
+                ),
+                Text(
+                  '−${PriceTag.format(walletPaise)}',
+                  style: text.bodySmall?.copyWith(color: z.ok),
+                ),
+              ],
+            ),
+            const SizedBox(height: ZSpace.x1),
+          ],
           Row(
             children: [
               Expanded(child: Text(summary, style: text.bodySmall)),
@@ -244,7 +298,11 @@ class _CheckoutFooter extends ConsumerWidget {
                     ),
                   )
                 : Text(
-                    state.paymentMethod == codPaymentMethod
+                    walletPaise > 0 && payable <= 0
+                        ? 'payFromWallet'.tr(
+                            args: [PriceTag.format(walletPaise)],
+                          )
+                        : state.paymentMethod == codPaymentMethod
                         ? 'placeOrderWithAmount'.tr(args: [total])
                         : 'payWithAmount'.tr(
                             args: [

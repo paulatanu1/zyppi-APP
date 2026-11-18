@@ -1,4 +1,6 @@
 import 'package:zippy/features/notifications/presentation/notifications_screen.dart';
+import 'package:zippy/features/report_problem/presentation/report_problem_screen.dart';
+import 'package:zippy/features/wallet/presentation/wallet_screen.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -208,6 +210,20 @@ class Routes {
           name: 'GuestUpgradeScreen',
           builder: withHomeFallback(
             (context, state) => const GuestUpgradeScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/walletScreen',
+          name: 'WalletScreen',
+          builder: withHomeFallback((context, state) => const WalletScreen()),
+        ),
+        GoRoute(
+          path: '/reportProblem',
+          name: 'ReportProblemScreen',
+          builder: withHomeFallback(
+            (context, state) => ReportProblemScreen(
+              orderId: state.uri.queryParameters['orderId'] ?? '',
+            ),
           ),
         ),
         GoRoute(

@@ -23,6 +23,7 @@ import 'package:zippy/core/payments/presentation/payment_options.dart';
 import 'package:zippy/core/payments/domain/payment_order.dart';
 import 'package:zippy/features/checkout/application/checkout_errors.dart';
 import 'package:zippy/features/checkout/application/checkout_state.dart';
+import 'package:zippy/features/wallet/data/wallet_repository.dart';
 
 // How long to wait before each payment-status check: PayU can report a
 // payment as pending for a few seconds after the SDK returns success.
@@ -136,6 +137,19 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
 
   bool _methodChosen = false;
 
+  void setUseWallet(bool use) => state = state.copyWith(useWallet: use);
+
+  /// The wallet's part of this order and the balance it came from, as
+  /// the screen shows them right now.
+  ({int balance, int applied}) walletSplit() {
+    final balance = ref.read(walletBalanceProvider).value ?? 0;
+    final total = ref.read(cartProvider).bill.totalPaise;
+    return (
+      balance: balance,
+      applied: walletToApply(balance, total, use: state.useWallet),
+    );
+  }
+
   void selectPaymentMethod(String method) {
     _methodChosen = true;
     state = state.copyWith(paymentMethod: method);
@@ -181,16 +195,30 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
     }
     if (!mounted) return;
 
+    // Wallet: the server re-reads the balance in the order's own
+    // transaction and refuses if it isn't the one shown here.
+    final wallet = walletSplit();
+    final walletCoversAll =
+        wallet.applied > 0 && wallet.applied >= cart.bill.totalPaise;
+
     // The mock flavor has no real payment gateway to open — every method
     // just places the order directly, same as COD always does.
-    if (state.paymentMethod == codPaymentMethod || Env.isMockDataSource) {
+    if (state.paymentMethod == codPaymentMethod ||
+        walletCoversAll ||
+        Env.isMockDataSource) {
       try {
         final orderId = await ref
             .read(orderRepositoryProvider)
             .placeOrder(
-              _orderFromCart(),
+              _orderFromCart().copyWith(
+                paymentMethod: walletCoversAll
+                    ? walletPaymentMethod
+                    : state.paymentMethod,
+              ),
               deliverySlotId: state.selectedSlot!.id,
               couponCode: cart.appliedCoupon?.code,
+              useWallet: wallet.applied > 0,
+              walletBalancePaise: wallet.applied > 0 ? wallet.balance : null,
             );
         await _onOrderPlaced(orderId, cart.bill.totalPaise);
       } catch (error) {
@@ -221,6 +249,8 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
             deliverySlotId: state.selectedSlot!.id,
             couponCode: cart.appliedCoupon?.code,
             tipPaise: cart.tipPaise,
+            useWallet: wallet.applied > 0,
+            walletBalancePaise: wallet.applied > 0 ? wallet.balance : null,
           );
     } catch (error) {
       _fail(friendlyOrderError(error));

@@ -17,6 +17,8 @@ class FirebasePaymentRepository implements PaymentRepository {
     required String deliverySlotId,
     String? couponCode,
     int tipPaise = 0,
+    bool useWallet = false,
+    int? walletBalancePaise,
   }) async {
     final Map<dynamic, dynamic> data;
     try {
@@ -26,6 +28,8 @@ class FirebasePaymentRepository implements PaymentRepository {
         'deliverySlotId': deliverySlotId,
         'couponCode': couponCode,
         'tipPaise': tipPaise,
+        'useWallet': useWallet,
+        'walletBalancePaise': ?walletBalancePaise,
       });
       data = result.data as Map<dynamic, dynamic>;
     } on FirebaseFunctionsException catch (error) {

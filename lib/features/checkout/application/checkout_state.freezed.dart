@@ -15,7 +15,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CheckoutState {
 
- List<Address> get addresses; Address? get selectedAddress; List<DeliverySlot> get slots; DeliverySlot? get selectedSlot; String get paymentMethod; bool get loading; bool get placingOrder; String? get placedOrderId; String? get error; String? get paymentError;
+ List<Address> get addresses; Address? get selectedAddress; List<DeliverySlot> get slots; DeliverySlot? get selectedSlot; String get paymentMethod;/// Spend the wallet balance on this order (on by default when there is
+/// one; docs/WALLET.md).
+ bool get useWallet; bool get loading; bool get placingOrder; String? get placedOrderId; String? get error; String? get paymentError;
 /// Create a copy of CheckoutState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +29,20 @@ $CheckoutStateCopyWith<CheckoutState> get copyWith => _$CheckoutStateCopyWithImp
 @override
 bool operator ==(Object other) {
   final _this = this as CheckoutState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CheckoutState&&const DeepCollectionEquality().equals(other.addresses, _this.addresses)&&(identical(other.selectedAddress, _this.selectedAddress) || other.selectedAddress == _this.selectedAddress)&&const DeepCollectionEquality().equals(other.slots, _this.slots)&&(identical(other.selectedSlot, _this.selectedSlot) || other.selectedSlot == _this.selectedSlot)&&(identical(other.paymentMethod, _this.paymentMethod) || other.paymentMethod == _this.paymentMethod)&&(identical(other.loading, _this.loading) || other.loading == _this.loading)&&(identical(other.placingOrder, _this.placingOrder) || other.placingOrder == _this.placingOrder)&&(identical(other.placedOrderId, _this.placedOrderId) || other.placedOrderId == _this.placedOrderId)&&(identical(other.error, _this.error) || other.error == _this.error)&&(identical(other.paymentError, _this.paymentError) || other.paymentError == _this.paymentError));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CheckoutState&&const DeepCollectionEquality().equals(other.addresses, _this.addresses)&&(identical(other.selectedAddress, _this.selectedAddress) || other.selectedAddress == _this.selectedAddress)&&const DeepCollectionEquality().equals(other.slots, _this.slots)&&(identical(other.selectedSlot, _this.selectedSlot) || other.selectedSlot == _this.selectedSlot)&&(identical(other.paymentMethod, _this.paymentMethod) || other.paymentMethod == _this.paymentMethod)&&(identical(other.useWallet, _this.useWallet) || other.useWallet == _this.useWallet)&&(identical(other.loading, _this.loading) || other.loading == _this.loading)&&(identical(other.placingOrder, _this.placingOrder) || other.placingOrder == _this.placingOrder)&&(identical(other.placedOrderId, _this.placedOrderId) || other.placedOrderId == _this.placedOrderId)&&(identical(other.error, _this.error) || other.error == _this.error)&&(identical(other.paymentError, _this.paymentError) || other.paymentError == _this.paymentError));
 }
 
 
 @override
 int get hashCode {
   final _this = this as CheckoutState;
-  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.addresses),_this.selectedAddress,const DeepCollectionEquality().hash(_this.slots),_this.selectedSlot,_this.paymentMethod,_this.loading,_this.placingOrder,_this.placedOrderId,_this.error,_this.paymentError);
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.addresses),_this.selectedAddress,const DeepCollectionEquality().hash(_this.slots),_this.selectedSlot,_this.paymentMethod,_this.useWallet,_this.loading,_this.placingOrder,_this.placedOrderId,_this.error,_this.paymentError);
 }
 
 @override
 String toString() {
   final _this = this as CheckoutState;
-  return 'CheckoutState(addresses: ${_this.addresses}, selectedAddress: ${_this.selectedAddress}, slots: ${_this.slots}, selectedSlot: ${_this.selectedSlot}, paymentMethod: ${_this.paymentMethod}, loading: ${_this.loading}, placingOrder: ${_this.placingOrder}, placedOrderId: ${_this.placedOrderId}, error: ${_this.error}, paymentError: ${_this.paymentError})';
+  return 'CheckoutState(addresses: ${_this.addresses}, selectedAddress: ${_this.selectedAddress}, slots: ${_this.slots}, selectedSlot: ${_this.selectedSlot}, paymentMethod: ${_this.paymentMethod}, useWallet: ${_this.useWallet}, loading: ${_this.loading}, placingOrder: ${_this.placingOrder}, placedOrderId: ${_this.placedOrderId}, error: ${_this.error}, paymentError: ${_this.paymentError})';
 }
 
 
@@ -51,7 +53,7 @@ abstract mixin class $CheckoutStateCopyWith<$Res>  {
   factory $CheckoutStateCopyWith(CheckoutState value, $Res Function(CheckoutState) _then) = _$CheckoutStateCopyWithImpl;
 @useResult
 $Res call({
- List<Address> addresses, Address? selectedAddress, List<DeliverySlot> slots, DeliverySlot? selectedSlot, String paymentMethod, bool loading, bool placingOrder, String? placedOrderId, String? error, String? paymentError
+ List<Address> addresses, Address? selectedAddress, List<DeliverySlot> slots, DeliverySlot? selectedSlot, String paymentMethod, bool useWallet, bool loading, bool placingOrder, String? placedOrderId, String? error, String? paymentError
 });
 
 
@@ -68,14 +70,15 @@ class _$CheckoutStateCopyWithImpl<$Res>
 
 /// Create a copy of CheckoutState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? addresses = null,Object? selectedAddress = freezed,Object? slots = null,Object? selectedSlot = freezed,Object? paymentMethod = null,Object? loading = null,Object? placingOrder = null,Object? placedOrderId = freezed,Object? error = freezed,Object? paymentError = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? addresses = null,Object? selectedAddress = freezed,Object? slots = null,Object? selectedSlot = freezed,Object? paymentMethod = null,Object? useWallet = null,Object? loading = null,Object? placingOrder = null,Object? placedOrderId = freezed,Object? error = freezed,Object? paymentError = freezed,}) {
   return _then(CheckoutState(
 addresses: null == addresses ? _self.addresses : addresses // ignore: cast_nullable_to_non_nullable
 as List<Address>,selectedAddress: freezed == selectedAddress ? _self.selectedAddress : selectedAddress // ignore: cast_nullable_to_non_nullable
 as Address?,slots: null == slots ? _self.slots : slots // ignore: cast_nullable_to_non_nullable
 as List<DeliverySlot>,selectedSlot: freezed == selectedSlot ? _self.selectedSlot : selectedSlot // ignore: cast_nullable_to_non_nullable
 as DeliverySlot?,paymentMethod: null == paymentMethod ? _self.paymentMethod : paymentMethod // ignore: cast_nullable_to_non_nullable
-as String,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
+as String,useWallet: null == useWallet ? _self.useWallet : useWallet // ignore: cast_nullable_to_non_nullable
+as bool,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
 as bool,placingOrder: null == placingOrder ? _self.placingOrder : placingOrder // ignore: cast_nullable_to_non_nullable
 as bool,placedOrderId: freezed == placedOrderId ? _self.placedOrderId : placedOrderId // ignore: cast_nullable_to_non_nullable
 as String?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
@@ -189,10 +192,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Address> addresses,  Address? selectedAddress,  List<DeliverySlot> slots,  DeliverySlot? selectedSlot,  String paymentMethod,  bool loading,  bool placingOrder,  String? placedOrderId,  String? error,  String? paymentError)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Address> addresses,  Address? selectedAddress,  List<DeliverySlot> slots,  DeliverySlot? selectedSlot,  String paymentMethod,  bool useWallet,  bool loading,  bool placingOrder,  String? placedOrderId,  String? error,  String? paymentError)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CheckoutState() when $default != null:
-return $default(_that.addresses,_that.selectedAddress,_that.slots,_that.selectedSlot,_that.paymentMethod,_that.loading,_that.placingOrder,_that.placedOrderId,_that.error,_that.paymentError);case _:
+return $default(_that.addresses,_that.selectedAddress,_that.slots,_that.selectedSlot,_that.paymentMethod,_that.useWallet,_that.loading,_that.placingOrder,_that.placedOrderId,_that.error,_that.paymentError);case _:
   return orElse();
 
 }
@@ -210,10 +213,10 @@ return $default(_that.addresses,_that.selectedAddress,_that.slots,_that.selected
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Address> addresses,  Address? selectedAddress,  List<DeliverySlot> slots,  DeliverySlot? selectedSlot,  String paymentMethod,  bool loading,  bool placingOrder,  String? placedOrderId,  String? error,  String? paymentError)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Address> addresses,  Address? selectedAddress,  List<DeliverySlot> slots,  DeliverySlot? selectedSlot,  String paymentMethod,  bool useWallet,  bool loading,  bool placingOrder,  String? placedOrderId,  String? error,  String? paymentError)  $default,) {final _that = this;
 switch (_that) {
 case _CheckoutState():
-return $default(_that.addresses,_that.selectedAddress,_that.slots,_that.selectedSlot,_that.paymentMethod,_that.loading,_that.placingOrder,_that.placedOrderId,_that.error,_that.paymentError);case _:
+return $default(_that.addresses,_that.selectedAddress,_that.slots,_that.selectedSlot,_that.paymentMethod,_that.useWallet,_that.loading,_that.placingOrder,_that.placedOrderId,_that.error,_that.paymentError);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -230,10 +233,10 @@ return $default(_that.addresses,_that.selectedAddress,_that.slots,_that.selected
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Address> addresses,  Address? selectedAddress,  List<DeliverySlot> slots,  DeliverySlot? selectedSlot,  String paymentMethod,  bool loading,  bool placingOrder,  String? placedOrderId,  String? error,  String? paymentError)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Address> addresses,  Address? selectedAddress,  List<DeliverySlot> slots,  DeliverySlot? selectedSlot,  String paymentMethod,  bool useWallet,  bool loading,  bool placingOrder,  String? placedOrderId,  String? error,  String? paymentError)?  $default,) {final _that = this;
 switch (_that) {
 case _CheckoutState() when $default != null:
-return $default(_that.addresses,_that.selectedAddress,_that.slots,_that.selectedSlot,_that.paymentMethod,_that.loading,_that.placingOrder,_that.placedOrderId,_that.error,_that.paymentError);case _:
+return $default(_that.addresses,_that.selectedAddress,_that.slots,_that.selectedSlot,_that.paymentMethod,_that.useWallet,_that.loading,_that.placingOrder,_that.placedOrderId,_that.error,_that.paymentError);case _:
   return null;
 
 }
@@ -245,7 +248,7 @@ return $default(_that.addresses,_that.selectedAddress,_that.slots,_that.selected
 
 
 class _CheckoutState implements CheckoutState {
-   _CheckoutState({ List<Address> addresses = const [], this.selectedAddress,  List<DeliverySlot> slots = const [], this.selectedSlot, this.paymentMethod = 'UPI', this.loading = true, this.placingOrder = false, this.placedOrderId, this.error, this.paymentError}): _addresses = addresses,_slots = slots;
+   _CheckoutState({ List<Address> addresses = const [], this.selectedAddress,  List<DeliverySlot> slots = const [], this.selectedSlot, this.paymentMethod = 'UPI', this.useWallet = true, this.loading = true, this.placingOrder = false, this.placedOrderId, this.error, this.paymentError}): _addresses = addresses,_slots = slots;
   
 
  final  List<Address> _addresses;
@@ -265,6 +268,9 @@ class _CheckoutState implements CheckoutState {
 
 @override final  DeliverySlot? selectedSlot;
 @override@JsonKey() final  String paymentMethod;
+/// Spend the wallet balance on this order (on by default when there is
+/// one; docs/WALLET.md).
+@override@JsonKey() final  bool useWallet;
 @override@JsonKey() final  bool loading;
 @override@JsonKey() final  bool placingOrder;
 @override final  String? placedOrderId;
@@ -281,18 +287,18 @@ _$CheckoutStateCopyWith<_CheckoutState> get copyWith => __$CheckoutStateCopyWith
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CheckoutState&&const DeepCollectionEquality().equals(other.addresses, _addresses)&&(identical(other.selectedAddress, selectedAddress) || other.selectedAddress == selectedAddress)&&const DeepCollectionEquality().equals(other.slots, _slots)&&(identical(other.selectedSlot, selectedSlot) || other.selectedSlot == selectedSlot)&&(identical(other.paymentMethod, paymentMethod) || other.paymentMethod == paymentMethod)&&(identical(other.loading, loading) || other.loading == loading)&&(identical(other.placingOrder, placingOrder) || other.placingOrder == placingOrder)&&(identical(other.placedOrderId, placedOrderId) || other.placedOrderId == placedOrderId)&&(identical(other.error, error) || other.error == error)&&(identical(other.paymentError, paymentError) || other.paymentError == paymentError));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CheckoutState&&const DeepCollectionEquality().equals(other.addresses, _addresses)&&(identical(other.selectedAddress, selectedAddress) || other.selectedAddress == selectedAddress)&&const DeepCollectionEquality().equals(other.slots, _slots)&&(identical(other.selectedSlot, selectedSlot) || other.selectedSlot == selectedSlot)&&(identical(other.paymentMethod, paymentMethod) || other.paymentMethod == paymentMethod)&&(identical(other.useWallet, useWallet) || other.useWallet == useWallet)&&(identical(other.loading, loading) || other.loading == loading)&&(identical(other.placingOrder, placingOrder) || other.placingOrder == placingOrder)&&(identical(other.placedOrderId, placedOrderId) || other.placedOrderId == placedOrderId)&&(identical(other.error, error) || other.error == error)&&(identical(other.paymentError, paymentError) || other.paymentError == paymentError));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_addresses),selectedAddress,const DeepCollectionEquality().hash(_slots),selectedSlot,paymentMethod,loading,placingOrder,placedOrderId,error,paymentError);
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_addresses),selectedAddress,const DeepCollectionEquality().hash(_slots),selectedSlot,paymentMethod,useWallet,loading,placingOrder,placedOrderId,error,paymentError);
 }
 
 @override
 String toString() {
-    return 'CheckoutState(addresses: $addresses, selectedAddress: $selectedAddress, slots: $slots, selectedSlot: $selectedSlot, paymentMethod: $paymentMethod, loading: $loading, placingOrder: $placingOrder, placedOrderId: $placedOrderId, error: $error, paymentError: $paymentError)';
+    return 'CheckoutState(addresses: $addresses, selectedAddress: $selectedAddress, slots: $slots, selectedSlot: $selectedSlot, paymentMethod: $paymentMethod, useWallet: $useWallet, loading: $loading, placingOrder: $placingOrder, placedOrderId: $placedOrderId, error: $error, paymentError: $paymentError)';
 }
 
 
@@ -303,7 +309,7 @@ abstract mixin class _$CheckoutStateCopyWith<$Res> implements $CheckoutStateCopy
   factory _$CheckoutStateCopyWith(_CheckoutState value, $Res Function(_CheckoutState) _then) = __$CheckoutStateCopyWithImpl;
 @override @useResult
 $Res call({
- List<Address> addresses, Address? selectedAddress, List<DeliverySlot> slots, DeliverySlot? selectedSlot, String paymentMethod, bool loading, bool placingOrder, String? placedOrderId, String? error, String? paymentError
+ List<Address> addresses, Address? selectedAddress, List<DeliverySlot> slots, DeliverySlot? selectedSlot, String paymentMethod, bool useWallet, bool loading, bool placingOrder, String? placedOrderId, String? error, String? paymentError
 });
 
 
@@ -320,14 +326,15 @@ class __$CheckoutStateCopyWithImpl<$Res>
 
 /// Create a copy of CheckoutState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? addresses = null,Object? selectedAddress = freezed,Object? slots = null,Object? selectedSlot = freezed,Object? paymentMethod = null,Object? loading = null,Object? placingOrder = null,Object? placedOrderId = freezed,Object? error = freezed,Object? paymentError = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? addresses = null,Object? selectedAddress = freezed,Object? slots = null,Object? selectedSlot = freezed,Object? paymentMethod = null,Object? useWallet = null,Object? loading = null,Object? placingOrder = null,Object? placedOrderId = freezed,Object? error = freezed,Object? paymentError = freezed,}) {
   return _then(_CheckoutState(
 addresses: null == addresses ? _self._addresses : addresses // ignore: cast_nullable_to_non_nullable
 as List<Address>,selectedAddress: freezed == selectedAddress ? _self.selectedAddress : selectedAddress // ignore: cast_nullable_to_non_nullable
 as Address?,slots: null == slots ? _self._slots : slots // ignore: cast_nullable_to_non_nullable
 as List<DeliverySlot>,selectedSlot: freezed == selectedSlot ? _self.selectedSlot : selectedSlot // ignore: cast_nullable_to_non_nullable
 as DeliverySlot?,paymentMethod: null == paymentMethod ? _self.paymentMethod : paymentMethod // ignore: cast_nullable_to_non_nullable
-as String,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
+as String,useWallet: null == useWallet ? _self.useWallet : useWallet // ignore: cast_nullable_to_non_nullable
+as bool,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
 as bool,placingOrder: null == placingOrder ? _self.placingOrder : placingOrder // ignore: cast_nullable_to_non_nullable
 as bool,placedOrderId: freezed == placedOrderId ? _self.placedOrderId : placedOrderId // ignore: cast_nullable_to_non_nullable
 as String?,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable

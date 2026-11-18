@@ -33,6 +33,23 @@ abstract class Order with _$Order {
 
     /// The chosen delivery slot's promise, for the tracking ETA.
     int? etaMinutes,
+
+    /// Wallet (docs/WALLET.md): what the wallet paid; the rest
+    /// ([payablePaise]) was paid online or is cash at the door.
+    @Default(0) int walletPaise,
+    int? payablePaise,
+
+    /// When it was delivered ("Report a problem" is open for 2 hours).
+    DateTime? deliveredAt,
+
+    /// The claim under review on this order, if any.
+    String? openIssueId,
+
+    /// Units already claimed per line (item index → units).
+    @Default(<String, int>{}) Map<String, int> claimedQty,
+
+    /// Set on a free replacement: the order it replaces.
+    String? replacementOf,
   }) = _Order;
 
   factory Order.fromJson(Map<String, dynamic> json) => _$OrderFromJson(json);

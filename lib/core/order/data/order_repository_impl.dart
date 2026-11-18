@@ -50,6 +50,8 @@ class HiveOrderRepository implements OrderRepository {
     Order order, {
     required String deliverySlotId,
     String? couponCode,
+    bool useWallet = false,
+    int? walletBalancePaise,
   }) async {
     final orders = await getOrders();
     orders.insert(0, order);

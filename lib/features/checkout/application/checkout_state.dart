@@ -12,6 +12,10 @@ abstract class CheckoutState with _$CheckoutState {
     @Default([]) List<DeliverySlot> slots,
     DeliverySlot? selectedSlot,
     @Default('UPI') String paymentMethod,
+
+    /// Spend the wallet balance on this order (on by default when there is
+    /// one; docs/WALLET.md).
+    @Default(true) bool useWallet,
     @Default(true) bool loading,
     @Default(false) bool placingOrder,
     String? placedOrderId,

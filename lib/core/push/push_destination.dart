@@ -37,6 +37,12 @@ PushDestination? pushDestination(Map<String, dynamic> data) {
       orderId.isEmpty ? '/supportChat' : '/supportChat?orderId=$orderId',
     );
   }
+  // A claim was approved or rejected (functions/src/wallet/claims.ts).
+  if (data['issueId'] case final String _
+      when (data['orderId'] as String? ?? '').isNotEmpty) {
+    return OpenRoute('/orderDetailsScreen?orderId=${data['orderId']}');
+  }
+  if (data['screen'] == 'wallet') return const OpenRoute('/walletScreen');
   if (data['orderId'] case final String orderId when orderId.isNotEmpty) {
     return OpenRoute('/orderTrackingScreen?orderId=$orderId', replace: true);
   }

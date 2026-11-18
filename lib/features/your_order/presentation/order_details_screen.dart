@@ -18,6 +18,7 @@ import 'package:zippy/core/utils/address_label.dart';
 import 'package:zippy/core/utils/order_id.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/your_order/application/reorder_action.dart';
+import 'package:zippy/features/report_problem/presentation/claim_status_card.dart';
 
 String orderStatusLabel(OrderStatus status) => switch (status) {
   OrderStatus.placed => 'orderStatusPlaced'.tr(),
@@ -215,6 +216,8 @@ class _OrderDetailsBody extends ConsumerWidget {
         ),
         if (order.status == OrderStatus.delivered) ...[
           const SizedBox(height: ZSpace.x3),
+          ClaimStatusCard(order: order),
+          const SizedBox(height: ZSpace.x3),
           RateSellersCard(orderId: order.id, items: order.items),
         ],
         const SizedBox(height: ZSpace.x3),
@@ -240,6 +243,16 @@ class _OrderDetailsBody extends ConsumerWidget {
                   ),
                 ],
               ),
+              if (order.walletPaise > 0) ...[
+                billRow('paidFromWallet'.tr(), order.walletPaise),
+                if (order.payablePaise case final rest? when rest > 0)
+                  billRow(
+                    order.paymentMethod == codPaymentMethod
+                        ? 'cashOnDelivery'.tr()
+                        : paymentMethodTitle(order.paymentMethod),
+                    rest,
+                  ),
+              ],
               const SizedBox(height: ZSpace.x1),
               Align(
                 alignment: Alignment.centerLeft,

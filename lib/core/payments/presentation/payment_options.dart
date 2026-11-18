@@ -14,6 +14,12 @@ const upiPaymentMethod = 'UPI';
 const cardPaymentMethod = 'Credit or debit card';
 const codPaymentMethod = 'Cash on delivery';
 
+/// Paid fully from the Zyppi wallet (docs/WALLET.md).
+const walletPaymentMethod = 'Wallet';
+
+/// A free replacement for an approved claim.
+const replacementPaymentMethod = 'Replacement';
+
 typedef _Option = ({
   String method,
   String titleKey,
@@ -71,6 +77,8 @@ String paymentMethodTitle(String method) {
   for (final option in _options) {
     if (option.method == method) return option.titleKey.tr();
   }
+  if (method == walletPaymentMethod) return 'walletTitle'.tr();
+  if (method == replacementPaymentMethod) return 'freeReplacement'.tr();
   return method;
 }
 

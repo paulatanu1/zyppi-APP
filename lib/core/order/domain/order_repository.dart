@@ -15,10 +15,17 @@ abstract class OrderRepository {
   /// synced cart server-side; returns the server-generated order id.
   /// Prepaid (PayU) orders are created by the server itself once the
   /// payment is verified — see PaymentRepository.verifyPayment.
+  ///
+  /// Wallet: [useWallet] spends the balance (cash covers the rest);
+  /// [Order.paymentMethod] 'Wallet' = the wallet pays it all.
+  /// [walletBalancePaise] is the balance the customer was shown: the
+  /// server refuses (WALLET_BALANCE_CHANGED) if the live one differs.
   Future<String> placeOrder(
     Order order, {
     required String deliverySlotId,
     String? couponCode,
+    bool useWallet = false,
+    int? walletBalancePaise,
   });
 
   Future<void> updateStatus(String orderId, OrderStatus status);

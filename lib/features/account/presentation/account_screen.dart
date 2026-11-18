@@ -14,6 +14,8 @@ import 'package:zippy/core/common_widgets/help_sheet.dart';
 import 'package:zippy/core/widgets/z_chrome.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/account/widgets/language_sheet.dart';
+import 'package:zippy/core/widgets/z_commerce.dart';
+import 'package:zippy/features/wallet/data/wallet_repository.dart';
 
 /// docs/mockups/Profile.dc.html.
 class AccountScreen extends ConsumerWidget {
@@ -25,6 +27,7 @@ class AccountScreen extends ConsumerWidget {
     final profile = profileAsync.value;
     final isGuest = profile?.isGuest ?? false;
     final unreadNotifications = ref.watch(unreadNotificationsProvider);
+    final walletBalance = ref.watch(walletBalanceProvider).value ?? 0;
     final name = profile?.fullName?.trim();
     final displayName = isGuest
         ? 'guestUser'.tr()
@@ -219,6 +222,14 @@ class AccountScreen extends ConsumerWidget {
                           const SizedBox(height: ZSpace.x3),
                           _Group(
                             items: [
+                              if (!isGuest)
+                                _GroupItem(
+                                  icon: Icons.account_balance_wallet_outlined,
+                                  label: 'walletTitle'.tr(),
+                                  trailingText: rupees(walletBalance),
+                                  onTap: () =>
+                                      context.pushNamed('WalletScreen'),
+                                ),
                               _GroupItem(
                                 icon: Icons.notifications_active_outlined,
                                 label: 'notifications'.tr(),

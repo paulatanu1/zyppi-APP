@@ -22,12 +22,17 @@ abstract class PaymentRepository {
   /// returned [PaymentOrder.amountPaise] is what the customer will pay.
   /// Throws [PaymentException] if the order can't be placed (stock,
   /// serviceability…) — before any money moves.
+  ///
+  /// [useWallet]: the wallet pays part (reserved by the server) and PayU
+  /// the rest; [walletBalancePaise] is the balance the customer was shown.
   Future<PaymentOrder> createOrder({
     required String paymentMethod,
     required String addressId,
     required String deliverySlotId,
     String? couponCode,
     int tipPaise = 0,
+    bool useWallet = false,
+    int? walletBalancePaise,
   });
 
   /// Checks a payment and, once it has completed, lets the server create

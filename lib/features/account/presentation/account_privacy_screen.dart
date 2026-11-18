@@ -8,6 +8,7 @@ import 'package:zippy/core/data/provider/shared_preference_provider.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
 import 'package:zippy/core/common_widgets/section_card.dart';
+import 'package:zippy/core/widgets/z_commerce.dart';
 
 /// Account → Account & privacy: policy links and account deletion (Google
 /// Play requires an in-app way to delete an account).
@@ -73,6 +74,36 @@ class AccountPrivacyScreen extends ConsumerWidget {
 
     try {
       await ref.read(accountRepositoryProvider).deleteAccount();
+    } on WalletNotEmpty catch (e) {
+      // Money in the wallet is lost with the account: say so first.
+      if (!context.mounted) return;
+      final forfeit = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('deleteWalletTitle'.tr()),
+          content: Text('deleteWalletBody'.tr(args: [rupees(e.walletPaise)])),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text('cancel'.tr()),
+            ),
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: context.z.danger),
+              onPressed: () => Navigator.pop(context, true),
+              child: Text('deleteAnyway'.tr()),
+            ),
+          ],
+        ),
+      );
+      if (forfeit != true) return;
+      try {
+        await ref
+            .read(accountRepositoryProvider)
+            .deleteAccount(forfeitWallet: true);
+      } catch (error) {
+        showError(error);
+        return;
+      }
     } catch (error) {
       showError(error);
       return;

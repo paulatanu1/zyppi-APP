@@ -17,6 +17,8 @@ class MockPaymentRepository implements PaymentRepository {
     required String deliverySlotId,
     String? couponCode,
     int tipPaise = 0,
+    bool useWallet = false,
+    int? walletBalancePaise,
   }) async {
     throw UnsupportedError('No PayU gateway in the mock flavor');
   }

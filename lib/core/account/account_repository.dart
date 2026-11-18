@@ -7,7 +7,17 @@ abstract class AccountRepository {
   /// Permanently deletes the signed-in user's account and personal data
   /// (orders are kept anonymised for accounting). Server side: the
   /// deleteAccount Cloud Function (functions/src/account.ts).
-  Future<void> deleteAccount();
+  ///
+  /// With money in the wallet it throws [WalletNotEmpty] until called
+  /// again with [forfeitWallet] (the customer has been warned).
+  Future<void> deleteAccount({bool forfeitWallet = false});
+}
+
+/// The account still has a wallet balance, which deletion would lose.
+class WalletNotEmpty implements Exception {
+  const WalletNotEmpty(this.walletPaise);
+
+  final int walletPaise;
 }
 
 class FirebaseAccountRepository implements AccountRepository {
@@ -16,8 +26,19 @@ class FirebaseAccountRepository implements AccountRepository {
   FirebaseAccountRepository(this.functions);
 
   @override
-  Future<void> deleteAccount() async {
-    await functions.httpsCallable('deleteAccount').call({'confirm': 'DELETE'});
+  Future<void> deleteAccount({bool forfeitWallet = false}) async {
+    try {
+      await functions.httpsCallable('deleteAccount').call({
+        'confirm': 'DELETE',
+        'forfeitWallet': forfeitWallet,
+      });
+    } on FirebaseFunctionsException catch (e) {
+      if (e.message == 'WALLET_NOT_EMPTY') {
+        final paise = (e.details as Map?)?['walletPaise'];
+        throw WalletNotEmpty(paise is num ? paise.round() : 0);
+      }
+      rethrow;
+    }
   }
 }
 
@@ -25,7 +46,7 @@ class FirebaseAccountRepository implements AccountRepository {
 /// whole effect.
 class MockAccountRepository implements AccountRepository {
   @override
-  Future<void> deleteAccount() async {}
+  Future<void> deleteAccount({bool forfeitWallet = false}) async {}
 }
 
 final accountRepositoryProvider = Provider<AccountRepository>(

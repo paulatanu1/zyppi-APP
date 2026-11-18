@@ -26,6 +26,18 @@ _Order _$OrderFromJson(Map<String, dynamic> json) => _Order(
   riderName: json['riderName'] as String?,
   riderPhone: json['riderPhone'] as String?,
   etaMinutes: (json['etaMinutes'] as num?)?.toInt(),
+  walletPaise: (json['walletPaise'] as num?)?.toInt() ?? 0,
+  payablePaise: (json['payablePaise'] as num?)?.toInt(),
+  deliveredAt: json['deliveredAt'] == null
+      ? null
+      : DateTime.parse(json['deliveredAt'] as String),
+  openIssueId: json['openIssueId'] as String?,
+  claimedQty:
+      (json['claimedQty'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(k, (e as num).toInt()),
+      ) ??
+      const <String, int>{},
+  replacementOf: json['replacementOf'] as String?,
 );
 
 Map<String, dynamic> _$OrderToJson(_Order instance) => <String, dynamic>{
@@ -46,6 +58,12 @@ Map<String, dynamic> _$OrderToJson(_Order instance) => <String, dynamic>{
   'riderName': instance.riderName,
   'riderPhone': instance.riderPhone,
   'etaMinutes': instance.etaMinutes,
+  'walletPaise': instance.walletPaise,
+  'payablePaise': instance.payablePaise,
+  'deliveredAt': instance.deliveredAt?.toIso8601String(),
+  'openIssueId': instance.openIssueId,
+  'claimedQty': instance.claimedQty,
+  'replacementOf': instance.replacementOf,
 };
 
 const _$OrderStatusEnumMap = {
