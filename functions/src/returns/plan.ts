@@ -1,5 +1,6 @@
 import { type DocumentReference, FieldValue, type Transaction } from "firebase-admin/firestore";
 import { db } from "../shared/firebase";
+import { distanceM, isPoint } from "../dispatch/model";
 import type { ClaimLine } from "../wallet/model";
 import { type Allocation, RETURNS, type ReturnLine, newReturnCode, splitByStore } from "./model";
 
@@ -7,6 +8,9 @@ import { type Allocation, RETURNS, type ReturnLine, newReturnCode, splitByStore 
 export interface PlannedReturn {
   ref: DocumentReference;
   data: Record<string, unknown>;
+  /** Where to collect: only the assigned rider and staff read it (the
+   * store reads the return itself and never sees the customer). */
+  customer: { addressText: string; area: string; lat: number | null; lng: number | null; phone: string | null };
   pickupCode: string;
   storeCode: string;
 }
@@ -53,8 +57,21 @@ export async function readReturnPlan(
   return storeIds.map((storeId, i) => {
     const store = stores[i];
     const lines = byStore.get(storeId) as ReturnLine[];
+    const customer = {
+      addressText: (order.addressText as string | undefined) ?? "",
+      // Rough area for the rider's offer card (no street or house number).
+      area: [address.area, address.city].filter((x) => typeof x === "string" && x).join(", ").slice(0, 80),
+      lat: typeof address.lat === "number" ? address.lat : null,
+      lng: typeof address.lng === "number" ? address.lng : null,
+      phone: (order.contactPhone as string | undefined) ?? null,
+    };
+    const storeLat = (store.get("lat") as number | undefined) ?? null;
+    const storeLng = (store.get("lng") as number | undefined) ?? null;
+    const from = { lat: customer.lat, lng: customer.lng };
+    const to = { lat: storeLat, lng: storeLng };
     return {
       ref: db.collection(RETURNS).doc(`${input.issueId}_${storeId}`),
+      customer,
       pickupCode: newReturnCode(),
       storeCode: newReturnCode(),
       data: {
@@ -65,18 +82,14 @@ export async function readReturnPlan(
         storeId,
         storeName: (store.get("name") as string | undefined) ?? "Store",
         storeAddress: (store.get("address") as string | undefined) ?? null,
-        storeLat: (store.get("lat") as number | undefined) ?? null,
-        storeLng: (store.get("lng") as number | undefined) ?? null,
+        storeLat,
+        storeLng,
         storePhone: (store.get("phone") as string | undefined) ?? null,
         // Who receives it: the shop's seller, or Zyppi for its own stores
         // (dark-store staff sign in to the seller app as Zyppi staff).
         sellerId: (store.get("sellerId") as string | undefined) || "zyppi",
-        customer: {
-          addressText: (order.addressText as string | undefined) ?? "",
-          lat: typeof address.lat === "number" ? address.lat : null,
-          lng: typeof address.lng === "number" ? address.lng : null,
-          phone: (order.contactPhone as string | undefined) ?? null,
-        },
+        // Customer → store, for the rider's pay (no address on this doc).
+        legM: isPoint(from) && isPoint(to) ? Math.round(distanceM(from, to)) : 0,
         lines,
         amountPaise: lines.reduce((a, l) => a + l.amountPaise, 0),
         resolution: input.resolution,
@@ -97,6 +110,7 @@ export async function readReturnPlan(
 export function writeReturnPlan(tx: Transaction, plan: PlannedReturn[]): void {
   for (const r of plan) {
     tx.create(r.ref, r.data);
+    tx.create(r.ref.collection("private").doc("customer"), r.customer);
     // The customer shows this one to the rider at the door…
     tx.create(r.ref.collection("private").doc("pickup"), { code: r.pickupCode, attempts: 0 });
     // …and the rider shows this one to the store.

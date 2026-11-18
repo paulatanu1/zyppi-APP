@@ -7,7 +7,7 @@ import { requireRider } from "../dispatch/rider_auth";
 import { notifySeller } from "../marketplace/seller_notify";
 import { db } from "../shared/firebase";
 import { decodeClaimPhoto } from "../wallet/model";
-import { customerPoint, earningRef, payReturnRider, releaseReturnRider, respondReturnOffer, returnIdOf, storePoint } from "./dispatch";
+import { customerPoint, customerRef, earningRef, payReturnRider, releaseReturnRider, respondReturnOffer, returnIdOf, storePoint } from "./dispatch";
 import { CUSTOMER_GEOFENCE_M, DONE_STATUSES, MAX_PICKUP_TRIES, MAX_RETURN_PHOTOS, RETURNS, type ReturnStatus } from "./model";
 import { tellCustomer } from "./notify";
 import { closeIssueIfDone, sendToReview } from "./settle";
@@ -83,7 +83,8 @@ export const riderReturnReachedCustomer = onCall(async (request) => {
   const rider = await requireRider(request);
   const r = await onMyReturn(rider.id, request.data?.returnId, async (tx, { ref, data, rider: me }) => {
     needStatus(data, ["assigned", "at_customer"]);
-    mustBeNear(me, customerPoint(data), CUSTOMER_GEOFENCE_M);
+    const customer = await tx.get(customerRef(ref.id));
+    mustBeNear(me, customerPoint(customer.data()), CUSTOMER_GEOFENCE_M);
     if (data.status === "at_customer") return null;
     tx.update(ref, { status: "at_customer", reachedCustomerAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
     return data;

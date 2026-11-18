@@ -16,7 +16,7 @@ Claims that go to ops keep the existing Claims-queue flow.
 
 ## The flow
 1. **Customer.** They start from the support chat (bot topic `missing_item`, action `return_flow`) or from Order details → Report a problem. They choose the items, what is wrong, 1–3 photos, and wallet, original payment or replacement. The claim gets status `returning`.
-2. **One return per store.** A return is created for each store the units came from, using `order.allocations`, as `returns/{issueId}_{storeId}`. Its codes are in `private/pickup` (the customer shows it to the rider) and `private/store` (the rider shows it to the store). The store or seller is alerted with `return_coming`.
+2. **One return per store.** A return is created for each store the units came from, using `order.allocations`, as `returns/{issueId}_{storeId}`. Its codes are in `private/pickup` (the customer shows it to the rider) and `private/store` (the rider shows it to the store). The customer's address and phone go in `private/customer`, which only the assigned rider and staff can read; the store never sees them. The store or seller is alerted with `return_coming`.
 3. **Rider offer** (`returns/dispatch.ts`). The nearest free rider to the customer gets an offer in `riders/{uid}/returnOffers` and a push of type `return_offer`. It times out and moves on under the same rules as order offers. If nobody accepts, the return shows as unassigned for ops. A rider on a return gets no order offers.
 4. **At the door** (`returns/rider.ts`). The rider must be within 200 m. They enter the customer's code and take 1–3 photos, which marks the return `picked_up`. Two other outcomes:
    - **Doesn't match:** the return goes to `review`, the claim goes back to the ops queue, and the rider is paid for the trip.

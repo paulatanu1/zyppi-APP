@@ -297,7 +297,8 @@ service cloud.firestore {
 
     // Automatic return pickups (functions/src/returns, docs/RETURNS.md):
     // the customer, the assigned rider, the receiving store (seller app,
-    // Zyppi staff for dark stores) and staff. Only functions write.
+    // Zyppi staff for dark stores) and staff. Only functions write. The
+    // customer's address and phone are in private/customer, not here.
     match /returns/{returnId} {
       allow read: if hasRole(['ops', 'support', 'finance'])
         || (signedIn() && resource.data.userId == request.auth.uid)
@@ -308,6 +309,13 @@ service cloud.firestore {
 
       function theReturn() {
         return get(/databases/$(database)/documents/returns/$(returnId)).data;
+      }
+      // Where to collect (address, pin, phone): the assigned rider and
+      // staff only. Never the store (sellers don't see customers).
+      match /private/customer {
+        allow read: if hasRole(['ops', 'support'])
+          || (signedIn() && theReturn().get('riderId', '') == request.auth.uid);
+        allow write: if false;
       }
       // The code the customer shows the rider at the door: customer + staff.
       match /private/pickup {

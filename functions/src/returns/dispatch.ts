@@ -4,7 +4,7 @@ import { onDocumentCreated } from "firebase-functions/firestore";
 import { HttpsError } from "firebase-functions/https";
 import { onSchedule } from "firebase-functions/scheduler";
 import { candidateFrom } from "../dispatch/dispatch";
-import { RIDER_CONFIG_DOC, earningFor, isPoint, distanceM, parseRiderConfig, pickRider, type Point } from "../dispatch/model";
+import { RIDER_CONFIG_DOC, earningFor, isPoint, parseRiderConfig, pickRider, type Point } from "../dispatch/model";
 import { istDayAndWeek } from "../dispatch/earnings";
 import { notifySeller } from "../marketplace/seller_notify";
 import { pushToDevices } from "../notifications/tokens";
@@ -32,11 +32,13 @@ export function returnIdOf(raw: unknown): string {
   return raw;
 }
 
-export function customerPoint(r: Record<string, unknown>): Point | null {
-  const c = (r.customer ?? {}) as Record<string, unknown>;
-  const p = { lat: c.lat, lng: c.lng };
+/** The customer's pin, from returns/{id}/private/customer. */
+export function customerPoint(c: Record<string, unknown> | undefined): Point | null {
+  const p = { lat: c?.lat, lng: c?.lng };
   return isPoint(p) ? p : null;
 }
+
+export const customerRef = (returnId: string) => returnRef(returnId).collection("private").doc("customer");
 
 export function storePoint(r: Record<string, unknown>): Point | null {
   const p = { lat: r.storeLat, lng: r.storeLng };
@@ -67,10 +69,7 @@ export function payReturnRider(
 ): void {
   if (existing.exists) return;
   const config = parseRiderConfig(configRaw);
-  const from = customerPoint(r);
-  const to = storePoint(r);
-  const straight = from && to ? distanceM(from, to) : 0;
-  const pay = earningFor(config, (r.serviceAreaId as string) ?? "", straight, new Date());
+  const pay = earningFor(config, (r.serviceAreaId as string) ?? "", (r.legM as number | undefined) ?? 0, new Date());
   const { day, week } = istDayAndWeek(new Date());
   tx.create(existing.ref, {
     type: "return",
@@ -94,7 +93,11 @@ export const earningRef = (uid: string, returnId: string) => riderRef(uid).colle
 export async function offerReturn(returnId: string, nowMs = Date.now()): Promise<void> {
   const ref = returnRef(returnId);
   const offered = await db.runTransaction(async (tx) => {
-    const [snap, configSnap] = await Promise.all([tx.get(ref), tx.get(db.doc(RIDER_CONFIG_DOC))]);
+    const [snap, configSnap, customer] = await Promise.all([
+      tx.get(ref),
+      tx.get(db.doc(RIDER_CONFIG_DOC)),
+      tx.get(customerRef(returnId)),
+    ]);
     const r = snap.data();
     if (!r || !["requested", "offered"].includes(r.status as string) || r.riderId) return null;
     if ((r.dispatch as { state?: string } | undefined)?.state === "manual") return null;
@@ -103,7 +106,7 @@ export async function offerReturn(returnId: string, nowMs = Date.now()): Promise
     if (offer?.riderId && (offer.expiresAt?.toMillis() ?? 0) > nowMs) return null;
     const tried = ((r.dispatch as { tried?: string[] } | undefined)?.tried ?? []).slice();
     if (offer?.riderId && !tried.includes(offer.riderId)) tried.push(offer.riderId);
-    const at = customerPoint(r);
+    const at = customerPoint(customer.data());
     const riders = config.dispatch.auto
       ? await tx.get(
           db
@@ -130,8 +133,7 @@ export async function offerReturn(returnId: string, nowMs = Date.now()): Promise
       return null;
     }
     const expiresAt = Timestamp.fromMillis(nowMs + config.dispatch.offerSeconds * 1000);
-    const to = storePoint(r);
-    const legM = at && to ? distanceM(at, to) : 0;
+    const legM = (r.legM as number | undefined) ?? 0;
     tx.update(ref, {
       status: "offered",
       offer: { riderId: pick.uid, expiresAt, at: FieldValue.serverTimestamp() },
@@ -145,7 +147,7 @@ export async function offerReturn(returnId: string, nowMs = Date.now()): Promise
       expiresAt,
       pickupDistanceM: pick.distanceM,
       dropDistanceM: legM,
-      customerArea: ((r.customer as { addressText?: string } | undefined)?.addressText ?? "").slice(0, 120),
+      customerArea: (customer.get("area") as string | undefined) ?? "",
       storeName: r.storeName ?? "Store",
       itemCount: ((r.lines as { quantity?: number }[] | undefined) ?? []).reduce((n, l) => n + (l.quantity ?? 0), 0),
       earningPaise: earningFor(config, (r.serviceAreaId as string) ?? "", legM, new Date(nowMs)).totalPaise,
