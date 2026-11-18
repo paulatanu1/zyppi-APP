@@ -231,6 +231,14 @@ service cloud.firestore {
         allow read: if isOwner(uid) || isAdmin();
         allow write: if false;
       }
+
+      // Wallet history (functions/src/wallet). The balance is
+      // users/{uid}.walletPaise, which the app can't write (not in
+      // profileFields); only Cloud Functions move money.
+      match /wallet/{entryId} {
+        allow read: if isOwner(uid) || isAdmin();
+        allow write: if false;
+      }
     }
 
     // Admin panel: a customer's addresses across users.
@@ -283,6 +291,15 @@ service cloud.firestore {
 
     match /paymentIntents/{id} {
       allow read: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid);
+      allow write: if false;
+    }
+
+    // "Report a problem" claims (functions/src/wallet/claims.ts): the
+    // customer sees their own; ops, support and finance review them. Only
+    // the callables write.
+    match /orderIssues/{id} {
+      allow read: if hasRole(['ops', 'support', 'finance'])
         || (signedIn() && resource.data.userId == request.auth.uid);
       allow write: if false;
     }

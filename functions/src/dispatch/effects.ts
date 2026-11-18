@@ -2,6 +2,7 @@ import { type DocumentReference, type DocumentSnapshot, FieldValue, Timestamp, t
 import { db } from "../shared/firebase";
 import { RIDERS } from "../riders/model";
 import { OFFERS } from "./model";
+import { cashToCollect } from "../wallet/model";
 
 /**
  * Order side-effects shared by ops (adminUpdateOrderStatus) and riders
@@ -27,7 +28,8 @@ export function creditRiderDelivery(
   const cod = (order.payment as { method?: string } | undefined)?.method === "Cash on delivery";
   const placed = (order.placedAt as Timestamp | undefined)?.toMillis() ?? Date.now();
   const onTime = Date.now() - placed <= ((order.etaMinutes as number | null) ?? 30) * 60_000;
-  const total = (order.totalPaise as number) ?? 0;
+  // Cash actually taken at the door: the wallet may have paid part of it.
+  const total = cashToCollect(order);
   tx.update(rider.ref, {
     deliveredCount: FieldValue.increment(1),
     ...(onTime ? { onTimeCount: FieldValue.increment(1) } : {}),

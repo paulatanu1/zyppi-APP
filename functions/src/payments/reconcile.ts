@@ -4,6 +4,7 @@ import { onSchedule } from "firebase-functions/scheduler";
 import { db } from "../shared/firebase";
 import { PAYU_SECRETS, PayUOutcome, verifyPayUTxn } from "./payu";
 import { settleIntent } from "./settle";
+import { giveBackWallet } from "../wallet/ledger";
 
 /** Leave fresh intents to the app's own checks while checkout is open. */
 export const RECONCILE_MIN_AGE_MS = 5 * 60 * 1000;
@@ -63,6 +64,7 @@ export async function reconcileOpenIntents(
       await db.runTransaction(async (tx) => {
         const current = await tx.get(doc.ref);
         if (current.get("status") !== "created") return;
+        await giveBackWallet(tx, current, doc.id, "Payment not completed");
         tx.update(doc.ref, {
           status: "expired",
           failureReason: "Not settled by PayU within 48 hours",

@@ -1,4 +1,5 @@
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import { cashToCollect } from "../wallet/model";
 import { pushToDevices, tokensOf } from "../notifications/tokens";
 import { logger } from "firebase-functions";
 import { onDocumentWritten } from "firebase-functions/firestore";
@@ -117,7 +118,8 @@ export async function offerOrder(orderId: string, nowMs = Date.now()): Promise<O
       dropArea: [address.area, address.city].filter((x) => typeof x === "string" && x).join(", "),
       storeIds,
       itemCount: ((o.items as { quantity?: number }[] | undefined) ?? []).reduce((n, i) => n + (i.quantity ?? 0), 0),
-      collectPaise: cod ? ((o.totalPaise as number) ?? 0) : 0,
+      // The wallet may have paid part of a cash order.
+      collectPaise: cod ? cashToCollect(o) : 0,
       cod,
       earningPaise:
         earningFor(config, (o.serviceAreaId as string) ?? "", dropM, new Date(nowMs)).totalPaise +

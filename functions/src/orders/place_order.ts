@@ -4,13 +4,20 @@ import { db } from "../shared/firebase";
 import { requireString, requireUid, toHttpsError } from "../shared/callable";
 import { assertCanOrder, getFeatures } from "../shared/features";
 import { COD, placeOrderInTx } from "./quote";
+import { WALLET_METHOD } from "../wallet/model";
 import { HOT } from "../shared/scaling";
 
 /**
- * Client entry point for cash-on-delivery orders (port of `place_order`).
- * Prepaid orders are only created by verifyPayUPayment.
+ * Client entry point for cash-on-delivery and wallet orders (port of
+ * `place_order`). PayU orders are only created by verifyPayUPayment.
  *
- * Request: {addressId, deliverySlotId, paymentMethod, couponCode?, tipPaise?}
+ * Wallet: `useWallet` spends the balance (cash covers the rest);
+ * paymentMethod "Wallet" means the wallet pays it all. `walletPaise` is the
+ * amount the app showed: if the balance no longer gives exactly that, the
+ * order is refused with WALLET_BALANCE_CHANGED and nothing is charged.
+ *
+ * Request: {addressId, deliverySlotId, paymentMethod, couponCode?, tipPaise?,
+ *           useWallet?, walletPaise?}
  * Response: {orderId}
  */
 export const placeOrder = onCall(HOT, async (request) => {
@@ -18,7 +25,7 @@ export const placeOrder = onCall(HOT, async (request) => {
   const data = (request.data ?? {}) as Record<string, unknown>;
 
   const paymentMethod = requireString(data.paymentMethod, "paymentMethod");
-  if (paymentMethod !== COD) {
+  if (paymentMethod !== COD && paymentMethod !== WALLET_METHOD) {
     throw new HttpsError(
       "permission-denied",
       "Online payments must be confirmed by the server",
@@ -42,7 +49,13 @@ export const placeOrder = onCall(HOT, async (request) => {
 
   try {
     const orderId = await db.runTransaction((tx) =>
-      placeOrderInTx(tx, params, { status: "pending", providerReference: null }),
+      placeOrderInTx(tx, params, { status: "pending", providerReference: null }, undefined, {
+        wallet: {
+          kind: "direct",
+          useWallet: data.useWallet === true || paymentMethod === WALLET_METHOD,
+          expectedWalletPaise: Number.isInteger(data.walletPaise) ? (data.walletPaise as number) : null,
+        },
+      }),
     );
     return { orderId };
   } catch (error) {

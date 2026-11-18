@@ -1,3 +1,4 @@
+import { cashToCollect } from "../wallet/model";
 /**
  * Report counters, written only by the `onOrderWritten` trigger (and the
  * `backfill-stats` script), read by the admin dashboard and reports so they
@@ -49,6 +50,8 @@ export function methodKey(method: unknown): string {
   if (method === COD) return "cod";
   if (method === "UPI") return "upi";
   if (method === "Credit or debit card") return "card";
+  if (method === "Wallet") return "wallet";
+  if (method === "Replacement") return "replacement";
   return "other";
 }
 
@@ -150,7 +153,8 @@ export function orderContribution(order: Record<string, unknown> | undefined): C
     const eta = int(order.etaMinutes) || 30;
     const onTime = deliveredMs != null && deliveredMs - placedMs <= eta * 60_000 ? 1 : 0;
     counts.riders = {
-      [rider]: { delivered: 1, onTime, codPaise: method === "cod" ? total : 0 },
+      // Cash taken at the door (the wallet may have paid part of it).
+      [rider]: { delivered: 1, onTime, codPaise: method === "cod" ? cashToCollect(order) : 0 },
     };
     if (typeof order.riderName === "string") labels.riders = { [rider]: order.riderName };
   }

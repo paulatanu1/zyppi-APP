@@ -2,6 +2,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 import { db } from "../shared/firebase";
 import { OrderError, placeOrderInTx } from "../orders/quote";
+import { holdId, releaseHold, walletEntryRef } from "../wallet/ledger";
 
 /** Intent statuses a person has taken over: no order is ever made from them. */
 export const CLOSED_BY_ADMIN = ["needs_review", "refunded", "dismissed"];
@@ -36,6 +37,12 @@ export async function placePaidOrder(
       }
 
       if (paidAmountPaise !== intent.amountPaise) {
+        // No order: the reserved wallet part goes back now.
+        const walletPaise = (intent.walletPaise as number | undefined) ?? 0;
+        if (walletPaise > 0) {
+          const hold = await tx.get(walletEntryRef(intent.userId, holdId(merchantOrderId)));
+          releaseHold(tx, intent.userId, merchantOrderId, hold, "Payment needs review: no order was made");
+        }
         tx.update(intentRef, {
           status: "needs_review",
           transactionId,
@@ -57,7 +64,9 @@ export async function placePaidOrder(
           paymentMethod: intent.paymentMethod,
         },
         { status: "succeeded", providerReference: transactionId },
-        intent.amountPaise,
+        // Intents from before the wallet have no totalPaise: PayU paid it all.
+        (intent.totalPaise as number | undefined) ?? intent.amountPaise,
+        { wallet: { kind: "intent", txnid: merchantOrderId, amountPaise: (intent.walletPaise as number | undefined) ?? 0 } },
       );
       tx.create(referenceRef, { merchantOrderId, orderId });
       tx.update(intentRef, {
@@ -76,6 +85,13 @@ export async function placePaidOrder(
     await db.runTransaction(async (tx) => {
       const snap = await tx.get(intentRef);
       if (snap.get("orderId")) return;
+      // No order, so the reserved wallet part goes back to the customer;
+      // support refunds the PayU part.
+      const uid = snap.get("userId") as string;
+      if (((snap.get("walletPaise") as number | undefined) ?? 0) > 0) {
+        const hold = await tx.get(walletEntryRef(uid, holdId(merchantOrderId)));
+        releaseHold(tx, uid, merchantOrderId, hold, "Payment needs review: no order was made");
+      }
       tx.update(intentRef, {
         status: "needs_review",
         transactionId,

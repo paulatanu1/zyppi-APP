@@ -18,6 +18,8 @@ import {
   userCredential,
 } from "./payu";
 import { settleIntent } from "./settle";
+import { holdId, writeWalletEntry } from "../wallet/ledger";
+import { WALLET_BALANCE_CHANGED, WALLET_COVERS_ORDER, walletBalanceOf, walletToApply } from "../wallet/model";
 import { HOT } from "../shared/scaling";
 
 const PRODUCT_INFO = "Zyppi order";
@@ -43,10 +45,17 @@ function payerDetails(user: Record<string, unknown>, authPhone: string | undefin
  * coupon and prices it from the live catalog, so an order that can't be
  * placed is rejected before the customer pays.
  *
+ * Wallet (`useWallet`): the balance is checked and the wallet part
+ * reserved (taken off the balance, `pay_{txnid}` held) in the same
+ * transaction that creates the intent, so it can't be spent twice while
+ * PayU is open. PayU is asked only for the rest. A failed / expired
+ * payment gives the reservation back (settle.ts, reconcile.ts). If the
+ * wallet covers it all, use placeOrder with "Wallet" (WALLET_COVERS_ORDER).
+ *
  * Request: {paymentMethod: "UPI" | "Credit or debit card", addressId,
- *           deliverySlotId, couponCode?, tipPaise?}
+ *           deliverySlotId, couponCode?, tipPaise?, useWallet?, walletPaise?}
  * Response: {txnid, key, amount, productInfo, firstName, email, phone,
- *            environment, userCredential, amountPaise}
+ *            environment, userCredential, amountPaise, walletPaise, totalPaise}
  */
 export const createPayUOrder = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (request) => {
   const uid = requireUid(request);
@@ -71,33 +80,57 @@ export const createPayUOrder = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (
     paymentMethod,
   };
 
-  let amountPaise: number;
+  let totalPaise: number;
   try {
     const quote = await db.runTransaction((tx) => quoteOrder(tx, params), { readOnly: true });
-    amountPaise = quote.totalPaise;
+    totalPaise = quote.totalPaise;
   } catch (error) {
     toHttpsError(error);
   }
 
-  const user = (await db.collection("users").doc(uid).get()).data() ?? {};
-  const payer = payerDetails(user, request.auth?.token.phone_number);
-
+  const useWallet = data.useWallet === true;
+  const expectedWalletPaise = Number.isInteger(data.walletPaise) ? (data.walletPaise as number) : null;
   const txnid = newTxnId();
-  await db.collection("paymentIntents").doc(txnid).create({
-    userId: uid,
-    amountPaise,
-    paymentMethod,
-    addressId: params.addressId,
-    deliverySlotId: params.deliverySlotId,
-    couponCode: params.couponCode,
-    tipPaise: params.tipPaise,
-    status: "created",
-    transactionId: null,
-    orderId: null,
-    failureReason: null,
-    createdAt: FieldValue.serverTimestamp(),
-    updatedAt: FieldValue.serverTimestamp(),
+  const intentRef = db.collection("paymentIntents").doc(txnid);
+  const userDocRef = db.collection("users").doc(uid);
+  const { user, walletPaise } = await db.runTransaction(async (tx) => {
+    const snap = await tx.get(userDocRef);
+    const walletPaise = walletToApply(walletBalanceOf(snap.data()), totalPaise, useWallet);
+    if (expectedWalletPaise != null && expectedWalletPaise !== walletPaise) {
+      throw new HttpsError("failed-precondition", WALLET_BALANCE_CHANGED);
+    }
+    if (walletPaise >= totalPaise) throw new HttpsError("failed-precondition", WALLET_COVERS_ORDER);
+    tx.create(intentRef, {
+      userId: uid,
+      // What PayU charges; plus walletPaise = totalPaise.
+      amountPaise: totalPaise - walletPaise,
+      walletPaise,
+      totalPaise,
+      paymentMethod,
+      addressId: params.addressId,
+      deliverySlotId: params.deliverySlotId,
+      couponCode: params.couponCode,
+      tipPaise: params.tipPaise,
+      status: "created",
+      transactionId: null,
+      orderId: null,
+      failureReason: null,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    if (walletPaise > 0) {
+      writeWalletEntry(tx, uid, holdId(txnid), {
+        type: "spend",
+        amountPaise: -walletPaise,
+        reason: "Reserved for an online payment",
+        intentId: txnid,
+        status: "held",
+      });
+    }
+    return { user: snap.data() ?? {}, walletPaise };
   });
+  const amountPaise = totalPaise - walletPaise;
+  const payer = payerDetails(user, request.auth?.token.phone_number);
 
   return {
     txnid,
@@ -110,6 +143,8 @@ export const createPayUOrder = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (
     // cards off; it scopes any card the customer chooses to save.
     userCredential: userCredential(merchantKey(), uid),
     amountPaise,
+    walletPaise,
+    totalPaise,
   };
 });
 

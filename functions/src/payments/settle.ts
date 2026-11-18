@@ -2,6 +2,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { db } from "../shared/firebase";
 import { PayUOutcome, verifyPayUTxn } from "./payu";
 import { CLOSED_BY_ADMIN, placePaidOrder } from "./place_paid_order";
+import { giveBackWallet } from "../wallet/ledger";
 
 /** Where a payment intent stands after asking PayU about it. */
 export type Settlement =
@@ -41,6 +42,7 @@ export async function settleIntent(
     await db.runTransaction(async (tx) => {
       const snap = await tx.get(intentRef);
       if (snap.get("status") !== "created" && snap.get("status") !== "expired") return;
+      await giveBackWallet(tx, snap, txnid, "Payment failed");
       tx.update(intentRef, {
         status: "failed",
         failureReason: outcome.reason,

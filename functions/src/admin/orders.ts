@@ -11,6 +11,7 @@ import { RIDERS } from "../riders/model";
 import { releaseRedemption } from "../coupons/usage";
 import { bindRider, creditRiderDelivery, releaseRider, withdrawOffer } from "../dispatch/effects";
 import { deliveryEarning } from "../dispatch/earnings";
+import { writeWalletEntry } from "../wallet/ledger";
 
 export const ORDER_STATUSES = ["placed", "packed", "out_for_delivery", "delivered", "cancelled"];
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
@@ -153,10 +154,45 @@ export async function updateOrderStatus(
           { merge: true },
         );
       }
-      const online = d.payment?.method && d.payment.method !== "Cash on delivery";
+      const online = ["UPI", "Credit or debit card"].includes(d.payment?.method);
       if (online && d.payment?.status === "succeeded") {
         due = (d.payment.amountPaise as number) - ((d.refundedPaise as number) ?? 0);
         if (due > 0) update.refundStatus = "pending";
+      }
+      // What the wallet paid goes straight back to the wallet, whatever
+      // the payment method (cash orders included).
+      const userId = d.userId as string | undefined;
+      const walletPaid = (d.walletPaise as number | undefined) ?? 0;
+      if (userId && walletPaid > 0) {
+        writeWalletEntry(tx, userId, `cancel_${orderRef.id}`, {
+          type: "cancel",
+          amountPaise: walletPaid,
+          reason: "Order cancelled",
+          orderId: orderRef.id,
+          by: actor.uid,
+        });
+        update.walletRefundedPaise = walletPaid;
+      }
+      // A cancelled replacement: the claim is paid to the wallet instead
+      // (same entry id as a wallet claim, so never both).
+      const claimPaise = (d.claimAmountPaise as number | undefined) ?? 0;
+      if (userId && typeof d.issueId === "string" && typeof d.replacementOf === "string" && claimPaise > 0) {
+        writeWalletEntry(tx, userId, `claim_${d.issueId}`, {
+          type: "claim",
+          amountPaise: claimPaise,
+          reason: "Replacement cancelled: claim credited",
+          orderId: d.replacementOf,
+          issueId: d.issueId,
+          by: actor.uid,
+        });
+        tx.update(db.collection("orders").doc(d.replacementOf), {
+          claimWalletPaise: FieldValue.increment(claimPaise),
+        });
+        tx.update(db.collection("orderIssues").doc(d.issueId), {
+          "resolution.type": "wallet",
+          "resolution.walletPaise": claimPaise,
+          "resolution.note": "Replacement cancelled; credited to wallet",
+        });
       }
     }
     const cod = d.payment?.method === "Cash on delivery";

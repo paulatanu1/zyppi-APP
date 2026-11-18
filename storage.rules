@@ -55,6 +55,21 @@ service firebase.storage {
       allow delete: if false;
     }
 
+    // Photos for a "Report a problem" claim: never public. The customer
+    // uploads into their own folder (one per order); ops, support and
+    // finance view them. Nobody replaces or deletes them (evidence).
+    match /users/{uid}/claims/{orderId}/{file} {
+      allow read: if request.auth != null
+        && (request.auth.uid == uid
+            || request.auth.token.get('admin', false) == true
+            || request.auth.token.get('role', '') in ['super_admin', 'ops', 'support', 'finance']);
+      allow create: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow update, delete: if false;
+    }
+
     // Home banners: public, uploaded from the admin Banners page.
     match /banners/{file} {
       allow read: if true;

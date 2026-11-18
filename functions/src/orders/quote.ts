@@ -21,7 +21,15 @@ import {
 import { priceListing } from "../marketplace/pricing";
 import { marketplaceConfigFrom } from "../marketplace/ranking";
 import { newHandoverCode } from "../dispatch/model";
-import { DocumentReference, FieldValue, Timestamp, Transaction } from "firebase-admin/firestore";
+import { DocumentReference, type DocumentSnapshot, FieldValue, Timestamp, Transaction } from "firebase-admin/firestore";
+import { holdId, walletEntryRef, writeWalletEntry } from "../wallet/ledger";
+import {
+  REPLACEMENT_METHOD,
+  WALLET_BALANCE_CHANGED,
+  WALLET_METHOD,
+  checkWalletOrder,
+  walletBalanceOf,
+} from "../wallet/model";
 import {
   PICKUP_CODES,
   type StoreInfo,
@@ -73,6 +81,12 @@ export interface OrderParams {
   honourCoupon?: boolean;
   tipPaise: number;
   paymentMethod: string;
+  /**
+   * A free replacement for an approved claim (wallet/claims.ts): these
+   * lines instead of the customer's cart, which is left alone; no coupon,
+   * no minimum order, no fees, nothing to pay.
+   */
+  replacement?: { lines: { productId: string; variantId: string; offerId: string | null; quantity: number }[] };
 }
 
 interface Variant {
@@ -282,16 +296,18 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
 
   // Cart rows: legacy ones are keyed by variant id (Zyppi's own stock);
   // marketplace ones by offer id with `offerId` + `variantId` fields.
-  const cartSnap = await tx.get(userRef.collection("cart"));
-  const cart = cartSnap.docs
-    .map((d) => ({
-      ref: d.ref,
-      offerId: (d.get("offerId") as string | undefined) ?? null,
-      variantId: (d.get("variantId") as string | undefined) ?? d.id,
-      productId: d.get("productId") as string,
-      quantity: d.get("quantity") as number,
-    }))
-    .filter((c) => Number.isInteger(c.quantity) && c.quantity > 0);
+  const cartSnap = p.replacement ? null : await tx.get(userRef.collection("cart"));
+  const cart = (
+    cartSnap
+      ? cartSnap.docs.map((d) => ({
+          ref: d.ref as DocumentReference | null,
+          offerId: (d.get("offerId") as string | undefined) ?? null,
+          variantId: (d.get("variantId") as string | undefined) ?? d.id,
+          productId: d.get("productId") as string,
+          quantity: d.get("quantity") as number,
+        }))
+      : p.replacement!.lines.map((l) => ({ ref: null as DocumentReference | null, ...l }))
+  ).filter((c) => Number.isInteger(c.quantity) && c.quantity > 0);
   if (cart.length === 0) throw new OrderError("Cart is empty");
 
   const productIds = [...new Set(cart.map((c) => c.productId))];
@@ -376,7 +392,7 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
   // pays a different total from the one they saw.
   let discount = 0;
   let couponCode: string | null = null;
-  const rawCode = p.couponCode?.trim();
+  const rawCode = p.replacement ? undefined : p.couponCode?.trim();
   if (rawCode) {
     const code = normalizeCode(rawCode);
     const lookup = code ? await lookupCoupon(tx, code, p.uid) : null;
@@ -389,10 +405,13 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
   }
 
   const delivery = deliveryConfigFrom(await tx.get(db.doc(DELIVERY_CONFIG_PATH)));
-  if (itemTotal < delivery.minOrderPaise) {
+  if (!p.replacement && itemTotal < delivery.minOrderPaise) {
     throw new OrderError(`MIN_ORDER_NOT_MET:${delivery.minOrderPaise}`);
   }
-  const deliveryFee = deliveryFeeFor(itemTotal, delivery);
+  // A replacement is free: the whole item total is its discount.
+  const deliveryFee = p.replacement ? 0 : deliveryFeeFor(itemTotal, delivery);
+  const handlingFee = p.replacement ? 0 : HANDLING_FEE_PAISE;
+  if (p.replacement) discount = itemTotal;
 
   const addressText = [address.line1, address.area, address.city, address.postalCode]
     .filter((part: unknown) => typeof part === "string" && part.trim() !== "")
@@ -426,13 +445,13 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
     etaMinutes: (slotSnap.get("etaMinutes") as number | undefined) ?? null,
     couponCode,
     lines,
-    cartRefs: cartSnap.docs.map((d) => d.ref),
+    cartRefs: cartSnap ? cartSnap.docs.map((d) => d.ref) : [],
     itemTotalPaise: itemTotal,
     deliveryFeePaise: deliveryFee,
-    handlingFeePaise: HANDLING_FEE_PAISE,
+    handlingFeePaise: handlingFee,
     discountPaise: discount,
-    tipPaise: p.tipPaise,
-    totalPaise: itemTotal + deliveryFee + HANDLING_FEE_PAISE + p.tipPaise - discount,
+    tipPaise: p.replacement ? 0 : p.tipPaise,
+    totalPaise: itemTotal + deliveryFee + handlingFee + (p.replacement ? 0 : p.tipPaise) - discount,
   };
 }
 
@@ -464,21 +483,65 @@ export function sellerSummary(lines: Pick<QuoteLine, "sellerId" | "quantity" | "
  * and its first event, and empties the cart. Every read happens in
  * [quoteOrder] before the first write, as Firestore transactions require.
  */
+/** How an order uses the wallet, and whether it replaces a claimed one. */
+export interface PlaceExtras {
+  wallet?:
+    | { kind: "direct"; useWallet: boolean; expectedWalletPaise?: number | null }
+    | { kind: "intent"; txnid: string; amountPaise: number };
+  /** The claim it replaces, and what that claim is worth (credited to the
+   * wallet instead if the replacement is cancelled). */
+  replacement?: { orderId: string; issueId: string; claimAmountPaise: number };
+}
+
 export async function placeOrderInTx(
   tx: Transaction,
   p: OrderParams,
   payment: { status: "pending" | "succeeded"; providerReference: string | null },
   expectedTotalPaise?: number,
+  extra: PlaceExtras = {},
 ): Promise<string> {
   const quote = await quoteOrder(tx, p);
   if (expectedTotalPaise != null && quote.totalPaise !== expectedTotalPaise) {
     throw new OrderError("PAYMENT_AMOUNT_MISMATCH");
   }
-  // Last read before the writes: which (non-cancelled) order this is for the
-  // customer, for the new-vs-repeat report.
+  // Last reads before the writes: which (non-cancelled) order this is for
+  // the customer (new-vs-repeat report), and their wallet balance.
   const userSnap = await tx.get(db.collection("users").doc(p.uid));
   const priorOrders = userSnap.get("orderCount");
   const customerOrderNo = (typeof priorOrders === "number" && priorOrders > 0 ? priorOrders : 0) + 1;
+
+  // Wallet: checked here, against the balance read in this transaction,
+  // before anything is written. Two orders at once can't both spend it:
+  // Firestore retries the later one, which then sees the lower balance.
+  let walletPaise = 0;
+  let method = p.paymentMethod;
+  let holdSnap: DocumentSnapshot | null = null;
+  const wallet = extra.wallet;
+  if (wallet?.kind === "direct") {
+    const check = checkWalletOrder({
+      method: p.paymentMethod,
+      useWallet: wallet.useWallet,
+      balancePaise: walletBalanceOf(userSnap.data()),
+      totalPaise: quote.totalPaise,
+      expectedWalletPaise: wallet.expectedWalletPaise,
+    });
+    if (!check.ok) throw new OrderError(check.code);
+    walletPaise = check.walletPaise;
+    method = check.method;
+  } else if (wallet?.kind === "intent" && wallet.amountPaise > 0) {
+    // Reserved when the PayU payment started (createPayUOrder). Released
+    // since (payment had failed / expired)? Then the order can't use it:
+    // the payment goes to review and is refunded.
+    holdSnap = await tx.get(walletEntryRef(p.uid, holdId(wallet.txnid)));
+    if (holdSnap.get("status") !== "held" || -((holdSnap.get("amountPaise") as number) ?? 0) !== wallet.amountPaise) {
+      throw new OrderError(WALLET_BALANCE_CHANGED);
+    }
+    walletPaise = wallet.amountPaise;
+  }
+  const payablePaise = quote.totalPaise - walletPaise;
+  const replacement = extra.replacement ?? null;
+  if (replacement) method = REPLACEMENT_METHOD;
+  const paidUpFront = method === WALLET_METHOD || method === REPLACEMENT_METHOD;
 
   // UUID ids keep the app's shortOrderId ("#3F2A9C1B") format.
   const orderRef = db.collection("orders").doc(crypto.randomUUID());
@@ -538,13 +601,21 @@ export async function placeOrderInTx(
     deliverySlotId: p.deliverySlotId,
     etaMinutes: quote.etaMinutes,
     couponCode: quote.couponCode,
-    paymentMethod: p.paymentMethod,
+    paymentMethod: method,
+    // amountPaise: what is paid outside the wallet (PayU, or cash at the
+    // door); walletPaise: what the wallet paid. Together: totalPaise.
     payment: {
-      method: p.paymentMethod,
-      amountPaise: quote.totalPaise,
-      status: payment.status,
+      method,
+      amountPaise: payablePaise,
+      status: paidUpFront ? "succeeded" : payment.status,
       providerReference: payment.providerReference,
     },
+    walletPaise,
+    // Rider app: cash to take at the door (0 unless cash on delivery).
+    cashToCollectPaise: method === COD ? payablePaise : 0,
+    ...(replacement
+      ? { replacementOf: replacement.orderId, issueId: replacement.issueId, claimAmountPaise: replacement.claimAmountPaise }
+      : {}),
     itemTotalPaise: quote.itemTotalPaise,
     deliveryFeePaise: quote.deliveryFeePaise,
     handlingFeePaise: quote.handlingFeePaise,
@@ -553,8 +624,9 @@ export async function placeOrderInTx(
     totalPaise: quote.totalPaise,
     // Counted against the coupon's limits; cancelling gives the use back.
     couponRedeemed: quote.couponCode != null,
-    // Added to users/{uid}.orderCount / totalSpentPaise (see below).
-    countedForUser: true,
+    // Added to users/{uid}.orderCount / totalSpentPaise (see below); a
+    // replacement isn't a new order for the customer.
+    countedForUser: !replacement,
     // 1 = the customer's first order (stats: new vs repeat).
     customerOrderNo,
     // Rider app: the delivery partner's call button.
@@ -613,18 +685,31 @@ export async function placeOrderInTx(
   if (quote.couponCode) {
     recordRedemption(tx, quote.couponCode, p.uid, orderRef.id, quote.discountPaise);
   }
+  if (wallet?.kind === "direct" && walletPaise > 0) {
+    writeWalletEntry(tx, p.uid, `order_${orderRef.id}`, {
+      type: "spend",
+      amountPaise: -walletPaise,
+      reason: "Order payment",
+      orderId: orderRef.id,
+    });
+  } else if (holdSnap) {
+    // Already taken off the balance when reserved; now it's spent.
+    tx.update(holdSnap.ref, { status: "spent", orderId: orderRef.id });
+  }
   // Customer aggregates for notification segments (cancelling takes the
   // order back off; lastOrderAt stays).
-  tx.set(
-    db.collection("users").doc(p.uid),
-    {
-      orderCount: FieldValue.increment(1),
-      totalSpentPaise: FieldValue.increment(quote.totalPaise),
-      lastOrderAt: now,
-      serviceAreaId: quote.serviceAreaId,
-    },
-    { merge: true },
-  );
+  if (!replacement) {
+    tx.set(
+      db.collection("users").doc(p.uid),
+      {
+        orderCount: FieldValue.increment(1),
+        totalSpentPaise: FieldValue.increment(quote.totalPaise),
+        lastOrderAt: now,
+        serviceAreaId: quote.serviceAreaId,
+      },
+      { merge: true },
+    );
+  }
 
   return orderRef.id;
 }

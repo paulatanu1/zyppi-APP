@@ -13,6 +13,7 @@ export { placeOrder } from "./orders/place_order";
 export { createPayUOrder, signPayUHash, verifyPayUPayment } from "./payments/callables";
 export { reconcilePayUIntents } from "./payments/reconcile";
 export { payuWebhook } from "./payments/webhook";
+export { reportOrderIssue, adminResolveIssue, adminRejectIssue, adminCreditWallet } from "./wallet/claims";
 export { placesProxy } from "./places";
 export { deleteAccount } from "./account";
 export { onOrderEventCreated } from "./push";

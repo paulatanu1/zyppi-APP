@@ -331,13 +331,17 @@ export const adminAdjustSellerEarnings = onCall(async (request) => {
  * the customer is the separate Refund action. Request: {orderId, index,
  * quantity, sellerAtFault, reason}.
  */
-export const adminReturnSellerItem = onCall(async (request) => {
-  const actor = requireRole(request, ["ops", "finance"]);
-  const orderId = typeof request.data?.orderId === "string" ? request.data.orderId : "";
-  const index = Number(request.data?.index);
-  const quantity = Number(request.data?.quantity);
-  const atFault = request.data?.sellerAtFault === true;
-  const reason = typeof request.data?.reason === "string" ? request.data.reason.trim().slice(0, 300) : "";
+export const adminReturnSellerItem = onCall(async (request) =>
+  returnSellerItem(requireRole(request, ["ops", "finance"]), request.data ?? {}),
+);
+
+/** adminReturnSellerItem's work; approved claims (wallet/claims.ts) use it too. */
+export async function returnSellerItem(actor: Actor, data: Record<string, unknown>): Promise<{ debitPaise: number }> {
+  const orderId = typeof data.orderId === "string" ? data.orderId : "";
+  const index = Number(data.index);
+  const quantity = Number(data.quantity);
+  const atFault = data.sellerAtFault === true;
+  const reason = typeof data.reason === "string" ? data.reason.trim().slice(0, 300) : "";
   if (!/^[\w-]{1,64}$/.test(orderId)) throw new HttpsError("invalid-argument", "Invalid order");
   if (!Number.isInteger(index) || index < 0) throw new HttpsError("invalid-argument", "Invalid line");
   if (!Number.isInteger(quantity) || quantity < 1) throw new HttpsError("invalid-argument", "Enter how many units");
@@ -395,7 +399,7 @@ export const adminReturnSellerItem = onCall(async (request) => {
     writeAudit(actor, { action: "order.returnItem", target: orderRef.path, after: { index, quantity, atFault, debitPaise, reason } }, tx);
     return { debitPaise };
   });
-});
+}
 
 // ------------------------------------------------------------ daily job
 
