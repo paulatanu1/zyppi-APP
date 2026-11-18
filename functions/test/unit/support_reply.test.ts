@@ -72,6 +72,15 @@ describe("composeReply", () => {
     expect(r.messages[1].action).toBe("contact_options");
   });
 
+  it("missing / wrong / damaged items: offers the guided return, no handoff", () => {
+    const r = reply({ queryVector: vectorFor("missing_item") });
+    expect(r.handoff).toBe(false);
+    expect(r.topic).toBe("missing_item");
+    expect(r.messages).toHaveLength(1);
+    expect(r.messages[0].action).toBe("return_flow");
+    expect(r.messages[0].quickReplies?.map((q) => q.id)).toEqual([AGENT_REPLY_ID]);
+  });
+
   it("answers a tapped topic chip without searching", () => {
     const r = reply({ quickReplyId: "kb:payment_methods" });
     expect(r.topic).toBe("payment_methods");

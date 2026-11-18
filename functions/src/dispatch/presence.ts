@@ -7,6 +7,7 @@ import { requireUid } from "../shared/callable";
 import { db } from "../shared/firebase";
 import { RIDERS } from "../riders/model";
 import { dispatchWaiting, respondOffer } from "./dispatch";
+import { respondReturnOffer } from "../returns/dispatch";
 import { istDayAndWeek } from "./earnings";
 import { distanceM, etaMinutes, impossibleJump, isPoint, requirePoint } from "./model";
 import { HOT } from "../shared/scaling";
@@ -48,7 +49,7 @@ export const riderSetOnline = onCall(async (request) => {
     await dispatchWaiting((rider.get("serviceAreaId") as string) ?? "");
     return { online: true };
   }
-  if (rider.get("presence.activeOrderId")) {
+  if (rider.get("presence.activeOrderId") || rider.get("presence.activeReturnId")) {
     throw new HttpsError("failed-precondition", "FINISH_DELIVERY_FIRST");
   }
   addOnlineMinutes(rider, batch, now);
@@ -60,6 +61,8 @@ export const riderSetOnline = onCall(async (request) => {
   await batch.commit();
   const offer = rider.get("presence.offerOrderId") as string | null | undefined;
   if (offer) await respondOffer(rider.id, offer, false);
+  const returnOffer = rider.get("presence.offerReturnId") as string | null | undefined;
+  if (returnOffer) await respondReturnOffer(rider.id, returnOffer, false);
   return { online: false };
 });
 
@@ -69,7 +72,7 @@ const MIN_PING_GAP_MS = 8_000;
 /**
  * Request: {lat, lng, accuracy?}. Updates the rider's position; on a
  * delivery also the customer's live distance / ETA.
- * Response: {online, activeOrderId, offerOrderId}.
+ * Response: {online, activeOrderId, offerOrderId, activeReturnId, offerReturnId}.
  */
 export const riderPing = onCall(HOT, async (request) => {
   const rider = await requireRider(request);
@@ -79,6 +82,9 @@ export const riderPing = onCall(HOT, async (request) => {
     online: presence.online === true,
     activeOrderId: (presence.activeOrderId as string | null | undefined) ?? null,
     offerOrderId: (presence.offerOrderId as string | null | undefined) ?? null,
+    // Return pickups (returns/dispatch.ts).
+    activeReturnId: (presence.activeReturnId as string | null | undefined) ?? null,
+    offerReturnId: (presence.offerReturnId as string | null | undefined) ?? null,
   };
   if (!state.online) return state;
   const now = Date.now();
@@ -128,6 +134,8 @@ export const riderBreak = onCall(async (request) => {
   await rider.ref.update({ "presence.onBreakUntil": until });
   const offer = rider.get("presence.offerOrderId") as string | null | undefined;
   if (minutes && offer) await respondOffer(rider.id, offer, false);
+  const returnOffer = rider.get("presence.offerReturnId") as string | null | undefined;
+  if (minutes && returnOffer) await respondReturnOffer(rider.id, returnOffer, false);
   if (!minutes) await dispatchWaiting((rider.get("serviceAreaId") as string) ?? "");
   return { onBreakUntil: until?.toMillis() ?? null };
 });

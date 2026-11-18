@@ -177,7 +177,8 @@ export async function updateOrderStatus(
       // (same entry id as a wallet claim, so never both).
       const claimPaise = (d.claimAmountPaise as number | undefined) ?? 0;
       if (userId && typeof d.issueId === "string" && typeof d.replacementOf === "string" && claimPaise > 0) {
-        writeWalletEntry(tx, userId, `claim_${d.issueId}`, {
+        // One entry per replacement order (a claim's returns can each have one).
+        writeWalletEntry(tx, userId, `claim_${d.issueId}_r_${orderRef.id}`, {
           type: "claim",
           amountPaise: claimPaise,
           reason: "Replacement cancelled: claim credited",

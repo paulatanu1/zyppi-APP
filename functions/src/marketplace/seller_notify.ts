@@ -19,7 +19,10 @@ export type SellerEvent =
   | "subscription_expired"
   | "licence_expired"
   | "product_approved"
-  | "product_rejected";
+  | "product_rejected"
+  | "return_coming"
+  | "return_picked"
+  | "return_arrived";
 
 const TEXT: Record<SellerEvent, { title: string; body: string }> = {
   new_order: { title: "New order", body: "Accept it in the Zyppi Seller app." },
@@ -31,9 +34,18 @@ const TEXT: Record<SellerEvent, { title: string; body: string }> = {
   licence_expired: { title: "FSSAI licence expired", body: "Your products are paused. Upload your renewed licence." },
   product_approved: { title: "Product approved", body: "Set your price and stock to start selling it." },
   product_rejected: { title: "Product not approved", body: "Open the app to see why and fix it." },
+  return_coming: { title: "Return coming", body: "A customer is returning items to your store. A rider will bring them." },
+  return_picked: { title: "Return on the way", body: "The rider has collected the return and is coming to your store." },
+  return_arrived: { title: "Rider here with a return", body: "Check the items and enter the rider's return code to receive them." },
 };
 
-export async function notifySeller(sellerId: string, orderId: string, kind: SellerEvent): Promise<void> {
+export async function notifySeller(
+  sellerId: string,
+  orderId: string,
+  kind: SellerEvent,
+  /** Extra string fields for the app (e.g. returnId, a line of what's coming). */
+  extra: Record<string, string> = {},
+): Promise<void> {
   try {
     const seller = db.collection(SELLERS).doc(sellerId);
     const [devices] = await Promise.all([
@@ -42,6 +54,7 @@ export async function notifySeller(sellerId: string, orderId: string, kind: Sell
         kind,
         orderId,
         ...TEXT[kind],
+        ...extra,
         read: false,
         at: FieldValue.serverTimestamp(),
         expireAt: expireAt(Date.now(), 90),
@@ -55,7 +68,7 @@ export async function notifySeller(sellerId: string, orderId: string, kind: Sell
     const ringing = kind === "new_order" || kind === "escalate";
     const res = await messaging.sendEachForMulticast({
       tokens: targets.map((t) => t.token),
-      data: { type: kind, orderId, ...TEXT[kind] },
+      data: { type: kind, orderId, ...TEXT[kind], ...extra },
       android: ringing
         ? { priority: "high", ttl: 10 * 60_000 }
         : { priority: "high", notification: { ...TEXT[kind], channelId: "orders" } },

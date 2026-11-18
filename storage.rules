@@ -67,6 +67,15 @@ service firebase.storage {
       allow write: if false;
     }
 
+    // Return pickup photos (rider at the door): written only by the
+    // returns functions; staff who handle claims can view them.
+    match /returns/{returnId}/{file} {
+      allow read: if request.auth != null
+        && (request.auth.token.get('admin', false) == true
+            || request.auth.token.get('role', '') in ['super_admin', 'ops', 'support', 'finance']);
+      allow write: if false;
+    }
+
     // Home banners: public, uploaded from the admin Banners page.
     match /banners/{file} {
       allow read: if true;

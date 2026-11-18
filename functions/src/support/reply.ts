@@ -15,8 +15,13 @@ export interface OutMessage {
   from: "bot" | "system";
   text: string;
   quickReplies?: QuickReply[];
-  /** `contact_options`: the app shows WhatsApp / Call buttons under it. */
-  action?: "contact_options";
+  /**
+   * `contact_options`: the app shows WhatsApp / Call buttons under it.
+   * `return_flow`: the app shows "Start a return" and runs the guided
+   * steps (order → items → photos → refund choice) in the chat, then
+   * calls reportOrderIssue with the chat id.
+   */
+  action?: "contact_options" | "return_flow";
 }
 
 export interface OrderSummary {
@@ -113,6 +118,16 @@ export function composeReply(input: {
     .map((id) => retriever.byId(id))
     .filter((e): e is KbEntry => !!e && !e.hidden)
     .map((e) => chip(e, lang));
+
+  if (entry.action === "return_flow") {
+    return {
+      messages: [
+        { from: "bot", text: answer || copy.returnFlow, action: "return_flow", quickReplies: [personChip(lang)] },
+      ],
+      handoff: false,
+      topic: entry.id,
+    };
+  }
 
   if (entry.action === "handoff") {
     const messages: OutMessage[] = answer ? [{ from: "bot", text: answer }] : [];

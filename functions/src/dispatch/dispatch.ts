@@ -27,15 +27,16 @@ const OPEN = ["placed", "packed"];
 
 const ms = (v: unknown) => (v instanceof Timestamp ? v.toMillis() : null);
 
-function candidateFrom(id: string, d: Record<string, unknown>): Candidate {
+export function candidateFrom(id: string, d: Record<string, unknown>): Candidate {
   const p = (d.presence ?? {}) as Record<string, unknown>;
   return {
     uid: id,
     lat: typeof p.lat === "number" ? p.lat : null,
     lng: typeof p.lng === "number" ? p.lng : null,
     pingAtMs: ms(p.at),
-    activeOrderId: (p.activeOrderId as string | null | undefined) ?? null,
-    offerOrderId: (p.offerOrderId as string | null | undefined) ?? null,
+    // A rider on (or offered) a return pickup is busy too (returns/dispatch.ts).
+    activeOrderId: (p.activeOrderId as string | null | undefined) ?? (p.activeReturnId as string | null | undefined) ?? null,
+    offerOrderId: (p.offerOrderId as string | null | undefined) ?? (p.offerReturnId as string | null | undefined) ?? null,
     onBreakUntilMs: ms(p.onBreakUntil),
     idleSinceMs: ms(p.idleSince),
     inSlot: (ms(p.slotEndsAt) ?? 0) > Date.now(),
@@ -172,7 +173,9 @@ export async function respondOffer(uid: string, orderIdRaw: unknown, accept: unk
       withdrawOffer(tx, orderId, uid);
       throw new HttpsError("failed-precondition", "OFFER_GONE");
     }
-    if (rider.get("presence.activeOrderId")) throw new HttpsError("failed-precondition", "FINISH_DELIVERY_FIRST");
+    if (rider.get("presence.activeOrderId") || rider.get("presence.activeReturnId")) {
+      throw new HttpsError("failed-precondition", "FINISH_DELIVERY_FIRST");
+    }
     bindRider(tx, orderId, uid);
     tx.update(orderRef, {
       riderId: uid,
@@ -248,7 +251,7 @@ export const dispatchSweep = onSchedule({ schedule: "every 1 minutes", timeoutSe
     }
   }
   for (const r of stale.docs) {
-    if (r.get("presence.activeOrderId")) continue; // keep them on their delivery
+    if (r.get("presence.activeOrderId") || r.get("presence.activeReturnId")) continue; // keep them on their job
     await r.ref.update({ "presence.online": false, "presence.offlineReason": "no_signal" });
   }
 });

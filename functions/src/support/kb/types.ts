@@ -6,7 +6,8 @@ import type { Lang } from "../lang";
  * - `order_status`: send the order's live status (then the answer, if any).
  * - `handoff`: send the answer, then connect the customer to the team.
  */
-export type KbAction = "none" | "order_status" | "handoff";
+/** return_flow: the app shows "Start a return" (guided steps in the chat). */
+export type KbAction = "none" | "order_status" | "handoff" | "return_flow";
 
 /** One support topic: ways people ask it, and the answer, per language. */
 export interface KbEntry {

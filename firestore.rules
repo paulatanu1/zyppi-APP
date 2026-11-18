@@ -295,6 +295,34 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Automatic return pickups (functions/src/returns, docs/RETURNS.md):
+    // the customer, the assigned rider, the receiving store (seller app,
+    // Zyppi staff for dark stores) and staff. Only functions write.
+    match /returns/{returnId} {
+      allow read: if hasRole(['ops', 'support', 'finance'])
+        || (signedIn() && resource.data.userId == request.auth.uid)
+        || (signedIn() && resource.data.get('riderId', '') == request.auth.uid)
+        || (signedIn() && request.auth.token.get('sellerId', '') != ''
+            && resource.data.sellerId == request.auth.token.sellerId);
+      allow write: if false;
+
+      function theReturn() {
+        return get(/databases/$(database)/documents/returns/$(returnId)).data;
+      }
+      // The code the customer shows the rider at the door: customer + staff.
+      match /private/pickup {
+        allow read: if hasRole(['ops', 'support'])
+          || (signedIn() && theReturn().userId == request.auth.uid);
+        allow write: if false;
+      }
+      // The code the rider shows the store: assigned rider + staff.
+      match /private/store {
+        allow read: if hasRole(['ops', 'support'])
+          || (signedIn() && theReturn().get('riderId', '') == request.auth.uid);
+        allow write: if false;
+      }
+    }
+
     // "Report a problem" claims (functions/src/wallet/claims.ts): the
     // customer sees their own; ops, support and finance review them. Only
     // the callables write.
@@ -390,6 +418,11 @@ service cloud.firestore {
       // Rider app (functions/src/dispatch): open order offers, earnings
       // ledger, payouts, daily login minutes, booked slots, inbox.
       match /offers/{id} {
+        allow read: if isOwner(uid) || hasRole(['ops']);
+        allow write: if false;
+      }
+      // Return pickups offered to this rider (functions/src/returns).
+      match /returnOffers/{id} {
         allow read: if isOwner(uid) || hasRole(['ops']);
         allow write: if false;
       }

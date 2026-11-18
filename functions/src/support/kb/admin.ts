@@ -17,7 +17,7 @@ import type { KbAction, KbEntry } from "./types";
  * kb/seed.ts, so it would undo edits made here.
  */
 
-const ACTIONS: KbAction[] = ["none", "order_status", "handoff"];
+const ACTIONS: KbAction[] = ["none", "order_status", "handoff", "return_flow"];
 const ID = /^[a-z0-9_]{2,40}$/;
 
 function bad(message: string): never {

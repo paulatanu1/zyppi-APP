@@ -233,7 +233,7 @@ export const KB_SEED: KbEntry[] = [
   },
   {
     id: "missing_item",
-    action: "handoff",
+    action: "return_flow",
     title: {
       en: "Missing or wrong item",
       bn: "জিনিস কম বা ভুল",
@@ -251,12 +251,12 @@ export const KB_SEED: KbEntry[] = [
       hi: ["ऑर्डर में एक सामान नहीं आया", "गलत सामान आया है", "सामान खराब निकला"],
       pa: ["ਆਰਡਰ ਵਿੱਚ ਇੱਕ ਸਾਮਾਨ ਨਹੀਂ ਆਇਆ", "ਗਲਤ ਸਾਮਾਨ ਆਇਆ ਹੈ", "ਸਾਮਾਨ ਖ਼ਰਾਬ ਨਿਕਲਿਆ"],
     },
-    keywords: ["missing", "wrong", "damaged", "broken", "expired", "spoiled", "quality"],
+    keywords: ["missing", "wrong", "damaged", "broken", "expired", "spoiled", "quality", "return", "refund item", "replace"],
     answers: {
-      en: "Sorry about that! I'm connecting you to our team. Tell us here which item it was and what went wrong — it helps them sort it out faster.",
-      bn: "এর জন্য দুঃখিত! আপনাকে আমাদের টিমের সঙ্গে যুক্ত করছি। কোন জিনিস আর কী সমস্যা হয়েছে, এখানে লিখুন — তাতে তাড়াতাড়ি সমাধান হবে।",
-      hi: "इसके लिए माफ़ी चाहते हैं! मैं आपको हमारी टीम से जोड़ रहा हूँ। यहाँ बताइए कौन-सा सामान था और क्या दिक्कत हुई — इससे जल्दी हल होगा।",
-      pa: "ਇਸ ਲਈ ਮਾਫ਼ੀ! ਮੈਂ ਤੁਹਾਨੂੰ ਸਾਡੀ ਟੀਮ ਨਾਲ ਜੋੜ ਰਿਹਾ ਹਾਂ। ਇੱਥੇ ਦੱਸੋ ਕਿਹੜਾ ਸਾਮਾਨ ਸੀ ਅਤੇ ਕੀ ਗੜਬੜ ਹੋਈ — ਇਸ ਨਾਲ ਜਲਦੀ ਹੱਲ ਹੋਵੇਗਾ।",
+      en: "Sorry about that! Tap \"Start a return\" to tell me which item and what went wrong. For wrong, damaged or expired items a rider collects it, and your refund goes out as soon as the store receives it. Missing items are checked by our team.",
+      bn: "এর জন্য দুঃখিত! কোন জিনিস আর কী সমস্যা, জানাতে \"রিটার্ন শুরু করুন\" ট্যাপ করুন। ভুল, নষ্ট বা মেয়াদোত্তীর্ণ জিনিস রাইডার নিয়ে যাবেন, দোকানে পৌঁছালেই রিফান্ড হবে। না আসা জিনিস আমাদের টিম দেখবে।",
+      hi: "इसके लिए माफ़ी! कौन-सा सामान और क्या दिक्कत है, बताने के लिए \"रिटर्न शुरू करें\" पर टैप करें। गलत, खराब या एक्सपायर्ड सामान राइडर ले जाएगा और दुकान पहुँचते ही रिफ़ंड हो जाएगा। न आए सामान की जाँच हमारी टीम करेगी।",
+      pa: "ਇਸ ਲਈ ਮਾਫ਼ੀ! ਕਿਹੜਾ ਸਾਮਾਨ ਅਤੇ ਕੀ ਗੜਬੜ ਹੈ, ਦੱਸਣ ਲਈ \"ਰਿਟਰਨ ਸ਼ੁਰੂ ਕਰੋ\" 'ਤੇ ਟੈਪ ਕਰੋ। ਗਲਤ, ਖ਼ਰਾਬ ਜਾਂ ਮਿਆਦ ਪੁੱਗਿਆ ਸਾਮਾਨ ਰਾਈਡਰ ਲੈ ਜਾਵੇਗਾ ਅਤੇ ਦੁਕਾਨ ਪਹੁੰਚਦੇ ਹੀ ਰਿਫੰਡ ਹੋ ਜਾਵੇਗਾ। ਨਾ ਆਏ ਸਾਮਾਨ ਦੀ ਜਾਂਚ ਸਾਡੀ ਟੀਮ ਕਰੇਗੀ।",
     },
   },
   {

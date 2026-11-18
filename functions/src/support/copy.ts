@@ -18,6 +18,8 @@ type Copy = {
   error: string;
   talkToPerson: string;
   agentReplyPush: string;
+  /** Under "Start a return" when the topic has no answer text. */
+  returnFlow: string;
 };
 
 export const COPY: Record<Lang, Copy> = {
@@ -43,6 +45,7 @@ export const COPY: Record<Lang, Copy> = {
     error: "Something went wrong on my side. You can talk to our team instead.",
     talkToPerson: "Talk to a person",
     agentReplyPush: "Zyppi support replied",
+    returnFlow: "Sorry about that! Tap \"Start a return\" and I'll help you report the item. A rider can collect it and you get your refund once the store receives it.",
   },
   bn: {
     welcome: "নমস্কার! আমি Zyppi-র সহকারী। আপনার অর্ডার, ডেলিভারি, পেমেন্ট বা টাকা ফেরত নিয়ে যা খুশি জিজ্ঞেস করুন।",
@@ -66,6 +69,7 @@ export const COPY: Record<Lang, Copy> = {
     error: "আমার দিকে কিছু সমস্যা হয়েছে। চাইলে আমাদের টিমের সঙ্গে কথা বলতে পারেন।",
     talkToPerson: "কারও সঙ্গে কথা বলুন",
     agentReplyPush: "Zyppi সাপোর্ট উত্তর দিয়েছে",
+    returnFlow: "এর জন্য দুঃখিত! \"রিটার্ন শুরু করুন\" ট্যাপ করুন, আমি সাহায্য করব। রাইডার জিনিসটি নিয়ে যাবেন, দোকানে পৌঁছালেই রিফান্ড হবে।",
   },
   hi: {
     welcome: "नमस्ते! मैं Zyppi का असिस्टेंट हूँ। अपने ऑर्डर, डिलीवरी, पेमेंट या रिफ़ंड के बारे में कुछ भी पूछें।",
@@ -89,6 +93,7 @@ export const COPY: Record<Lang, Copy> = {
     error: "मेरी तरफ़ से कुछ गड़बड़ हुई। आप हमारी टीम से बात कर सकते हैं।",
     talkToPerson: "किसी से बात करें",
     agentReplyPush: "Zyppi सपोर्ट ने जवाब दिया",
+    returnFlow: "इसके लिए माफ़ी! \"रिटर्न शुरू करें\" पर टैप करें, मैं मदद करूँगा। राइडर सामान ले जाएगा और दुकान पहुँचते ही रिफ़ंड हो जाएगा।",
   },
   pa: {
     welcome: "ਸਤ ਸ੍ਰੀ ਅਕਾਲ! ਮੈਂ Zyppi ਦਾ ਸਹਾਇਕ ਹਾਂ। ਆਪਣੇ ਆਰਡਰ, ਡਿਲੀਵਰੀ, ਭੁਗਤਾਨ ਜਾਂ ਰਿਫ਼ੰਡ ਬਾਰੇ ਕੁਝ ਵੀ ਪੁੱਛੋ।",
@@ -112,6 +117,7 @@ export const COPY: Record<Lang, Copy> = {
     error: "ਮੇਰੇ ਵੱਲੋਂ ਕੁਝ ਗੜਬੜ ਹੋਈ। ਤੁਸੀਂ ਸਾਡੀ ਟੀਮ ਨਾਲ ਗੱਲ ਕਰ ਸਕਦੇ ਹੋ।",
     talkToPerson: "ਕਿਸੇ ਨਾਲ ਗੱਲ ਕਰੋ",
     agentReplyPush: "Zyppi ਸਹਾਇਤਾ ਨੇ ਜਵਾਬ ਦਿੱਤਾ",
+    returnFlow: "ਇਸ ਲਈ ਮਾਫ਼ੀ! \"ਰਿਟਰਨ ਸ਼ੁਰੂ ਕਰੋ\" 'ਤੇ ਟੈਪ ਕਰੋ, ਮੈਂ ਮਦਦ ਕਰਾਂਗਾ। ਰਾਈਡਰ ਸਾਮਾਨ ਲੈ ਜਾਵੇਗਾ ਅਤੇ ਦੁਕਾਨ ਪਹੁੰਚਦੇ ਹੀ ਰਿਫੰਡ ਹੋ ਜਾਵੇਗਾ।",
   },
 };
 

@@ -1,4 +1,4 @@
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { logger } from "firebase-functions";
 import { HttpsError, onCall } from "firebase-functions/https";
@@ -14,6 +14,9 @@ import { requireString, requireUid } from "../shared/callable";
 import { db } from "../shared/firebase";
 import { type Actor, requireRole } from "../shared/roles";
 import { writeWalletEntry } from "./ledger";
+import { CLAIMS_CONFIG_DOC, autoReturnDecision, claimsConfigFrom } from "../returns/model";
+import { readReturnPlan, writeReturnPlan } from "../returns/plan";
+import { ownChatId, tellChat } from "../returns/notify";
 import {
   type ClaimLine,
   MAX_CLAIM_PHOTOS,
@@ -52,8 +55,13 @@ export const claimPhotoPrefix = (uid: string, orderId: string) => `users/${uid}/
  * Photos come in the request (base64, compressed on the phone) and are
  * stored by the server, which checks each really is an image.
  * Request: {orderId, lines: [{index, quantity, kind}], photos: [base64],
- *           note?, resolution: "wallet" | "original" | "replacement"}
- * Response: {issueId}
+ *           note?, resolution: "wallet" | "original" | "replacement", chatId?}
+ * Response: {issueId, autoReturn}
+ *
+ * Wrong / damaged / expired items within the automatic limits
+ * (config/claims) skip ops: a return pickup is created per store at once
+ * (returns/returns.ts) and the refund goes out when the store receives
+ * the items. Everything else waits for ops, as before.
  */
 export const reportOrderIssue = onCall(async (request) => {
   const uid = requireUid(request);
@@ -88,6 +96,20 @@ export const reportOrderIssue = onCall(async (request) => {
   const before = await orderRef.get();
   if (!before.exists) throw new HttpsError("not-found", "NOT_YOUR_ORDER");
   check(before.data()!);
+  // For the automatic check: this customer's claims in the last 30 days and
+  // the limits. Read outside the transaction (a count isn't transactional);
+  // being one claim off at the edge is harmless.
+  const [recent, claimsConfig] = await Promise.all([
+    db
+      .collection(ORDER_ISSUES)
+      .where("userId", "==", uid)
+      .where("createdAt", ">=", Timestamp.fromMillis(Date.now() - 30 * 86_400_000))
+      .count()
+      .get(),
+    db.doc(CLAIMS_CONFIG_DOC).get(),
+  ]);
+  const claims30d = recent.data().count + 1;
+  const chatId = await ownChatId(uid, request.data?.chatId);
   const bucket = getStorage().bucket();
   await Promise.all(
     photos.map((p, i) =>
@@ -95,15 +117,32 @@ export const reportOrderIssue = onCall(async (request) => {
     ),
   );
 
+  let autoReturn = false;
   try {
     await db.runTransaction(async (tx) => {
       const order = await tx.get(orderRef);
       if (!order.exists) throw new HttpsError("not-found", "NOT_YOUR_ORDER");
       const v = check(order.data()!);
+      const decision = autoReturnDecision({
+        kinds: v.lines.map((l) => l.kind),
+        amountPaise: v.amountPaise,
+        claims30d,
+        config: claimsConfigFrom(claimsConfig.data()),
+      });
+      // Reads for the returns happen here, before the first write.
+      const plan = decision.auto
+        ? await readReturnPlan(tx, { issueId: ref.id, orderId, order: order.data()!, lines: v.lines, resolution: v.resolution })
+        : null;
+      autoReturn = !!plan;
       tx.create(ref, {
         orderId,
         userId: uid,
-        status: "open",
+        status: plan ? "returning" : "open",
+        autoReturn: !!plan,
+        reviewReason: plan ? null : decision.auto ? "No store found on the order" : decision.reason,
+        returnIds: plan ? plan.map((r) => r.ref.id) : [],
+        returnPaidPaise: 0,
+        chatId,
         lines: v.lines,
         photos: v.photos,
         note: v.note,
@@ -117,10 +156,11 @@ export const reportOrderIssue = onCall(async (request) => {
       });
       const update: Record<string, unknown> = {
         openIssueId: ref.id,
-        issueStatus: "open",
-        // Ops alert (admin Dispatch board / Claims queue).
-        "opsAlerts.claim": FieldValue.serverTimestamp(),
+        issueStatus: plan ? "returning" : "open",
+        // Ops alert (admin Claims queue); automatic returns don't need one.
+        ...(plan ? {} : { "opsAlerts.claim": FieldValue.serverTimestamp() }),
       };
+      if (plan) writeReturnPlan(tx, plan);
       for (const l of v.lines) update[`claimedQty.${l.index}`] = FieldValue.increment(l.quantity);
       tx.update(orderRef, update);
       // Shown to ops next to every claim (repeat claimers stand out).
@@ -134,7 +174,12 @@ export const reportOrderIssue = onCall(async (request) => {
     await Promise.all(paths.map((p) => bucket.file(p).delete().catch(() => undefined)));
     throw error;
   }
-  return { issueId: ref.id };
+  if (chatId) {
+    await tellChat(chatId, autoReturn ? "claimAutoReturn" : "claimForReview").catch((e) =>
+      logger.warn("Claim chat message failed", { issueId: ref.id, error: String(e) }),
+    );
+  }
+  return { issueId: ref.id, autoReturn };
 });
 
 /**
@@ -171,7 +216,8 @@ export async function resolveIssue(actor: Actor, data: Record<string, unknown>) 
   const { issue, order } = locked;
   const orderId = issue.orderId as string;
   const uid = issue.userId as string;
-  const claimPaise = (issue.amountPaise as number) ?? 0;
+  // Automatic returns may already have paid part of it (returns/settle.ts).
+  const claimPaise = Math.max(0, ((issue.amountPaise as number) ?? 0) - ((issue.returnPaidPaise as number) ?? 0));
   const unlock = (error: string) =>
     issueRef(issueId).update({ status: "open", lastError: error.slice(0, 300), updatedAt: FieldValue.serverTimestamp() });
 
@@ -297,7 +343,7 @@ export async function resolveIssue(actor: Actor, data: Record<string, unknown>) 
  * same seller first). Tries up to three choices of seller per line before
  * giving up (ops then picks the wallet).
  */
-async function placeReplacement(
+export async function placeReplacement(
   issueId: string,
   uid: string,
   orderId: string,
