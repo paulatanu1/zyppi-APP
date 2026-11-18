@@ -24,6 +24,7 @@ export {
   riderReturnReachedStore,
 } from "./returns/rider";
 export { storeReceiveReturn, onReturnReceived, adminUpdateReturn } from "./returns/store";
+export { adminSetZyppiStoreStaff } from "./marketplace/sellers";
 export { placesProxy } from "./places";
 export { deleteAccount } from "./account";
 export { onOrderEventCreated } from "./push";

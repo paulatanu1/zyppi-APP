@@ -337,3 +337,39 @@ export const sellerRemoveStaff = onCall(async (request) => {
   }
   return { ok: true };
 });
+
+/**
+ * Ops: dark-store staff log in to the Zyppi Seller app as staff of the
+ * "zyppi" seller (Zyppi's own stores have no owner login), so they get
+ * return alerts and can receive returns (functions/src/returns/store.ts).
+ * Request: {phone, action: "add" | "remove"}
+ */
+export const adminSetZyppiStoreStaff = onCall(async (request) => {
+  const actor = requireRole(request, ["ops"]);
+  const raw = typeof request.data?.phone === "string" ? request.data.phone.replace(/[\s-]/g, "") : "";
+  const phone = /^[6-9]\d{9}$/.test(raw) ? `+91${raw}` : raw;
+  if (!/^\+91[6-9]\d{9}$/.test(phone)) throw new HttpsError("invalid-argument", "Enter a 10-digit mobile number");
+  const action = request.data?.action;
+  if (action !== "add" && action !== "remove") throw new HttpsError("invalid-argument", "Choose add or remove");
+  const user = await auth.getUserByPhoneNumber(phone).catch(() => null);
+  if (!user) throw new HttpsError("not-found", "Ask them to sign in to the Zyppi Seller app once first");
+  const ref = db.collection(SELLER_USERS).doc(user.uid);
+  const existing = await ref.get();
+  if (action === "add") {
+    if (existing.exists && existing.get("sellerId") !== "zyppi") {
+      throw new HttpsError("failed-precondition", "This number already works for another shop");
+    }
+    await ref.set({ sellerId: "zyppi", role: "staff" satisfies SellerRole, addedBy: actor.uid, addedAt: FieldValue.serverTimestamp() });
+    await auth.setCustomUserClaims(user.uid, { ...(user.customClaims ?? {}), sellerId: "zyppi", sellerRole: "staff" });
+  } else {
+    if (!existing.exists || existing.get("sellerId") !== "zyppi") throw new HttpsError("not-found", "Not dark-store staff");
+    await ref.delete();
+    const claims: Record<string, unknown> = { ...(user.customClaims ?? {}) };
+    delete claims.sellerId;
+    delete claims.sellerRole;
+    await auth.setCustomUserClaims(user.uid, claims);
+    await auth.revokeRefreshTokens(user.uid);
+  }
+  await writeAudit(actor, { action: `zyppiStaff.${action}`, target: `${SELLER_USERS}/${user.uid}`, after: { phone } });
+  return { uid: user.uid };
+});
