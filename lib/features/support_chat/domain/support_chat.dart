@@ -46,5 +46,9 @@ abstract class SupportMessage with _$SupportMessage {
 
     /// The hand-off message: show WhatsApp / Call buttons under it.
     @Default(false) bool showContactOptions,
+
+    /// Missing / wrong / damaged items: show "Start a return" under it
+    /// (functions/src/support/reply.ts, action `return_flow`).
+    @Default(false) bool showReturnFlow,
   }) = _SupportMessage;
 }

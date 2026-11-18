@@ -223,6 +223,7 @@ class Routes {
           builder: withHomeFallback(
             (context, state) => ReportProblemScreen(
               orderId: state.uri.queryParameters['orderId'] ?? '',
+              chatId: state.uri.queryParameters['chatId'],
             ),
           ),
         ),

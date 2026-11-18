@@ -43,9 +43,12 @@ String claimKindLabel(ClaimKind k) => switch (k) {
 /// Order details → Report a problem (2 hours after delivery): which items,
 /// what's wrong, photos, and wallet credit / refund / replacement.
 class ReportProblemScreen extends ConsumerWidget {
-  const ReportProblemScreen({super.key, required this.orderId});
+  const ReportProblemScreen({super.key, required this.orderId, this.chatId});
 
   final String orderId;
+
+  /// Opened from the support chat's "Start a return": updates go there too.
+  final String? chatId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -87,16 +90,17 @@ class ReportProblemScreen extends ConsumerWidget {
                   ),
                 ),
               )
-            : _ReportForm(order: o),
+            : _ReportForm(order: o, chatId: chatId),
       ),
     );
   }
 }
 
 class _ReportForm extends ConsumerStatefulWidget {
-  const _ReportForm({required this.order});
+  const _ReportForm({required this.order, this.chatId});
 
   final Order order;
+  final String? chatId;
 
   @override
   ConsumerState<_ReportForm> createState() => _ReportFormState();
@@ -180,7 +184,7 @@ class _ReportFormState extends ConsumerState<_ReportForm> {
     }
     setState(() => _sending = true);
     try {
-      await ref
+      final sent = await ref
           .read(claimRepositoryProvider)
           .report(
             orderId: widget.order.id,
@@ -188,9 +192,13 @@ class _ReportFormState extends ConsumerState<_ReportForm> {
             photos: _photos,
             note: _note.text.trim(),
             resolution: _resolution,
+            chatId: widget.chatId,
           );
       ref.invalidate(orderByIdProvider(widget.order.id));
-      showSuccessToast(message: 'claimSent'.tr());
+      // Wrong / damaged / expired within the limits: a rider is on the way.
+      showSuccessToast(
+        message: sent.autoReturn ? 'claimReturnBooked'.tr() : 'claimSent'.tr(),
+      );
       if (mounted) context.pop();
     } catch (error) {
       showError(claimErrorMessage(error));

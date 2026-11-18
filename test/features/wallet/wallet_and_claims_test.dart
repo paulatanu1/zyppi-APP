@@ -29,18 +29,26 @@ class _Wallet implements WalletRepository {
 }
 
 class _Claims implements ClaimRepository {
-  _Claims(this.issues);
+  _Claims(this.issues, {this.returns = const [], this.code});
   final List<OrderIssue> issues;
+  final List<CustomerReturn> returns;
+  final String? code;
   @override
-  Future<String> report({
+  Future<ClaimReport> report({
     required String orderId,
     required List<ClaimLineInput> lines,
     required List<Uint8List> photos,
     required String note,
     required ClaimResolution resolution,
-  }) async => 'i1';
+    String? chatId,
+  }) async => (issueId: 'i1', autoReturn: true);
   @override
   Stream<List<OrderIssue>> watchIssues(String orderId) => Stream.value(issues);
+  @override
+  Stream<List<CustomerReturn>> watchReturns(String orderId) =>
+      Stream.value(returns);
+  @override
+  Stream<String?> watchPickupCode(String returnId) => Stream.value(code);
 }
 
 Order order({
@@ -237,10 +245,16 @@ void main() {
     Future<void> pump(
       WidgetTester tester,
       Order o,
-      List<OrderIssue> issues,
-    ) async {
+      List<OrderIssue> issues, {
+      List<CustomerReturn> returns = const [],
+      String? code,
+    }) async {
       final container = ProviderContainer(
-        overrides: [claimRepositoryProvider.overrideWithValue(_Claims(issues))],
+        overrides: [
+          claimRepositoryProvider.overrideWithValue(
+            _Claims(issues, returns: returns, code: code),
+          ),
+        ],
       );
       addTearDown(container.dispose);
       await pumpLocalizedApp(
@@ -283,6 +297,46 @@ void main() {
       );
       expect(find.text('Problem sorted'), findsOneWidget);
       expect(find.text('₹50 added to your wallet.'), findsOneWidget);
+    });
+
+    testWidgets('automatic return: step, store and door code', (tester) async {
+      await pump(
+        tester,
+        order(deliveredAt: DateTime.now(), openIssueId: 'i1'),
+        const [
+          OrderIssue(
+            id: 'i1',
+            status: 'returning',
+            amountPaise: 5000,
+            resolutionWanted: 'wallet',
+          ),
+        ],
+        returns: const [
+          CustomerReturn(
+            id: 'i1_s1',
+            step: ReturnStep.atDoor,
+            storeName: 'Ranchi Dark Store',
+            itemCount: 1,
+            riderName: 'Ravi',
+            riderPhone: '+919800000000',
+          ),
+        ],
+        code: '4821',
+      );
+      expect(find.text('Return in progress'), findsOneWidget);
+      expect(find.text('1 item · Ranchi Dark Store'), findsOneWidget);
+      expect(find.text('4 8 2 1'), findsOneWidget);
+      expect(find.text('Call Ravi'), findsOneWidget);
+      // Open claim: no second report.
+      expect(find.text('Report a problem'), findsNothing);
+    });
+
+    test('return steps from the server status', () {
+      expect(returnStepOf('at_customer'), ReturnStep.atDoor);
+      expect(returnStepOf('picked_up'), ReturnStep.collected);
+      expect(returnStepOf('requested'), ReturnStep.searching);
+      expect(returnStepOf('offered'), ReturnStep.searching);
+      expect(returnStepOf('received'), ReturnStep.received);
     });
 
     testWidgets('shows a rejection reason', (tester) async {

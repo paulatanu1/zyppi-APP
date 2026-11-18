@@ -557,7 +557,9 @@ mixin _$SupportMessage {
 
  String get id; SupportSender get from; String get text;/// Null while the customer's own message is still pending the server.
  DateTime? get createdAt; List<SupportQuickReply> get quickReplies;/// The hand-off message: show WhatsApp / Call buttons under it.
- bool get showContactOptions;
+ bool get showContactOptions;/// Missing / wrong / damaged items: show "Start a return" under it
+/// (functions/src/support/reply.ts, action `return_flow`).
+ bool get showReturnFlow;
 /// Create a copy of SupportMessage
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -569,20 +571,20 @@ $SupportMessageCopyWith<SupportMessage> get copyWith => _$SupportMessageCopyWith
 @override
 bool operator ==(Object other) {
   final _this = this as SupportMessage;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SupportMessage&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.from, _this.from) || other.from == _this.from)&&(identical(other.text, _this.text) || other.text == _this.text)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&const DeepCollectionEquality().equals(other.quickReplies, _this.quickReplies)&&(identical(other.showContactOptions, _this.showContactOptions) || other.showContactOptions == _this.showContactOptions));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SupportMessage&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.from, _this.from) || other.from == _this.from)&&(identical(other.text, _this.text) || other.text == _this.text)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&const DeepCollectionEquality().equals(other.quickReplies, _this.quickReplies)&&(identical(other.showContactOptions, _this.showContactOptions) || other.showContactOptions == _this.showContactOptions)&&(identical(other.showReturnFlow, _this.showReturnFlow) || other.showReturnFlow == _this.showReturnFlow));
 }
 
 
 @override
 int get hashCode {
   final _this = this as SupportMessage;
-  return Object.hash(runtimeType,_this.id,_this.from,_this.text,_this.createdAt,const DeepCollectionEquality().hash(_this.quickReplies),_this.showContactOptions);
+  return Object.hash(runtimeType,_this.id,_this.from,_this.text,_this.createdAt,const DeepCollectionEquality().hash(_this.quickReplies),_this.showContactOptions,_this.showReturnFlow);
 }
 
 @override
 String toString() {
   final _this = this as SupportMessage;
-  return 'SupportMessage(id: ${_this.id}, from: ${_this.from}, text: ${_this.text}, createdAt: ${_this.createdAt}, quickReplies: ${_this.quickReplies}, showContactOptions: ${_this.showContactOptions})';
+  return 'SupportMessage(id: ${_this.id}, from: ${_this.from}, text: ${_this.text}, createdAt: ${_this.createdAt}, quickReplies: ${_this.quickReplies}, showContactOptions: ${_this.showContactOptions}, showReturnFlow: ${_this.showReturnFlow})';
 }
 
 
@@ -593,7 +595,7 @@ abstract mixin class $SupportMessageCopyWith<$Res>  {
   factory $SupportMessageCopyWith(SupportMessage value, $Res Function(SupportMessage) _then) = _$SupportMessageCopyWithImpl;
 @useResult
 $Res call({
- String id, SupportSender from, String text, DateTime? createdAt, List<SupportQuickReply> quickReplies, bool showContactOptions
+ String id, SupportSender from, String text, DateTime? createdAt, List<SupportQuickReply> quickReplies, bool showContactOptions, bool showReturnFlow
 });
 
 
@@ -610,7 +612,7 @@ class _$SupportMessageCopyWithImpl<$Res>
 
 /// Create a copy of SupportMessage
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? from = null,Object? text = null,Object? createdAt = freezed,Object? quickReplies = null,Object? showContactOptions = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? from = null,Object? text = null,Object? createdAt = freezed,Object? quickReplies = null,Object? showContactOptions = null,Object? showReturnFlow = null,}) {
   return _then(SupportMessage(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,from: null == from ? _self.from : from // ignore: cast_nullable_to_non_nullable
@@ -618,6 +620,7 @@ as SupportSender,text: null == text ? _self.text : text // ignore: cast_nullable
 as String,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,quickReplies: null == quickReplies ? _self.quickReplies : quickReplies // ignore: cast_nullable_to_non_nullable
 as List<SupportQuickReply>,showContactOptions: null == showContactOptions ? _self.showContactOptions : showContactOptions // ignore: cast_nullable_to_non_nullable
+as bool,showReturnFlow: null == showReturnFlow ? _self.showReturnFlow : showReturnFlow // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -703,10 +706,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  SupportSender from,  String text,  DateTime? createdAt,  List<SupportQuickReply> quickReplies,  bool showContactOptions)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  SupportSender from,  String text,  DateTime? createdAt,  List<SupportQuickReply> quickReplies,  bool showContactOptions,  bool showReturnFlow)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SupportMessage() when $default != null:
-return $default(_that.id,_that.from,_that.text,_that.createdAt,_that.quickReplies,_that.showContactOptions);case _:
+return $default(_that.id,_that.from,_that.text,_that.createdAt,_that.quickReplies,_that.showContactOptions,_that.showReturnFlow);case _:
   return orElse();
 
 }
@@ -724,10 +727,10 @@ return $default(_that.id,_that.from,_that.text,_that.createdAt,_that.quickReplie
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  SupportSender from,  String text,  DateTime? createdAt,  List<SupportQuickReply> quickReplies,  bool showContactOptions)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  SupportSender from,  String text,  DateTime? createdAt,  List<SupportQuickReply> quickReplies,  bool showContactOptions,  bool showReturnFlow)  $default,) {final _that = this;
 switch (_that) {
 case _SupportMessage():
-return $default(_that.id,_that.from,_that.text,_that.createdAt,_that.quickReplies,_that.showContactOptions);case _:
+return $default(_that.id,_that.from,_that.text,_that.createdAt,_that.quickReplies,_that.showContactOptions,_that.showReturnFlow);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -744,10 +747,10 @@ return $default(_that.id,_that.from,_that.text,_that.createdAt,_that.quickReplie
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  SupportSender from,  String text,  DateTime? createdAt,  List<SupportQuickReply> quickReplies,  bool showContactOptions)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  SupportSender from,  String text,  DateTime? createdAt,  List<SupportQuickReply> quickReplies,  bool showContactOptions,  bool showReturnFlow)?  $default,) {final _that = this;
 switch (_that) {
 case _SupportMessage() when $default != null:
-return $default(_that.id,_that.from,_that.text,_that.createdAt,_that.quickReplies,_that.showContactOptions);case _:
+return $default(_that.id,_that.from,_that.text,_that.createdAt,_that.quickReplies,_that.showContactOptions,_that.showReturnFlow);case _:
   return null;
 
 }
@@ -759,7 +762,7 @@ return $default(_that.id,_that.from,_that.text,_that.createdAt,_that.quickReplie
 
 
 class _SupportMessage implements SupportMessage {
-  const _SupportMessage({required this.id, required this.from, required this.text, this.createdAt,  List<SupportQuickReply> quickReplies = const [], this.showContactOptions = false}): _quickReplies = quickReplies;
+  const _SupportMessage({required this.id, required this.from, required this.text, this.createdAt,  List<SupportQuickReply> quickReplies = const [], this.showContactOptions = false, this.showReturnFlow = false}): _quickReplies = quickReplies;
   
 
 @override final  String id;
@@ -776,6 +779,9 @@ class _SupportMessage implements SupportMessage {
 
 /// The hand-off message: show WhatsApp / Call buttons under it.
 @override@JsonKey() final  bool showContactOptions;
+/// Missing / wrong / damaged items: show "Start a return" under it
+/// (functions/src/support/reply.ts, action `return_flow`).
+@override@JsonKey() final  bool showReturnFlow;
 
 /// Create a copy of SupportMessage
 /// with the given fields replaced by the non-null parameter values.
@@ -787,18 +793,18 @@ _$SupportMessageCopyWith<_SupportMessage> get copyWith => __$SupportMessageCopyW
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SupportMessage&&(identical(other.id, id) || other.id == id)&&(identical(other.from, from) || other.from == from)&&(identical(other.text, text) || other.text == text)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&const DeepCollectionEquality().equals(other.quickReplies, _quickReplies)&&(identical(other.showContactOptions, showContactOptions) || other.showContactOptions == showContactOptions));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SupportMessage&&(identical(other.id, id) || other.id == id)&&(identical(other.from, from) || other.from == from)&&(identical(other.text, text) || other.text == text)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&const DeepCollectionEquality().equals(other.quickReplies, _quickReplies)&&(identical(other.showContactOptions, showContactOptions) || other.showContactOptions == showContactOptions)&&(identical(other.showReturnFlow, showReturnFlow) || other.showReturnFlow == showReturnFlow));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,from,text,createdAt,const DeepCollectionEquality().hash(_quickReplies),showContactOptions);
+    return Object.hash(runtimeType,id,from,text,createdAt,const DeepCollectionEquality().hash(_quickReplies),showContactOptions,showReturnFlow);
 }
 
 @override
 String toString() {
-    return 'SupportMessage(id: $id, from: $from, text: $text, createdAt: $createdAt, quickReplies: $quickReplies, showContactOptions: $showContactOptions)';
+    return 'SupportMessage(id: $id, from: $from, text: $text, createdAt: $createdAt, quickReplies: $quickReplies, showContactOptions: $showContactOptions, showReturnFlow: $showReturnFlow)';
 }
 
 
@@ -809,7 +815,7 @@ abstract mixin class _$SupportMessageCopyWith<$Res> implements $SupportMessageCo
   factory _$SupportMessageCopyWith(_SupportMessage value, $Res Function(_SupportMessage) _then) = __$SupportMessageCopyWithImpl;
 @override @useResult
 $Res call({
- String id, SupportSender from, String text, DateTime? createdAt, List<SupportQuickReply> quickReplies, bool showContactOptions
+ String id, SupportSender from, String text, DateTime? createdAt, List<SupportQuickReply> quickReplies, bool showContactOptions, bool showReturnFlow
 });
 
 
@@ -826,7 +832,7 @@ class __$SupportMessageCopyWithImpl<$Res>
 
 /// Create a copy of SupportMessage
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? from = null,Object? text = null,Object? createdAt = freezed,Object? quickReplies = null,Object? showContactOptions = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? from = null,Object? text = null,Object? createdAt = freezed,Object? quickReplies = null,Object? showContactOptions = null,Object? showReturnFlow = null,}) {
   return _then(_SupportMessage(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,from: null == from ? _self.from : from // ignore: cast_nullable_to_non_nullable
@@ -834,6 +840,7 @@ as SupportSender,text: null == text ? _self.text : text // ignore: cast_nullable
 as String,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,quickReplies: null == quickReplies ? _self._quickReplies : quickReplies // ignore: cast_nullable_to_non_nullable
 as List<SupportQuickReply>,showContactOptions: null == showContactOptions ? _self.showContactOptions : showContactOptions // ignore: cast_nullable_to_non_nullable
+as bool,showReturnFlow: null == showReturnFlow ? _self.showReturnFlow : showReturnFlow // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

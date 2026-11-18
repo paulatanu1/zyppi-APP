@@ -90,6 +90,10 @@ class OrderIssue {
 
   bool get isOpen => status == 'open' || status == 'resolving';
 
+  /// Automatic return in progress: a rider collects, the store receives,
+  /// then the refund goes out (functions/src/returns).
+  bool get isReturning => status == 'returning';
+
   factory OrderIssue.fromMap(String id, Map<String, dynamic> d) {
     final r = (d['resolution'] as Map?) ?? const {};
     int n(Object? v) => v is num ? v.round() : 0;
@@ -110,21 +114,95 @@ class OrderIssue {
   }
 }
 
+/// Where a return pickup is (returns/{id}; functions/src/returns/model.ts).
+enum ReturnStep {
+  searching,
+  assigned,
+  atDoor,
+  collected,
+  atStore,
+  received,
+  review,
+  failed,
+  cancelled,
+}
+
+ReturnStep returnStepOf(String? status) => switch (status) {
+  'assigned' => ReturnStep.assigned,
+  'at_customer' => ReturnStep.atDoor,
+  'picked_up' => ReturnStep.collected,
+  'at_store' => ReturnStep.atStore,
+  'received' => ReturnStep.received,
+  'review' => ReturnStep.review,
+  'failed' => ReturnStep.failed,
+  'cancelled' => ReturnStep.cancelled,
+  _ => ReturnStep.searching,
+};
+
+/// One return pickup as the customer sees it.
+class CustomerReturn {
+  const CustomerReturn({
+    required this.id,
+    required this.step,
+    required this.storeName,
+    required this.itemCount,
+    this.riderName,
+    this.riderPhone,
+  });
+
+  final String id;
+  final ReturnStep step;
+  final String storeName;
+  final int itemCount;
+  final String? riderName;
+  final String? riderPhone;
+
+  /// The customer still has to hand the item over (show the code).
+  bool get awaitingPickup =>
+      step == ReturnStep.searching ||
+      step == ReturnStep.assigned ||
+      step == ReturnStep.atDoor;
+
+  factory CustomerReturn.fromMap(String id, Map<String, dynamic> d) =>
+      CustomerReturn(
+        id: id,
+        step: returnStepOf(d['status'] as String?),
+        storeName: d['storeName'] as String? ?? '',
+        itemCount: ((d['lines'] as List?) ?? const []).fold<int>(
+          0,
+          (n, l) => n + (((l as Map)['quantity'] as num?)?.round() ?? 0),
+        ),
+        riderName: d['riderName'] as String?,
+        riderPhone: d['riderPhone'] as String?,
+      );
+}
+
+/// What [ClaimRepository.report] did: straight to a return pickup, or ops.
+typedef ClaimReport = ({String issueId, bool autoReturn});
+
 /// "Report a problem" on a delivered order (functions/src/wallet/claims.ts).
 abstract class ClaimRepository {
-  /// Sends the claim; [photos] are compressed JPEGs. Returns the claim id.
-  /// Throws [FirebaseFunctionsException] with a code such as
-  /// CLAIM_WINDOW_OVER or PHOTO_REQUIRED as its message.
-  Future<String> report({
+  /// Sends the claim; [photos] are compressed JPEGs. [chatId]: the support
+  /// chat it started in (updates are posted there too). Throws
+  /// [FirebaseFunctionsException] with a code such as CLAIM_WINDOW_OVER or
+  /// PHOTO_REQUIRED as its message.
+  Future<ClaimReport> report({
     required String orderId,
     required List<ClaimLineInput> lines,
     required List<Uint8List> photos,
     required String note,
     required ClaimResolution resolution,
+    String? chatId,
   });
 
   /// The customer's claims on [orderId], newest first, live.
   Stream<List<OrderIssue>> watchIssues(String orderId);
+
+  /// The customer's return pickups for [orderId], live.
+  Stream<List<CustomerReturn>> watchReturns(String orderId);
+
+  /// The 4-digit code the customer tells the rider at the door.
+  Stream<String?> watchPickupCode(String returnId);
 }
 
 class FirebaseClaimRepository implements ClaimRepository {
@@ -135,12 +213,13 @@ class FirebaseClaimRepository implements ClaimRepository {
   final FirebaseFunctions functions;
 
   @override
-  Future<String> report({
+  Future<ClaimReport> report({
     required String orderId,
     required List<ClaimLineInput> lines,
     required List<Uint8List> photos,
     required String note,
     required ClaimResolution resolution,
+    String? chatId,
   }) async {
     final result = await functions
         .httpsCallable(
@@ -153,9 +232,39 @@ class FirebaseClaimRepository implements ClaimRepository {
           'photos': [for (final p in photos) base64Encode(p)],
           'note': note,
           'resolution': resolution.name,
+          'chatId': ?chatId,
         });
-    return (result.data as Map)['issueId'] as String;
+    final data = result.data as Map;
+    return (
+      issueId: data['issueId'] as String,
+      autoReturn: data['autoReturn'] == true,
+    );
   }
+
+  @override
+  Stream<List<CustomerReturn>> watchReturns(String orderId) {
+    final uid = auth.currentUser?.uid;
+    if (uid == null) return Stream.value(const []);
+    return db
+        .collection('returns')
+        .where('userId', isEqualTo: uid)
+        .where('orderId', isEqualTo: orderId)
+        .snapshots()
+        .map(
+          (snap) => [
+            for (final d in snap.docs) CustomerReturn.fromMap(d.id, d.data()),
+          ],
+        );
+  }
+
+  @override
+  Stream<String?> watchPickupCode(String returnId) => db
+      .collection('returns')
+      .doc(returnId)
+      .collection('private')
+      .doc('pickup')
+      .snapshots()
+      .map((s) => s.data()?['code'] as String?);
 
   @override
   Stream<List<OrderIssue>> watchIssues(String orderId) {
@@ -184,17 +293,25 @@ class FirebaseClaimRepository implements ClaimRepository {
 /// No backend in the mock flavor.
 class MockClaimRepository implements ClaimRepository {
   @override
-  Future<String> report({
+  Future<ClaimReport> report({
     required String orderId,
     required List<ClaimLineInput> lines,
     required List<Uint8List> photos,
     required String note,
     required ClaimResolution resolution,
-  }) async => 'mock-issue';
+    String? chatId,
+  }) async => (issueId: 'mock-issue', autoReturn: false);
 
   @override
   Stream<List<OrderIssue>> watchIssues(String orderId) =>
       Stream.value(const []);
+
+  @override
+  Stream<List<CustomerReturn>> watchReturns(String orderId) =>
+      Stream.value(const []);
+
+  @override
+  Stream<String?> watchPickupCode(String returnId) => Stream.value(null);
 }
 
 final claimRepositoryProvider = Provider<ClaimRepository>(
@@ -211,4 +328,18 @@ final claimRepositoryProvider = Provider<ClaimRepository>(
 final orderIssuesProvider = StreamProvider.autoDispose
     .family<List<OrderIssue>, String>(
       (ref, orderId) => ref.watch(claimRepositoryProvider).watchIssues(orderId),
+    );
+
+/// The customer's return pickups on one order.
+final orderReturnsProvider = StreamProvider.autoDispose
+    .family<List<CustomerReturn>, String>(
+      (ref, orderId) =>
+          ref.watch(claimRepositoryProvider).watchReturns(orderId),
+    );
+
+/// The door code for one return.
+final returnPickupCodeProvider = StreamProvider.autoDispose
+    .family<String?, String>(
+      (ref, returnId) =>
+          ref.watch(claimRepositoryProvider).watchPickupCode(returnId),
     );

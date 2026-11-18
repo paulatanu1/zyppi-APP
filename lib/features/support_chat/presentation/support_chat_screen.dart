@@ -11,6 +11,7 @@ import 'package:zippy/core/widgets/z_chrome.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/support_chat/application/support_chat_providers.dart';
 import 'package:zippy/features/support_chat/domain/support_chat.dart';
+import 'package:zippy/features/report_problem/presentation/start_return.dart';
 
 /// In-app support: the Zyppi assistant answers first (a free retrieval
 /// bot in Cloud Functions — functions/src/support), then hands off to the
@@ -129,6 +130,8 @@ class _ChatViewState extends ConsumerState<_ChatView> {
         Expanded(
           child: messages != null
               ? _Messages(
+                  chatId: widget.chatId,
+                  orderId: widget.orderId,
                   messages: messages,
                   typing:
                       botOn &&
@@ -273,12 +276,16 @@ class _Header extends StatelessWidget {
 
 class _Messages extends StatelessWidget {
   const _Messages({
+    required this.chatId,
+    required this.orderId,
     required this.messages,
     required this.typing,
     required this.quickRepliesEnabled,
     required this.onQuickReply,
   });
 
+  final String chatId;
+  final String? orderId;
   final List<SupportMessage> messages;
   final bool typing;
   final bool quickRepliesEnabled;
@@ -306,6 +313,8 @@ class _Messages extends StatelessWidget {
         ZEntrance(
           key: ValueKey(messages[i].id),
           child: _MessageTile(
+            chatId: chatId,
+            orderId: orderId,
             message: messages[i],
             // Chips only under the newest message, while the bot answers.
             quickReplies: i == messages.length - 1 && quickRepliesEnabled
@@ -327,11 +336,15 @@ class _Messages extends StatelessWidget {
 
 class _MessageTile extends StatelessWidget {
   const _MessageTile({
+    required this.chatId,
+    required this.orderId,
     required this.message,
     required this.quickReplies,
     required this.onQuickReply,
   });
 
+  final String chatId;
+  final String? orderId;
   final SupportMessage message;
   final List<SupportQuickReply> quickReplies;
   final ValueChanged<SupportQuickReply> onQuickReply;
@@ -398,6 +411,8 @@ class _MessageTile extends StatelessWidget {
               message.text,
               style: t.bodyLarge!.copyWith(color: mine ? z.onBrand : z.ink),
             ),
+            if (message.showReturnFlow)
+              StartReturnButton(chatId: chatId, orderId: orderId),
           ],
         ),
       ),

@@ -93,5 +93,6 @@ SupportMessage _message(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
           ]
         : const [],
     showContactOptions: d['action'] == 'contact_options',
+    showReturnFlow: d['action'] == 'return_flow',
   );
 }
