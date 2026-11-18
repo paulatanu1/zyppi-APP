@@ -4,6 +4,7 @@ import { db } from "../shared/firebase";
 import { requireString, requireUid, toHttpsError } from "../shared/callable";
 import { assertCanOrder, getFeatures } from "../shared/features";
 import { COD, placeOrderInTx } from "./quote";
+import { HOT } from "../shared/scaling";
 
 /**
  * Client entry point for cash-on-delivery orders (port of `place_order`).
@@ -12,7 +13,7 @@ import { COD, placeOrderInTx } from "./quote";
  * Request: {addressId, deliverySlotId, paymentMethod, couponCode?, tipPaise?}
  * Response: {orderId}
  */
-export const placeOrder = onCall(async (request) => {
+export const placeOrder = onCall(HOT, async (request) => {
   const uid = requireUid(request);
   const data = (request.data ?? {}) as Record<string, unknown>;
 

@@ -9,6 +9,7 @@ import { RIDERS } from "../riders/model";
 import { dispatchWaiting, respondOffer } from "./dispatch";
 import { istDayAndWeek } from "./earnings";
 import { distanceM, etaMinutes, impossibleJump, isPoint, requirePoint } from "./model";
+import { HOT } from "../shared/scaling";
 
 const ms = (v: unknown) => (v instanceof Timestamp ? v.toMillis() : null);
 
@@ -70,7 +71,7 @@ const MIN_PING_GAP_MS = 8_000;
  * delivery also the customer's live distance / ETA.
  * Response: {online, activeOrderId, offerOrderId}.
  */
-export const riderPing = onCall(async (request) => {
+export const riderPing = onCall(HOT, async (request) => {
   const rider = await requireRider(request);
   const p = requirePoint(request.data);
   const presence = (rider.get("presence") ?? {}) as Record<string, unknown>;
@@ -146,7 +147,7 @@ export const riderRegisterDevice = onCall(async (request) => {
 });
 
 /** Request: {orderId, accept}. */
-export const riderRespondOffer = onCall(async (request) => {
+export const riderRespondOffer = onCall(HOT, async (request) => {
   const rider = await requireRider(request);
   return respondOffer(rider.id, request.data?.orderId, request.data?.accept);
 });

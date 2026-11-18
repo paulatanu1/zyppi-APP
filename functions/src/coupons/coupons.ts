@@ -12,6 +12,7 @@ import {
   validateCouponInput,
 } from "./model";
 import { lookupCoupon, problemOf } from "./usage";
+import { HOT } from "../shared/scaling";
 
 /**
  * Customer pre-check from the cart (the bill shows the discount before
@@ -22,7 +23,7 @@ import { lookupCoupon, problemOf } from "./usage";
  * Response: the terms the app's bill needs; or failed-precondition with
  * one of COUPON_MESSAGES and `details.reason`.
  */
-export const checkCoupon = onCall(async (request) => {
+export const checkCoupon = onCall(HOT, async (request) => {
   const uid = requireUid(request);
   const code = normalizeCode(request.data?.code);
   const area =

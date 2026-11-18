@@ -4,6 +4,7 @@ import { requireUid } from "../shared/callable";
 import { db } from "../shared/firebase";
 import { isLang } from "./model";
 import { isValidToken, withToken } from "./tokens";
+import { HOT } from "../shared/scaling";
 
 /**
  * Customer devices for pushes. Every signed-in phone is kept in
@@ -13,7 +14,7 @@ import { isValidToken, withToken } from "./tokens";
  */
 
 /** Request: {token, lang?}. */
-export const registerPushToken = onCall(async (request) => {
+export const registerPushToken = onCall(HOT, async (request) => {
   const uid = requireUid(request);
   const token = request.data?.token;
   if (!isValidToken(token)) throw new HttpsError("invalid-argument", "Invalid token");

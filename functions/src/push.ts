@@ -2,6 +2,7 @@ import { onDocumentCreated } from "firebase-functions/firestore";
 import { db } from "./shared/firebase";
 import { addToInbox } from "./notifications/inbox";
 import { pushToDevices } from "./notifications/tokens";
+import { HOT } from "./shared/scaling";
 
 const STATUS_COPY: Record<string, { title: string; body: string }> = {
   placed: { title: "Order placed", body: "We've got your order!" },
@@ -41,7 +42,7 @@ export async function pushOrderCustomer(
  * entry id is fixed per order and status, so a retried trigger doesn't
  * list it twice.
  */
-export const onOrderEventCreated = onDocumentCreated("orders/{orderId}/events/{eventId}", async (event) => {
+export const onOrderEventCreated = onDocumentCreated({ ...HOT, document: "orders/{orderId}/events/{eventId}" }, async (event) => {
   const status = event.data?.get("status") as string | undefined;
   const orderId = event.params.orderId;
   if (!status) return;
