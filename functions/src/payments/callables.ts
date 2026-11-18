@@ -53,7 +53,7 @@ function payerDetails(user: Record<string, unknown>, authPhone: string | undefin
  * wallet covers it all, use placeOrder with "Wallet" (WALLET_COVERS_ORDER).
  *
  * Request: {paymentMethod: "UPI" | "Credit or debit card", addressId,
- *           deliverySlotId, couponCode?, tipPaise?, useWallet?, walletPaise?}
+ *           deliverySlotId, couponCode?, tipPaise?, useWallet?, walletBalancePaise?}
  * Response: {txnid, key, amount, productInfo, firstName, email, phone,
  *            environment, userCredential, amountPaise, walletPaise, totalPaise}
  */
@@ -89,16 +89,17 @@ export const createPayUOrder = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (
   }
 
   const useWallet = data.useWallet === true;
-  const expectedWalletPaise = Number.isInteger(data.walletPaise) ? (data.walletPaise as number) : null;
+  const shownBalancePaise = Number.isInteger(data.walletBalancePaise) ? (data.walletBalancePaise as number) : null;
   const txnid = newTxnId();
   const intentRef = db.collection("paymentIntents").doc(txnid);
   const userDocRef = db.collection("users").doc(uid);
   const { user, walletPaise } = await db.runTransaction(async (tx) => {
     const snap = await tx.get(userDocRef);
-    const walletPaise = walletToApply(walletBalanceOf(snap.data()), totalPaise, useWallet);
-    if (expectedWalletPaise != null && expectedWalletPaise !== walletPaise) {
+    const balance = walletBalanceOf(snap.data());
+    if (useWallet && shownBalancePaise != null && shownBalancePaise !== balance) {
       throw new HttpsError("failed-precondition", WALLET_BALANCE_CHANGED);
     }
+    const walletPaise = walletToApply(balance, totalPaise, useWallet);
     if (walletPaise >= totalPaise) throw new HttpsError("failed-precondition", WALLET_COVERS_ORDER);
     tx.create(intentRef, {
       userId: uid,

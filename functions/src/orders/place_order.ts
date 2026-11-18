@@ -12,12 +12,12 @@ import { HOT } from "../shared/scaling";
  * `place_order`). PayU orders are only created by verifyPayUPayment.
  *
  * Wallet: `useWallet` spends the balance (cash covers the rest);
- * paymentMethod "Wallet" means the wallet pays it all. `walletPaise` is the
- * amount the app showed: if the balance no longer gives exactly that, the
- * order is refused with WALLET_BALANCE_CHANGED and nothing is charged.
+ * paymentMethod "Wallet" means the wallet pays it all. `walletBalancePaise`
+ * is the balance the app showed: if the live balance differs, the order is
+ * refused with WALLET_BALANCE_CHANGED and nothing is charged.
  *
  * Request: {addressId, deliverySlotId, paymentMethod, couponCode?, tipPaise?,
- *           useWallet?, walletPaise?}
+ *           useWallet?, walletBalancePaise?}
  * Response: {orderId}
  */
 export const placeOrder = onCall(HOT, async (request) => {
@@ -53,7 +53,7 @@ export const placeOrder = onCall(HOT, async (request) => {
         wallet: {
           kind: "direct",
           useWallet: data.useWallet === true || paymentMethod === WALLET_METHOD,
-          expectedWalletPaise: Number.isInteger(data.walletPaise) ? (data.walletPaise as number) : null,
+          shownBalancePaise: Number.isInteger(data.walletBalancePaise) ? (data.walletBalancePaise as number) : null,
         },
       }),
     );

@@ -29,8 +29,9 @@ History entries use fixed ids, written with `tx.create`, so a retry can never cr
 
 ### Checkout: the balance is always checked before the order is created
 - **Cash or wallet-only (`placeOrder`).**
-  - The app sends `useWallet` and `walletPaise`, the amount it showed the customer.
-  - Inside the order transaction the server re-reads the balance and works out the wallet amount itself. If that amount differs from what the app showed, the order is refused with `WALLET_BALANCE_CHANGED` and nothing is charged. The app then reloads and asks again.
+  - The app sends `useWallet` and `walletBalancePaise`, the balance it showed the customer.
+  - Inside the order transaction the server re-reads the balance. If it differs from what the app showed, the order is refused with `WALLET_BALANCE_CHANGED` and nothing is charged. The app then shows the new balance and asks again.
+  - The server works out the wallet amount itself, as min(balance, total).
   - The debit and the new order are written in that same transaction, so two orders at the same moment can't both spend the same money.
   - The rider collects only `cashToCollectPaise`.
 - **UPI or card plus wallet (`createPayUOrder`).**

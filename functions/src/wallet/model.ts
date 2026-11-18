@@ -65,9 +65,8 @@ export type WalletCheck =
 
 /**
  * The checks before a cash or wallet-only order is created:
- * - the wallet amount the customer confirmed must still be what the
- *   balance gives (else WALLET_BALANCE_CHANGED: the app reloads and asks
- *   again);
+ * - the balance must still be the one the customer saw at checkout (else
+ *   WALLET_BALANCE_CHANGED: the app shows the new balance and asks again);
  * - a wallet-only order needs the balance to cover the whole total;
  * - a cash order the wallet now covers in full becomes a wallet order.
  */
@@ -76,14 +75,14 @@ export function checkWalletOrder(input: {
   useWallet: boolean;
   balancePaise: number;
   totalPaise: number;
-  /** The wallet amount the app showed, if it sent one. */
-  expectedWalletPaise?: number | null;
+  /** The balance the app showed, if it sent one. */
+  shownBalancePaise?: number | null;
 }): WalletCheck {
   const wantsWallet = input.useWallet || input.method === WALLET_METHOD;
-  const walletPaise = walletToApply(input.balancePaise, input.totalPaise, wantsWallet);
-  if (input.expectedWalletPaise != null && input.expectedWalletPaise !== walletPaise) {
+  if (wantsWallet && input.shownBalancePaise != null && input.shownBalancePaise !== input.balancePaise) {
     return { ok: false, code: WALLET_BALANCE_CHANGED };
   }
+  const walletPaise = walletToApply(input.balancePaise, input.totalPaise, wantsWallet);
   const payablePaise = input.totalPaise - walletPaise;
   if (input.method === WALLET_METHOD && payablePaise > 0) return { ok: false, code: WALLET_BALANCE_CHANGED };
   return { ok: true, walletPaise, payablePaise, method: payablePaise === 0 && walletPaise > 0 ? WALLET_METHOD : input.method };

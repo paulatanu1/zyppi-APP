@@ -486,7 +486,7 @@ export function sellerSummary(lines: Pick<QuoteLine, "sellerId" | "quantity" | "
 /** How an order uses the wallet, and whether it replaces a claimed one. */
 export interface PlaceExtras {
   wallet?:
-    | { kind: "direct"; useWallet: boolean; expectedWalletPaise?: number | null }
+    | { kind: "direct"; useWallet: boolean; shownBalancePaise?: number | null }
     | { kind: "intent"; txnid: string; amountPaise: number };
   /** The claim it replaces, and what that claim is worth (credited to the
    * wallet instead if the replacement is cancelled). */
@@ -523,7 +523,7 @@ export async function placeOrderInTx(
       useWallet: wallet.useWallet,
       balancePaise: walletBalanceOf(userSnap.data()),
       totalPaise: quote.totalPaise,
-      expectedWalletPaise: wallet.expectedWalletPaise,
+      shownBalancePaise: wallet.shownBalancePaise,
     });
     if (!check.ok) throw new OrderError(check.code);
     walletPaise = check.walletPaise;

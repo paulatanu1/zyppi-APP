@@ -36,7 +36,7 @@ describe("wallet at checkout", () => {
   });
 
   it("cash + wallet: cash covers the rest", () => {
-    expect(checkWalletOrder({ method: COD, useWallet: true, balancePaise: 10000, totalPaise: 25000, expectedWalletPaise: 10000 })).toEqual({
+    expect(checkWalletOrder({ method: COD, useWallet: true, balancePaise: 10000, totalPaise: 25000, shownBalancePaise: 10000 })).toEqual({
       ok: true,
       walletPaise: 10000,
       payablePaise: 15000,
@@ -45,13 +45,13 @@ describe("wallet at checkout", () => {
   });
 
   it("refuses when the balance dropped since the customer saw it", () => {
-    // Showed ₹100 from the wallet; another order spent ₹40 meanwhile.
-    expect(checkWalletOrder({ method: COD, useWallet: true, balancePaise: 6000, totalPaise: 25000, expectedWalletPaise: 10000 })).toEqual({
+    // Showed a ₹100 balance; another order spent ₹40 meanwhile.
+    expect(checkWalletOrder({ method: COD, useWallet: true, balancePaise: 6000, totalPaise: 25000, shownBalancePaise: 10000 })).toEqual({
       ok: false,
       code: WALLET_BALANCE_CHANGED,
     });
     // Went up (a refund landed): still refused, so the customer sees the new total.
-    expect(checkWalletOrder({ method: COD, useWallet: true, balancePaise: 20000, totalPaise: 25000, expectedWalletPaise: 10000 }).ok).toBe(false);
+    expect(checkWalletOrder({ method: COD, useWallet: true, balancePaise: 20000, totalPaise: 25000, shownBalancePaise: 10000 }).ok).toBe(false);
   });
 
   it("wallet-only needs the balance to cover everything", () => {
@@ -83,10 +83,21 @@ describe("wallet at checkout", () => {
 
   it("two orders at once: the second sees the lower balance and is refused", () => {
     // Firestore retries the later transaction with fresh reads.
-    const first = checkWalletOrder({ method: COD, useWallet: true, balancePaise: 10000, totalPaise: 25000, expectedWalletPaise: 10000 });
+    const first = checkWalletOrder({ method: COD, useWallet: true, balancePaise: 10000, totalPaise: 25000, shownBalancePaise: 10000 });
     expect(first.ok).toBe(true);
     const after = 10000 - (first.ok ? first.walletPaise : 0);
-    expect(checkWalletOrder({ method: COD, useWallet: true, balancePaise: after, totalPaise: 20000, expectedWalletPaise: 10000 }).ok).toBe(false);
+    expect(checkWalletOrder({ method: COD, useWallet: true, balancePaise: after, totalPaise: 20000, shownBalancePaise: 10000 }).ok).toBe(false);
+  });
+
+  it("a balance that hasn't changed passes even if the server's total differs from the app's", () => {
+    expect(checkWalletOrder({ method: COD, useWallet: true, balancePaise: 30000, totalPaise: 25200, shownBalancePaise: 30000 })).toMatchObject({
+      ok: true,
+      walletPaise: 25200,
+    });
+  });
+
+  it("the balance isn't checked when the wallet isn't used", () => {
+    expect(checkWalletOrder({ method: COD, useWallet: false, balancePaise: 6000, totalPaise: 25000, shownBalancePaise: 10000 }).ok).toBe(true);
   });
 });
 
