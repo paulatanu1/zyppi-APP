@@ -12,6 +12,7 @@ import {
   parseRiderConfig,
   pickRider,
   requirePoint,
+  withinCashLimit,
 } from "../../src/dispatch/model";
 
 const store = { lat: 23.3324, lng: 86.3617 }; // Purulia
@@ -28,6 +29,7 @@ const rider = (uid: string, dLat: number, over: Partial<Candidate> = {}): Candid
   onBreakUntilMs: null,
   idleSinceMs: now - 60_000,
   inSlot: false,
+  codBalancePaise: 0,
   ...over,
 });
 
@@ -83,6 +85,30 @@ describe("pickRider", () => {
     // A slot rider 2 km away loses to a free one next door.
     const d = rider("slot-far", 0.018, { inSlot: true });
     expect(pickRider([a, d], store, cfg, [], now)?.uid).toBe("idle-short");
+  });
+});
+
+describe("cash limit", () => {
+  const limit = { collectPaise: 50_000, cashLimitPaise: 300_000 };
+
+  it("skips riders the order's cash would take past the limit", () => {
+    const full = rider("full", 0.001, { codBalancePaise: 260_000 });
+    const ok = rider("ok", 0.01, { codBalancePaise: 250_000 });
+    expect(pickRider([full, ok], store, cfg, [], now, limit)?.uid).toBe("ok");
+    expect(pickRider([full], store, cfg, [], now, limit)).toBeNull();
+  });
+
+  it("ignores the limit for prepaid orders and when it is 0", () => {
+    const full = rider("full", 0.001, { codBalancePaise: 900_000 });
+    expect(pickRider([full], store, cfg, [], now, { collectPaise: 0, cashLimitPaise: 300_000 })?.uid).toBe("full");
+    expect(pickRider([full], store, cfg, [], now, { collectPaise: 50_000, cashLimitPaise: 0 })?.uid).toBe("full");
+    expect(pickRider([full], store, cfg, [], now)?.uid).toBe("full");
+  });
+
+  it("allows landing exactly on the limit", () => {
+    expect(withinCashLimit(250_000, limit)).toBe(true);
+    expect(withinCashLimit(250_001, limit)).toBe(false);
+    expect(withinCashLimit(-5, limit)).toBe(true);
   });
 });
 

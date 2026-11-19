@@ -45,7 +45,11 @@ export interface PayRate {
 export interface RiderConfig {
   dispatch: DispatchConfig;
   emergency: { ambulance: string; police: string; accident: string };
-  /** "Hand over cash" warning above this (paise). */
+  /**
+   * Cash a rider may hold (paise). Above it the app warns "hand over cash",
+   * and dispatch stops offering cash orders that would push them past it
+   * (see pickRider). 0 = no limit.
+   */
   cashLimitPaise: number;
   /** Minutes to wait at the door before "can't deliver" unlocks. */
   waitMinutes: number;
@@ -259,6 +263,25 @@ export interface Candidate {
   idleSinceMs: number | null;
   /** In a booked gig slot right now. */
   inSlot: boolean;
+  /** Cash collected and not yet handed over (paise). */
+  codBalancePaise: number;
+}
+
+/** What the order asks of the rider beyond being free and near. */
+export interface CashRule {
+  /** Cash the rider collects at the door (0 for prepaid orders). */
+  collectPaise: number;
+  /** config.cashLimitPaise; 0 = no limit. */
+  cashLimitPaise: number;
+}
+
+/**
+ * False when collecting `collectPaise` would take the rider past the cash
+ * limit. Prepaid orders (nothing to collect) never count against it.
+ */
+export function withinCashLimit(codBalancePaise: number, rule: CashRule | undefined): boolean {
+  if (!rule || rule.collectPaise <= 0 || rule.cashLimitPaise <= 0) return true;
+  return Math.max(0, codBalancePaise) + rule.collectPaise <= rule.cashLimitPaise;
 }
 
 export interface Pick {
@@ -270,7 +293,8 @@ export interface Pick {
  * The best rider for an order whose first pickup is at `store`: free,
  * not on a break, with a fresh position within range, not already tried.
  * Nearest first; within 500 m, riders in a booked slot first, then the
- * one waiting longest.
+ * one waiting longest. Riders who would go over the cash limit by
+ * collecting this order's cash are skipped (`cash`).
  */
 export function pickRider(
   candidates: Candidate[],
@@ -278,6 +302,7 @@ export function pickRider(
   config: DispatchConfig,
   tried: readonly string[],
   nowMs: number,
+  cash?: CashRule,
 ): Pick | null {
   const usable = candidates
     .filter(
@@ -289,7 +314,8 @@ export function pickRider(
         c.lat != null &&
         c.lng != null &&
         c.pingAtMs != null &&
-        nowMs - c.pingAtMs <= config.pingFreshSeconds * 1000,
+        nowMs - c.pingAtMs <= config.pingFreshSeconds * 1000 &&
+        withinCashLimit(c.codBalancePaise, cash),
     )
     .map((c) => ({ c, d: distanceM({ lat: c.lat!, lng: c.lng! }, store) }))
     .filter((x) => x.d <= config.maxDistanceKm * 1000);

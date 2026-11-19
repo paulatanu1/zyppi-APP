@@ -40,6 +40,7 @@ export function candidateFrom(id: string, d: Record<string, unknown>): Candidate
     onBreakUntilMs: ms(p.onBreakUntil),
     idleSinceMs: ms(p.idleSince),
     inSlot: (ms(p.slotEndsAt) ?? 0) > Date.now(),
+    codBalancePaise: typeof d.codBalancePaise === "number" ? d.codBalancePaise : 0,
   };
 }
 
@@ -75,6 +76,9 @@ export async function offerOrder(orderId: string, nowMs = Date.now()): Promise<O
     if (offer?.riderId && !tried.includes(offer.riderId)) tried.push(offer.riderId);
 
     const store = await pickupPoint(tx, o);
+    const cod = (o.payment as { method?: string } | undefined)?.method === "Cash on delivery";
+    // The wallet may have paid part of a cash order.
+    const collectPaise = cod ? cashToCollect(o) : 0;
     const riders = await tx.get(
       db
         .collection(RIDERS)
@@ -85,7 +89,10 @@ export async function offerOrder(orderId: string, nowMs = Date.now()): Promise<O
     );
     const pick =
       tried.length < config.dispatch.maxOffers && store
-        ? pickRider(riders.docs.map((r) => candidateFrom(r.id, r.data())), store, config.dispatch, tried, nowMs)
+        ? pickRider(riders.docs.map((r) => candidateFrom(r.id, r.data())), store, config.dispatch, tried, nowMs, {
+            collectPaise,
+            cashLimitPaise: config.cashLimitPaise,
+          })
         : null;
 
     // Writes from here on.
@@ -103,7 +110,6 @@ export async function offerOrder(orderId: string, nowMs = Date.now()): Promise<O
     const dropM = store && isPoint(to) ? distanceM(store, to) : 0;
     const allocations = (o.allocations as { storeId: string }[] | undefined) ?? [];
     const storeIds = [...new Set(allocations.map((a) => a.storeId))];
-    const cod = (o.payment as { method?: string } | undefined)?.method === "Cash on delivery";
     tx.update(orderRef, {
       offer: { riderId: pick.uid, expiresAt, at: FieldValue.serverTimestamp() },
       dispatch: { state: "offered", tried: [...tried, pick.uid], updatedAt: FieldValue.serverTimestamp() },
@@ -119,8 +125,7 @@ export async function offerOrder(orderId: string, nowMs = Date.now()): Promise<O
       dropArea: [address.area, address.city].filter((x) => typeof x === "string" && x).join(", "),
       storeIds,
       itemCount: ((o.items as { quantity?: number }[] | undefined) ?? []).reduce((n, i) => n + (i.quantity ?? 0), 0),
-      // The wallet may have paid part of a cash order.
-      collectPaise: cod ? cashToCollect(o) : 0,
+      collectPaise,
       cod,
       earningPaise:
         earningFor(config, (o.serviceAreaId as string) ?? "", dropM, new Date(nowMs)).totalPaise +
