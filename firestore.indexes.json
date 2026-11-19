@@ -358,6 +358,14 @@
         { "fieldPath": "settle.state", "order": "ASCENDING" },
         { "fieldPath": "settle.startedAt", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "riders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "earningsBalancePaise", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": [

@@ -35,24 +35,87 @@ export function payable(earningsBalancePaise: number, codBalancePaise: number): 
 /** Request: {}. Asks finance to pay the whole payable balance. */
 export const riderRequestPayout = onCall(async (request) => {
   const rider = await requireRider(request);
-  const ref = rider.ref.collection(PAYOUTS);
+  const out = await openPayoutRequest(rider.ref, rider.ref.collection(PAYOUTS).doc(), "rider");
+  if (out === "pending") throw new HttpsError("failed-precondition", "PAYOUT_PENDING");
+  if (out === "too_small") throw new HttpsError("failed-precondition", "PAYOUT_TOO_SMALL");
+  return out;
+});
+
+/**
+ * Opens a payout request for the rider's whole payable balance at `doc`,
+ * unless one is already open, `doc` exists, or it's under the minimum.
+ */
+async function openPayoutRequest(
+  riderRef: FirebaseFirestore.DocumentReference,
+  doc: FirebaseFirestore.DocumentReference,
+  source: "rider" | "weekly",
+  week?: string,
+): Promise<{ id: string; amountPaise: number } | "pending" | "too_small" | "exists"> {
   return db.runTransaction(async (tx) => {
-    const r = await tx.get(rider.ref);
-    const open = await tx.get(ref.where("status", "==", "requested").limit(1));
-    if (!open.empty) throw new HttpsError("failed-precondition", "PAYOUT_PENDING");
+    const [r, open, existing] = await Promise.all([
+      tx.get(riderRef),
+      tx.get(riderRef.collection(PAYOUTS).where("status", "==", "requested").limit(1)),
+      tx.get(doc),
+    ]);
+    if (existing.exists) return "exists";
+    if (!open.empty) return "pending";
     const amount = payable((r.get("earningsBalancePaise") as number) ?? 0, (r.get("codBalancePaise") as number) ?? 0);
-    if (amount < MIN_PAYOUT_PAISE) throw new HttpsError("failed-precondition", "PAYOUT_TOO_SMALL");
-    const doc = ref.doc();
+    if (amount < MIN_PAYOUT_PAISE) return "too_small";
     tx.create(doc, {
       status: "requested",
       amountPaise: amount,
-      riderId: rider.id,
+      riderId: riderRef.id,
       riderName: r.get("fullName") ?? null,
+      source,
+      ...(week ? { week } : {}),
       requestedAt: FieldValue.serverTimestamp(),
     });
     return { id: doc.id, amountPaise: amount };
   });
-});
+}
+
+/** The Monday (India time) of the week that ended before `now`'s week. */
+export function settledWeek(now: Date): string {
+  const { week } = istDayAndWeek(now);
+  return new Date(Date.parse(`${week}T00:00:00Z`) - 7 * 86_400_000).toISOString().slice(0, 10);
+}
+
+/**
+ * Monday 06:00 India time: weekly settlement. Every approved rider with at
+ * least the minimum payable (earnings minus cash still held) gets a payout
+ * request for finance (Rider payouts), one per rider per week
+ * (`weekly_<monday>`), so a rerun never doubles it. Riders who already
+ * asked are left as they are. Finance still pays and records it.
+ */
+export const weeklyRiderSettlement = onSchedule(
+  { schedule: "0 6 * * 1", timeZone: "Asia/Kolkata", timeoutSeconds: 540 },
+  async () => {
+    const week = settledWeek(new Date());
+    let opened = 0;
+    let last: FirebaseFirestore.QueryDocumentSnapshot | undefined;
+    for (;;) {
+      let q = db
+        .collection(RIDERS)
+        .where("status", "==", "approved")
+        .where("earningsBalancePaise", ">=", MIN_PAYOUT_PAISE)
+        .orderBy("earningsBalancePaise")
+        .limit(200);
+      if (last) q = q.startAfter(last);
+      const page = await q.get();
+      for (const r of page.docs) {
+        try {
+          const out = await openPayoutRequest(r.ref, r.ref.collection(PAYOUTS).doc(`weekly_${week}`), "weekly", week);
+          if (typeof out === "object") opened += 1;
+        } catch (e) {
+          logger.error("weekly settlement failed", { riderId: r.id, e });
+        }
+      }
+      if (page.size < 200) break;
+      last = page.docs[page.docs.length - 1];
+    }
+    logger.info("weekly rider settlement", { week, opened });
+  },
+);
 
 /**
  * Request: {riderId, amountPaise, method: upi|bank|cash, reference, payoutId?}.
