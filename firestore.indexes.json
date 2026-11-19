@@ -344,22 +344,6 @@
       ]
     },
     {
-      "collectionGroup": "orderIssues",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "updatedAt", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "returns",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "settle.state", "order": "ASCENDING" },
-        { "fieldPath": "settle.startedAt", "order": "ASCENDING" }
-      ]
-    },
-    {
       "collectionGroup": "riders",
       "queryScope": "COLLECTION",
       "fields": [
@@ -373,6 +357,22 @@
       "fields": [
         { "fieldPath": "sellersPending", "order": "ASCENDING" },
         { "fieldPath": "opsAlerts.sellerLate", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "orderIssues",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "returns",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "settle.state", "order": "ASCENDING" },
+        { "fieldPath": "settle.startedAt", "order": "ASCENDING" }
       ]
     }
   ],
