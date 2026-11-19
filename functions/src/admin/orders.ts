@@ -1,7 +1,7 @@
 import { FieldValue, type Transaction } from "firebase-admin/firestore";
 import { inventoryIdFor, isZyppiStore } from "../marketplace/model";
 import { HttpsError, onCall } from "firebase-functions/https";
-import { auth, db } from "../shared/firebase";
+import { db } from "../shared/firebase";
 import { requireString } from "../shared/callable";
 import { type Actor, requireRole } from "../shared/roles";
 import { writeAudit } from "../shared/audit";
@@ -377,43 +377,3 @@ async function restock(
 export const adminUpdateOrderStatus = onCall({ secrets: PAYU_SECRETS }, async (request) =>
   updateOrderStatus(requireRole(request, ["ops"]), request.data ?? {}),
 );
-
-/**
- * Users list for the admin panel: profile docs joined with Auth (email
- * lives only in Auth).
- *
- * Response: [{id, email, phone, fullName, createdAt}] newest first.
- */
-export const adminListUsers = onCall(async (request) => {
-  requireRole(request, ["ops", "support"]);
-
-  const authUsers = new Map<string, { email: string | null; phone: string | null; created: string }>();
-  let pageToken: string | undefined;
-  do {
-    const page = await auth.listUsers(1000, pageToken);
-    for (const u of page.users) {
-      authUsers.set(u.uid, {
-        email: u.email ?? null,
-        phone: u.phoneNumber ?? null,
-        created: u.metadata.creationTime,
-      });
-    }
-    pageToken = page.pageToken;
-  } while (pageToken);
-
-  const profiles = await db.collection("users").get();
-  const profileById = new Map(profiles.docs.map((d) => [d.id, d.data()]));
-
-  return [...authUsers.entries()]
-    .map(([id, a]) => {
-      const profile = profileById.get(id) ?? {};
-      return {
-        id,
-        email: (profile.email as string | undefined) ?? a.email,
-        phone: (profile.phone as string | undefined) ?? a.phone,
-        fullName: (profile.fullName as string | undefined) ?? null,
-        createdAt: new Date(a.created).toISOString(),
-      };
-    })
-    .sort((x, y) => y.createdAt.localeCompare(x.createdAt));
-});
