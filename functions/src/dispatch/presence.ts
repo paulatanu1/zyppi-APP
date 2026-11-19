@@ -119,11 +119,17 @@ export const riderPing = onCall(HOT, async (request) => {
         distanceM: d,
         etaMinutes: etaMinutes(d),
         at: FieldValue.serverTimestamp(),
+        // The rider's position: deleted by the TTL policy a day after the
+        // last ping (firestore.indexes.json fieldOverrides).
+        expireAt: Timestamp.fromMillis(Date.now() + TRACKING_TTL_MS),
       });
     }
   }
   return state;
 });
+
+/** How long the live position stays after the last ping. */
+export const TRACKING_TTL_MS = 24 * 60 * 60 * 1000;
 
 /** Request: {minutes: 0 | 15 | 30}. Pauses new offers; 0 ends the break. */
 export const riderBreak = onCall(async (request) => {
