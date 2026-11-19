@@ -199,7 +199,7 @@ export function acceptProblems(input: AcceptInput, ctx: AcceptContext, current: 
  * accepting the same version again changes nothing.
  */
 export const acceptLegal = onCall(async (request) => {
-  const uid = requireUid(request);
+  const uid = requireUid(request, "web");
   const input = readAccept(request.data ?? {});
   const token = request.auth?.token;
   const ctx: AcceptContext = {

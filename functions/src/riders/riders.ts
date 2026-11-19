@@ -85,7 +85,7 @@ export async function saveApplication(
 }
 
 export const riderSaveApplication = onCall(async (request) => {
-  const uid = requireUid(request);
+  const uid = requireUid(request, "web");
   if (request.auth?.token.firebase?.sign_in_provider === "anonymous") {
     throw new HttpsError("permission-denied", "Sign in with your phone or Google account");
   }
