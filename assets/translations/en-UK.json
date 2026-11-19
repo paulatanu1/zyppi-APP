@@ -501,5 +501,17 @@
   "newCount": "{} new",
   "collectingFromStores": "Collecting your order from {} stores",
   "pickedUpFromStores": "Picked up from {picked} of {total} stores",
-  "deleteActiveOrders": "You have an order, payment or reported problem still in progress. You can delete your account once it's finished."
+  "deleteActiveOrders": "You have an order, payment or reported problem still in progress. You can delete your account once it's finished.",
+  "cancelOrder": "Cancel order",
+  "cancelOrderTitle": "Why are you cancelling?",
+  "cancelOrderNote": "You can cancel until your order is packed. Wallet money goes back to your wallet; online payments are refunded to the original method.",
+  "cancelOrderConfirm": "Cancel order",
+  "keepOrder": "Keep order",
+  "cancelReasonChangedMind": "I changed my mind",
+  "cancelReasonMistake": "I ordered by mistake",
+  "cancelReasonTooSlow": "Delivery is taking too long",
+  "cancelReasonWrongAddress": "Wrong delivery address",
+  "cancelReasonOther": "Something else",
+  "orderCancelledToast": "Your order was cancelled",
+  "cancelTooLate": "Your order is already packed and can't be cancelled now. Contact support for help."
 }

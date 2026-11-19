@@ -501,5 +501,17 @@
   "newCount": "{} नई",
   "collectingFromStores": "{} दुकानों से आपका ऑर्डर लिया जा रहा है",
   "pickedUpFromStores": "{total} में से {picked} दुकानों से ले लिया",
-  "deleteActiveOrders": "आपका कोई ऑर्डर, भुगतान या बताई गई समस्या अभी चल रही है। उसके पूरा होने के बाद आप खाता हटा सकते हैं।"
+  "deleteActiveOrders": "आपका कोई ऑर्डर, भुगतान या बताई गई समस्या अभी चल रही है। उसके पूरा होने के बाद आप खाता हटा सकते हैं।",
+  "cancelOrder": "ऑर्डर रद्द करें",
+  "cancelOrderTitle": "आप क्यों रद्द कर रहे हैं?",
+  "cancelOrderNote": "ऑर्डर पैक होने तक आप उसे रद्द कर सकते हैं। वॉलेट की राशि वॉलेट में लौटेगी; ऑनलाइन भुगतान उसी तरीके में रिफ़ंड होगा।",
+  "cancelOrderConfirm": "ऑर्डर रद्द करें",
+  "keepOrder": "ऑर्डर रखें",
+  "cancelReasonChangedMind": "मेरा मन बदल गया",
+  "cancelReasonMistake": "गलती से ऑर्डर हो गया",
+  "cancelReasonTooSlow": "डिलीवरी में बहुत देर हो रही है",
+  "cancelReasonWrongAddress": "गलत डिलीवरी पता",
+  "cancelReasonOther": "कुछ और",
+  "orderCancelledToast": "आपका ऑर्डर रद्द हो गया",
+  "cancelTooLate": "आपका ऑर्डर पैक हो चुका है और अब रद्द नहीं हो सकता। मदद के लिए सपोर्ट से संपर्क करें।"
 }

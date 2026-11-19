@@ -7,8 +7,9 @@ import 'package:zippy/core/domain/order_status.dart';
 import 'package:zippy/core/order/domain/order_repository.dart';
 
 /// Orders are read-only for the app: the placeOrder Cloud Function creates
-/// them (pricing, stock and coupon checked server-side) and only the
-/// admin panel changes their status.
+/// them (pricing, stock and coupon checked server-side), the admin panel
+/// changes their status, and the customer can only cancel through the
+/// cancelMyOrder function.
 class FirebaseOrderRepository implements OrderRepository {
   final FirebaseAuth auth;
   final FirebaseFirestore firestore;
@@ -67,6 +68,23 @@ class FirebaseOrderRepository implements OrderRepository {
       'Order status is changed only by the admin panel '
       '(adminUpdateOrderStatus Cloud Function).',
     );
+  }
+
+  @override
+  Future<void> cancelOrder(String orderId, CancelReason reason) async {
+    try {
+      await functions.httpsCallable('cancelMyOrder').call({
+        'orderId': orderId,
+        'reason': reason.code,
+      });
+    } on FirebaseFunctionsException catch (e) {
+      if (e.code == 'failed-precondition' &&
+          (e.message == 'TOO_LATE_TO_CANCEL' ||
+              e.message == 'ALREADY_CANCELLED')) {
+        throw const OrderCancelTooLate();
+      }
+      rethrow;
+    }
   }
 
   @override

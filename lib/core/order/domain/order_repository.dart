@@ -30,12 +30,40 @@ abstract class OrderRepository {
 
   Future<void> updateStatus(String orderId, OrderStatus status);
 
+  /// The customer cancels their own order (cancelMyOrder Cloud Function:
+  /// only while it's placed and nothing was picked up; stock, coupon,
+  /// wallet and online refund are handled server-side). Throws
+  /// [OrderCancelTooLate] when the order has moved on.
+  Future<void> cancelOrder(String orderId, CancelReason reason);
+
   /// The newest [limit] orders, re-emitted on every change. One live
   /// query: a change costs one read, not a re-read of the whole list.
   Stream<List<Order>> watchOrders({int limit});
 
   /// One order, re-emitted on every change (null if it doesn't exist).
   Stream<Order?> watchOrder(String id);
+}
+
+/// Why the customer cancelled (functions/src/orders/cancel_order.ts).
+enum CancelReason {
+  changedMind('changed_mind', 'cancelReasonChangedMind'),
+  orderedByMistake('ordered_by_mistake', 'cancelReasonMistake'),
+  deliveryTooSlow('delivery_too_slow', 'cancelReasonTooSlow'),
+  wrongAddress('wrong_address', 'cancelReasonWrongAddress'),
+  other('other', 'cancelReasonOther');
+
+  const CancelReason(this.code, this.labelKey);
+
+  /// Sent to the server.
+  final String code;
+
+  /// Translation key.
+  final String labelKey;
+}
+
+/// The order was packed or picked up before the cancel reached the server.
+class OrderCancelTooLate implements Exception {
+  const OrderCancelTooLate();
 }
 
 /// How many orders "Your orders" shows.

@@ -501,5 +501,17 @@
   "newCount": "{} ਨਵੀਆਂ",
   "collectingFromStores": "{} ਦੁਕਾਨਾਂ ਤੋਂ ਤੁਹਾਡਾ ਆਰਡਰ ਲਿਆ ਜਾ ਰਿਹਾ ਹੈ",
   "pickedUpFromStores": "{total} ਵਿੱਚੋਂ {picked} ਦੁਕਾਨਾਂ ਤੋਂ ਲੈ ਲਿਆ",
-  "deleteActiveOrders": "ਤੁਹਾਡਾ ਕੋਈ ਆਰਡਰ, ਭੁਗਤਾਨ ਜਾਂ ਦੱਸੀ ਸਮੱਸਿਆ ਅਜੇ ਚੱਲ ਰਹੀ ਹੈ। ਇਸਦੇ ਪੂਰਾ ਹੋਣ ਤੋਂ ਬਾਅਦ ਤੁਸੀਂ ਖਾਤਾ ਮਿਟਾ ਸਕਦੇ ਹੋ।"
+  "deleteActiveOrders": "ਤੁਹਾਡਾ ਕੋਈ ਆਰਡਰ, ਭੁਗਤਾਨ ਜਾਂ ਦੱਸੀ ਸਮੱਸਿਆ ਅਜੇ ਚੱਲ ਰਹੀ ਹੈ। ਇਸਦੇ ਪੂਰਾ ਹੋਣ ਤੋਂ ਬਾਅਦ ਤੁਸੀਂ ਖਾਤਾ ਮਿਟਾ ਸਕਦੇ ਹੋ।",
+  "cancelOrder": "ਆਰਡਰ ਰੱਦ ਕਰੋ",
+  "cancelOrderTitle": "ਤੁਸੀਂ ਕਿਉਂ ਰੱਦ ਕਰ ਰਹੇ ਹੋ?",
+  "cancelOrderNote": "ਆਰਡਰ ਪੈਕ ਹੋਣ ਤੱਕ ਤੁਸੀਂ ਇਸਨੂੰ ਰੱਦ ਕਰ ਸਕਦੇ ਹੋ। ਵਾਲਿਟ ਦੀ ਰਕਮ ਵਾਲਿਟ ਵਿੱਚ ਵਾਪਸ ਆਵੇਗੀ; ਔਨਲਾਈਨ ਭੁਗਤਾਨ ਉਸੇ ਤਰੀਕੇ ਵਿੱਚ ਰਿਫੰਡ ਹੋਵੇਗਾ।",
+  "cancelOrderConfirm": "ਆਰਡਰ ਰੱਦ ਕਰੋ",
+  "keepOrder": "ਆਰਡਰ ਰੱਖੋ",
+  "cancelReasonChangedMind": "ਮੇਰਾ ਮਨ ਬਦਲ ਗਿਆ",
+  "cancelReasonMistake": "ਗਲਤੀ ਨਾਲ ਆਰਡਰ ਹੋ ਗਿਆ",
+  "cancelReasonTooSlow": "ਡਿਲੀਵਰੀ ਵਿੱਚ ਬਹੁਤ ਦੇਰ ਹੋ ਰਹੀ ਹੈ",
+  "cancelReasonWrongAddress": "ਗਲਤ ਡਿਲੀਵਰੀ ਪਤਾ",
+  "cancelReasonOther": "ਕੁਝ ਹੋਰ",
+  "orderCancelledToast": "ਤੁਹਾਡਾ ਆਰਡਰ ਰੱਦ ਹੋ ਗਿਆ",
+  "cancelTooLate": "ਤੁਹਾਡਾ ਆਰਡਰ ਪੈਕ ਹੋ ਚੁੱਕਾ ਹੈ ਅਤੇ ਹੁਣ ਰੱਦ ਨਹੀਂ ਹੋ ਸਕਦਾ। ਮਦਦ ਲਈ ਸਪੋਰਟ ਨਾਲ ਸੰਪਰਕ ਕਰੋ।"
 }
