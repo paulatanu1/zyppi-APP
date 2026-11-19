@@ -62,6 +62,8 @@ export async function updateOrderStatus(
   actor: Actor,
   input: StatusInput,
   payu: PayURefunds = payURefunds,
+  /** Extra check on the order as read in the transaction (throws to refuse). */
+  guard?: (order: Record<string, unknown>) => void,
 ): Promise<{ ok: true; refund?: { refundId: string; status: string } }> {
   const orderId = requireString(input.orderId, "orderId");
   const status = requireString(input.status, "status");
@@ -75,6 +77,7 @@ export async function updateOrderStatus(
     const order = await tx.get(orderRef);
     if (!order.exists) throw new HttpsError("not-found", `Order not found: ${orderId}`);
     const d = order.data()!;
+    guard?.(d);
     const from = d.status as string;
 
     const update: Record<string, unknown> = { updatedAt: FieldValue.serverTimestamp() };
