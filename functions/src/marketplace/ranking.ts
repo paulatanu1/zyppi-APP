@@ -25,6 +25,11 @@ export interface MarketplaceConfig {
   maxSellersPerOrder: number;
   /** A seller has this long to accept a new order before ops is alerted. */
   acceptSlaMinutes: number;
+  /**
+   * Minutes after the accept deadline before an order a seller still
+   * hasn't accepted is cancelled and refunded (0 = never: ops decides).
+   */
+  autoCancelLateMinutes: number;
 }
 
 export const DEFAULT_MARKETPLACE_CONFIG: MarketplaceConfig = {
@@ -33,6 +38,7 @@ export const DEFAULT_MARKETPLACE_CONFIG: MarketplaceConfig = {
   ratingPrior: 4,
   maxSellersPerOrder: 3,
   acceptSlaMinutes: 5,
+  autoCancelLateMinutes: 0,
 };
 
 const num = (v: unknown, min: number, max: number, fallback: number) =>
@@ -53,6 +59,7 @@ export function marketplaceConfigFrom(raw: Record<string, unknown> | undefined):
     ratingPrior: num(raw?.ratingPrior, 1, 5, d.ratingPrior),
     maxSellersPerOrder: Math.round(num(raw?.maxSellersPerOrder, 1, 10, d.maxSellersPerOrder)),
     acceptSlaMinutes: num(raw?.acceptSlaMinutes, 1, 60, d.acceptSlaMinutes),
+    autoCancelLateMinutes: Math.round(num(raw?.autoCancelLateMinutes, 0, 120, d.autoCancelLateMinutes)),
   };
 }
 

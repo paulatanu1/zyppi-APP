@@ -56,3 +56,17 @@ describe("weekly settlement", () => {
   });
 });
 
+describe("late sellers", async () => {
+  const { lateCancelDue } = await import("../../src/marketplace/seller_orders");
+  const { marketplaceConfigFrom } = await import("../../src/marketplace/ranking");
+  const now = Date.UTC(2026, 10, 19, 10, 0);
+
+  it("cancels only when switched on and the wait is over", () => {
+    expect(lateCancelDue(now - 20 * 60_000, 0, now)).toBe(false); // off by default
+    expect(lateCancelDue(now - 9 * 60_000, 10, now)).toBe(false);
+    expect(lateCancelDue(now - 10 * 60_000, 10, now)).toBe(true);
+    expect(lateCancelDue(null, 10, now)).toBe(false);
+    expect(marketplaceConfigFrom(undefined).autoCancelLateMinutes).toBe(0);
+    expect(marketplaceConfigFrom({ autoCancelLateMinutes: 15 }).autoCancelLateMinutes).toBe(15);
+  });
+});
