@@ -18,6 +18,7 @@
     "backfill-user-stats": "tsx scripts/backfill-user-stats.ts",
     "backfill-stats": "tsx scripts/backfill-stats.ts",
     "backfill-zyppi-seller": "tsx scripts/backfill-zyppi-seller.ts",
+    "backfill-rider-trips": "tsx scripts/backfill-rider-trips.ts",
     "publish-legal": "tsx scripts/publish-legal.ts"
   },
   "dependencies": {
