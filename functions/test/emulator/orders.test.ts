@@ -145,3 +145,21 @@ describe("placePaidOrder", () => {
     expect((await db.doc("paymentIntents/m5").get()).get("status")).toBe("needs_review");
   });
 });
+
+describe("concurrency", () => {
+  beforeEach(() => resetData({ "v-milk": 5 }));
+
+  it("two customers racing for the last units: exactly one order, stock never negative", async () => {
+    // A second customer with the same cart (all 5 milk across both stores).
+    const other = "user-2";
+    const home = (await db.doc(`users/${UID}/addresses/home`).get()).data()!;
+    await db.doc(`users/${other}/addresses/home`).set(home);
+    await db.doc(`users/${other}/cart/v-milk`).set({ productId: "p-milk", quantity: 5 });
+    const results = await Promise.allSettled([place(), place(params({ uid: other }))]);
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    const failed = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
+    expect(failed.reason).toBeInstanceOf(OrderError);
+    expect([await stockOf(STORE_A, "v-milk"), await stockOf(STORE_B, "v-milk")]).toEqual([0, 0]);
+    expect((await db.collection("orders").get()).size).toBe(1);
+  });
+});

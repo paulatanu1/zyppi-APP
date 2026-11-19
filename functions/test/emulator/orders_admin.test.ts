@@ -232,3 +232,20 @@ describe("needs-review payments", () => {
     });
   });
 });
+
+describe("concurrent cancels", () => {
+  beforeEach(() => resetData({ "v-milk": 4 }));
+
+  it("two cancels at once: one refund, stock back once", async () => {
+    const id = await place({ status: "succeeded", providerReference: "mih-7" }, "UPI");
+    const { payu, calls } = fakePayU();
+    const results = await Promise.allSettled([
+      updateOrderStatus(ops, { orderId: id, status: "cancelled", reason: "Customer asked" }, payu),
+      updateOrderStatus(ops, { orderId: id, status: "cancelled", reason: "Customer asked" }, payu),
+    ]);
+    expect(results.every((r) => r.status === "fulfilled")).toBe(true); // the second is a no-op
+    expect(calls).toHaveLength(1);
+    expect((await db.collection("refunds").where("orderId", "==", id).get()).size).toBe(1);
+    expect([await stock(STORE_A, "v-milk"), await stock(STORE_B, "v-milk")]).toEqual([3, 2]);
+  });
+});
