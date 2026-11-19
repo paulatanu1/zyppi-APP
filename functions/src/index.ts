@@ -15,6 +15,7 @@ export { createPayUOrder, signPayUHash, verifyPayUPayment } from "./payments/cal
 export { reconcilePayUIntents } from "./payments/reconcile";
 export { payuWebhook } from "./payments/webhook";
 export { reportOrderIssue, adminResolveIssue, adminRejectIssue, adminCreditWallet } from "./wallet/claims";
+export { recoverStuckPayouts } from "./wallet/recovery";
 export { onReturnCreated, returnsSweep } from "./returns/dispatch";
 export {
   riderRespondReturnOffer,
