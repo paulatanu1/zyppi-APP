@@ -156,7 +156,12 @@ export type HashDecision =
       credential: string | null;
     }
   | { kind: "payment"; txnid: string; amountPaise: number }
-  | { kind: "v2"; txnids: string[] }
+  | {
+      kind: "v2";
+      txnid: string;
+      /** The JSON body's amount, when it has one: must be that intent's (checked by the caller). */
+      amountPaise: number | null;
+    }
   | { kind: "reject"; reason: string };
 
 /**
@@ -181,12 +186,7 @@ export function classifyHash(
     return classifySdkEvent(hashName, hashString, now);
   }
 
-  if (request.hashType === "V2") {
-    const txnids = [...new Set(hashString.match(TXNID_PATTERN) ?? [])];
-    return txnids.length > 0
-      ? { kind: "v2", txnids }
-      : { kind: "reject", reason: "v2 without txnid" };
-  }
+  if (request.hashType === "V2") return classifyV2(hashString, merchantKey);
 
   const parts = hashString.split("|");
   if (parts[0] !== merchantKey || parts.length < 3) {
@@ -208,6 +208,37 @@ export function classifyHash(
     return { kind: "payment", txnid: field2, amountPaise };
   }
   return { kind: "reject", reason: `command ${field2} not allowed` };
+}
+
+/**
+ * A V2 (HMAC) string is signed only for exactly one of our txnids (checked
+ * to be the caller's open intent). When it's PayU's `body|date|` with a
+ * JSON body, the body's `key` must be ours and its `amount` the intent's,
+ * so a valid txnid can't be wrapped around a different payment.
+ */
+function classifyV2(hashString: string, merchantKey: string): HashDecision {
+  const txnids = [...new Set(hashString.match(TXNID_PATTERN) ?? [])];
+  if (txnids.length === 0) return { kind: "reject", reason: "v2 without txnid" };
+  if (txnids.length > 1) return { kind: "reject", reason: "v2 with several txnids" };
+  let amountPaise: number | null = null;
+  const parts = hashString.split("|");
+  if (parts.length === 3 && parts[2] === "") {
+    let body: unknown = null;
+    try {
+      body = JSON.parse(parts[0]);
+    } catch {
+      body = null;
+    }
+    if (body && typeof body === "object" && !Array.isArray(body)) {
+      const record = body as Record<string, unknown>;
+      if ("key" in record && record.key !== merchantKey) return { kind: "reject", reason: "v2 other key" };
+      if ("amount" in record) {
+        amountPaise = amountToPaise(record.amount);
+        if (Number.isNaN(amountPaise)) return { kind: "reject", reason: "v2 amount" };
+      }
+    }
+  }
+  return { kind: "v2", txnid: txnids[0], amountPaise };
 }
 
 function classifySdkEvent(hashName: string, hashString: string, now: number): HashDecision {
