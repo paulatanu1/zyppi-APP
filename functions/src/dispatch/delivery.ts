@@ -9,6 +9,10 @@ import { notifySeller } from "../marketplace/seller_notify";
 import { type PickupStop, STORE_GEOFENCE_M, allStopsPicked, stopReady } from "./pickups";
 import { RESERVED_STORES, releaseReservation, reservedStoresOf } from "../catalog/reservations";
 import { requireRider } from "./rider_auth";
+import { RIDER_CONFIG_DOC, parseRiderConfig } from "./model";
+import { updateOrderStatus } from "../admin/orders";
+import { PAYU_SECRETS } from "../payments/payu";
+import type { Actor } from "../shared/roles";
 
 /**
  * The rider's steps on their active order:
@@ -238,7 +242,9 @@ export const riderDeliver = onCall(async (request) => {
 
 /**
  * Request: {orderId, reason, note?}. The rider can't complete the drop;
- * ops sees it on the Dispatch board and cancels, reschedules or reassigns.
+ * ops sees it on the Dispatch board and cancels, reschedules or reassigns,
+ * or the rider brings it back (riderReturnedToStore). "Customer
+ * unreachable" only after waiting `waitMinutes` at the door (riderArrived).
  */
 export const riderCannotDeliver = onCall(async (request) => {
   const rider = await requireRider(request);
@@ -247,7 +253,13 @@ export const riderCannotDeliver = onCall(async (request) => {
     throw new HttpsError("invalid-argument", "Invalid reason");
   }
   const note = typeof request.data?.note === "string" ? request.data.note.trim().slice(0, 300) : "";
-  return onMyOrder(rider.id, request.data?.orderId, async (tx, { order }) => {
+  return onMyOrder(rider.id, request.data?.orderId, async (tx, { order, data }) => {
+    if (data.status !== "out_for_delivery") throw new HttpsError("failed-precondition", "WRONG_STEP");
+    if (reason === "customer_unreachable") {
+      const config = parseRiderConfig((await tx.get(db.doc(RIDER_CONFIG_DOC))).data());
+      const left = doorWaitLeftMs(data.riderArrivedAt, config.waitMinutes, Date.now());
+      if (left > 0) throw new HttpsError("failed-precondition", "WAIT_AT_DOOR", { secondsLeft: Math.ceil(left / 1000) });
+    }
     tx.update(order.ref, {
       riderStage: "returning",
       cannotDeliver: { reason, note: note || null, at: FieldValue.serverTimestamp(), riderId: rider.id },
@@ -256,3 +268,49 @@ export const riderCannotDeliver = onCall(async (request) => {
     return { ok: true };
   });
 });
+
+/**
+ * Milliseconds the rider must still wait at the door (0 = can give up).
+ * Never arrived (riderArrived not called): the full wait.
+ */
+export function doorWaitLeftMs(arrivedAt: unknown, waitMinutes: number, nowMs: number): number {
+  const at = arrivedAt as { toMillis?: () => number } | undefined;
+  if (typeof at?.toMillis !== "function") return waitMinutes * 60_000;
+  return Math.max(0, at.toMillis() + waitMinutes * 60_000 - nowMs);
+}
+
+/** Identity for automatic cancels after a failed delivery (audit, cancelledBy). */
+export const FAILED_DELIVERY_ACTOR: Actor = { uid: "system:failed_delivery", role: "ops", email: null };
+
+/**
+ * Request: {orderId}. After "can't deliver", the rider is back at a store
+ * of the order (last ping within 150 m): the order is cancelled like an
+ * ops cancel (stock back on the shelf, wallet / online refund, seller
+ * reversal) and the rider is paid for the trip (config.cancelledTripPercent).
+ */
+export const riderReturnedToStore = onCall({ secrets: PAYU_SECRETS }, async (request) => {
+  const rider = await requireRider(request);
+  const orderId = orderIdOf(request.data?.orderId);
+  return updateOrderStatus(
+    FAILED_DELIVERY_ACTOR,
+    { orderId, status: "cancelled", reason: "Delivery failed: returned to store" },
+    undefined,
+    (d) => {
+      if (d.riderId !== rider.id) throw new HttpsError("permission-denied", "NOT_YOUR_ORDER");
+      if (d.status === "cancelled") throw new HttpsError("failed-precondition", "ORDER_CANCELLED");
+      if (d.riderStage !== "returning") throw new HttpsError("failed-precondition", "WRONG_STEP");
+      const here = freshPosition(rider, POSITION_MAX_AGE_MS);
+      if (!here) throw new HttpsError("failed-precondition", "LOCATION_NEEDED");
+      if (!nearAnyStore(d, here)) throw new HttpsError("failed-precondition", "NOT_AT_STORE");
+    },
+  );
+});
+
+/** True when `here` is within the geofence of one of the order's pickup stops (or it has no known store positions). */
+export function nearAnyStore(order: Record<string, unknown>, here: Point): boolean {
+  const pickups = (order.pickups ?? {}) as Stops;
+  const shops = Object.values(pickups)
+    .map((p) => ({ lat: p?.lat, lng: p?.lng }))
+    .filter((p): p is Point => isPoint(p));
+  return !shops.length || shops.some((shop) => distanceM(here, shop) <= STORE_GEOFENCE_M);
+}

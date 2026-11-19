@@ -1,6 +1,15 @@
 import { type DocumentReference, type DocumentSnapshot, FieldValue, type Transaction } from "firebase-admin/firestore";
 import { db } from "../shared/firebase";
-import { type Point, RIDER_CONFIG_DOC, distanceM, earningFor, isPoint, parseRiderConfig } from "./model";
+import {
+  type OrderEarning,
+  type Point,
+  RIDER_CONFIG_DOC,
+  type RiderConfig,
+  distanceM,
+  earningFor,
+  isPoint,
+  parseRiderConfig,
+} from "./model";
 import { type PickupStop, routeDistanceM } from "./pickups";
 
 export const EARNINGS = "earnings";
@@ -38,17 +47,13 @@ export async function pickupPoint(tx: Transaction, order: Record<string, unknown
 }
 
 /**
- * Credits the rider for a delivery: order pay (rate card + peak + surge)
- * and the customer's tip, as ledger rows in riders/{uid}/earnings, and
- * stamps the order with what the rider earned. Reads first, then writes;
- * returns the fields to add to the rider's update.
+ * The rider's pay for this order's trip (rate card on the whole route +
+ * peak + surge + extra stops), and the rider config. Reads only.
  */
-export async function deliveryEarning(
+export async function tripPay(
   tx: Transaction,
-  orderRef: DocumentReference,
   order: Record<string, unknown>,
-  rider: DocumentSnapshot,
-): Promise<Record<string, unknown>> {
+): Promise<{ pay: OrderEarning; config: RiderConfig }> {
   const configSnap = await tx.get(db.doc(RIDER_CONFIG_DOC));
   const config = parseRiderConfig(configSnap.data());
   const address = order.address as Partial<Point> | null | undefined;
@@ -62,8 +67,81 @@ export async function deliveryEarning(
     const from = await pickupPoint(tx, order);
     straight = from && to ? distanceM(from, to) : 0;
   }
+  const pay = earningFor(config, (order.serviceAreaId as string) ?? "", straight, new Date(), Math.max(0, stops.length - 1));
+  return { pay, config };
+}
+
+/** True once any of the order's goods left a store with the rider. */
+export function goodsLeftStore(order: Record<string, unknown>): boolean {
+  if (order.status === "out_for_delivery") return true;
+  const stage = order.riderStage as string | undefined;
+  if (stage === "picked_up" || stage === "at_customer" || stage === "returning") return true;
+  const pickups = (order.pickups ?? {}) as Record<string, { pickedAt?: unknown } | undefined>;
+  return Object.values(pickups).some((p) => !!p?.pickedAt);
+}
+
+/** What a cancelled trip pays: `percent` of the trip's pay (no tip). */
+export function cancelledTripPaise(tripTotalPaise: number, percent: number): number {
+  return Math.round((Math.max(0, tripTotalPaise) * Math.min(100, Math.max(0, percent))) / 100);
+}
+
+/**
+ * The order was cancelled after the rider collected it (customer
+ * unreachable, refused, ops cancelled on the way): the rider still made
+ * the trip and is paid `config.cancelledTripPercent` of it, as a "trip" row
+ * (not "order": it doesn't count towards delivery incentives). Reads now;
+ * call the returned `apply` once the transaction's writes begin.
+ * Deterministic id, so a repeat writes the same row.
+ */
+export async function prepareCancelledTrip(
+  tx: Transaction,
+  orderRef: DocumentReference,
+  order: Record<string, unknown>,
+  riderId: string,
+): Promise<(() => number) | null> {
+  if (!goodsLeftStore(order)) return null;
+  const riderRef = db.collection("riders").doc(riderId);
+  const [{ pay, config }, row] = await Promise.all([tripPay(tx, order), tx.get(riderRef.collection(EARNINGS).doc(`${orderRef.id}_trip`))]);
+  if (row.exists) return null;
+  const amount = cancelledTripPaise(pay.totalPaise, config.cancelledTripPercent);
+  if (amount <= 0) return null;
+  return () => {
+    const { day, week } = istDayAndWeek(new Date());
+    tx.set(riderRef.collection(EARNINGS).doc(`${orderRef.id}_trip`), {
+      type: "trip",
+      orderId: orderRef.id,
+      amountPaise: amount,
+      kind: "cancelled_after_pickup",
+      // Shown in the rider app's Pocket.
+      reason: "Trip paid: order cancelled after pickup",
+      breakdown: { tripPaise: pay.totalPaise, percent: config.cancelledTripPercent, distanceM: pay.distanceM },
+      day,
+      week,
+      at: FieldValue.serverTimestamp(),
+    });
+    tx.set(
+      riderRef,
+      { earningsBalancePaise: FieldValue.increment(amount), earnedTotalPaise: FieldValue.increment(amount) },
+      { merge: true },
+    );
+    return amount;
+  };
+}
+
+/**
+ * Credits the rider for a delivery: order pay (rate card + peak + surge)
+ * and the customer's tip, as ledger rows in riders/{uid}/earnings, and
+ * stamps the order with what the rider earned. Reads first, then writes;
+ * returns the fields to add to the rider's update.
+ */
+export async function deliveryEarning(
+  tx: Transaction,
+  orderRef: DocumentReference,
+  order: Record<string, unknown>,
+  rider: DocumentSnapshot,
+): Promise<Record<string, unknown>> {
+  const { pay } = await tripPay(tx, order);
   const now = new Date();
-  const pay = earningFor(config, (order.serviceAreaId as string) ?? "", straight, now, Math.max(0, stops.length - 1));
   const tip = Math.max(0, Math.round((order.tipPaise as number | undefined) ?? 0));
   const { day, week } = istDayAndWeek(now);
   const ledger = rider.ref.collection(EARNINGS);
