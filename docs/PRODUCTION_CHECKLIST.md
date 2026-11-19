@@ -53,10 +53,35 @@ Order matters for the audit fixes (2026-11-19):
        logcat or the browser console, and add it under App Check → Apps → ⋮ → Manage debug tokens.
 4. [ ] Release the new app build to Play (it sends App Check tokens).
 5. [ ] Watch App Check → APIs → Cloud Functions / Firestore metrics, and Logs Explorer for
-       `Callable without App Check`. When unverified calls are only very old installs:
-       - set `APP_CHECK_ENFORCE=true` in `functions/.env.zippy-app-2024` and redeploy functions;
-       - App Check → APIs → Cloud Firestore and Storage → **Enforce**.
-       Also raise `minAppVersion` so installs without App Check get the update screen.
+       `Callable without App Check` (each line says `caller: app` or `caller: web`).
+6. [ ] **Apps first** (customer, rider and seller apps all register Play Integrity — do step 1 for
+       `com.zyppi.delivery` and the seller app too): when `caller: app` lines are only very old
+       installs, set `APP_CHECK_ENFORCE=true` in `functions/.env.zippy-app-2024` and redeploy
+       functions. Raise `minAppVersion` so installs without App Check get the update screen.
+7. [ ] **Web second**, only after step 2 is live (the admin panel and its rider sign-up portal
+       send no App Check token without the site key, so enforcing earlier locks staff out):
+       `APP_CHECK_ENFORCE_WEB=true`, redeploy functions.
+8. [ ] Last: App Check → APIs → Cloud Firestore and Storage → **Enforce** (this covers the admin
+       panel's direct reads too, so only after step 7 works).
+
+## 4b. Staging project (so tests never touch production data)
+
+Today dev, staging and prod builds all use `zippy-app-2024`. Billable: a second Blaze project
+(usually pennies at test volume) — your call.
+
+1. [ ] Create the project (e.g. `zyppi-staging`) in asia-south1; enable Auth (phone, Google),
+       Firestore, Storage, Functions (Blaze), App Check.
+2. [ ] `firebase use --add` → alias `staging` (adds it to `.firebaserc`).
+3. [ ] Register the three Android apps in it; put each app's staging `google-services.json`
+       in `android/app/src/staging/` (the Gradle plugin picks the flavor's file over
+       `android/app/google-services.json`). Same for `dev` in `android/app/src/dev/` if dev
+       should use staging too.
+4. [ ] `functions/.env.<staging-project-id>` from `functions/.env.zippy-app-2024`, with
+       `PAYU_ENV=test`; set the PayU test secrets with
+       `firebase functions:secrets:set ... --project staging`.
+5. [ ] Deploy everything with `--project staging`, seed it
+       (`npm --prefix functions run seed -- --project <staging-project-id>`), and point
+       `env/staging.json` / the admin's staging environment at it.
 
 ## 5. Admin on Firebase Hosting
 
