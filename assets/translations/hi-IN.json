@@ -500,5 +500,6 @@
   "unread": "नहीं पढ़ा",
   "newCount": "{} नई",
   "collectingFromStores": "{} दुकानों से आपका ऑर्डर लिया जा रहा है",
-  "pickedUpFromStores": "{total} में से {picked} दुकानों से ले लिया"
+  "pickedUpFromStores": "{total} में से {picked} दुकानों से ले लिया",
+  "deleteActiveOrders": "आपका कोई ऑर्डर, भुगतान या बताई गई समस्या अभी चल रही है। उसके पूरा होने के बाद आप खाता हटा सकते हैं।"
 }

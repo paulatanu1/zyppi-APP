@@ -500,5 +500,6 @@
   "unread": "Unread",
   "newCount": "{} new",
   "collectingFromStores": "Collecting your order from {} stores",
-  "pickedUpFromStores": "Picked up from {picked} of {total} stores"
+  "pickedUpFromStores": "Picked up from {picked} of {total} stores",
+  "deleteActiveOrders": "You have an order, payment or reported problem still in progress. You can delete your account once it's finished."
 }
