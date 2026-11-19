@@ -68,16 +68,22 @@ export const adminRecordPayout = onCall(async (request) => {
   if (method !== "cash" && reference.length < 4) throw new HttpsError("invalid-argument", "Add the UTR / reference");
   const riderRef = db.collection(RIDERS).doc(riderId);
   const payoutId = typeof request.data?.payoutId === "string" ? request.data.payoutId : null;
+  const requestId = payoutRequestId(request.data?.requestId);
+  if (!payoutId && !requestId) throw new HttpsError("invalid-argument", "Missing requestId");
+  let duplicate = false;
   await db.runTransaction(async (tx) => {
-    const rider = await tx.get(riderRef);
+    const doc = riderRef.collection(PAYOUTS).doc(payoutId ?? `manual_${requestId}`);
+    const [rider, existing] = await Promise.all([tx.get(riderRef), tx.get(doc)]);
     if (!rider.exists) throw new HttpsError("not-found", "Rider not found");
+    if (existing.get("status") === "paid" && (!requestId || existing.get("requestId") === requestId)) {
+      // The same confirm sent twice (retry, double click): recorded already.
+      duplicate = true;
+      return;
+    }
+    if (payoutId && existing.get("status") !== "requested") throw new HttpsError("failed-precondition", "Already handled");
+    if (!payoutId && existing.exists) throw new HttpsError("failed-precondition", "Already handled");
     const balance = (rider.get("earningsBalancePaise") as number) ?? 0;
     if (amount > balance) throw new HttpsError("failed-precondition", "More than the rider's unpaid earnings");
-    const doc = payoutId ? riderRef.collection(PAYOUTS).doc(payoutId) : riderRef.collection(PAYOUTS).doc();
-    if (payoutId) {
-      const existing = await tx.get(doc);
-      if (existing.get("status") !== "requested") throw new HttpsError("failed-precondition", "Already handled");
-    }
     tx.set(
       doc,
       {
@@ -89,6 +95,7 @@ export const adminRecordPayout = onCall(async (request) => {
         riderName: rider.get("fullName") ?? null,
         paidBy: actor.uid,
         paidAt: FieldValue.serverTimestamp(),
+        requestId: requestId ?? null,
       },
       { merge: true },
     );
@@ -98,8 +105,23 @@ export const adminRecordPayout = onCall(async (request) => {
     });
     writeAudit(actor, { action: "rider.payout", target: doc.path, after: { amount, method, reference } }, tx);
   });
-  return { ok: true };
+  return { ok: true, duplicate };
 });
+
+/** Client-made key for one "record payout" confirm (a UUID), or null. */
+export function payoutRequestId(v: unknown): string | null {
+  return typeof v === "string" && /^[\w-]{8,64}$/.test(v) ? v : null;
+}
+
+/**
+ * True for a rider's own earnings row. `earnings` is also the name of the
+ * sellers' ledger (marketplace/settlement.ts), whose rows have type "order"
+ * too, so collection-group queries must drop those.
+ */
+export function isRiderLedgerPath(path: string): boolean {
+  const parts = path.split("/");
+  return parts.length === 4 && parts[0] === RIDERS && parts[2] === EARNINGS;
+}
 
 /** Request: {riderId, amountPaise (+/-), reason}. Manual credit or deduction. */
 export const adminAdjustEarnings = onCall(async (request) => {
@@ -217,6 +239,7 @@ export const settleIncentives = onSchedule(
         .get();
       const counts = new Map<string, number>();
       for (const r of rows.docs) {
+        if (!isRiderLedgerPath(r.ref.path)) continue; // a seller's ledger row
         const riderId = r.ref.parent.parent!.id;
         counts.set(riderId, (counts.get(riderId) ?? 0) + 1);
       }

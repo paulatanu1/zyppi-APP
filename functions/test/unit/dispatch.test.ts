@@ -170,8 +170,23 @@ it("handover codes are 4 digits", () => {
 });
 
 describe("pay and gigs", async () => {
-  const { payable, validateRiderOffer, endedPeriod } = await import("../../src/dispatch/pay");
+  const { payable, validateRiderOffer, endedPeriod, isRiderLedgerPath, payoutRequestId } = await import(
+    "../../src/dispatch/pay"
+  );
   const { bookingProblem, slotKey, templatesFor } = await import("../../src/dispatch/gigs");
+
+  it("counts only riders' ledger rows for incentives (not sellers')", () => {
+    expect(isRiderLedgerPath("riders/r1/earnings/o1_order")).toBe(true);
+    expect(isRiderLedgerPath("sellers/s1/earnings/o1_order")).toBe(false);
+    expect(isRiderLedgerPath("riders/r1/payouts/p1")).toBe(false);
+  });
+
+  it("accepts only well-formed payout request ids", () => {
+    expect(payoutRequestId("0b6f1d4e-7a8c-4c3b-9d2e-1f0a5b6c7d8e")).toBe("0b6f1d4e-7a8c-4c3b-9d2e-1f0a5b6c7d8e");
+    expect(payoutRequestId("short")).toBeNull();
+    expect(payoutRequestId("a/b/c/d/e/f/g")).toBeNull();
+    expect(payoutRequestId(42)).toBeNull();
+  });
 
   it("pays out earnings minus cash still held", () => {
     expect(payable(50000, 12000)).toBe(38000);
