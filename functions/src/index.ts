@@ -109,6 +109,7 @@ export {
   adminAdjustEarnings,
   adminSaveRiderOffer,
   settleIncentives,
+  weeklyRiderSettlement,
 } from "./dispatch/pay";
 export { riderBookSlot, riderCancelSlot } from "./dispatch/gigs";
 export { rateRider } from "./dispatch/rating";
