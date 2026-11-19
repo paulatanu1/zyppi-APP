@@ -513,5 +513,6 @@
   "cancelReasonOther": "Something else",
   "orderCancelledToast": "Your order was cancelled",
   "cancelTooLate": "Your order is already packed and can't be cancelled now. Contact support for help.",
-  "deleteActiveOrders": "You have an order, payment or reported problem still in progress. You can delete your account once it's finished."
+  "deleteActiveOrders": "You have an order, payment or reported problem still in progress. You can delete your account once it's finished.",
+  "errorTooManyTries": "Too many tries. Wait a minute and try again."
 }

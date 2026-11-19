@@ -38,6 +38,8 @@ String friendlyOrderError(Object error) {
     return 'errorAddressUnserviceable'.tr();
   }
   if (message.contains('Cart is empty')) return 'errorCartEmpty'.tr();
+  // functions/src/shared/rate_limit.ts: too many tries in a minute.
+  if (message.contains('RATE_LIMITED')) return 'errorTooManyTries'.tr();
   // functions/src/wallet/model.ts: the balance moved since checkout opened
   // (the screen already shows the new one), or now pays for everything.
   if (message.contains('WALLET_BALANCE_CHANGED')) {
