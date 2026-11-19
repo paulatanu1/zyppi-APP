@@ -10,14 +10,19 @@ import { MAX_CODE_ATTEMPTS } from "../dispatch/model";
 import { PICKUP_CODES, type PickupStop, sellerOnlyOrderReady } from "../dispatch/pickups";
 import { writeAudit } from "../shared/audit";
 import { db } from "../shared/firebase";
-import { requireRole } from "../shared/roles";
-import { SELLERS } from "./model";
+import { type Actor, requireRole } from "../shared/roles";
+import { MARKETPLACE_CONFIG_DOC, SELLERS } from "./model";
 import { notifySeller } from "./seller_notify";
 import { requireSeller } from "./sellers";
+import { updateOrderStatus } from "../admin/orders";
+import { PAYU_SECRETS } from "../payments/payu";
+import { logger } from "firebase-functions";
+import { marketplaceConfigFrom } from "./ranking";
 
 /**
  * A marketplace seller's side of an order (docs/MARKETPLACE.md → Seller
- * app): accept (no reject — only Zyppi ops can cancel), mark ready, hand
+ * app): accept or say they can't fulfil it (before accepting; the order is
+ * cancelled and refunded), mark ready, hand
  * over to the rider by entering the rider's pickup code, report an item
  * problem. Sellers never read orders/{id} (it holds the customer's
  * details): they get a projection at sellers/{id}/orders/{orderId}.
@@ -59,6 +64,45 @@ export const sellerAcceptOrder = onCall(async (request) => {
     });
     return { ok: true, status: "accepted" };
   });
+});
+
+/** Why a seller can't take an order (seller app). */
+export const SELLER_REJECT_REASONS = ["out_of_stock", "shop_closing", "too_busy", "other"] as const;
+
+/** Identity for cancels the seller or the accept deadline caused (audit, cancelledBy). */
+export const SELLER_CANCEL_ACTOR: Actor = { uid: "system:seller", role: "ops", email: null };
+
+/**
+ * Request: {orderId, reason}. Before accepting, the seller can't fulfil
+ * the order: it is cancelled like an ops cancel (stock back, wallet /
+ * online refund, customer told), and counts against the seller
+ * (sellerIssues → stats.cancelled, ranking). Lines aren't moved to another
+ * seller: the customer can order again.
+ */
+export const sellerRejectOrder = onCall({ secrets: PAYU_SECRETS }, async (request) => {
+  const me = await requireSeller(request);
+  const orderId = orderIdOf(request.data?.orderId);
+  const reason = request.data?.reason;
+  if (!(SELLER_REJECT_REASONS as readonly unknown[]).includes(reason)) throw new HttpsError("invalid-argument", "Pick a reason");
+  const label = String(reason).replace(/_/g, " ");
+  const res = await updateOrderStatus(
+    { ...SELLER_CANCEL_ACTOR, uid: `seller:${me.sellerId}` },
+    { orderId, status: "cancelled", reason: `Seller can't fulfil: ${label}` },
+    undefined,
+    (d) => {
+      const status = (d.sellerStatus ?? {}) as Record<string, string>;
+      if (!(me.sellerId in status)) throw new HttpsError("permission-denied", "NOT_YOUR_ORDER");
+      if (d.status === "cancelled") throw new HttpsError("failed-precondition", "ORDER_CANCELLED");
+      if (status[me.sellerId] !== "pending") throw new HttpsError("failed-precondition", "ALREADY_ACCEPTED");
+    },
+    () => ({
+      [`sellerStatus.${me.sellerId}`]: "rejected",
+      [`sellerIssues.${me.sellerId}`]: { note: `Rejected: ${label}`, at: FieldValue.serverTimestamp(), by: me.uid },
+      sellersPending: false,
+      sellerAcceptDeadline: null,
+    }),
+  );
+  return { ok: true, refund: res.refund ?? null };
 });
 
 /**
@@ -298,10 +342,13 @@ export const checkSellerAccept = onTaskDispatched<{ orderId: string }>(
 
 /**
  * Safety net, not the timer (checkSellerAccept is): deadlines whose task
- * never ran, e.g. Cloud Tasks was briefly unavailable at placement.
+ * never ran, e.g. Cloud Tasks was briefly unavailable at placement. Also,
+ * when config/marketplace.autoCancelLateMinutes is set, cancels (and
+ * refunds) orders a seller still hasn't accepted that long after the
+ * alert, so the customer isn't left waiting.
  */
 export const escalateLateSellers = onSchedule(
-  { schedule: "every 15 minutes", timeZone: "Asia/Kolkata" },
+  { schedule: "every 5 minutes", timeZone: "Asia/Kolkata", secrets: PAYU_SECRETS },
   async () => {
     const due = await db
       .collection(ORDERS)
@@ -310,8 +357,53 @@ export const escalateLateSellers = onSchedule(
       .limit(100)
       .get();
     for (const o of due.docs) await escalateLate(o.id);
+    await cancelLateOrders();
   },
 );
+
+/** True when an order a seller is late on should now be cancelled. */
+export function lateCancelDue(alertedAtMs: number | null, autoCancelMinutes: number, nowMs: number): boolean {
+  return autoCancelMinutes > 0 && alertedAtMs != null && nowMs - alertedAtMs >= autoCancelMinutes * 60_000;
+}
+
+async function cancelLateOrders(nowMs = Date.now()): Promise<void> {
+  const cfg = marketplaceConfigFrom((await db.doc(MARKETPLACE_CONFIG_DOC).get()).data());
+  if (cfg.autoCancelLateMinutes <= 0) return;
+  const late = await db
+    .collection(ORDERS)
+    .where("sellersPending", "==", true)
+    .where("opsAlerts.sellerLate", "<=", Timestamp.fromMillis(nowMs - cfg.autoCancelLateMinutes * 60_000))
+    .limit(50)
+    .get();
+  for (const o of late.docs) {
+    try {
+      await updateOrderStatus(
+        SELLER_CANCEL_ACTOR,
+        { orderId: o.id, status: "cancelled", reason: "Seller didn't accept in time" },
+        undefined,
+        (d) => {
+          const alerted = (d.opsAlerts as { sellerLate?: Timestamp } | undefined)?.sellerLate?.toMillis() ?? null;
+          if (d.status !== "placed" || d.sellersPending !== true || !lateCancelDue(alerted, cfg.autoCancelLateMinutes, Date.now())) {
+            throw new HttpsError("failed-precondition", "NOT_LATE");
+          }
+        },
+        (d) => {
+          const status = (d.sellerStatus ?? {}) as Record<string, string>;
+          const pending = Object.keys(status).filter((id) => status[id] === "pending");
+          return {
+            sellersPending: false,
+            ...Object.fromEntries(pending.map((id) => [`sellerStatus.${id}`, "expired"])),
+            ...Object.fromEntries(
+              pending.map((id) => [`sellerIssues.${id}`, { note: "Didn't accept in time", at: FieldValue.serverTimestamp(), by: "system" }]),
+            ),
+          };
+        },
+      );
+    } catch (e) {
+      if (!(e instanceof HttpsError && e.message === "NOT_LATE")) logger.warn("late seller cancel failed", { orderId: o.id, e });
+    }
+  }
+}
 
 /**
  * Admin → Dispatch: ops marks a stop collected when the code can't be used

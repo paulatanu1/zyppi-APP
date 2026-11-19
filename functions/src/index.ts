@@ -146,6 +146,7 @@ export {
 } from "./marketplace/offers_sync";
 export {
   sellerAcceptOrder,
+  sellerRejectOrder,
   sellerMarkReady,
   storeConfirmPickup,
   sellerReportIssue,

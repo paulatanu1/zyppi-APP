@@ -64,6 +64,8 @@ export async function updateOrderStatus(
   payu: PayURefunds = payURefunds,
   /** Extra check on the order as read in the transaction (throws to refuse). */
   guard?: (order: Record<string, unknown>) => void,
+  /** More fields for the same order write, from the order as read (e.g. who was at fault). */
+  extra?: (order: Record<string, unknown>) => Record<string, unknown>,
 ): Promise<{ ok: true; refund?: { refundId: string; status: string } }> {
   const orderId = requireString(input.orderId, "orderId");
   const status = requireString(input.status, "status");
@@ -237,6 +239,7 @@ export async function updateOrderStatus(
     }
     if (status === "cancelled" && riderId) releaseRider(tx, riderId);
     if (payTrip) update.riderEarning = { totalPaise: payTrip(), tipPaise: 0, cancelledTrip: true };
+    if (extra) Object.assign(update, extra(d));
 
     tx.update(orderRef, update);
     tx.create(orderRef.collection("events").doc(), {

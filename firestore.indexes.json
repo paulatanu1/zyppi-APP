@@ -366,6 +366,14 @@
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "earningsBalancePaise", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "orders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "sellersPending", "order": "ASCENDING" },
+        { "fieldPath": "opsAlerts.sellerLate", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": [
