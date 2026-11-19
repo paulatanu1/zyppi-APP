@@ -5,6 +5,7 @@ import { db } from "../shared/firebase";
 import { type Actor, requireRole } from "../shared/roles";
 import { inventoryIdFor, isZyppiStore } from "../marketplace/model";
 import { PRODUCTS, type Variant } from "./model";
+import { availableFromCount } from "./reservations";
 
 export const INVENTORY = "inventory";
 export const MOVEMENTS = "inventoryMovements";
@@ -19,7 +20,10 @@ export interface StockItem {
   sellerId?: string | null;
   productId: string;
   variantId: string;
-  /** add: change by `value` (may be negative); set: new absolute count. */
+  /**
+   * add: change by `value` (may be negative); set: a shelf count (what's
+   * sellable becomes `value` minus units held for open orders).
+   */
   mode: "add" | "set";
   value: number;
 }
@@ -86,7 +90,10 @@ export async function adjustStock(
         throw new HttpsError("not-found", "Product or variant not found");
       }
       const before = (rows[i].get("quantity") as number | undefined) ?? 0;
-      const after = it.mode === "set" ? it.value : before + it.value;
+      // "set" is a shelf count: units sold and waiting for pickup are on
+      // the shelf but not for sale (catalog/reservations.ts).
+      const reserved = rows[i].get("reserved") as number | undefined;
+      const after = it.mode === "set" ? availableFromCount(it.value, reserved) : before + it.value;
       if (after < 0) throw new HttpsError("failed-precondition", "Stock can’t go below zero");
       if (after > MAX_QUANTITY) throw new HttpsError("invalid-argument", "Quantity too large");
       const sellerId = isZyppiStore(it.sellerId) ? null : it.sellerId!;
@@ -112,6 +119,7 @@ export async function adjustStock(
         after,
         reason,
         note: note || null,
+        ...(it.mode === "set" ? { counted: it.value, reserved: Math.max(0, reserved ?? 0) } : {}),
         actorUid: actor.uid,
         actorEmail: actor.email,
         at: FieldValue.serverTimestamp(),

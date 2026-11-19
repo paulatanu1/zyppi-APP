@@ -129,6 +129,16 @@ describe("adjustStock", () => {
     );
   });
 
+  it("a shelf count leaves out units sold and waiting for pickup", async () => {
+    await db.doc(`inventory/${STORE_A}_v-rice`).update({ quantity: 4, reserved: 3 });
+    const row = { storeId: STORE_A, productId: "p-rice", variantId: "v-rice", mode: "set", value: 7 };
+    await adjustStock(riya, { reason: "count", items: [row] });
+    // 7 on the shelf, 3 of them belong to open orders: 4 sellable, not 7.
+    expect((await db.doc(`inventory/${STORE_A}_v-rice`).get()).get("quantity")).toBe(4);
+    const moves = (await db.collection("inventoryMovements").where("reason", "==", "count").get()).docs;
+    expect(moves[0].data()).toMatchObject({ counted: 7, reserved: 3, before: 4, after: 4 });
+  });
+
   it("never goes below zero and checks the variant belongs to the product", async () => {
     const row = { storeId: STORE_A, productId: "p-milk", variantId: "v-milk", mode: "add", value: -4 };
     await expect(adjustStock(riya, { reason: "damage", items: [row] })).rejects.toThrow(

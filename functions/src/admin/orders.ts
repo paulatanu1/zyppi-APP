@@ -12,6 +12,7 @@ import { releaseRedemption } from "../coupons/usage";
 import { bindRider, creditRiderDelivery, releaseRider, withdrawOffer } from "../dispatch/effects";
 import { deliveryEarning } from "../dispatch/earnings";
 import { writeWalletEntry } from "../wallet/ledger";
+import { RESERVED_STORES, releaseReservation, reservedStoresOf } from "../catalog/reservations";
 
 export const ORDER_STATUSES = ["placed", "packed", "out_for_delivery", "delivered", "cancelled"];
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
@@ -140,6 +141,7 @@ export async function updateOrderStatus(
       update.cancelReason = reason.slice(0, 300);
       update.cancelledBy = actor.uid;
       await restock(tx, orderRef.id, d, actor);
+      if (reservedStoresOf(d).length) update[RESERVED_STORES] = [];
       if (d.couponRedeemed === true && typeof d.couponCode === "string") {
         releaseRedemption(tx, d.couponCode, d.userId as string, (d.discountPaise as number) ?? 0);
       }
@@ -195,6 +197,12 @@ export async function updateOrderStatus(
           "resolution.note": "Replacement cancelled; credited to wallet",
         });
       }
+    }
+    // Sent out (or delivered) by ops without the stops being marked
+    // collected: the goods left the shelves anyway.
+    if (status === "out_for_delivery" || status === "delivered") {
+      const held = reservedStoresOf(d);
+      if (held.length) update[RESERVED_STORES] = releaseReservation(tx, d, held);
     }
     const cod = d.payment?.method === "Cash on delivery";
     if (status === "delivered" && cod) {
@@ -283,6 +291,9 @@ async function restock(
   }
   const refs = allocations.map((a) => db.collection("inventory").doc(inventoryIdFor(a.storeId, a.sellerId, a.variantId)));
   const snaps = refs.length ? await tx.getAll(...refs) : [];
+  // Units still on the shelf were held for this order (catalog/reservations.ts):
+  // they stop being held as they become sellable again.
+  const held = new Set(reservedStoresOf(order));
   allocations.forEach((a, i) => {
     const before = (snaps[i].get("quantity") as number | undefined) ?? 0;
     tx.set(
@@ -293,6 +304,7 @@ async function restock(
         productId: a.productId,
         variantId: a.variantId,
         quantity: before + a.quantity,
+        ...(held.has(a.storeId) ? { reserved: FieldValue.increment(-a.quantity) } : {}),
         updatedAt: FieldValue.serverTimestamp(),
       },
       { merge: true },

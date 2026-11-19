@@ -3,6 +3,7 @@ import { db } from "../shared/firebase";
 import { PayUOutcome, verifyPayUTxn } from "./payu";
 import { CLOSED_BY_ADMIN, placePaidOrder } from "./place_paid_order";
 import { giveBackWallet } from "../wallet/ledger";
+import { releaseStockHold } from "./stock_hold";
 
 /** Where a payment intent stands after asking PayU about it. */
 export type Settlement =
@@ -46,6 +47,7 @@ export async function settleIntent(
       tx.update(intentRef, {
         status: "failed",
         failureReason: outcome.reason,
+        ...releaseStockHold(tx, snap.data()),
         updatedAt: FieldValue.serverTimestamp(),
       });
     });
