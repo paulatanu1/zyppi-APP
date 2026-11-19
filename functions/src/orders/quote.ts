@@ -34,7 +34,9 @@ import {
   PICKUP_CODES,
   type StoreInfo,
   buildPickupStops,
+  estimateEtaMinutes,
   newPickupCode,
+  routeDistanceM,
   sellersToAccept,
 } from "../dispatch/pickups";
 import { COUPON_MESSAGES, discountFor, normalizeCode } from "../coupons/model";
@@ -437,6 +439,7 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
       lat: (st.get("lat") as number | undefined) ?? null,
       lng: (st.get("lng") as number | undefined) ?? null,
       phone: (st.get("phone") as string | undefined) ?? null,
+      prepMinutes: (st.get("prepMinutes") as number | undefined) ?? null,
     })),
     acceptSlaMinutes: config.acceptSlaMinutes,
     address: {
@@ -631,7 +634,15 @@ export async function placeOrderInTx(
     address: quote.address,
     serviceAreaId: quote.serviceAreaId,
     deliverySlotId: p.deliverySlotId,
-    etaMinutes: quote.etaMinutes,
+    // The slot's promise, or longer when packing + the route need it.
+    etaMinutes: estimateEtaMinutes({
+      slotMinutes: quote.etaMinutes,
+      prepMinutes: pickupOrder.map((id) => quote.stores.find((st) => st.id === id)?.prepMinutes),
+      routeM: routeDistanceM(
+        pickupOrder.map((id) => stops[id]),
+        { lat: quote.address.lat, lng: quote.address.lng },
+      ),
+    }),
     couponCode: quote.couponCode,
     paymentMethod: method,
     // amountPaise: what is paid outside the wallet (PayU, or cash at the

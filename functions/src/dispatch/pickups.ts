@@ -53,6 +53,33 @@ export interface StoreInfo {
   lat: number | null;
   lng: number | null;
   phone: string | null;
+  /** Minutes the store needs to pack an order (stores/{id}.prepMinutes). */
+  prepMinutes?: number | null;
+}
+
+/** Packing time when a store hasn't set one. */
+export const DEFAULT_PREP_MINUTES = 8;
+/** A free rider reaching the first store (they're dispatched within a few km). */
+export const RIDER_REACH_MINUTES = 6;
+
+/**
+ * Minutes until the customer has the order: the slowest store packs while
+ * the rider rides there, then the route (stores in order → customer) by
+ * road. The promise is never shorter than the slot's own (`slotMinutes`).
+ */
+export function estimateEtaMinutes(input: {
+  slotMinutes: number | null;
+  prepMinutes: (number | null | undefined)[];
+  routeM: number;
+}): number | null {
+  const prep = Math.max(
+    0,
+    ...input.prepMinutes.map((m) => (typeof m === "number" && m >= 0 && m <= 240 ? m : DEFAULT_PREP_MINUTES)),
+  );
+  const ride = Math.max(1, Math.ceil((Math.max(0, input.routeM) * 1.3) / 300)); // as dispatch/model etaMinutes
+  const estimate = Math.max(prep, RIDER_REACH_MINUTES) + ride;
+  if (!input.prepMinutes.length && input.slotMinutes == null) return null;
+  return Math.max(input.slotMinutes ?? 0, estimate);
 }
 
 export interface AllocationLike {
