@@ -95,9 +95,25 @@ describe("classifyHash", () => {
   it("only allows V2 strings that name a txnid", () => {
     expect(
       classifyHash({ hashName: "payment", hashString: `{"txnid":"${TXN}"}|date|`, hashType: "V2" }, KEY),
-    ).toEqual({ kind: "v2", txnids: [TXN] });
+    ).toEqual({ kind: "v2", txnid: TXN, amountPaise: null });
     expect(
       classifyHash({ hashName: "payment", hashString: "{}|date|", hashType: "V2" }, KEY).kind,
+    ).toBe("reject");
+  });
+
+  it("binds a V2 body to one txnid, our key and its amount", () => {
+    const other = "z" + "B".repeat(24);
+    expect(
+      classifyHash({ hashName: "payment", hashString: `{"key":"${KEY}","txnid":"${TXN}","amount":"477.00"}|date|`, hashType: "V2" }, KEY),
+    ).toEqual({ kind: "v2", txnid: TXN, amountPaise: 47700 });
+    expect(
+      classifyHash({ hashName: "payment", hashString: `{"key":"other","txnid":"${TXN}"}|date|`, hashType: "V2" }, KEY).kind,
+    ).toBe("reject");
+    expect(
+      classifyHash({ hashName: "payment", hashString: `{"txnid":"${TXN}","ref":"${other}"}|date|`, hashType: "V2" }, KEY).kind,
+    ).toBe("reject");
+    expect(
+      classifyHash({ hashName: "payment", hashString: `{"txnid":"${TXN}","amount":"abc"}|date|`, hashType: "V2" }, KEY).kind,
     ).toBe("reject");
   });
 });
