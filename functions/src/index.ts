@@ -10,6 +10,7 @@ import { DEFAULT_MAX_INSTANCES } from "./shared/scaling";
 setGlobalOptions({ region: REGION, maxInstances: DEFAULT_MAX_INSTANCES, cpu: "gcf_gen1" });
 
 export { placeOrder } from "./orders/place_order";
+export { cancelMyOrder } from "./orders/cancel_order";
 export { createPayUOrder, signPayUHash, verifyPayUPayment } from "./payments/callables";
 export { reconcilePayUIntents } from "./payments/reconcile";
 export { payuWebhook } from "./payments/webhook";
