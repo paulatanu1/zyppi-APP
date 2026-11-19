@@ -11,7 +11,7 @@ import { logger } from "firebase-functions";
 import { RIDERS } from "../riders/model";
 import { releaseRedemption } from "../coupons/usage";
 import { bindRider, creditRiderDelivery, releaseRider, withdrawOffer } from "../dispatch/effects";
-import { deliveryEarning } from "../dispatch/earnings";
+import { deliveryEarning, prepareCancelledTrip } from "../dispatch/earnings";
 import { writeWalletEntry } from "../wallet/ledger";
 import { RESERVED_STORES, releaseReservation, reservedStoresOf } from "../catalog/reservations";
 
@@ -140,10 +140,14 @@ export async function updateOrderStatus(
     update[`${status === "out_for_delivery" ? "outForDelivery" : status}At`] = FieldValue.serverTimestamp();
 
     let refund: QueuedCancelRefund | null = null;
+    let payTrip: (() => number) | null = null;
     if (status === "cancelled") {
       if (reason.length < 3) throw new HttpsError("invalid-argument", "Give a reason for cancelling");
       update.cancelReason = reason.slice(0, 300);
       update.cancelledBy = actor.uid;
+      // Reads first: the rider who already collected the goods is paid for the trip.
+      const tripRider = (d.riderId as string | null | undefined) ?? null;
+      payTrip = tripRider ? await prepareCancelledTrip(tx, orderRef, d, tripRider) : null;
       await restock(tx, orderRef.id, d, actor);
       if (reservedStoresOf(d).length) update[RESERVED_STORES] = [];
       if (d.couponRedeemed === true && typeof d.couponCode === "string") {
@@ -232,6 +236,7 @@ export async function updateOrderStatus(
       }
     }
     if (status === "cancelled" && riderId) releaseRider(tx, riderId);
+    if (payTrip) update.riderEarning = { totalPaise: payTrip(), tipPaise: 0, cancelledTrip: true };
 
     tx.update(orderRef, update);
     tx.create(orderRef.collection("events").doc(), {

@@ -53,6 +53,8 @@ export interface RiderConfig {
   cashLimitPaise: number;
   /** Minutes to wait at the door before "can't deliver" unlocks. */
   waitMinutes: number;
+  /** Share (%) of the trip's pay for an order cancelled after pickup. */
+  cancelledTripPercent: number;
   /** Paid per pickup stop after the first (marketplace orders; 0 = none). */
   extraPickupPaise: number;
   /** Pay per service area id, plus "default". */
@@ -87,6 +89,7 @@ export const DEFAULT_RIDER_CONFIG: RiderConfig = {
   emergency: { ambulance: "108", police: "112", accident: "" },
   cashLimitPaise: 300000,
   waitMinutes: 10,
+  cancelledTripPercent: 100,
   extraPickupPaise: 0,
   pay: { default: DEFAULT_RATE },
   surge: { enabled: false, extraPaise: 1000, label: "Rain bonus" },
@@ -163,6 +166,7 @@ export function parseRiderConfig(raw: Record<string, unknown> | undefined): Ride
     },
     cashLimitPaise: num(r.cashLimitPaise, d.cashLimitPaise, 0, 10_000_00),
     waitMinutes: num(r.waitMinutes, d.waitMinutes, 2, 30),
+    cancelledTripPercent: num(r.cancelledTripPercent, d.cancelledTripPercent, 0, 100),
     extraPickupPaise: num(r.extraPickupPaise, d.extraPickupPaise, 0, 10000),
     pay,
     surge: {

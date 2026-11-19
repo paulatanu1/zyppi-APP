@@ -101,6 +101,7 @@ export {
   riderArrived,
   riderDeliver,
   riderCannotDeliver,
+  riderReturnedToStore,
 } from "./dispatch/delivery";
 export { riderSos, adminResolveSos } from "./dispatch/sos";
 export { adminSaveRiderConfig } from "./dispatch/admin";
