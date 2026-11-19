@@ -94,6 +94,8 @@ export interface StoreInput {
   /** Where riders pick up (navigation, dispatch distance); null = area centre. */
   lat: number | null;
   lng: number | null;
+  /** Minutes to pack an order (order ETA); null = DEFAULT_PREP_MINUTES. */
+  prepMinutes: number | null;
   isActive: boolean;
 }
 
@@ -115,6 +117,7 @@ export function validateStore(raw: unknown): StoreInput {
     phone: phoneOrNull(d.phone, "Phone"),
     hours,
     ...storePoint(d),
+    prepMinutes: d.prepMinutes == null ? null : intIn(d.prepMinutes, "Packing time (min)", 0, 240),
     isActive: bool(d.isActive, true),
   };
 }
