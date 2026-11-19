@@ -62,6 +62,15 @@ class HiveOrderRepository implements OrderRepository {
   }
 
   @override
+  Future<void> cancelOrder(String orderId, CancelReason reason) async {
+    final order = await getOrderById(orderId);
+    if (order == null || order.status != OrderStatus.placed) {
+      throw const OrderCancelTooLate();
+    }
+    await updateStatus(orderId, OrderStatus.cancelled);
+  }
+
+  @override
   Future<void> updateStatus(String orderId, OrderStatus status) async {
     final orders = await getOrders();
     final index = orders.indexWhere((o) => o.id == orderId);

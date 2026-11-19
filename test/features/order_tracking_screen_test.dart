@@ -14,6 +14,7 @@ import '../helpers/localized_app.dart';
 class _Orders implements OrderRepository {
   _Orders(this.order);
   final Order? order;
+  final cancelled = <(String, CancelReason)>[];
 
   @override
   Future<Order?> getOrderById(String id) async => order;
@@ -21,6 +22,9 @@ class _Orders implements OrderRepository {
   Future<List<Order>> getOrders({int? limit}) async => [?order];
   @override
   Future<void> updateStatus(String orderId, OrderStatus status) async {}
+  @override
+  Future<void> cancelOrder(String orderId, CancelReason reason) async =>
+      cancelled.add((orderId, reason));
   @override
   Stream<Order?> watchOrder(String id) => Stream.value(order);
   @override
@@ -57,14 +61,15 @@ Order _order(OrderStatus status) => Order(
 );
 
 void main() {
-  Future<void> pump(
+  Future<_Orders> pump(
     WidgetTester tester,
     Order? order, {
     ThemeData? theme,
     double textScale = 1,
   }) async {
+    final orders = _Orders(order);
     final c = ProviderContainer(
-      overrides: [orderRepositoryProvider.overrideWithValue(_Orders(order))],
+      overrides: [orderRepositoryProvider.overrideWithValue(orders)],
     );
     addTearDown(c.dispose);
     await pumpLocalizedApp(
@@ -76,6 +81,7 @@ void main() {
       // The rider marker pulses forever.
       disableAnimations: true,
     );
+    return orders;
   }
 
   /// Unmounts and lets the mock flavour's status timer go.
@@ -104,6 +110,30 @@ void main() {
     await pump(tester, _order(OrderStatus.cancelled));
     expect(find.byType(LinearProgressIndicator), findsNothing);
     expect(find.textContaining('cancelled'), findsOneWidget);
+    await unmount(tester);
+  });
+
+  testWidgets('placed: the customer can cancel with a reason', (tester) async {
+    final orders = await pump(tester, _order(OrderStatus.placed));
+    final button = find.widgetWithText(TextButton, 'Cancel order');
+    await tester.ensureVisible(button);
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+    expect(find.text('Why are you cancelling?'), findsOneWidget);
+    await tester.tap(find.text('I ordered by mistake'));
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, 'Cancel order'));
+    await tester.pumpAndSettle();
+    expect(orders.cancelled, [('o1', CancelReason.orderedByMistake)]);
+    await unmount(tester);
+  });
+
+  testWidgets('no cancel once packed or on the way', (tester) async {
+    await pump(tester, _order(OrderStatus.packed));
+    expect(find.text('Cancel order'), findsNothing);
+    await unmount(tester);
+    await pump(tester, _order(OrderStatus.outForDelivery));
+    expect(find.text('Cancel order'), findsNothing);
     await unmount(tester);
   });
 

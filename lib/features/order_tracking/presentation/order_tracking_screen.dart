@@ -13,6 +13,7 @@ import 'package:zippy/core/utils/launch.dart';
 import 'package:zippy/core/widgets/z_commerce.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/order_tracking/application/order_tracking_provider.dart';
+import 'package:zippy/features/order_tracking/widgets/cancel_order_button.dart';
 import 'package:zippy/features/order_tracking/widgets/tracking_map.dart';
 
 const _timeline = [
@@ -502,6 +503,8 @@ class _SheetContent extends StatelessWidget {
             ),
           ),
         ),
+        if (order.status == OrderStatus.placed)
+          CancelOrderButton(orderId: order.id),
       ],
     );
   }
