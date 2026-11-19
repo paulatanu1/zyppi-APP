@@ -43,6 +43,7 @@ import { COUPON_MESSAGES, discountFor, normalizeCode } from "../coupons/model";
 import { lookupCoupon, problemOf, recordRedemption } from "../coupons/usage";
 import { db } from "../shared/firebase";
 import { RESERVED_STORES } from "../catalog/reservations";
+import { serviceAreas } from "../shared/area_cache";
 import { DELIVERY_CONFIG_PATH, deliveryConfigFrom, deliveryFeeFor } from "./delivery_config";
 import { AreaLike, findServiceableArea } from "../shared/geo";
 
@@ -264,14 +265,9 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
 
   // The area is derived from the address's coordinates on the server, not
   // trusted from the client.
-  const areasSnap = await tx.get(db.collection("serviceAreas"));
-  const areas: AreaLike[] = areasSnap.docs.map((d) => ({
-    id: d.id,
-    isActive: d.get("isActive") === true,
-    centerLat: d.get("centerLat") ?? null,
-    centerLng: d.get("centerLng") ?? null,
-    radiusMeters: d.get("radiusMeters") ?? null,
-  }));
+  // Cached for a minute per instance (shared/area_cache.ts): not part of
+  // the transaction, which is fine for rarely-edited config.
+  const areas: AreaLike[] = await serviceAreas();
   const area = findServiceableArea(areas, address.lat, address.lng);
   if (!area) throw new OrderError("Address not found or not serviceable");
   if (p.closedAreaIds?.includes(area.id)) {
