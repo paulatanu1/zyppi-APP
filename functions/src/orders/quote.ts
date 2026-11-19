@@ -40,6 +40,7 @@ import {
 import { COUPON_MESSAGES, discountFor, normalizeCode } from "../coupons/model";
 import { lookupCoupon, problemOf, recordRedemption } from "../coupons/usage";
 import { db } from "../shared/firebase";
+import { RESERVED_STORES } from "../catalog/reservations";
 import { DELIVERY_CONFIG_PATH, deliveryConfigFrom, deliveryFeeFor } from "./delivery_config";
 import { AreaLike, findServiceableArea } from "../shared/geo";
 
@@ -87,6 +88,12 @@ export interface OrderParams {
    * no minimum order, no fees, nothing to pay.
    */
   replacement?: { lines: { productId: string; variantId: string; offerId: string | null; quantity: number }[] };
+  /**
+   * Units this customer's PayU payment held (payments/stock_hold.ts), by
+   * inventory path: available to this order on top of `quantity`. Whatever
+   * the order doesn't take goes back on sale when it's placed.
+   */
+  heldUnits?: ReadonlyMap<string, number>;
 }
 
 interface Variant {
@@ -361,7 +368,10 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
   const inventoryRefs = candidatesOf.flat().map((c) => c.ref);
   const inventorySnaps = inventoryRefs.length ? await tx.getAll(...inventoryRefs) : [];
   const stock = new Map(
-    inventorySnaps.map((s) => [s.ref.path, (s.get("quantity") as number | undefined) ?? 0]),
+    inventorySnaps.map((s) => [
+      s.ref.path,
+      ((s.get("quantity") as number | undefined) ?? 0) + (p.heldUnits?.get(s.ref.path) ?? 0),
+    ]),
   );
 
   const { lines, itemTotal } = priceCartLines({
@@ -565,9 +575,21 @@ export async function placeOrderInTx(
   );
   const toAccept = sellersToAccept(stops);
 
+  // `current` already counts units this payment held; they were reserved
+  // since, so only the difference is newly reserved.
+  const held = p.heldUnits ?? new Map<string, number>();
+  const taken = new Set<string>();
   for (const line of quote.lines) {
     for (const a of line.allocations) {
-      tx.update(a.ref, { quantity: a.current - a.take, updatedAt: now });
+      taken.add(a.ref.path);
+      const wasHeld = held.get(a.ref.path) ?? 0;
+      // Sold but still on the shelf until the rider collects it
+      // (catalog/reservations.ts).
+      tx.update(a.ref, {
+        quantity: a.current - a.take,
+        reserved: FieldValue.increment(a.take - wasHeld),
+        updatedAt: now,
+      });
       // Stock history (admin Inventory): sales show next to adjustments.
       tx.create(db.collection("inventoryMovements").doc(), {
         storeId: a.storeId,
@@ -585,6 +607,16 @@ export async function placeOrderInTx(
         at: now,
       });
     }
+  }
+
+  // Held for this payment but not in the order (cart changed): back on sale.
+  for (const [path, units] of held) {
+    if (taken.has(path) || units <= 0) continue;
+    tx.update(db.doc(path), {
+      quantity: FieldValue.increment(units),
+      reserved: FieldValue.increment(-units),
+      updatedAt: now,
+    });
   }
 
   tx.create(orderRef, {
@@ -665,6 +697,8 @@ export async function placeOrderInTx(
     pickups: stops,
     pickupOrder,
     pickupCount: pickupOrder.length,
+    // Stores still holding this order's units (catalog/reservations.ts).
+    [RESERVED_STORES]: [...new Set(quote.lines.flatMap((l) => l.allocations.map((a) => a.storeId)))],
     // Sellers accept / mark ready in the seller app (seller_orders.ts).
     sellerStatus: Object.fromEntries(toAccept.map((id) => [id, "pending"])),
     sellersPending: toAccept.length > 0,

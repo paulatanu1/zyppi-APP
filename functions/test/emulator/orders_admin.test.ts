@@ -13,6 +13,8 @@ const fin: Actor = { uid: "fin-1", role: "finance", email: "fin@zyppi.test" };
 
 const stock = async (store: string, variant: string) =>
   (await db.doc(`inventory/${store}_${variant}`).get()).get("quantity");
+const reserved = async (store: string, variant: string) =>
+  ((await db.doc(`inventory/${store}_${variant}`).get()).get("reserved") as number | undefined) ?? 0;
 
 /** Fake PayU: records calls, answers as told. */
 function fakePayU(answer: "ok" | "refused" | "down" = "ok", check: "succeeded" | "pending" = "succeeded") {
@@ -46,6 +48,49 @@ describe("order placement", () => {
     expect(moves.map((m) => [m.storeId, m.delta, m.reason])).toEqual(
       expect.arrayContaining([[STORE_A, -3, "order"], [STORE_B, -1, "order"]]),
     );
+  });
+});
+
+describe("stock reservations", () => {
+  beforeEach(() => resetData({ "v-milk": 4 }));
+
+  it("holds sold units until they leave the shelf", async () => {
+    const id = await place();
+    expect([await reserved(STORE_A, "v-milk"), await reserved(STORE_B, "v-milk")]).toEqual([3, 1]);
+    expect((await db.doc(`orders/${id}`).get()).get("reservedStores")).toEqual(
+      expect.arrayContaining([STORE_A, STORE_B]),
+    );
+    await updateOrderStatus(ops, { orderId: id, status: "packed" });
+    await updateOrderStatus(ops, { orderId: id, status: "out_for_delivery" });
+    expect([await reserved(STORE_A, "v-milk"), await reserved(STORE_B, "v-milk")]).toEqual([0, 0]);
+    expect((await db.doc(`orders/${id}`).get()).get("reservedStores")).toEqual([]);
+    // Delivering later releases nothing twice.
+    await updateOrderStatus(ops, { orderId: id, status: "delivered" });
+    expect(await reserved(STORE_A, "v-milk")).toBe(0);
+  });
+
+  it("a paid order can use the units its PayU payment held", async () => {
+    // The payment held all 5 milk (3 at A, 2 at B): nothing left on sale.
+    await db.doc(`inventory/${STORE_A}_v-milk`).update({ quantity: 0, reserved: 3 });
+    await db.doc(`inventory/${STORE_B}_v-milk`).update({ quantity: 0, reserved: 2 });
+    const heldUnits = new Map([
+      [`inventory/${STORE_A}_v-milk`, 3],
+      [`inventory/${STORE_B}_v-milk`, 2], // one more than the order needs
+    ]);
+    const id = await db.runTransaction((tx) =>
+      placeOrderInTx(tx, { ...params(), heldUnits } as never, { status: "succeeded", providerReference: "mih-9" }),
+    );
+    expect(id).toBeTruthy();
+    // Held units became the order's; the spare one went back on sale.
+    expect([await stock(STORE_A, "v-milk"), await reserved(STORE_A, "v-milk")]).toEqual([0, 3]);
+    expect([await stock(STORE_B, "v-milk"), await reserved(STORE_B, "v-milk")]).toEqual([1, 1]);
+  });
+
+  it("a cancel before pickup makes the held units sellable again", async () => {
+    const id = await place();
+    await updateOrderStatus(ops, { orderId: id, status: "cancelled", reason: "Customer asked" });
+    expect([await stock(STORE_A, "v-milk"), await reserved(STORE_A, "v-milk")]).toEqual([3, 0]);
+    expect([await stock(STORE_B, "v-milk"), await reserved(STORE_B, "v-milk")]).toEqual([2, 0]);
   });
 });
 

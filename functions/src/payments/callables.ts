@@ -18,6 +18,7 @@ import {
   userCredential,
 } from "./payu";
 import { settleIntent } from "./settle";
+import { writeStockHold } from "./stock_hold";
 import { holdId, writeWalletEntry } from "../wallet/ledger";
 import { WALLET_BALANCE_CHANGED, WALLET_COVERS_ORDER, walletBalanceOf, walletToApply } from "../wallet/model";
 import { HOT } from "../shared/scaling";
@@ -44,6 +45,9 @@ function payerDetails(user: Record<string, unknown>, authPhone: string | undefin
  * taken from the client: quoteOrder validates address, slot, stock and
  * coupon and prices it from the live catalog, so an order that can't be
  * placed is rejected before the customer pays.
+ *
+ * Stock: the quoted units are held for the payment (payments/stock_hold.ts)
+ * in the transaction that creates the intent.
  *
  * Wallet (`useWallet`): the balance is checked and the wallet part
  * reserved (taken off the balance, `pay_{txnid}` held) in the same
@@ -80,56 +84,62 @@ export const createPayUOrder = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (
     paymentMethod,
   };
 
-  let totalPaise: number;
-  try {
-    const quote = await db.runTransaction((tx) => quoteOrder(tx, params), { readOnly: true });
-    totalPaise = quote.totalPaise;
-  } catch (error) {
-    toHttpsError(error);
-  }
-
   const useWallet = data.useWallet === true;
   const shownBalancePaise = Number.isInteger(data.walletBalancePaise) ? (data.walletBalancePaise as number) : null;
   const txnid = newTxnId();
   const intentRef = db.collection("paymentIntents").doc(txnid);
   const userDocRef = db.collection("users").doc(uid);
-  const { user, walletPaise } = await db.runTransaction(async (tx) => {
-    const snap = await tx.get(userDocRef);
-    const balance = walletBalanceOf(snap.data());
-    if (useWallet && shownBalancePaise != null && shownBalancePaise !== balance) {
-      throw new HttpsError("failed-precondition", WALLET_BALANCE_CHANGED);
-    }
-    const walletPaise = walletToApply(balance, totalPaise, useWallet);
-    if (walletPaise >= totalPaise) throw new HttpsError("failed-precondition", WALLET_COVERS_ORDER);
-    tx.create(intentRef, {
-      userId: uid,
-      // What PayU charges; plus walletPaise = totalPaise.
-      amountPaise: totalPaise - walletPaise,
-      walletPaise,
-      totalPaise,
-      paymentMethod,
-      addressId: params.addressId,
-      deliverySlotId: params.deliverySlotId,
-      couponCode: params.couponCode,
-      tipPaise: params.tipPaise,
-      status: "created",
-      transactionId: null,
-      orderId: null,
-      failureReason: null,
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-    if (walletPaise > 0) {
-      writeWalletEntry(tx, uid, holdId(txnid), {
-        type: "spend",
-        amountPaise: -walletPaise,
-        reason: "Reserved for an online payment",
-        intentId: txnid,
-        status: "held",
+  let result: { user: Record<string, unknown>; walletPaise: number; totalPaise: number };
+  try {
+    // One transaction: the quote's stock is held for this payment (so the
+    // last unit can't be sold to someone else while PayU is open) with the
+    // wallet part and the intent.
+    result = await db.runTransaction(async (tx) => {
+      const quote = await quoteOrder(tx, params);
+      const totalPaise = quote.totalPaise;
+      const snap = await tx.get(userDocRef);
+      const balance = walletBalanceOf(snap.data());
+      if (useWallet && shownBalancePaise != null && shownBalancePaise !== balance) {
+        throw new HttpsError("failed-precondition", WALLET_BALANCE_CHANGED);
+      }
+      const walletPaise = walletToApply(balance, totalPaise, useWallet);
+      if (walletPaise >= totalPaise) throw new HttpsError("failed-precondition", WALLET_COVERS_ORDER);
+      // Writes from here on.
+      const stockHold = writeStockHold(tx, quote);
+      tx.create(intentRef, {
+        userId: uid,
+        // What PayU charges; plus walletPaise = totalPaise.
+        amountPaise: totalPaise - walletPaise,
+        walletPaise,
+        totalPaise,
+        paymentMethod,
+        addressId: params.addressId,
+        deliverySlotId: params.deliverySlotId,
+        couponCode: params.couponCode,
+        tipPaise: params.tipPaise,
+        status: "created",
+        transactionId: null,
+        orderId: null,
+        failureReason: null,
+        stockHold,
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
       });
-    }
-    return { user: snap.data() ?? {}, walletPaise };
-  });
+      if (walletPaise > 0) {
+        writeWalletEntry(tx, uid, holdId(txnid), {
+          type: "spend",
+          amountPaise: -walletPaise,
+          reason: "Reserved for an online payment",
+          intentId: txnid,
+          status: "held",
+        });
+      }
+      return { user: snap.data() ?? {}, walletPaise, totalPaise };
+    });
+  } catch (error) {
+    toHttpsError(error);
+  }
+  const { user, walletPaise, totalPaise } = result;
   const amountPaise = totalPaise - walletPaise;
   const payer = payerDetails(user, request.auth?.token.phone_number);
 

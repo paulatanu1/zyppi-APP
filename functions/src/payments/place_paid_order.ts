@@ -3,6 +3,7 @@ import { logger } from "firebase-functions";
 import { db } from "../shared/firebase";
 import { OrderError, placeOrderInTx } from "../orders/quote";
 import { holdId, releaseHold, walletEntryRef } from "../wallet/ledger";
+import { heldUnitsOf, releaseStockHold } from "./stock_hold";
 
 /** Intent statuses a person has taken over: no order is ever made from them. */
 export const CLOSED_BY_ADMIN = ["needs_review", "refunded", "dismissed"];
@@ -47,6 +48,7 @@ export async function placePaidOrder(
           status: "needs_review",
           transactionId,
           failureReason: "Paid amount differs from quote",
+          ...releaseStockHold(tx, intent),
           updatedAt: FieldValue.serverTimestamp(),
         });
         return null;
@@ -62,6 +64,8 @@ export async function placePaidOrder(
           honourCoupon: true,
           tipPaise: intent.tipPaise,
           paymentMethod: intent.paymentMethod,
+          // Stock this payment held (payments/stock_hold.ts) counts for it.
+          heldUnits: heldUnitsOf(intent),
         },
         { status: "succeeded", providerReference: transactionId },
         // Intents from before the wallet have no totalPaise: PayU paid it all.
@@ -73,6 +77,8 @@ export async function placePaidOrder(
         status: "completed",
         transactionId,
         orderId,
+        // The held units are now the order's (or back on sale).
+        stockHold: [],
         updatedAt: FieldValue.serverTimestamp(),
       });
       return orderId;
@@ -96,6 +102,7 @@ export async function placePaidOrder(
         status: "needs_review",
         transactionId,
         failureReason: error.message,
+        ...releaseStockHold(tx, snap.data()),
         updatedAt: FieldValue.serverTimestamp(),
       });
     });

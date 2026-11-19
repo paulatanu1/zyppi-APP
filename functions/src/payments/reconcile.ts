@@ -5,6 +5,7 @@ import { db } from "../shared/firebase";
 import { PAYU_SECRETS, PayUOutcome, verifyPayUTxn } from "./payu";
 import { settleIntent } from "./settle";
 import { giveBackWallet } from "../wallet/ledger";
+import { STOCK_HOLD_MS, releaseStockHold } from "./stock_hold";
 
 /** Leave fresh intents to the app's own checks while checkout is open. */
 export const RECONCILE_MIN_AGE_MS = 5 * 60 * 1000;
@@ -53,6 +54,9 @@ export async function reconcileOpenIntents(
       if (action === "settle") {
         const { state } = await settleIntent(doc.id, verify);
         summary.settled[state] = (summary.settled[state] ?? 0) + 1;
+        // Still not paid after the hold window: the stock goes back on sale
+        // (a later capture still becomes an order if stock allows).
+        if (state === "pending" && holdExpired(createdAt, now)) await releaseExpiredHold(doc.ref);
         continue;
       }
       // One last look before closing it, so a capture isn't missed.
@@ -68,6 +72,7 @@ export async function reconcileOpenIntents(
         tx.update(doc.ref, {
           status: "expired",
           failureReason: "Not settled by PayU within 48 hours",
+          ...releaseStockHold(tx, current.data()),
           updatedAt: FieldValue.serverTimestamp(),
         });
       });
@@ -78,6 +83,21 @@ export async function reconcileOpenIntents(
     }
   }
   return summary;
+}
+
+/** True once an open intent's stock hold has run its time. */
+export function holdExpired(createdAt: Timestamp | undefined, now: number): boolean {
+  return !createdAt || now - createdAt.toMillis() >= STOCK_HOLD_MS;
+}
+
+/** Gives an unpaid intent's held stock back (the intent stays open). */
+async function releaseExpiredHold(ref: FirebaseFirestore.DocumentReference): Promise<void> {
+  await db.runTransaction(async (tx) => {
+    const current = await tx.get(ref);
+    if (current.get("status") !== "created" || current.get("orderId")) return;
+    const released = releaseStockHold(tx, current.data());
+    if (Object.keys(released).length) tx.update(ref, { ...released, updatedAt: FieldValue.serverTimestamp() });
+  });
 }
 
 export const reconcilePayUIntents = onSchedule(

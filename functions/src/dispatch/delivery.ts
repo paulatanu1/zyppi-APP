@@ -7,6 +7,7 @@ import { deliveryEarning } from "./earnings";
 import { CANNOT_DELIVER_REASONS, MAX_CODE_ATTEMPTS, type Point, type RiderStage, distanceM, isPoint } from "./model";
 import { notifySeller } from "../marketplace/seller_notify";
 import { type PickupStop, STORE_GEOFENCE_M, allStopsPicked, stopReady } from "./pickups";
+import { RESERVED_STORES, releaseReservation, reservedStoresOf } from "../catalog/reservations";
 import { requireRider } from "./rider_auth";
 
 /**
@@ -134,7 +135,11 @@ export function completePickup(
   const done = new Set(Object.entries(pickups).filter(([, v]) => v?.pickedAt).map(([k]) => k));
   done.add(storeId);
   const allDone = allStopsPicked(stores, done);
+  // The goods left the shelf: no longer held for this order. Once ops (or
+  // a status change) took the order out, nothing is left to release.
+  const stillHeld = releaseReservation(tx, data, allDone ? reservedStoresOf(data) : [storeId]);
   tx.update(order.ref, {
+    [RESERVED_STORES]: stillHeld,
     [`pickups.${storeId}.pickedAt`]: FieldValue.serverTimestamp(),
     ...(pickups[storeId] ? { [`pickups.${storeId}.status`]: "picked" } : {}),
     ...(allDone
