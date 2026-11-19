@@ -6,7 +6,21 @@ Nothing here is done automatically: every step changes production.
 
 ## 1. Deploy the backend
 
-- [ ] `firebase deploy --only functions,firestore:rules,firestore:indexes`
+Order matters for the audit fixes (2026-11-19):
+
+1. [ ] Run the emulator suite once on a dev machine: `npm --prefix functions test`.
+2. [ ] Deploy the admin panel first (`zyppi-delivery-admin`): rider payouts now send a one-time
+       `requestId`, which the new backend requires for manual payouts. The hosting deploy runs
+       `scripts/check-csp.mjs` and stops if the build's inline scripts aren't in the CSP.
+3. [ ] Backfill rider trips **before** the rules change, so riders' History keeps old orders:
+       `npm --prefix functions run backfill-rider-trips -- --project zippy-app-2024 --write`
+4. [ ] `firebase deploy --only functions,firestore:indexes` (the deploy asks to delete the unused
+       `adminListUsers`: yes).
+5. [ ] Release the rider app (History reads `riders/{uid}/trips`; "I'm back at the store"), the
+       seller app ("Can't fulfil this order") and the customer app ("Cancel order").
+6. [ ] Once most riders are on the new rider app: `firebase deploy --only firestore:rules`
+       (riders read an order only while they hold it and 2 h after; customers can't read
+       `config/riders`; address field allow-list).
 - [ ] Indexes finished building (Firebase console → Firestore → Indexes: none "Building").
 - [ ] Stats backfill re-run after the deploy, at a quiet time:
       `npm --prefix functions run backfill-stats -- --project zippy-app-2024 --write`
@@ -74,7 +88,11 @@ Customer orders placed **before** that deploy have no delivery code; riders can 
 - [ ] Dispatch: auto-assign on, "look for a rider" (placed / packed), seconds to accept, riders to try, max distance.
 - [ ] Pay: default rate (base, per km, min, max), per-area rates if they differ, peak hours, surge.
 - [ ] Gig slots: book-ahead days, cancel window, slot times / riders per slot / on-time bonus per area.
-- [ ] Safety & cash: ambulance (108), police (112), **accident-team number**, door wait time, cash-in-hand warning.
+- [ ] Safety & cash: ambulance (108), police (112), **accident-team number**, door wait time, cash-in-hand limit
+      (riders at the limit get no cash orders; 0 = no limit), trip pay % for orders cancelled after pickup.
+- [ ] Store settings → Stores: **packing time** per store (the delivery time customers are promised; default 8 min).
+- [ ] Optional: `config/marketplace.autoCancelLateMinutes` (Firestore) — cancel and refund an order a seller
+      still hasn't accepted this many minutes after the late alert (0 / unset = ops decides).
 - [ ] Store settings → Stores: **pickup latitude / longitude** for each dark store (navigation and dispatch distance; else the area centre is used).
 
 **Firebase / Google**:
@@ -100,7 +118,11 @@ Customer orders placed **before** that deploy have no delivery code; riders can 
 - [ ] Pocket shows order pay + tip; request payout → Admin → Rider payouts → record with UTR → Pocket shows it paid.
 - [ ] Book a slot → online in it → dispatch priority + on-time bonus; incentive target reached → paid after midnight.
 - [ ] Emergency → each button dials; Dispatch board shows the SOS with the rider's location and alarm; resolve.
-- [ ] Can't deliver → reason → Dispatch board shows the issue; ops cancels / reassigns.
+- [ ] Can't deliver → reason ("customer unreachable" only after the door wait) → Dispatch board shows the
+      issue; at the store, "I'm back at the store" cancels the order, refunds and pays the trip.
+- [ ] Customer cancels a placed order from tracking → stock back, refund recorded (Payments), seller told.
+- [ ] Seller taps "Can't fulfil this order" on a new order → order cancelled and refunded.
+- [ ] Monday 06:00: weekly rider settlement opens payout requests (Rider payouts).
 - [ ] Message riders from Dispatch → push + Messages in the app.
 
 ## 8. Known limits (accepted for launch)
@@ -113,4 +135,8 @@ Customer orders placed **before** that deploy have no delivery code; riders can 
 - Customer name search matches from the start of the name only.
 - Rider app v2 (not built): batching 2 orders per trip, an in-app map, instant withdrawals (needs a paid payout API), masked calling, document-expiry reminders.
 - Riders' location stops if Android kills the app (aggressive battery savers on some phones): the server marks them offline after 10 minutes without a ping. Ask riders to exempt Zyppi Delivery from battery optimisation.
-- No Content-Security-Policy header on the admin yet (other security headers are set in `firebase.json`).
+- Admin CSP allows inline styles (ng-zorro needs them); inline scripts are pinned by hash.
+- A seller who can't fulfil (or is too late, when auto-cancel is on) cancels the whole order: lines
+  aren't moved to another seller, the customer re-orders.
+- Stock held for a PayU payment is released 15–25 min after an unpaid start; a later capture still
+  becomes an order if stock allows, else goes to review.
