@@ -7,6 +7,7 @@ import {
   initializeTestEnvironment,
 } from "@firebase/rules-unit-testing";
 import {
+  Timestamp,
   addDoc,
   collection,
   doc,
@@ -96,6 +97,48 @@ describe("firestore.rules", () => {
     await assertFails(getDoc(doc(bob, "orders/o1")));
     await assertFails(updateDoc(doc(alice, "orders/o1"), { totalPaise: 1 }));
     await assertFails(setDoc(doc(alice, "orders/o2"), { userId: "alice" }));
+  });
+
+  it("lets a rider read an order only while holding it (and 2 h after)", async () => {
+    const hour = 60 * 60 * 1000;
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore();
+      await setDoc(doc(db, "orders/open"), { userId: "alice", riderId: "ravi", status: "out_for_delivery" });
+      await setDoc(doc(db, "orders/just"), {
+        userId: "alice", riderId: "ravi", status: "delivered", deliveredAt: Timestamp.fromMillis(Date.now() - hour),
+      });
+      await setDoc(doc(db, "orders/old"), {
+        userId: "alice", riderId: "ravi", status: "delivered", deliveredAt: Timestamp.fromMillis(Date.now() - 3 * hour),
+      });
+      await setDoc(doc(db, "riders/ravi/trips/old"), { status: "delivered" });
+    });
+    const ravi = env.authenticatedContext("ravi", { rider: true }).firestore();
+    await assertSucceeds(getDoc(doc(ravi, "orders/open")));
+    await assertSucceeds(getDoc(doc(ravi, "orders/just")));
+    await assertFails(getDoc(doc(ravi, "orders/old")));
+    await assertSucceeds(getDoc(doc(ravi, "riders/ravi/trips/old")));
+    const bob = env.authenticatedContext("bob").firestore();
+    await assertFails(getDoc(doc(bob, "riders/ravi/trips/old")));
+  });
+
+  it("keeps rider settings from customers", async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "riders/applicant"), { status: "pending" });
+    });
+    const alice = env.authenticatedContext("alice").firestore();
+    await assertFails(getDoc(doc(alice, "config/riders")));
+    await assertSucceeds(getDoc(doc(env.authenticatedContext("ravi", { rider: true }).firestore(), "config/riders")));
+    await assertSucceeds(getDoc(doc(env.authenticatedContext("applicant").firestore(), "config/riders")));
+  });
+
+  it("accepts only the address fields the app writes", async () => {
+    const alice = env.authenticatedContext("alice").firestore();
+    const ok = { label: "Home", line1: "12 Station Rd", landmark: null, lat: 23.3, lng: 86.3, isDefault: true };
+    await assertSucceeds(setDoc(doc(alice, "users/alice/addresses/a1"), ok));
+    await assertFails(setDoc(doc(alice, "users/alice/addresses/a2"), { ...ok, verified: true }));
+    await assertFails(setDoc(doc(alice, "users/alice/addresses/a3"), { ...ok, line1: "x".repeat(301) }));
+    await assertSucceeds(updateDoc(doc(alice, "users/alice/addresses/a1"), { label: "Work" }));
+    await assertFails(updateDoc(doc(alice, "users/alice/addresses/a1"), { serviceAreaIdOverride: "x" }));
   });
 
   it("keeps stock levels admin-only", async () => {

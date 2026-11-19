@@ -105,6 +105,7 @@ export {
   riderReturnedToStore,
 } from "./dispatch/delivery";
 export { riderSos, adminResolveSos } from "./dispatch/sos";
+export { onOrderForRiders } from "./dispatch/trips";
 export { adminSaveRiderConfig } from "./dispatch/admin";
 export {
   riderRequestPayout,

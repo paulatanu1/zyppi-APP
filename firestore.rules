@@ -192,9 +192,24 @@ service cloud.firestore {
 
       match /addresses/{addressId} {
         allow read: if isOwner(uid) || isAdmin();
+        // Only the fields the app writes (older docs may hold others, so
+        // updates check just what changes).
+        function addressFields() {
+          return ['serviceAreaId', 'label', 'line1', 'area', 'city', 'state',
+                  'postalCode', 'landmark', 'lat', 'lng', 'isDefault',
+                  'createdAt', 'updatedAt'];
+        }
         allow create, update: if isOwner(uid)
+          && (resource == null
+              ? request.resource.data.keys().hasOnly(addressFields())
+              : request.resource.data.diff(resource.data).affectedKeys().hasOnly(addressFields()))
           && request.resource.data.label is string
+          && request.resource.data.label.size() <= 60
           && request.resource.data.line1 is string
+          && request.resource.data.line1.size() <= 300
+          && (!('landmark' in request.resource.data)
+              || request.resource.data.landmark == null
+              || (request.resource.data.landmark is string && request.resource.data.landmark.size() <= 200))
           && request.resource.data.lat is number
           && request.resource.data.lng is number
           && request.resource.data.isDefault is bool;
@@ -259,10 +274,22 @@ service cloud.firestore {
 
     // The customer, staff, and the delivery partner who holds the order
     // (rider app; offers are summarised in riders/{uid}/offers instead).
+    // The rider only while it's open and for 2 hours after it closes (the
+    // "Delivered" screen): the customer's address and phone don't stay with
+    // them. Their History reads riders/{uid}/trips (no customer details).
     match /orders/{orderId} {
+      function riderHoldsIt() {
+        return signedIn()
+          && resource.data.get('riderId', '') == request.auth.uid
+          && (resource.data.status in ['placed', 'packed', 'out_for_delivery']
+              || (resource.data.status == 'delivered'
+                  && request.time < resource.data.deliveredAt + duration.value(2, 'h'))
+              || (resource.data.status == 'cancelled'
+                  && request.time < resource.data.cancelledAt + duration.value(2, 'h')));
+      }
       allow read: if isAdmin()
         || (signedIn() && resource.data.userId == request.auth.uid)
-        || (signedIn() && resource.data.get('riderId', '') == request.auth.uid);
+        || riderHoldsIt();
       allow write: if false;
 
       function orderCustomer() {
@@ -445,6 +472,11 @@ service cloud.firestore {
         allow read: if isOwner(uid) || hasRole(['ops', 'finance']);
         allow write: if false;
       }
+      // The rider's past orders without customer details (dispatch/trips.ts).
+      match /trips/{orderId} {
+        allow read: if isOwner(uid) || hasRole(['ops', 'finance']);
+        allow write: if false;
+      }
       match /payouts/{id} {
         allow read: if isOwner(uid) || hasRole(['finance']);
         allow write: if false;
@@ -468,10 +500,12 @@ service cloud.firestore {
       }
     }
 
-    // Rider settings (pay, dispatch, emergency numbers): riders read them;
-    // only the admin callables write.
+    // Rider settings (pay, dispatch, emergency numbers): riders and rider
+    // applicants read them (not customers); only the admin callables write.
     match /config/riders {
-      allow read: if signedIn();
+      allow read: if isAdmin()
+        || (signedIn() && request.auth.token.get('rider', false) == true)
+        || (signedIn() && exists(/databases/$(database)/documents/riders/$(request.auth.uid)));
       allow write: if false;
     }
 
