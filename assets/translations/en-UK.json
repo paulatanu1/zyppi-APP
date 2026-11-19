@@ -512,5 +512,6 @@
   "cancelReasonWrongAddress": "Wrong delivery address",
   "cancelReasonOther": "Something else",
   "orderCancelledToast": "Your order was cancelled",
-  "cancelTooLate": "Your order is already packed and can't be cancelled now. Contact support for help."
+  "cancelTooLate": "Your order is already packed and can't be cancelled now. Contact support for help.",
+  "deleteActiveOrders": "You have an order, payment or reported problem still in progress. You can delete your account once it's finished."
 }

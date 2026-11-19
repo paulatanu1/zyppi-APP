@@ -100,10 +100,16 @@ class AccountPrivacyScreen extends ConsumerWidget {
         await ref
             .read(accountRepositoryProvider)
             .deleteAccount(forfeitWallet: true);
+      } on AccountHasActiveOrders {
+        showError('deleteActiveOrders'.tr());
+        return;
       } catch (error) {
         showError(error);
         return;
       }
+    } on AccountHasActiveOrders {
+      showError('deleteActiveOrders'.tr());
+      return;
     } catch (error) {
       showError(error);
       return;

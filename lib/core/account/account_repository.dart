@@ -9,8 +9,14 @@ abstract class AccountRepository {
   /// deleteAccount Cloud Function (functions/src/account.ts).
   ///
   /// With money in the wallet it throws [WalletNotEmpty] until called
-  /// again with [forfeitWallet] (the customer has been warned).
+  /// again with [forfeitWallet] (the customer has been warned). While an
+  /// order, payment or claim is in progress it throws [AccountHasActiveOrders].
   Future<void> deleteAccount({bool forfeitWallet = false});
+}
+
+/// An order, online payment or claim is still in progress.
+class AccountHasActiveOrders implements Exception {
+  const AccountHasActiveOrders();
 }
 
 /// The account still has a wallet balance, which deletion would lose.
@@ -37,6 +43,7 @@ class FirebaseAccountRepository implements AccountRepository {
         final paise = (e.details as Map?)?['walletPaise'];
         throw WalletNotEmpty(paise is num ? paise.round() : 0);
       }
+      if (e.message == 'ACTIVE_ORDERS') throw const AccountHasActiveOrders();
       rethrow;
     }
   }
