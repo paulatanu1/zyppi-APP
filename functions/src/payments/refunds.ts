@@ -16,6 +16,8 @@ export type RefundTarget = { orderId: string } | { intentId: string };
 export interface RefundInput {
   amountPaise: number;
   reason: string;
+  /** What the refund pays (a claim, a return), so an interrupted payout can find it. */
+  link?: { issueId?: string; returnId?: string };
 }
 
 function targetRef(t: RefundTarget) {
@@ -99,6 +101,8 @@ export function queueRefundInTx(
     failureReason: null,
     createdBy: actor.uid,
     createdByEmail: actor.email,
+    issueId: input.link?.issueId ?? null,
+    returnId: input.link?.returnId ?? null,
     createdAt: FieldValue.serverTimestamp(),
     updatedAt: FieldValue.serverTimestamp(),
   });

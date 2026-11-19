@@ -210,7 +210,13 @@ export async function resolveIssue(actor: Actor, data: Record<string, unknown>) 
     if (snap.get("status") !== "open") throw new HttpsError("failed-precondition", "This claim is already handled");
     const order = await tx.get(db.collection("orders").doc(snap.get("orderId") as string));
     if (!order.exists) throw new HttpsError("not-found", "Order not found");
-    tx.update(snap.ref, { status: "resolving", resolvingBy: actor.uid, updatedAt: FieldValue.serverTimestamp() });
+    tx.update(snap.ref, {
+      status: "resolving",
+      resolvingBy: actor.uid,
+      resolvingKind: resolution,
+      resolvingPlan: null,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
     return { issue: snap.data()!, order: order.data()! };
   });
   const { issue, order } = locked;
@@ -245,10 +251,15 @@ export async function resolveIssue(actor: Actor, data: Record<string, unknown>) 
       if (split.onlinePaise + split.walletPaise <= 0) {
         throw new HttpsError("failed-precondition", "Everything on this order has already been given back");
       }
+      // Written before any money moves: if this function dies after the
+      // refund, recoverStuckPayouts finishes the approval from it.
+      const plan: ApprovalPlan = { resolution, walletPaise: split.walletPaise, refundPaise: split.onlinePaise, note, sellerAtFault };
+      await issueRef(issueId).update({ resolvingPlan: plan, updatedAt: FieldValue.serverTimestamp() });
       if (split.onlinePaise > 0) {
         const r = await createRefund(actor, { orderId }, {
           amountPaise: split.onlinePaise,
           reason: `Claim ${issueId.slice(0, 8)}: ${note || "item problem"}`,
+          link: { issueId },
         });
         refundId = r.refundId;
         refundPaise = split.onlinePaise;
@@ -263,13 +274,48 @@ export async function resolveIssue(actor: Actor, data: Record<string, unknown>) 
     throw error;
   }
 
-  // 2. Approve, with the wallet credit in the same transaction.
-  await db.runTransaction(async (tx) => {
+  await finishApproval(actor, issueId, issue, {
+    resolution,
+    walletPaise,
+    refundPaise,
+    note,
+    sellerAtFault,
+  }, { refundId, replacementOrderId });
+  return { walletPaise, refundPaise, replacementOrderId, sellerDebitPaise: await chargeSeller(actor, issueId, issue, sellerAtFault, note) };
+}
+
+/** What an approval pays, fixed before any money moves (orderIssues.resolvingPlan). */
+export interface ApprovalPlan {
+  resolution: "wallet" | "original" | "replacement";
+  walletPaise: number;
+  refundPaise: number;
+  note: string;
+  sellerAtFault: boolean;
+}
+
+/**
+ * Step 2 of an approval: the wallet credit (fixed entry id, so it can't be
+ * paid twice) and the claim marked approved, then the customer told. Only
+ * while the claim is still "resolving", so the normal path and
+ * recoverStuckPayouts can't both finish it.
+ */
+export async function finishApproval(
+  actor: Actor,
+  issueId: string,
+  issue: Record<string, unknown>,
+  plan: ApprovalPlan,
+  done: { refundId: string | null; replacementOrderId: string | null },
+): Promise<boolean> {
+  const orderId = issue.orderId as string;
+  const uid = issue.userId as string;
+  const finished = await db.runTransaction(async (tx) => {
+    const current = await tx.get(issueRef(issueId));
+    if (current.get("status") !== "resolving") return false;
     const orderRef = db.collection("orders").doc(orderId);
-    if (walletPaise > 0) {
+    if (plan.walletPaise > 0) {
       writeWalletEntry(tx, uid, `claim_${issueId}`, {
         type: "claim",
-        amountPaise: walletPaise,
+        amountPaise: plan.walletPaise,
         reason: `Refund for a problem with your order`,
         orderId,
         issueId,
@@ -279,18 +325,18 @@ export async function resolveIssue(actor: Actor, data: Record<string, unknown>) 
     tx.update(orderRef, {
       openIssueId: null,
       issueStatus: "approved",
-      ...(walletPaise > 0 ? { claimWalletPaise: FieldValue.increment(walletPaise) } : {}),
+      ...(plan.walletPaise > 0 ? { claimWalletPaise: FieldValue.increment(plan.walletPaise) } : {}),
     });
     tx.update(issueRef(issueId), {
       status: "approved",
       resolution: {
-        type: resolution,
-        walletPaise,
-        refundPaise,
-        refundId,
-        replacementOrderId,
-        sellerAtFault,
-        note,
+        type: plan.resolution,
+        walletPaise: plan.walletPaise,
+        refundPaise: plan.refundPaise,
+        refundId: done.refundId,
+        replacementOrderId: done.replacementOrderId,
+        sellerAtFault: plan.sellerAtFault,
+        note: plan.note,
         by: actor.uid,
         at: FieldValue.serverTimestamp(),
       },
@@ -299,43 +345,51 @@ export async function resolveIssue(actor: Actor, data: Record<string, unknown>) 
     });
     writeAudit(
       actor,
-      { action: "claim.approve", target: `${ORDER_ISSUES}/${issueId}`, after: { resolution, walletPaise, refundPaise, replacementOrderId, sellerAtFault } },
+      {
+        action: "claim.approve",
+        target: `${ORDER_ISSUES}/${issueId}`,
+        after: { resolution: plan.resolution, walletPaise: plan.walletPaise, refundPaise: plan.refundPaise, replacementOrderId: done.replacementOrderId, sellerAtFault: plan.sellerAtFault },
+      },
       tx,
     );
+    return true;
   });
-
-  // 3. The seller pays for their own mistake (wrong, damaged, expired item).
-  let sellerDebitPaise = 0;
-  if (sellerAtFault) {
-    for (const l of (issue.lines as ClaimLine[]).filter((x) => x.sellerId && x.sellerId !== ZYPPI_SELLER_ID)) {
-      try {
-        const r = await returnSellerItem(actor, {
-          orderId,
-          index: l.index,
-          quantity: l.quantity,
-          sellerAtFault: true,
-          reason: `Customer claim (${l.kind}) ${note}`.trim(),
-        });
-        sellerDebitPaise += r.debitPaise;
-      } catch (error) {
-        // The claim stays approved; ops can charge it from Orders → Return / damage.
-        logger.warn("Claim: seller debit failed", { issueId, line: l.index, error: String(error) });
-        await issueRef(issueId).update({ sellerDebitError: String(error).slice(0, 300) });
-      }
-    }
-    if (sellerDebitPaise) await issueRef(issueId).update({ "resolution.sellerDebitPaise": sellerDebitPaise });
-  }
-
+  if (!finished) return false;
   const body =
-    resolution === "replacement"
+    plan.resolution === "replacement"
       ? "A free replacement is on its way."
-      : [walletPaise > 0 ? `${rupees(walletPaise)} added to your Zyppi wallet.` : "", refundPaise > 0 ? `${rupees(refundPaise)} refunded to your original payment (5–7 days).` : ""]
+      : [plan.walletPaise > 0 ? `${rupees(plan.walletPaise)} added to your Zyppi wallet.` : "", plan.refundPaise > 0 ? `${rupees(plan.refundPaise)} refunded to your original payment (5–7 days).` : ""]
           .filter(Boolean)
           .join(" ");
   await pushOrderCustomer(orderId, { title: "We've sorted your problem", body }, { issueId }).catch((e) =>
     logger.warn("Claim push failed", { issueId, error: String(e) }),
   );
-  return { walletPaise, refundPaise, replacementOrderId, sellerDebitPaise };
+  return true;
+}
+
+/** Step 3: the seller pays for their own mistake (wrong, damaged, expired item). */
+async function chargeSeller(actor: Actor, issueId: string, issue: Record<string, unknown>, sellerAtFault: boolean, note: string): Promise<number> {
+  let sellerDebitPaise = 0;
+  if (!sellerAtFault) return 0;
+  const orderId = issue.orderId as string;
+  for (const l of (issue.lines as ClaimLine[]).filter((x) => x.sellerId && x.sellerId !== ZYPPI_SELLER_ID)) {
+    try {
+      const r = await returnSellerItem(actor, {
+        orderId,
+        index: l.index,
+        quantity: l.quantity,
+        sellerAtFault: true,
+        reason: `Customer claim (${l.kind}) ${note}`.trim(),
+      });
+      sellerDebitPaise += r.debitPaise;
+    } catch (error) {
+      // The claim stays approved; ops can charge it from Orders → Return / damage.
+      logger.warn("Claim: seller debit failed", { issueId, line: l.index, error: String(error) });
+      await issueRef(issueId).update({ sellerDebitError: String(error).slice(0, 300) });
+    }
+  }
+  if (sellerDebitPaise) await issueRef(issueId).update({ "resolution.sellerDebitPaise": sellerDebitPaise });
+  return sellerDebitPaise;
 }
 
 /**

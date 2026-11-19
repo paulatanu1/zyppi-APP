@@ -67,9 +67,18 @@ export async function settleReturn(returnId: string): Promise<void> {
         onlineRefundablePaise: onlineRefundable(order),
         orderRemainingPaise: orderRemaining(order),
       });
+      // Each payment is counted on the claim (returnPaidPaise) as it's
+      // made, so if this run is interrupted ops never pays it again
+      // (recoverStuckPayouts sends it to review).
       if (split.onlinePaise > 0) {
-        await createRefund(RETURNS_ACTOR, { orderId }, { amountPaise: split.onlinePaise, reason: `Return ${returnId.slice(0, 12)}` });
+        const r2 = await createRefund(RETURNS_ACTOR, { orderId }, {
+          amountPaise: split.onlinePaise,
+          reason: `Return ${returnId.slice(0, 12)}`,
+          link: { issueId, returnId },
+        });
+        await countReturnRefund(returnId, issueId, r2.refundId, split.onlinePaise);
         result.refundPaise = split.onlinePaise;
+        result.refundId = r2.refundId;
       }
       if (split.walletPaise > 0) {
         await db.runTransaction(async (tx) => {
@@ -82,12 +91,11 @@ export async function settleReturn(returnId: string): Promise<void> {
             by: RETURNS_ACTOR.uid,
           });
           tx.update(db.collection("orders").doc(orderId), { claimWalletPaise: FieldValue.increment(split.walletPaise) });
+          tx.update(db.collection(ORDER_ISSUES).doc(issueId), { returnPaidPaise: FieldValue.increment(split.walletPaise) });
+          tx.update(ref, { "settle.walletPaise": split.walletPaise });
         });
         result.walletPaise = split.walletPaise;
       }
-      await db.collection(ORDER_ISSUES).doc(issueId).update({
-        returnPaidPaise: FieldValue.increment(split.onlinePaise + split.walletPaise),
-      });
     }
 
     // The seller pays for wrong / damaged / expired items they sold.
@@ -126,6 +134,20 @@ export async function settleReturn(returnId: string): Promise<void> {
     if (paid > 0) await tellCustomer(issue, "refunded", { amount: rupeesText(paid) });
   }
   await closeIssueIfDone(issueId);
+}
+
+/**
+ * Records a return's PayU refund on the return (settle.refundId) and counts
+ * it on the claim, once (a second call for the same return does nothing).
+ */
+export async function countReturnRefund(returnId: string, issueId: string, refundId: string, amountPaise: number): Promise<void> {
+  const ref = db.collection(RETURNS).doc(returnId);
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (snap.get("settle.refundId")) return;
+    tx.update(ref, { "settle.refundId": refundId, "settle.refundPaise": amountPaise });
+    tx.update(db.collection(ORDER_ISSUES).doc(issueId), { returnPaidPaise: FieldValue.increment(amountPaise) });
+  });
 }
 
 /**
