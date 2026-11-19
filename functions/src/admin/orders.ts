@@ -6,7 +6,8 @@ import { requireString } from "../shared/callable";
 import { type Actor, requireRole } from "../shared/roles";
 import { writeAudit } from "../shared/audit";
 import { PAYU_SECRETS, type PayURefunds, payURefunds } from "../payments/payu";
-import { createRefund } from "../payments/refunds";
+import { queueRefundInTx, sendRefund } from "../payments/refunds";
+import { logger } from "firebase-functions";
 import { RIDERS } from "../riders/model";
 import { releaseRedemption } from "../coupons/usage";
 import { bindRider, creditRiderDelivery, releaseRider, withdrawOffer } from "../dispatch/effects";
@@ -70,7 +71,7 @@ export async function updateOrderStatus(
   const reason = typeof input.reason === "string" ? input.reason.trim() : "";
 
   const orderRef = db.collection("orders").doc(orderId);
-  const refundDue = await db.runTransaction(async (tx) => {
+  const queued = await db.runTransaction(async (tx): Promise<QueuedCancelRefund | null> => {
     const order = await tx.get(orderRef);
     if (!order.exists) throw new HttpsError("not-found", `Order not found: ${orderId}`);
     const d = order.data()!;
@@ -127,7 +128,7 @@ export async function updateOrderStatus(
         }
       }
       tx.update(orderRef, update);
-      return 0;
+      return null;
     }
     if (!TRANSITIONS[from]?.includes(status)) {
       throw new HttpsError("failed-precondition", `Can’t move an order from ${label(from)} to ${label(status)}`);
@@ -135,7 +136,7 @@ export async function updateOrderStatus(
     update.status = status;
     update[`${status === "out_for_delivery" ? "outForDelivery" : status}At`] = FieldValue.serverTimestamp();
 
-    let due = 0;
+    let refund: QueuedCancelRefund | null = null;
     if (status === "cancelled") {
       if (reason.length < 3) throw new HttpsError("invalid-argument", "Give a reason for cancelling");
       update.cancelReason = reason.slice(0, 300);
@@ -156,11 +157,7 @@ export async function updateOrderStatus(
           { merge: true },
         );
       }
-      const online = ["UPI", "Credit or debit card"].includes(d.payment?.method);
-      if (online && d.payment?.status === "succeeded") {
-        due = (d.payment.amountPaise as number) - ((d.refundedPaise as number) ?? 0);
-        if (due > 0) update.refundStatus = "pending";
-      }
+      refund = queueCancelRefund(tx, actor, orderRef.id, d, reason, update);
       // What the wallet paid goes straight back to the wallet, whatever
       // the payment method (cash orders included).
       const userId = d.userId as string | undefined;
@@ -245,19 +242,54 @@ export async function updateOrderStatus(
       { action: "order.status", target: orderRef.path, before: { status: from }, after: { status, reason: reason || null } },
       tx,
     );
-    return due;
+    return refund;
   });
 
-  if (refundDue > 0) {
-    const refund = await createRefund(
-      actor,
-      { orderId },
-      { amountPaise: refundDue, reason: `Order cancelled: ${reason}`.slice(0, 300) },
-      payu,
-    );
-    return { ok: true, refund };
+  if (queued) {
+    // The refund is already recorded with the cancel; if PayU is down this
+    // stays "requesting" and reconcileRefunds sends it again.
+    const refundStatus = await sendRefund(queued.refundId, queued.mihpayid, queued.amountPaise, payu);
+    return { ok: true, refund: { refundId: queued.refundId, status: refundStatus } };
   }
   return { ok: true };
+}
+
+interface QueuedCancelRefund {
+  refundId: string;
+  mihpayid: string;
+  amountPaise: number;
+}
+
+/**
+ * A cancelled order paid online: records the refund of what's left in the
+ * cancel's own transaction (merging the reservation into `update`, the
+ * order's single write). Without a PayU id on the order the refund can't
+ * be sent automatically: it's left "pending" for finance (Payments → Refund).
+ */
+export function queueCancelRefund(
+  tx: Transaction,
+  actor: Actor,
+  orderId: string,
+  d: Record<string, unknown>,
+  reason: string,
+  update: Record<string, unknown>,
+): QueuedCancelRefund | null {
+  const payment = (d.payment ?? {}) as Record<string, unknown>;
+  const online = ["UPI", "Credit or debit card"].includes(payment.method as string);
+  if (!online || payment.status !== "succeeded") return null;
+  const due = (payment.amountPaise as number) - ((d.refundedPaise as number) ?? 0);
+  if (due <= 0) return null;
+  if (!payment.providerReference) {
+    logger.error("Cancelled online order has no PayU id; refund left for finance", { orderId });
+    update.refundStatus = "pending";
+    return null;
+  }
+  const q = queueRefundInTx(tx, actor, { orderId }, d, {
+    amountPaise: due,
+    reason: `Order cancelled: ${reason}`.slice(0, 300),
+  });
+  Object.assign(update, q.targetUpdate);
+  return { refundId: q.refundId, mihpayid: q.mihpayid, amountPaise: q.amountPaise };
 }
 
 const label = (s: string) => s.replace(/_/g, " ");
