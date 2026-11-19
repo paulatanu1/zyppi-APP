@@ -6,6 +6,7 @@ import { assertCanOrder, getFeatures } from "../shared/features";
 import { COD, placeOrderInTx } from "./quote";
 import { WALLET_METHOD } from "../wallet/model";
 import { HOT } from "../shared/scaling";
+import { rateLimit } from "../shared/rate_limit";
 
 /**
  * Client entry point for cash-on-delivery and wallet orders (port of
@@ -22,6 +23,7 @@ import { HOT } from "../shared/scaling";
  */
 export const placeOrder = onCall(HOT, async (request) => {
   const uid = requireUid(request);
+  rateLimit("placeOrder", uid);
   const data = (request.data ?? {}) as Record<string, unknown>;
 
   const paymentMethod = requireString(data.paymentMethod, "paymentMethod");

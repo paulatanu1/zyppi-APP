@@ -3,6 +3,7 @@ import { HttpsError, onCall } from "firebase-functions/https";
 import { requireUid } from "../shared/callable";
 import { db } from "../shared/firebase";
 import { SELLERS, SELLER_USERS, ZYPPI_SELLER_ID } from "./model";
+import { rateLimit } from "../shared/rate_limit";
 
 /** New average after adding `stars` (1 decimal is shown; 3 kept). */
 export function nextRating(sum: number, count: number, stars: number): { sum: number; count: number; avg: number } {
@@ -18,6 +19,7 @@ export function nextRating(sum: number, count: number, stars: number): { sum: nu
  */
 export const rateSellers = onCall(async (request) => {
   const uid = requireUid(request);
+  rateLimit("rateSellers", uid);
   const orderId = typeof request.data?.orderId === "string" ? request.data.orderId : "";
   const raw = (request.data?.ratings ?? {}) as Record<string, unknown>;
   const ratings = Object.entries(raw).filter(

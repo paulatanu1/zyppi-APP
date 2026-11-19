@@ -3,6 +3,7 @@ import { HttpsError, onCall } from "firebase-functions/https";
 import { requireUid } from "../shared/callable";
 import { db } from "../shared/firebase";
 import { RIDERS } from "../riders/model";
+import { rateLimit } from "../shared/rate_limit";
 
 export const RATING_TAGS = ["polite", "on_time", "careful", "late", "rude", "damaged"] as const;
 
@@ -12,6 +13,7 @@ export const RATING_TAGS = ["polite", "on_time", "careful", "late", "rude", "dam
  */
 export const rateRider = onCall(async (request) => {
   const uid = requireUid(request);
+  rateLimit("rateRider", uid);
   const orderId = typeof request.data?.orderId === "string" ? request.data.orderId : "";
   const stars = request.data?.stars;
   if (!/^[\w-]{1,64}$/.test(orderId) || !Number.isInteger(stars) || stars < 1 || stars > 5) {

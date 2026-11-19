@@ -13,6 +13,7 @@ import {
 } from "./model";
 import { lookupCoupon, problemOf } from "./usage";
 import { HOT } from "../shared/scaling";
+import { rateLimit } from "../shared/rate_limit";
 
 /**
  * Customer pre-check from the cart (the bill shows the discount before
@@ -25,6 +26,7 @@ import { HOT } from "../shared/scaling";
  */
 export const checkCoupon = onCall(HOT, async (request) => {
   const uid = requireUid(request);
+  rateLimit("checkCoupon", uid);
   const code = normalizeCode(request.data?.code);
   const area =
     typeof request.data?.serviceAreaId === "string" && request.data.serviceAreaId

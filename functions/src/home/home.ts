@@ -6,6 +6,7 @@ import { isHttpsUrl } from "../catalog/model";
 import { writeAudit } from "../shared/audit";
 import { db } from "../shared/firebase";
 import { type Actor, requireRole } from "../shared/roles";
+import { rateLimit } from "../shared/rate_limit";
 
 /**
  * The app's Home screen: `homeSections/{id}` = {type, title, subtitle,
@@ -283,6 +284,6 @@ export const adminDeleteHomeSection = onCall(async (request) =>
 );
 
 export const trackBannerClick = onCall(async (request) => {
-  requireUid(request);
+  rateLimit("trackBannerClick", requireUid(request));
   return recordBannerClick(request.data?.sectionId, request.data?.itemId);
 });

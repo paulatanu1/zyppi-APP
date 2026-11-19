@@ -8,6 +8,7 @@ import { CHATS, postMessages } from "./bot";
 import { COPY, shortOrderId } from "./copy";
 import { langFromLocale, type Lang } from "./lang";
 import { AGENT_REPLY_ID, handoffMessage, type OutMessage } from "./reply";
+import { rateLimit } from "../shared/rate_limit";
 
 const STARTERS = ["where_is_order", "refund", "missing_item", "payment_methods"];
 
@@ -42,6 +43,7 @@ async function welcome(lang: Lang, orderId: string | null): Promise<OutMessage> 
  */
 export const openSupportChat = onCall(async (request) => {
   const uid = requireUid(request);
+  rateLimit("openSupportChat", uid);
   const rawOrderId = request.data?.orderId;
   const orderId = typeof rawOrderId === "string" && rawOrderId ? rawOrderId : null;
   if (orderId && !/^[\w-]{1,64}$/.test(orderId)) {
@@ -89,6 +91,7 @@ export const openSupportChat = onCall(async (request) => {
  */
 export const requestSupportAgent = onCall(async (request) => {
   const uid = requireUid(request);
+  rateLimit("requestSupportAgent", uid);
   const chatRef = db.collection(CHATS).doc(requireString(request.data?.chatId, "chatId"));
   const handedOff = await db.runTransaction(async (tx) => {
     const chat = await tx.get(chatRef);
