@@ -1,4 +1,4 @@
-import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import { FieldValue, Timestamp, type Transaction } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 import { HttpsError, onCall } from "firebase-functions/https";
 import { onSchedule } from "firebase-functions/scheduler";
@@ -36,6 +36,41 @@ export async function createRefund(
   input: RefundInput,
   payu: PayURefunds = payURefunds,
 ): Promise<{ refundId: string; status: RefundStatus }> {
+  const ref = targetRef(target);
+  const queued = await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) throw new HttpsError("not-found", "Payment not found");
+    const q = queueRefundInTx(tx, actor, target, snap.data()!, input);
+    tx.update(ref, q.targetUpdate);
+    return q;
+  });
+  const status = await sendRefund(queued.refundId, queued.mihpayid, queued.amountPaise, payu);
+  return { refundId: queued.refundId, status };
+}
+
+export interface QueuedRefund {
+  refundId: string;
+  mihpayid: string;
+  amountPaise: number;
+  /** Fields the caller must write on the order / intent in the same transaction. */
+  targetUpdate: Record<string, unknown>;
+}
+
+/**
+ * The transactional half of a refund: checks it, creates refunds/{id} as
+ * "requesting" and returns the reservation to write on the target. Run it
+ * in the same transaction as whatever makes the refund due (an order
+ * cancel), so the refund can't be lost if PayU is then unreachable or the
+ * function dies: reconcileRefunds re-sends every "requesting" refund.
+ * `d` is the target's data, read in `tx`. Only writes after all checks pass.
+ */
+export function queueRefundInTx(
+  tx: Transaction,
+  actor: Actor,
+  target: RefundTarget,
+  d: Record<string, unknown>,
+  input: RefundInput,
+): QueuedRefund {
   const reason = typeof input.reason === "string" ? input.reason.trim() : "";
   if (reason.length < 3 || reason.length > 300) {
     throw new HttpsError("invalid-argument", "Give a reason (3–300 characters)");
@@ -43,70 +78,65 @@ export async function createRefund(
   if (!Number.isInteger(input.amountPaise) || input.amountPaise <= 0) {
     throw new HttpsError("invalid-argument", "Enter an amount");
   }
-
-  const ref = targetRef(target);
+  const { paid, mihpayid } = refundable(target, d);
+  if (!mihpayid) throw new HttpsError("failed-precondition", "No PayU payment id on record");
+  const left = paid - ((d.refundedPaise as number | undefined) ?? 0);
+  if (input.amountPaise > left) {
+    throw new HttpsError(
+      "failed-precondition",
+      left > 0 ? `At most ₹${(left / 100).toFixed(2)} can still be refunded` : "Already fully refunded",
+    );
+  }
   const refundRef = db.collection(REFUNDS).doc();
-  const { mihpayid } = await db.runTransaction(async (tx) => {
-    const snap = await tx.get(ref);
-    if (!snap.exists) throw new HttpsError("not-found", "Payment not found");
-    const d = snap.data()!;
-    let paid: number;
-    let mihpayid: string | null;
-    if ("orderId" in target) {
-      const online = d.payment?.method && d.payment.method !== "Cash on delivery";
-      if (!online || d.payment?.status !== "succeeded") {
-        throw new HttpsError("failed-precondition", "Only online payments can be refunded here");
-      }
-      paid = d.payment.amountPaise as number;
-      mihpayid = (d.payment.providerReference as string | null) ?? null;
-    } else {
-      if (d.status !== "needs_review") {
-        throw new HttpsError("failed-precondition", "Only payments waiting for review can be refunded here");
-      }
-      paid = d.amountPaise as number;
-      mihpayid = (d.transactionId as string | null) ?? null;
-    }
-    if (!mihpayid) throw new HttpsError("failed-precondition", "No PayU payment id on record");
-    const left = paid - ((d.refundedPaise as number | undefined) ?? 0);
-    if (input.amountPaise > left) {
-      throw new HttpsError(
-        "failed-precondition",
-        left > 0 ? `At most ₹${(left / 100).toFixed(2)} can still be refunded` : "Already fully refunded",
-      );
-    }
-    tx.create(refundRef, {
-      ...("orderId" in target ? { orderId: target.orderId, intentId: null } : { orderId: null, intentId: target.intentId }),
-      userId: d.userId ?? null,
-      mihpayid,
-      amountPaise: input.amountPaise,
-      reason,
-      status: "requesting",
-      requestId: null,
-      failureReason: null,
-      createdBy: actor.uid,
-      createdByEmail: actor.email,
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-    tx.update(ref, {
+  tx.create(refundRef, {
+    ...("orderId" in target ? { orderId: target.orderId, intentId: null } : { orderId: null, intentId: target.intentId }),
+    userId: d.userId ?? null,
+    mihpayid,
+    amountPaise: input.amountPaise,
+    reason,
+    status: "requesting",
+    requestId: null,
+    failureReason: null,
+    createdBy: actor.uid,
+    createdByEmail: actor.email,
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+  writeAudit(
+    actor,
+    { action: "payment.refund", target: refundRef.path, before: null, after: { ...target, amountPaise: input.amountPaise, reason } },
+    tx,
+  );
+  return {
+    refundId: refundRef.id,
+    mihpayid,
+    amountPaise: input.amountPaise,
+    targetUpdate: {
       refundedPaise: FieldValue.increment(input.amountPaise),
       refundStatus: "requesting",
       updatedAt: FieldValue.serverTimestamp(),
-    });
-    writeAudit(
-      actor,
-      { action: "payment.refund", target: refundRef.path, before: null, after: { ...target, amountPaise: input.amountPaise, reason } },
-      tx,
-    );
-    return { mihpayid };
-  });
-
-  const status = await sendRefund(refundRef.id, mihpayid, input.amountPaise, payu);
-  return { refundId: refundRef.id, status };
+    },
+  };
 }
 
-/** Asks PayU (again, same token) and records the answer. */
-async function sendRefund(
+/** What was paid on the order / intent and PayU's payment id (or a precondition error). */
+export function refundable(target: RefundTarget, d: Record<string, unknown>): { paid: number; mihpayid: string | null } {
+  if ("orderId" in target) {
+    const payment = (d.payment ?? {}) as Record<string, unknown>;
+    const online = payment.method && payment.method !== "Cash on delivery";
+    if (!online || payment.status !== "succeeded") {
+      throw new HttpsError("failed-precondition", "Only online payments can be refunded here");
+    }
+    return { paid: payment.amountPaise as number, mihpayid: (payment.providerReference as string | null) ?? null };
+  }
+  if (d.status !== "needs_review") {
+    throw new HttpsError("failed-precondition", "Only payments waiting for review can be refunded here");
+  }
+  return { paid: d.amountPaise as number, mihpayid: (d.transactionId as string | null) ?? null };
+}
+
+/** Asks PayU (again, same token) and records the answer. Never throws for PayU errors. */
+export async function sendRefund(
   refundId: string,
   mihpayid: string,
   amountPaise: number,
@@ -243,9 +273,13 @@ export const adminResolveIntent = onCall({ secrets: PAYU_SECRETS }, async (reque
   resolveIntent(requireRole(request, ["finance"]), request.data ?? {}),
 );
 
-/** Hourly: chases refunds PayU hasn't confirmed yet. Cheap when there are none. */
+/**
+ * Every 15 minutes: re-sends refunds PayU never acknowledged ("requesting",
+ * e.g. a cancel whose PayU call failed) and chases ones it hasn't confirmed.
+ * Cheap when there are none.
+ */
 export const reconcileRefunds = onSchedule(
-  { schedule: "every 60 minutes", secrets: PAYU_SECRETS, timeoutSeconds: 120 },
+  { schedule: "every 15 minutes", secrets: PAYU_SECRETS, timeoutSeconds: 120 },
   async () => {
     const tenMinAgo = Timestamp.fromMillis(Date.now() - 10 * 60_000);
     const open = await db
