@@ -2,15 +2,17 @@ import { HttpsError } from "firebase-functions/https";
 import { describe, expect, it } from "vitest";
 import { checkAppCheck, hardeningEnv } from "../../src/shared/hardening";
 
-const monitor = { appCheckEnforce: false };
-const strict = { appCheckEnforce: true };
+const monitor = { appCheckEnforce: false, appCheckEnforceWeb: false };
+const strict = { appCheckEnforce: true, appCheckEnforceWeb: true };
+const appsOnly = { appCheckEnforce: true, appCheckEnforceWeb: false };
 const req = (app?: object) => ({ app, rawRequest: { path: "/" } }) as Parameters<typeof checkAppCheck>[0];
 
 describe("hardeningEnv", () => {
   it("is off unless switched on explicitly", () => {
     expect(hardeningEnv({})).toEqual(monitor);
     expect(hardeningEnv({ APP_CHECK_ENFORCE: "1" })).toEqual(monitor);
-    expect(hardeningEnv({ APP_CHECK_ENFORCE: "true" })).toEqual(strict);
+    expect(hardeningEnv({ APP_CHECK_ENFORCE: "true" })).toEqual(appsOnly);
+    expect(hardeningEnv({ APP_CHECK_ENFORCE: "true", APP_CHECK_ENFORCE_WEB: "true" })).toEqual(strict);
   });
 });
 
@@ -25,5 +27,10 @@ describe("checkAppCheck", () => {
 
   it("rejects a missing token when enforced", () => {
     expect(() => checkAppCheck(req(), strict)).toThrow(HttpsError);
+  });
+
+  it("enforces the apps and the web separately", () => {
+    expect(() => checkAppCheck(req(), appsOnly, "app")).toThrow(HttpsError);
+    expect(() => checkAppCheck(req(), appsOnly, "web")).not.toThrow();
   });
 });

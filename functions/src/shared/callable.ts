@@ -1,22 +1,28 @@
 import { CallableRequest, HttpsError } from "firebase-functions/https";
 import { OrderError } from "../orders/quote";
-import { checkAppCheck } from "./hardening";
+import { type Caller, checkAppCheck } from "./hardening";
 import { roleOf } from "./roles";
 
-/** The caller's uid; anonymous (guest) users count as signed in. */
-export function requireUid(request: CallableRequest): string {
+/**
+ * The caller's uid; anonymous (guest) users count as signed in. `caller`
+ * picks the App Check switch (shared/hardening.ts): "web" for callables
+ * the admin panel / rider portal use too.
+ */
+export function requireUid(request: CallableRequest, caller: Caller = "app"): string {
   const uid = request.auth?.uid;
   if (!uid) throw new HttpsError("unauthenticated", "Not authenticated");
-  checkAppCheck(request);
+  checkAppCheck(request, undefined, caller);
   return uid;
 }
 
 /** Any staff role (see shared/roles.ts; use requireRole to narrow it). */
 export function requireAdmin(request: CallableRequest): string {
-  const uid = requireUid(request);
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError("unauthenticated", "Not authenticated");
   if (roleOf(request.auth?.token as Record<string, unknown> | undefined) === null) {
     throw new HttpsError("permission-denied", "Not authorized");
   }
+  checkAppCheck(request, undefined, "web");
   return uid;
 }
 
