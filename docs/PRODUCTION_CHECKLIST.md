@@ -6,6 +6,19 @@ Nothing here is done automatically: every step changes production.
 
 ## 1. Deploy the backend
 
+Release 1 of the audit fixes (branch `fix/audit-p0`: stock reservations and PayU stock hold,
+refunds recorded with the cancel, rider cash limit, incentive / payout fixes, stuck-payout
+recovery, account-deletion checks, App Check switches). Order matters:
+
+1. [ ] Run the emulator suite once on a dev machine: `npm --prefix functions test`.
+2. [ ] Deploy the admin panel (`zyppi-delivery-admin`, branch `fix/audit-p0`) first: rider payouts
+       now send a one-time `requestId`, which the new backend requires for manual payouts.
+3. [ ] `firebase deploy --only functions,firestore:indexes` (no rules change in this release).
+4. [ ] Release the customer app (account deletion explains why it's refused while an order is
+       in progress). Older app versions still work; they just show a generic error there.
+
+Then, for every later deploy:
+
 - [ ] `firebase deploy --only functions,firestore:rules,firestore:indexes`
 - [ ] Indexes finished building (Firebase console → Firestore → Indexes: none "Building").
 - [ ] Stats backfill re-run after the deploy, at a quiet time:
@@ -99,7 +112,8 @@ Customer orders placed **before** that deploy have no delivery code; riders can 
 - [ ] Dispatch: auto-assign on, "look for a rider" (placed / packed), seconds to accept, riders to try, max distance.
 - [ ] Pay: default rate (base, per km, min, max), per-area rates if they differ, peak hours, surge.
 - [ ] Gig slots: book-ahead days, cancel window, slot times / riders per slot / on-time bonus per area.
-- [ ] Safety & cash: ambulance (108), police (112), **accident-team number**, door wait time, cash-in-hand warning.
+- [ ] Safety & cash: ambulance (108), police (112), **accident-team number**, door wait time, cash-in-hand limit
+      (riders at the limit get no cash orders; 0 = no limit).
 - [ ] Store settings → Stores: **pickup latitude / longitude** for each dark store (navigation and dispatch distance; else the area centre is used).
 
 **Firebase / Google**:
