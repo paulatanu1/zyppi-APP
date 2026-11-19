@@ -29,6 +29,7 @@ import {
   splitClaimPayout,
   validateClaim,
 } from "./model";
+import { rateLimit } from "../shared/rate_limit";
 
 /**
  * "Report a problem" on a delivered order (docs/WALLET.md).
@@ -65,6 +66,7 @@ export const claimPhotoPrefix = (uid: string, orderId: string) => `users/${uid}/
  */
 export const reportOrderIssue = onCall(async (request) => {
   const uid = requireUid(request);
+  rateLimit("reportOrderIssue", uid);
   const orderId = requireString(request.data?.orderId, "orderId");
   if (!/^[\w-]{1,64}$/.test(orderId)) throw new HttpsError("invalid-argument", "Invalid order");
   const orderRef = db.collection("orders").doc(orderId);

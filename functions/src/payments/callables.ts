@@ -22,6 +22,7 @@ import { writeStockHold } from "./stock_hold";
 import { holdId, writeWalletEntry } from "../wallet/ledger";
 import { WALLET_BALANCE_CHANGED, WALLET_COVERS_ORDER, walletBalanceOf, walletToApply } from "../wallet/model";
 import { HOT } from "../shared/scaling";
+import { rateLimit } from "../shared/rate_limit";
 
 const PRODUCT_INFO = "Zyppi order";
 
@@ -63,6 +64,7 @@ function payerDetails(user: Record<string, unknown>, authPhone: string | undefin
  */
 export const createPayUOrder = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (request) => {
   const uid = requireUid(request);
+  rateLimit("createPayUOrder", uid);
   const data = (request.data ?? {}) as Record<string, unknown>;
 
   const paymentMethod = typeof data.paymentMethod === "string" ? data.paymentMethod : "UPI";
@@ -176,6 +178,7 @@ const SDK_EVENT_INTENT_AGE_MS = 15 * 60 * 1000;
  */
 export const signPayUHash = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (request) => {
   const uid = requireUid(request);
+  rateLimit("signPayUHash", uid);
   const data = (request.data ?? {}) as Record<string, unknown>;
   const hashRequest = {
     hashName: requireString(data.hashName, "hashName"),
@@ -264,6 +267,7 @@ export const signPayUHash = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (req
  */
 export const verifyPayUPayment = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (request) => {
   const uid = requireUid(request);
+  rateLimit("verifyPayUPayment", uid);
   const txnid = requireString(request.data?.txnid, "txnid");
 
   // Only the payer may check (and complete) their own payment.

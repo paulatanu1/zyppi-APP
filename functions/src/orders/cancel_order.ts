@@ -3,6 +3,7 @@ import { updateOrderStatus } from "../admin/orders";
 import { PAYU_SECRETS } from "../payments/payu";
 import { requireString, requireUid } from "../shared/callable";
 import type { Actor } from "../shared/roles";
+import { rateLimit } from "../shared/rate_limit";
 
 /** Why the customer cancelled (the app shows these). */
 export const CUSTOMER_CANCEL_REASONS = [
@@ -43,6 +44,7 @@ export function customerActor(uid: string): Actor {
  */
 export const cancelMyOrder = onCall({ secrets: PAYU_SECRETS }, async (request) => {
   const uid = requireUid(request);
+  rateLimit("cancelMyOrder", uid);
   const orderId = requireString(request.data?.orderId, "orderId");
   const reason = request.data?.reason;
   if (!(CUSTOMER_CANCEL_REASONS as readonly unknown[]).includes(reason)) {

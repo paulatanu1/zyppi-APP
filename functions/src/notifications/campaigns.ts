@@ -29,6 +29,7 @@ import {
   validateCampaign,
   validateSegment,
 } from "./model";
+import { rateLimit } from "../shared/rate_limit";
 
 const PAGE = 1000;
 /** The users/{uid} fields toRecipient reads. */
@@ -436,6 +437,7 @@ export const adminDeleteTemplate = onCall(async (request) => {
 
 export const trackCampaignOpen = onCall(async (request) => {
   const uid = requireUid(request);
+  rateLimit("trackCampaignOpen", uid);
   return recordOpen(uid, request.data?.campaignId);
 });
 
