@@ -111,41 +111,37 @@ class ProductDetailsScreen extends ConsumerWidget {
           );
 
     return Scaffold(
-      backgroundColor: z.surface,
+      backgroundColor: z.bg,
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
             child: ProductSlider(productId: productId, heroTag: heroTag),
           ),
           SliverToBoxAdapter(
-            // The white sheet overlaps the photo panel by its corner radius.
-            child: Transform.translate(
-              offset: const Offset(0, -ZRadius.sheet),
-              // Material (not a coloured box) so the expansion tile's ink
-              // shows.
-              child: Material(
-                color: z.surface,
-                borderRadius: ZRadius.sheetTop,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    ZSpace.screen,
-                    ZSpace.x5,
-                    ZSpace.screen,
-                    0,
-                  ),
-                  child: state.loading || product == null
-                      ? const _InfoSkeleton()
-                      : _Info(
-                          product: product,
-                          variant: variant,
-                          areaId: areaId,
-                          offers: offers,
-                          chosen: chosen,
-                          selectedIndex: selectedIndex,
-                          onSelectVariant: notifier.selectVariant,
-                          onPickOffer: (o) => notifier.pickOffer(o.id),
-                        ),
+            // Floating Cards: the details sit on the page under the rounded
+            // photo panel. Material (not a coloured box) so the expansion
+            // tile's ink shows.
+            child: Material(
+              color: Colors.transparent,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  ZSpace.screen,
+                  ZSpace.x5,
+                  ZSpace.screen,
+                  0,
                 ),
+                child: state.loading || product == null
+                    ? const _InfoSkeleton()
+                    : _Info(
+                        product: product,
+                        variant: variant,
+                        areaId: areaId,
+                        offers: offers,
+                        chosen: chosen,
+                        selectedIndex: selectedIndex,
+                        onSelectVariant: notifier.selectVariant,
+                        onPickOffer: (o) => notifier.pickOffer(o.id),
+                      ),
               ),
             ),
           ),

@@ -35,8 +35,14 @@ class ProductSlider extends ConsumerWidget {
     final top = MediaQuery.paddingOf(context).top;
 
     return Container(
-      color: z.surface2,
       height: top + _panelHeight,
+      // Floating Cards: a tinted panel with a rounded bottom.
+      decoration: BoxDecoration(
+        color: z.surface2,
+        borderRadius: const BorderRadius.vertical(
+          bottom: Radius.circular(ZRadius.sheet),
+        ),
+      ),
       padding: EdgeInsets.only(top: top),
       child: Stack(
         children: [

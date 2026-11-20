@@ -61,6 +61,7 @@ class _RateSellersCardState extends ConsumerState<RateSellersCard> {
       decoration: BoxDecoration(
         color: z.surface,
         borderRadius: ZRadius.all(ZRadius.card),
+        boxShadow: z.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
