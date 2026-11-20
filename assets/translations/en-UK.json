@@ -554,5 +554,11 @@
   "errorAccountRequired": "Save your account to place an order.",
   "errorPhoneRequired": "Add your mobile number to place an order.",
   "agreeTermsShort": "I agree to Zyppi's Terms and Privacy Policy",
-  "deliveryPromise": "12 min delivery"
+  "deliveryPromise": "12 min delivery",
+  "addMoreItems": "Add more items",
+  "coupons": "Coupons",
+  "couponsHint": "Have a code?",
+  "tipRider": "Tip rider",
+  "billShort": "Bill",
+  "billSummary": "Items {} · Delivery {} · Handling {}"
 }

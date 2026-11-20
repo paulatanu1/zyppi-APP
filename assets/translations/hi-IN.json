@@ -554,5 +554,11 @@
   "errorAccountRequired": "ऑर्डर देने के लिए अपना अकाउंट सेव करें।",
   "errorPhoneRequired": "ऑर्डर देने के लिए अपना मोबाइल नंबर जोड़ें।",
   "agreeTermsShort": "मैं Zyppi की शर्तों और गोपनीयता नीति से सहमत हूँ",
-  "deliveryPromise": "12 मिनट में डिलीवरी"
+  "deliveryPromise": "12 मिनट में डिलीवरी",
+  "addMoreItems": "और आइटम जोड़ें",
+  "coupons": "कूपन",
+  "couponsHint": "कोड है?",
+  "tipRider": "राइडर को टिप",
+  "billShort": "बिल",
+  "billSummary": "आइटम {} · डिलीवरी {} · हैंडलिंग {}"
 }

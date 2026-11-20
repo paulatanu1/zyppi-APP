@@ -554,5 +554,11 @@
   "errorAccountRequired": "ਆਰਡਰ ਦੇਣ ਲਈ ਆਪਣਾ ਖਾਤਾ ਸੇਵ ਕਰੋ।",
   "errorPhoneRequired": "ਆਰਡਰ ਦੇਣ ਲਈ ਆਪਣਾ ਮੋਬਾਈਲ ਨੰਬਰ ਜੋੜੋ।",
   "agreeTermsShort": "ਮੈਂ Zyppi ਦੀਆਂ ਸ਼ਰਤਾਂ ਅਤੇ ਪਰਦੇਦਾਰੀ ਨੀਤੀ ਨਾਲ ਸਹਿਮਤ ਹਾਂ",
-  "deliveryPromise": "12 ਮਿੰਟ ਵਿੱਚ ਡਿਲੀਵਰੀ"
+  "deliveryPromise": "12 ਮਿੰਟ ਵਿੱਚ ਡਿਲੀਵਰੀ",
+  "addMoreItems": "ਹੋਰ ਆਈਟਮ ਜੋੜੋ",
+  "coupons": "ਕੂਪਨ",
+  "couponsHint": "ਕੋਡ ਹੈ?",
+  "tipRider": "ਰਾਈਡਰ ਨੂੰ ਟਿਪ",
+  "billShort": "ਬਿੱਲ",
+  "billSummary": "ਆਈਟਮ {} · ਡਿਲੀਵਰੀ {} · ਹੈਂਡਲਿੰਗ {}"
 }

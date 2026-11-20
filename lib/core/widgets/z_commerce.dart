@@ -438,7 +438,6 @@ class ZDeliveryProgress extends StatelessWidget {
         decoration: BoxDecoration(
           color: z.surface,
           borderRadius: ZRadius.all(compact ? ZRadius.chip : ZRadius.card),
-          border: Border.all(color: z.line),
           boxShadow: compact
               ? [
                   BoxShadow(
@@ -447,7 +446,7 @@ class ZDeliveryProgress extends StatelessWidget {
                     offset: const Offset(0, 2),
                   ),
                 ]
-              : null,
+              : z.cardShadow,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,

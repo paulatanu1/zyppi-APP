@@ -94,6 +94,10 @@ void main() {
     expect(find.text('Your cart'), findsOneWidget);
     expect(find.text('Shimla Apples'), findsOneWidget);
     expect(find.text('Mixed Fruit Juice'), findsOneWidget);
+    // The full bill opens from the sticky sheet's one-line summary.
+    expect(find.text('Bill details'), findsNothing);
+    await tester.tap(find.text('Bill'));
+    await tester.pumpAndSettle();
     expect(find.text('Bill details'), findsOneWidget);
     expect(find.text('Ranchi Road, Purulia'), findsOneWidget);
     expect(find.text('Checkout'), findsOneWidget);
@@ -102,6 +106,9 @@ void main() {
   testWidgets('a tip box sets the tip in the bill', (tester) async {
     final container = await pumpCart(tester);
 
+    // The tip boxes open from the "Tip rider" card.
+    await tester.tap(find.text('Tip rider'));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('₹20'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('₹20'));

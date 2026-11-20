@@ -119,10 +119,11 @@ class _TipBox extends StatelessWidget {
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(horizontal: ZSpace.x1),
           decoration: BoxDecoration(
-            color: selected ? z.brandSoft : z.surface,
+            // Floating Cards: filled boxes; only the chosen one is outlined.
+            color: selected ? z.brandSoft : z.surface2,
             borderRadius: ZRadius.all(ZRadius.control),
             border: Border.all(
-              color: selected ? z.brand : z.line,
+              color: selected ? z.brand : Colors.transparent,
               width: selected ? 1.5 : 1,
             ),
           ),

@@ -44,7 +44,7 @@ void main() {
     );
 
     expect(find.text('Basmati Rice'), findsOneWidget);
-    expect(find.text('1 kg'), findsOneWidget);
+    expect(find.text('1 kg · '), findsOneWidget); // pack size, then the price
     expect(find.text('2'), findsOneWidget); // quantity shown in the stepper
   });
 }
