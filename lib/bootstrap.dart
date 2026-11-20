@@ -23,6 +23,7 @@ import 'package:zippy/core/order/data/order_repository_impl.dart';
 import 'package:zippy/core/payments/application/resume_pending_payment.dart';
 import 'package:zippy/core/push/push_notification_service.dart';
 import 'package:zippy/core/shared_providers/location/provider/request_location_provider.dart';
+import 'package:zippy/features/splash/application/launch_done.dart';
 import 'package:zippy/routes/routes.dart';
 
 /// Shared startup for every flavor (dev/staging/prod), selected via
@@ -96,11 +97,18 @@ Future<void> bootstrap() async {
   // blocking here means a user (or an automated test) who doesn't
   // immediately answer the system prompt never sees the app at all.
   // Sequenced so the location and notification permission dialogs never
-  // overlap (Android only shows one permission request at a time).
+  // overlap (Android only shows one permission request at a time), and
+  // held until the launch animation has handed off: a system dialog
+  // opened on the first frame covers the whole animation.
   unawaited(
     container
-        .read(checkAndRequestLocation.notifier)
-        .checkAndRequestLocationPermission()
+        .read(launchDoneProvider)
+        .future
+        .then(
+          (_) => container
+              .read(checkAndRequestLocation.notifier)
+              .checkAndRequestLocationPermission(),
+        )
         .whenComplete(
           () => PushNotificationService.initialize(container, router),
         ),

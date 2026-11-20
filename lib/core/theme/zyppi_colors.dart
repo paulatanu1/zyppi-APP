@@ -126,7 +126,7 @@ class ZColors extends ThemeExtension<ZColors> {
     mapWater: Color(0xFFCFE3F5),
     shadow: Color(0x14141519),
     logo: Color(0xFF673AB7),
-    splashBg: Color(0xFFFFFFFF),
+    splashBg: Color(0xFF673AB7),
   );
 
   static const dark = ZColors(
@@ -175,7 +175,7 @@ class ZColors extends ThemeExtension<ZColors> {
     shadow: Color(0x59000000),
     // Lighter tint so the tagline reads on near-black.
     logo: Color(0xFFB39DDB),
-    splashBg: Color(0xFF0D0E11),
+    splashBg: Color(0xFF673AB7),
   );
 
   /// Card/sheet shadow used by floating elements (cart bar, map buttons).

@@ -32,7 +32,7 @@ import 'package:zippy/features/favourite/presentation/favourite_screen.dart';
 import 'package:zippy/features/filter/presentation/filter_screen.dart';
 import 'package:zippy/features/home_screen/presentation/home_screen.dart';
 import 'package:zippy/features/intro/presentation/slider/slider.dart';
-import 'package:zippy/features/launch/presentation/launch_screen.dart';
+import 'package:zippy/features/splash/presentation/zyppi_splash_screen.dart';
 import 'package:zippy/core/theme/zyppi_tokens.dart';
 import 'package:zippy/features/my_cart/presentation/my_cart_screen.dart';
 import 'package:zippy/features/order_placed/presentation/order_placed_screen.dart';
@@ -60,7 +60,7 @@ class Routes {
       GoRouterRefreshListenable(container);
 
   String? _redirect(GoRouterState state) {
-    // The launch animation picks Home or Onboarding itself when it ends.
+    // The splash picks Home or Onboarding itself when it ends.
     if (state.matchedLocation == '/launch') return null;
 
     if (_publicRoutes.contains(state.matchedLocation)) return null;
@@ -93,7 +93,7 @@ class Routes {
         GoRoute(
           path: '/launch',
           name: 'Launch',
-          builder: (context, state) => const LaunchScreen(),
+          builder: (context, state) => const SplashRoute(),
         ),
         GoRoute(
           path: '/slider',
