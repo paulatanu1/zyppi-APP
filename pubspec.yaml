@@ -134,7 +134,13 @@ flutter:
     - assets/fonts/
     - assets/images/
     - assets/images/products/
-    - assets/mock/
+    # Mock data (DATA_SOURCE=mock) is left out of prod builds, so the Play
+    # app doesn't ship test coupons or sample service areas (autopsy APP-07).
+    # Run tests with --flavor dev so they can load it.
+    - path: assets/mock/
+      flavors:
+        - dev
+        - staging
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

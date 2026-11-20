@@ -10,7 +10,7 @@ Zyppi is a quick-commerce grocery customer app (Flutter, FVM-pinned 3.47.x) on a
 
 ## Commands
 - Always `fvm flutter …` / `fvm dart …`, never a global `flutter`.
-- After every change: `fvm dart format .` → `fvm flutter analyze` (0 issues) → `fvm flutter test`.
+- After every change: `fvm dart format .` → `fvm flutter analyze` (0 issues) → `fvm flutter test --flavor dev` (the mock-data assets are bundled only in the dev/staging flavors).
 - After editing freezed / json / riverpod-annotated files: `fvm dart run build_runner build -d`.
 - Backend (`functions/`): `npm --prefix functions run build`, then `npm --prefix functions test` (runs the Auth + Firestore emulators; needs Java 21+). Local backend for the app: `firebase emulators:start`, seed with `FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 FIREBASE_STORAGE_EMULATOR_HOST=127.0.0.1:9199 npm --prefix functions run seed`, run the app with `"USE_FIREBASE_EMULATOR": true` in `env/dev.json`.
 - Run: `fvm flutter run --flavor dev --dart-define-from-file=env/dev.json` (flavors exist from Phase 1; before that drop `--flavor`). Android Studio: use the checked-in "dev"/"staging"/"prod" run configurations (`.idea/runConfigurations/`) instead of the default flavorless one, which fails to produce an APK on this flavored project.

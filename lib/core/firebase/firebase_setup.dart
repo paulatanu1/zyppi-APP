@@ -6,6 +6,7 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:zippy/core/config/env.dart';
+import 'package:zippy/core/firebase/report_error.dart';
 
 /// Cloud Functions live in Mumbai (functions/src/shared/firebase.ts).
 const functionsRegion = 'asia-south1';
@@ -28,8 +29,10 @@ Future<void> activateAppCheck() async {
           ? const AppleAppAttestWithDeviceCheckFallbackProvider()
           : const AppleDebugProvider(),
     );
-  } catch (e) {
-    debugPrint('App Check unavailable: $e');
+  } catch (e, stack) {
+    // Still never blocks startup, but shows on the Crashlytics dashboard so
+    // a broken Play Integrity setup is seen before enforcement is turned on.
+    reportNonFatal(e, stack, reason: 'App Check activation failed');
   }
 }
 

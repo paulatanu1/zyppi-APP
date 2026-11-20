@@ -3,6 +3,8 @@ name: CI
 on:
   pull_request:
     branches: [Development]
+  push:
+    branches: [main]
 
 jobs:
   format-analyze-test:
@@ -26,7 +28,39 @@ jobs:
         run: flutter analyze
 
       - name: Test
-        run: flutter test
+        # dev flavor: the mock-data assets are bundled only in dev/staging.
+        run: flutter test --flavor dev
+
+  # Every push to main proves a release build still compiles and shrinks
+  # (R8 + the PayU keep rules). Staging, because a prod release needs the
+  # upload key, which CI doesn't have.
+  release-apk:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.47.7" # keep in sync with .fvmrc
+          channel: "stable"
+          cache: true
+
+      - name: Build release APK
+        run: |
+          cp env/staging.example.json env/staging.json
+          flutter build apk --flavor staging --release --dart-define-from-file=env/staging.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zyppi-staging-release-apk
+          path: build/app/outputs/flutter-apk/app-staging-release.apk
+          retention-days: 7
 
   functions:
     runs-on: ubuntu-latest
