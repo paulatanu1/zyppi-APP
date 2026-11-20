@@ -252,7 +252,7 @@ class _Details extends ConsumerWidget {
       decoration: BoxDecoration(
         color: z.surface,
         borderRadius: ZRadius.all(ZRadius.card),
-        border: Border.all(color: z.line),
+        boxShadow: z.cardShadow,
       ),
       child: child,
     );

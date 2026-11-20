@@ -26,8 +26,8 @@ class CheckoutSteps extends StatelessWidget {
         ZSpace.x3,
       ),
       decoration: BoxDecoration(
-        color: z.surface,
-        border: Border(bottom: BorderSide(color: z.line)),
+        // On the page, like the app bar above it (no divider).
+        color: z.bg,
       ),
       child: Row(
         children: [

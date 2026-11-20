@@ -141,7 +141,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
               ),
               decoration: BoxDecoration(
                 color: z.surface,
-                border: Border(top: BorderSide(color: z.line)),
+                boxShadow: z.barShadow,
               ),
               child: Row(
                 children: [

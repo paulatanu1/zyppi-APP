@@ -153,8 +153,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 ZSpace.x3,
               ),
               decoration: BoxDecoration(
-                color: z.surface,
-                border: Border(bottom: BorderSide(color: z.line)),
+                // On the page, like the app bar (no divider).
+                color: z.bg,
               ),
               child: Row(
                 children: [

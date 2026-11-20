@@ -113,8 +113,8 @@ class ZProductCard extends StatelessWidget {
     final eta =
         (etaText > ZEtaBadge.iconSize ? etaText : ZEtaBadge.iconSize) +
         2 * ZEtaBadge.verticalPadding;
-    return 2 + // border
-        8 + // top padding
+    // No border (Floating Cards): the card floats on a shadow.
+    return 8 + // top padding
         ZSize.productTile +
         6 +
         eta +
@@ -140,7 +140,7 @@ class ZProductCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: z.surface,
           borderRadius: ZRadius.all(ZRadius.card),
-          border: Border.all(color: z.line),
+          boxShadow: z.cardShadow,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -275,7 +275,7 @@ class ZProductCardSkeleton extends StatelessWidget {
       decoration: BoxDecoration(
         color: z.surface,
         borderRadius: ZRadius.all(ZRadius.card),
-        border: Border.all(color: z.line),
+        boxShadow: z.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -388,7 +388,7 @@ class _SheetContent extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(ZSpace.x4),
           decoration: BoxDecoration(
-            border: Border.all(color: z.line),
+            boxShadow: z.cardShadow,
             borderRadius: ZRadius.all(ZRadius.card),
           ),
           child: Row(

@@ -191,12 +191,11 @@ class _Header extends StatelessWidget {
       _ => ('supportStatusBot'.tr(), z.ok),
     };
 
+    // Floating Cards: the header sits on the page, no divider.
     return Material(
-      color: z.surface,
+      color: z.bg,
       child: Container(
-        decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: z.line)),
-        ),
+        decoration: const BoxDecoration(),
         padding: const EdgeInsets.fromLTRB(
           ZSpace.x1,
           ZSpace.x2,
@@ -496,7 +495,7 @@ class _Typing extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             color: z.surface,
-            border: Border.all(color: z.line),
+            boxShadow: z.cardShadow,
             borderRadius: ZRadius.all(ZRadius.card),
           ),
           child: ExcludeSemantics(
@@ -543,9 +542,7 @@ class _Composer extends StatelessWidget {
     return Material(
       color: z.surface,
       child: Container(
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: z.line)),
-        ),
+        decoration: BoxDecoration(color: z.surface, boxShadow: z.barShadow),
         padding: const EdgeInsets.fromLTRB(
           ZSpace.screen,
           ZSpace.x2,

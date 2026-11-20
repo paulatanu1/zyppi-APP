@@ -18,7 +18,7 @@ class AppErrorWidget extends StatelessWidget {
         decoration: BoxDecoration(
           color: context.z.surface,
           borderRadius: BorderRadius.circular(ZRadius.card),
-          border: Border.all(color: context.z.line),
+          boxShadow: context.z.cardShadow,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

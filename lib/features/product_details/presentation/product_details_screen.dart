@@ -410,10 +410,7 @@ class _BottomBar extends ConsumerWidget {
           );
 
     return Container(
-      decoration: BoxDecoration(
-        color: z.surface,
-        border: Border(top: BorderSide(color: z.line)),
-      ),
+      decoration: BoxDecoration(color: z.surface, boxShadow: z.barShadow),
       child: SafeArea(
         top: false,
         child: Padding(

@@ -6,6 +6,7 @@ import 'package:zippy/core/common_widgets/google_sign_in_button.dart';
 import 'package:zippy/core/legal/application/legal_providers.dart';
 import 'package:zippy/core/legal/presentation/legal_consent_row.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
+import 'package:zippy/core/widgets/z_chrome.dart';
 import 'package:zippy/core/utils/phone.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
 import 'package:zippy/features/auth/email/data/email_auth_repository_impl.dart';
@@ -235,76 +236,84 @@ class AuthHeader extends StatelessWidget {
     final top = MediaQuery.paddingOf(context).top;
     final canPop = Navigator.of(context).canPop();
 
-    return Container(
-      height: top + height,
-      padding: EdgeInsets.only(top: top),
+    const radius = BorderRadius.vertical(
+      bottom: Radius.circular(ZRadius.sheet),
+    );
+    // Floating Cards: the shared header band (brand sheen; Dark B glow).
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: z.header,
-        borderRadius: const BorderRadius.vertical(
-          bottom: Radius.circular(ZRadius.sheet),
-        ),
+        borderRadius: radius,
+        boxShadow: z.headerShadow,
       ),
-      child: Stack(
-        children: [
-          Center(
-            child: Container(
-              width: 72,
-              height: 72,
-              padding: const EdgeInsets.all(ZSpace.x3),
-              decoration: BoxDecoration(
-                color: z.surface,
-                borderRadius: ZRadius.all(ZRadius.card + 4),
-                boxShadow: [
-                  BoxShadow(
-                    color: z.shadow,
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
+      child: ZHeaderFill(
+        offsetY: 0,
+        borderRadius: radius,
+        child: Container(
+          height: top + height,
+          padding: EdgeInsets.only(top: top),
+          child: Stack(
+            children: [
+              Center(
+                child: Container(
+                  width: 72,
+                  height: 72,
+                  padding: const EdgeInsets.all(ZSpace.x3),
+                  decoration: BoxDecoration(
+                    color: z.surface,
+                    borderRadius: ZRadius.all(ZRadius.card + 4),
+                    boxShadow: [
+                      BoxShadow(
+                        color: z.shadow,
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Image.asset(
-                'assets/brand/zyppi_mark.png',
-                excludeFromSemantics: true,
-              ),
-            ),
-          ),
-          Positioned(
-            left: canPop ? null : ZSpace.screen,
-            right: canPop ? ZSpace.screen : null,
-            top: ZSpace.x3,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: ZSpace.x3,
-                vertical: ZSpace.x1 + 2,
-              ),
-              decoration: BoxDecoration(
-                color: z.headerInk.withValues(alpha: .18),
-                borderRadius: ZRadius.all(ZRadius.chip),
-              ),
-              child: Text(
-                '⚡ ${'deliveryPromise'.tr()}',
-                style: t.labelSmall!.copyWith(
-                  color: z.headerInk,
-                  fontWeight: FontWeight.w800,
+                  child: Image.asset(
+                    'assets/brand/zyppi_mark.png',
+                    excludeFromSemantics: true,
+                  ),
                 ),
               ),
-            ),
-          ),
-          if (canPop)
-            Positioned(
-              left: ZSpace.x2,
-              top: 0,
-              child: IconButton(
-                tooltip: 'back'.tr(),
-                onPressed: () => Navigator.of(context).pop(),
-                icon: Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  size: 20,
-                  color: z.headerInk,
+              Positioned(
+                left: canPop ? null : ZSpace.screen,
+                right: canPop ? ZSpace.screen : null,
+                top: ZSpace.x3,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: ZSpace.x3,
+                    vertical: ZSpace.x1 + 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: z.headerInk.withValues(alpha: .18),
+                    borderRadius: ZRadius.all(ZRadius.chip),
+                  ),
+                  child: Text(
+                    '⚡ ${'deliveryPromise'.tr()}',
+                    style: t.labelSmall!.copyWith(
+                      color: z.headerInk,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ),
               ),
-            ),
-        ],
+              if (canPop)
+                Positioned(
+                  left: ZSpace.x2,
+                  top: 0,
+                  child: IconButton(
+                    tooltip: 'back'.tr(),
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 20,
+                      color: z.headerInk,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

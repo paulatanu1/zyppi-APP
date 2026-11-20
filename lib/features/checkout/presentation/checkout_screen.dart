@@ -274,10 +274,7 @@ class _CheckoutFooter extends ConsumerWidget {
         ZSpace.screen,
         ZSpace.x3 + MediaQuery.paddingOf(context).bottom,
       ),
-      decoration: BoxDecoration(
-        color: z.surface,
-        border: Border(top: BorderSide(color: z.line)),
-      ),
+      decoration: BoxDecoration(color: z.surface, boxShadow: z.barShadow),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

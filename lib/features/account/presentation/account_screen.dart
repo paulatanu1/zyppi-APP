@@ -52,121 +52,138 @@ class AccountScreen extends ConsumerWidget {
                   // Magenta header; the quick-action card below overlaps
                   // its bottom edge (the translate leaves that space at the
                   // end of the scroll).
-                  Container(
-                    color: z.header,
-                    padding: const EdgeInsets.fromLTRB(
-                      ZSpace.screen,
-                      ZSpace.x4,
-                      ZSpace.screen,
-                      ZSpace.x8 + ZSpace.x6,
+                  // Floating Cards: the rounded header band (Dark B glow).
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.vertical(
+                        bottom: Radius.circular(ZRadius.sheet),
+                      ),
+                      boxShadow: z.headerShadow,
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            // The whole identity block opens Edit Profile
-                            // (Save account for guests), not just the pill.
-                            onTap: !isGuest && profile == null
-                                ? null
-                                : () => context.pushNamed(
-                                    isGuest
-                                        ? 'GuestUpgradeScreen'
-                                        : 'EditProfileScreen',
-                                  ),
-                            child: Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 28,
-                                  backgroundColor: z.onBrand.withValues(
-                                    alpha: .16,
-                                  ),
-                                  child: Text(
-                                    initial,
-                                    style: t.headlineSmall!.copyWith(
-                                      color: z.onBrand,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: ZSpace.x3),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      if (profileAsync.isLoading &&
-                                          profile == null)
-                                        const ZSkeleton(
-                                          width: 140,
-                                          height: 18,
-                                          radius: ZRadius.badge,
-                                        )
-                                      else
-                                        Text(
-                                          displayName,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: t.headlineSmall!.copyWith(
-                                            color: z.headerInk,
-                                          ),
-                                        ),
-                                      if (profileAsync.hasError &&
-                                          profile == null)
-                                        GestureDetector(
-                                          onTap: () =>
-                                              ref.invalidate(profileProvider),
-                                          child: Text(
-                                            'profileLoadFailed'.tr(),
-                                            style: t.bodySmall!.copyWith(
-                                              color: z.headerInk,
-                                              decoration:
-                                                  TextDecoration.underline,
-                                              decorationColor: z.headerInk,
-                                            ),
-                                          ),
-                                        )
-                                      else if (isGuest)
-                                        Text(
-                                          'guestHint'.tr(),
-                                          style: t.bodySmall!.copyWith(
-                                            color: z.headerInk2,
-                                          ),
-                                        )
-                                      else if (phone.isNotEmpty)
-                                        Text(
-                                          phone,
-                                          style: t.bodyMedium!.copyWith(
-                                            color: z.headerInk2,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                    child: ZHeaderFill(
+                      offsetY: MediaQuery.paddingOf(context).top,
+                      borderRadius: const BorderRadius.vertical(
+                        bottom: Radius.circular(ZRadius.sheet),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          ZSpace.screen,
+                          ZSpace.x4,
+                          ZSpace.screen,
+                          ZSpace.x8 + ZSpace.x6,
                         ),
-                        const SizedBox(width: ZSpace.x2),
-                        // Flexible: a long label can't push the name out.
-                        if (isGuest)
-                          Flexible(
-                            child: _HeaderPill(
-                              label: 'saveAccount'.tr(),
-                              onTap: () =>
-                                  context.pushNamed('GuestUpgradeScreen'),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                // The whole identity block opens Edit Profile
+                                // (Save account for guests), not just the pill.
+                                onTap: !isGuest && profile == null
+                                    ? null
+                                    : () => context.pushNamed(
+                                        isGuest
+                                            ? 'GuestUpgradeScreen'
+                                            : 'EditProfileScreen',
+                                      ),
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 28,
+                                      backgroundColor: z.onBrand.withValues(
+                                        alpha: .16,
+                                      ),
+                                      child: Text(
+                                        initial,
+                                        style: t.headlineSmall!.copyWith(
+                                          color: z.onBrand,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: ZSpace.x3),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          if (profileAsync.isLoading &&
+                                              profile == null)
+                                            const ZSkeleton(
+                                              width: 140,
+                                              height: 18,
+                                              radius: ZRadius.badge,
+                                            )
+                                          else
+                                            Text(
+                                              displayName,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: t.headlineSmall!.copyWith(
+                                                color: z.headerInk,
+                                              ),
+                                            ),
+                                          if (profileAsync.hasError &&
+                                              profile == null)
+                                            GestureDetector(
+                                              onTap: () => ref.invalidate(
+                                                profileProvider,
+                                              ),
+                                              child: Text(
+                                                'profileLoadFailed'.tr(),
+                                                style: t.bodySmall!.copyWith(
+                                                  color: z.headerInk,
+                                                  decoration:
+                                                      TextDecoration.underline,
+                                                  decorationColor: z.headerInk,
+                                                ),
+                                              ),
+                                            )
+                                          else if (isGuest)
+                                            Text(
+                                              'guestHint'.tr(),
+                                              style: t.bodySmall!.copyWith(
+                                                color: z.headerInk2,
+                                              ),
+                                            )
+                                          else if (phone.isNotEmpty)
+                                            Text(
+                                              phone,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: t.bodyMedium!.copyWith(
+                                                color: z.headerInk2,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                          )
-                        else if (profile != null)
-                          Flexible(
-                            child: _HeaderPill(
-                              icon: Icons.edit_outlined,
-                              label: 'edit'.tr(),
-                              semanticLabel: 'editProfile'.tr(),
-                              onTap: () =>
-                                  context.pushNamed('EditProfileScreen'),
-                            ),
-                          ),
-                      ],
+                            const SizedBox(width: ZSpace.x2),
+                            // Flexible: a long label can't push the name out.
+                            if (isGuest)
+                              Flexible(
+                                child: _HeaderPill(
+                                  label: 'saveAccount'.tr(),
+                                  onTap: () =>
+                                      context.pushNamed('GuestUpgradeScreen'),
+                                ),
+                              )
+                            else if (profile != null)
+                              Flexible(
+                                child: _HeaderPill(
+                                  icon: Icons.edit_outlined,
+                                  label: 'edit'.tr(),
+                                  semanticLabel: 'editProfile'.tr(),
+                                  onTap: () =>
+                                      context.pushNamed('EditProfileScreen'),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                   Transform.translate(
@@ -360,7 +377,6 @@ class _Card extends StatelessWidget {
       decoration: BoxDecoration(
         color: z.surface,
         borderRadius: ZRadius.all(ZRadius.card),
-        border: Border.all(color: z.line),
         boxShadow: [
           BoxShadow(
             color: z.shadow,
@@ -517,61 +533,61 @@ class _Group extends StatelessWidget {
     final t = Theme.of(context).textTheme;
     // A Material (not a coloured box) so the ListTiles' ink splashes paint
     // on it and are clipped to the rounded corners.
-    return Material(
-      color: z.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: ZRadius.all(ZRadius.card),
-        side: BorderSide(color: z.line),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          for (var i = 0; i < items.length; i++) ...[
-            if (i > 0) Divider(height: 1, color: z.line),
-            ListTile(
-              onTap: items[i].onTap,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: ZSpace.x4,
-                vertical: ZSpace.x1,
-              ),
-              leading: Container(
-                width: ZSize.touch - 4,
-                height: ZSize.touch - 4,
-                decoration: BoxDecoration(
-                  color: items[i].danger ? z.dangerSoft : z.surface2,
-                  borderRadius: ZRadius.all(ZRadius.control),
+    return DecoratedBox(
+      decoration: z.card(),
+      child: Material(
+        color: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: ZRadius.all(ZRadius.card)),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          children: [
+            for (var i = 0; i < items.length; i++) ...[
+              if (i > 0) Divider(height: 1, color: z.line),
+              ListTile(
+                onTap: items[i].onTap,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: ZSpace.x4,
+                  vertical: ZSpace.x1,
                 ),
-                child: Icon(
-                  items[i].icon,
-                  size: 20,
-                  color: items[i].danger ? z.danger : z.ink2,
+                leading: Container(
+                  width: ZSize.touch - 4,
+                  height: ZSize.touch - 4,
+                  decoration: BoxDecoration(
+                    color: items[i].danger ? z.dangerSoft : z.surface2,
+                    borderRadius: ZRadius.all(ZRadius.control),
+                  ),
+                  child: Icon(
+                    items[i].icon,
+                    size: 20,
+                    color: items[i].danger ? z.danger : z.ink2,
+                  ),
                 ),
-              ),
-              title: Text(
-                items[i].label,
-                style: t.labelLarge!.copyWith(
-                  color: items[i].danger ? z.danger : z.ink,
+                title: Text(
+                  items[i].label,
+                  style: t.labelLarge!.copyWith(
+                    color: items[i].danger ? z.danger : z.ink,
+                  ),
                 ),
-              ),
-              trailing: items[i].danger
-                  ? null
-                  : Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (items[i].trailingText != null)
-                          Padding(
-                            padding: const EdgeInsets.only(right: ZSpace.x2),
-                            child: Text(
-                              items[i].trailingText!,
-                              style: t.bodySmall,
+                trailing: items[i].danger
+                    ? null
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (items[i].trailingText != null)
+                            Padding(
+                              padding: const EdgeInsets.only(right: ZSpace.x2),
+                              child: Text(
+                                items[i].trailingText!,
+                                style: t.bodySmall,
+                              ),
                             ),
-                          ),
-                        Icon(Icons.chevron_right_rounded, color: z.ink3),
-                      ],
-                    ),
-            ),
+                          Icon(Icons.chevron_right_rounded, color: z.ink3),
+                        ],
+                      ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -588,7 +604,7 @@ class _AppearanceCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: context.z.surface,
         borderRadius: BorderRadius.circular(ZRadius.card),
-        border: Border.all(color: context.z.line),
+        boxShadow: context.z.cardShadow,
       ),
       padding: const EdgeInsets.all(ZSpace.x4),
       child: Column(

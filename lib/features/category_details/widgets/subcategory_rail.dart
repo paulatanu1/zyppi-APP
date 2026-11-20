@@ -37,7 +37,17 @@ class SubcategoryRail extends StatelessWidget {
       width: width,
       decoration: BoxDecoration(
         color: z.surface,
-        border: Border(right: BorderSide(color: z.line)),
+        // Floating Cards: a lifted rail with a rounded top corner.
+        borderRadius: const BorderRadius.only(
+          topRight: Radius.circular(ZRadius.chip),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: z.shadow,
+            blurRadius: 12,
+            offset: const Offset(4, 0),
+          ),
+        ],
       ),
       child: ListView.builder(
         physics: const BouncingScrollPhysics(),

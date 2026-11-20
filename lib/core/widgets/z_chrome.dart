@@ -443,16 +443,7 @@ class ZNavBar extends StatelessWidget {
     final t = Theme.of(context).textTheme;
     return Container(
       // Floating Cards: no divider, a soft upward shadow instead.
-      decoration: BoxDecoration(
-        color: z.surface,
-        boxShadow: [
-          BoxShadow(
-            color: z.shadow,
-            blurRadius: z.isDark ? 24 : 18,
-            offset: const Offset(0, -6),
-          ),
-        ],
-      ),
+      decoration: BoxDecoration(color: z.surface, boxShadow: z.barShadow),
       child: SafeArea(
         top: false,
         // The bar has a fixed height, so labels stop growing at 1.2×.

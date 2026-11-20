@@ -470,7 +470,6 @@ class _PredictionsList extends StatelessWidget {
       decoration: BoxDecoration(
         color: z.surface,
         borderRadius: ZRadius.all(ZRadius.card),
-        border: Border.all(color: z.line),
         boxShadow: [
           BoxShadow(
             color: z.shadow,

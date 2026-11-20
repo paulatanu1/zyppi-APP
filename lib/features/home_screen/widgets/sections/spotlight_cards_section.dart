@@ -45,7 +45,7 @@ class SpotlightCardsSection extends StatelessWidget {
             child: Container(
               width: 120,
               decoration: BoxDecoration(
-                border: Border.all(color: context.z.line),
+                boxShadow: context.z.cardShadow,
                 borderRadius: BorderRadius.circular(ZRadius.card),
               ),
               child: Stack(

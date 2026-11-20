@@ -198,6 +198,16 @@ class ZColors extends ThemeExtension<ZColors> {
     BoxShadow(color: shadow, blurRadius: 2, offset: const Offset(0, 1)),
   ];
 
+  /// The upward shadow of bars pinned to the bottom (nav bar, checkout
+  /// bars, chat composer) instead of a divider line.
+  List<BoxShadow> get barShadow => [
+    BoxShadow(
+      color: shadow,
+      blurRadius: isDark ? 24 : 18,
+      offset: const Offset(0, -6),
+    ),
+  ];
+
   /// A smaller lift for chips, tiles and other small floating controls.
   List<BoxShadow> get softShadow => [
     BoxShadow(color: shadow, blurRadius: 8, offset: const Offset(0, 2)),

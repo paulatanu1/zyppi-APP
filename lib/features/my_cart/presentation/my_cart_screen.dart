@@ -500,13 +500,7 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
       decoration: BoxDecoration(
         color: z.surface,
         borderRadius: ZRadius.sheetTop,
-        boxShadow: [
-          BoxShadow(
-            color: z.shadow,
-            blurRadius: 18,
-            offset: const Offset(0, -6),
-          ),
-        ],
+        boxShadow: z.barShadow,
       ),
       child: SafeArea(
         top: false,
