@@ -218,6 +218,9 @@ class _SearchAddressScreenState extends ConsumerState<SearchAddressScreen> {
                                       .placeDetails(
                                         placeId: prediction.placeId,
                                         selectedAddress: prediction.description,
+                                        mainText: prediction
+                                            .structuredFormatting
+                                            ?.mainText,
                                       );
                                   if (mounted) setState(() {});
                                 },
@@ -486,13 +489,28 @@ class _PredictionsList extends StatelessWidget {
               Divider(height: 1, color: z.line),
           itemBuilder: (context, index) {
             final prediction = predictions[index];
+            final t = Theme.of(context).textTheme;
+            final main = prediction.structuredFormatting?.mainText ?? '';
+            final secondary =
+                prediction.structuredFormatting?.secondaryText ?? '';
 
+            // Place name on top, its area below (approved mockup).
             return ListTile(
               leading: Icon(Icons.location_on_outlined, color: z.brandText),
               title: Text(
-                prediction.description ?? '',
-                style: Theme.of(context).textTheme.bodyMedium,
+                main.isNotEmpty ? main : prediction.description ?? '',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: t.labelLarge,
               ),
+              subtitle: main.isNotEmpty && secondary.isNotEmpty
+                  ? Text(
+                      secondary,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: t.bodySmall?.copyWith(color: z.ink3),
+                    )
+                  : null,
               onTap: () => onSelected(prediction),
             );
           },

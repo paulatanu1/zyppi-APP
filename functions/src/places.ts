@@ -30,7 +30,12 @@ export const placesProxy = onCall({ ...HOT, secrets: [GOOGLE_PLACES_API_KEY] }, 
   // Switched off in Settings → Services: the app falls back to the phone's
   // geocoder exactly as it does on any Places error, and nothing is billed.
   if (!(await getFeatures()).placesSearch) return { status: "ERROR", disabled: true };
-  const data = (request.data ?? {}) as { action?: string; input?: string; placeId?: string };
+  const data = (request.data ?? {}) as {
+    action?: string;
+    input?: string;
+    placeId?: string;
+    near?: { lat?: unknown; lng?: unknown };
+  };
   const key = GOOGLE_PLACES_API_KEY.value();
 
   if (data.action === "autocomplete" && data.input) {
@@ -42,6 +47,9 @@ export const placesProxy = onCall({ ...HOT, secrets: [GOOGLE_PLACES_API_KEY] }, 
         // Delivery is India-only.
         includedRegionCodes: ["in"],
         languageCode: "en",
+        // Prefer places near the map's point, so "youth club" finds the
+        // one in this village before others in the state.
+        ...locationBias(data.near),
       }),
     });
     const body = await response.json();
@@ -69,6 +77,22 @@ export const placesProxy = onCall({ ...HOT, secrets: [GOOGLE_PLACES_API_KEY] }, 
 
   throw new HttpsError("invalid-argument", "INVALID_REQUEST");
 });
+
+/** Bias radius around the app's map point (rural towns are spread out). */
+export const BIAS_RADIUS_M = 30_000;
+
+/** A Places `locationBias` circle for a valid point in India, else nothing. */
+export function locationBias(near: { lat?: unknown; lng?: unknown } | undefined) {
+  const lat = near?.lat;
+  const lng = near?.lng;
+  if (typeof lat !== "number" || typeof lng !== "number") return {};
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return {};
+  // Roughly India's bounding box; anything else is junk or (0, 0).
+  if (lat < 6 || lat > 38 || lng < 68 || lng > 98) return {};
+  return {
+    locationBias: { circle: { center: { latitude: lat, longitude: lng }, radius: BIAS_RADIUS_M } },
+  };
+}
 
 // --- Places API (New) response shapes (only the fields used) ---------------
 

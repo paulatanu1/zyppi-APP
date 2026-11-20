@@ -1,5 +1,7 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:geocoding/geocoding.dart' as geocoding;
+import 'package:zippy/core/firebase/report_error.dart';
+import 'package:zippy/core/utils/parsed_address.dart';
 import 'package:zippy/features/search_address/domain/place_repository.dart';
 
 /// Prefix for predictions that came from the device geocoder instead of
@@ -24,20 +26,49 @@ class FirebasePlaceRepository implements PlaceRepository {
     return Map<String, dynamic>.from(result.data as Map);
   }
 
+  /// Reported once per app run: why search fell back to the phone's
+  /// geocoder (missing GOOGLE_PLACES_API_KEY secret, Places switched off in
+  /// the admin, quota). The fallback can't find schools, clubs or shops.
+  static bool _fallbackReported = false;
+
   @override
-  Future<Map<String, dynamic>> fetchPlacePredictions(String? input) async {
+  Future<Map<String, dynamic>> fetchPlacePredictions(
+    String? input, {
+    double? nearLat,
+    double? nearLng,
+  }) async {
     final query = input?.trim() ?? '';
     if (query.isEmpty) return {'status': 'ZERO_RESULTS', 'predictions': []};
 
     try {
-      final data = await _call({'action': 'autocomplete', 'input': query});
+      final data = await _call({
+        'action': 'autocomplete',
+        'input': query,
+        if (nearLat != null &&
+            nearLng != null &&
+            (nearLat != 0 || nearLng != 0))
+          'near': {'lat': nearLat, 'lng': nearLng},
+      });
       final status = data['status'] as String?;
       if (status == 'OK' || status == 'ZERO_RESULTS') return data;
-    } catch (_) {
-      // Fall through to the device geocoder.
+      _reportFallback(
+        StateError(
+          'placesProxy status $status'
+          '${data['disabled'] == true ? ' (switched off in Settings)' : ''}',
+        ),
+        StackTrace.current,
+      );
+    } catch (e, s) {
+      _reportFallback(e, s);
     }
 
     return _devicePredictions(query);
+  }
+
+  void _reportFallback(Object e, StackTrace s) {
+    if (_fallbackReported) return;
+    _fallbackReported = true;
+    reportNonFatal(e, s, reason: 'places search fell back to the geocoder');
   }
 
   @override
@@ -56,9 +87,18 @@ class FirebasePlaceRepository implements PlaceRepository {
       return {'status': 'ZERO_RESULTS', 'predictions': []};
     }
 
+    // The geocoder doesn't know points of interest: "Chelyama girls
+    // school" and "Chelyama youth club" land on the same village point.
+    // Keep what was typed as the main text (it becomes address line 1),
+    // never a plus code, and list each point once.
     final predictions = <Map<String, dynamic>>[];
+    final seen = <String>{};
     for (final location in locations.take(5)) {
-      var description = query;
+      final placeId =
+          '$devicePlacePrefix${location.latitude.toStringAsFixed(5)},'
+          '${location.longitude.toStringAsFixed(5)}';
+      if (!seen.add(placeId)) continue;
+      var secondary = '';
       try {
         final marks = await geocoder.placemarkFromCoordinates(
           location.latitude,
@@ -66,20 +106,17 @@ class FirebasePlaceRepository implements PlaceRepository {
         );
         if (marks.isNotEmpty) {
           final m = marks.first;
-          final parts = {
-            m.name,
-            m.subLocality,
-            m.locality,
-            m.administrativeArea,
-          }.whereType<String>().where((p) => p.trim().isNotEmpty);
-          if (parts.isNotEmpty) description = parts.join(', ');
+          secondary = {m.subLocality, m.locality, m.administrativeArea}
+              .whereType<String>()
+              .where((p) => p.trim().isNotEmpty && !isPlusCode(p))
+              .join(', ');
         }
       } catch (_) {}
 
       predictions.add({
-        'description': description,
-        'placeId':
-            '$devicePlacePrefix${location.latitude},${location.longitude}',
+        'description': secondary.isEmpty ? query : '$query, $secondary',
+        'placeId': placeId,
+        'structuredFormatting': {'mainText': query, 'secondaryText': secondary},
       });
     }
 

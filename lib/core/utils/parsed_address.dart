@@ -1,6 +1,17 @@
 import 'package:geocoding/geocoding.dart' as geocoding;
 import 'package:zippy/features/search_address/domain/place_details.dart';
 
+/// A Google plus code such as `JH83+23P` (or `JH83+23P Chelyama`). Android's
+/// geocoder puts one in `Placemark.name` for rural points with no street;
+/// it means nothing to a rider, so it's never used as an address line.
+bool isPlusCode(String? value) =>
+    value != null && _plusCode.hasMatch(value.trim());
+
+final _plusCode = RegExp(
+  r'^[23456789CFGHJMPQRVWX]{2,8}\+[23456789CFGHJMPQRVWX]{0,3}(\s|,|$)',
+  caseSensitive: false,
+);
+
 /// The subset of an [Address]'s fields that can be derived from a reverse
 /// geocode (map-pin picker) or a Google Places Details response (search
 /// result) — both feed the same `line1/area/city/state/postalCode` shape.
@@ -28,7 +39,10 @@ class ParsedAddress {
     return ParsedAddress(
       line1: street.isNotEmpty
           ? street
-          : (placemark.name ?? placemark.street ?? ''),
+          : [placemark.name, placemark.street].whereType<String>().firstWhere(
+              (p) => p.trim().isNotEmpty && !isPlusCode(p),
+              orElse: () => '',
+            ),
       area: placemark.subLocality?.isNotEmpty == true
           ? placemark.subLocality!
           : (placemark.locality ?? ''),

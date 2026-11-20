@@ -40,9 +40,14 @@ class PlacePredictionProvider extends StateNotifier<PlacePredictionState> {
 
     _timer = Timer(_debounce, () async {
       try {
+        final here = ref.read(currentLocation);
         final json = await ref
             .read(placeRepositoryProvider)
-            .fetchPlacePredictions(query);
+            .fetchPlacePredictions(
+              query,
+              nearLat: here.latitude,
+              nearLng: here.longitude,
+            );
         if (!mounted || requestId != _requestId) return;
         state = state.copyWith(placePrediction: PlacePrediction.fromJson(json));
       } catch (error) {
@@ -54,6 +59,7 @@ class PlacePredictionProvider extends StateNotifier<PlacePredictionState> {
   Future<void> placeDetails({
     required String? placeId,
     required String? selectedAddress,
+    String? mainText,
   }) async {
     _timer?.cancel();
     _requestId++; // drop any search still in flight
@@ -67,7 +73,9 @@ class PlacePredictionProvider extends StateNotifier<PlacePredictionState> {
       final lng = parts.length > 1 ? double.tryParse(parts[1]) : null;
       if (lat != null && lng != null) {
         state = state.copyWith(selectedAddress: selectedAddress);
-        await ref.read(currentLocation.notifier).resolveLatLng(lat, lng);
+        await ref
+            .read(currentLocation.notifier)
+            .resolveLatLng(lat, lng, line1Hint: mainText);
       }
       return;
     }

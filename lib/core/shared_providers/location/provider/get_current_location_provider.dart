@@ -79,7 +79,14 @@ class GetCurrentLocationProvider
   /// Reverse-geocodes `(lat, lng)` and checks serviceability. Used both for
   /// "use current location" and whenever the map-pin picker's camera
   /// settles on a new center.
-  Future<void> resolveLatLng(double lat, double lng) async {
+  ///
+  /// [line1Hint] (what the person searched for) fills address line 1 when
+  /// the reverse geocode has no street, instead of leaving it empty.
+  Future<void> resolveLatLng(
+    double lat,
+    double lng, {
+    String? line1Hint,
+  }) async {
     state = state.copyWith(
       isDetecting: true,
       latitude: lat,
@@ -98,7 +105,7 @@ class GetCurrentLocationProvider
         lng,
       );
       if (!mounted) return;
-      final parsed = placemarks.isNotEmpty
+      var parsed = placemarks.isNotEmpty
           ? ParsedAddress.fromPlacemark(placemarks.first)
           : const ParsedAddress(
               line1: '',
@@ -107,6 +114,16 @@ class GetCurrentLocationProvider
               state: '',
               postalCode: '',
             );
+      final hint = line1Hint?.trim() ?? '';
+      if (parsed.line1.isEmpty && hint.isNotEmpty) {
+        parsed = ParsedAddress(
+          line1: hint,
+          area: parsed.area,
+          city: parsed.city,
+          state: parsed.state,
+          postalCode: parsed.postalCode,
+        );
+      }
 
       final formatted = [
         parsed.line1,

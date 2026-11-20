@@ -9,7 +9,11 @@ import 'package:zippy/features/search_address/domain/place_repository.dart';
 /// works offline in the mock flavor without a Places key at all.
 class MockPlaceRepository implements PlaceRepository {
   @override
-  Future<Map<String, dynamic>> fetchPlacePredictions(String? input) async {
+  Future<Map<String, dynamic>> fetchPlacePredictions(
+    String? input, {
+    double? nearLat,
+    double? nearLng,
+  }) async {
     await MockDataSource.simulateLatency();
 
     final json = await MockDataSource.loadJsonMap(

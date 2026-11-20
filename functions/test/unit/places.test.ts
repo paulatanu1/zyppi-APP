@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toDetails, toPredictions } from "../../src/places";
+import { BIAS_RADIUS_M, locationBias, toDetails, toPredictions } from "../../src/places";
 
 describe("places mapping (Places API New → app shape)", () => {
   it("maps autocomplete suggestions to predictions", () => {
@@ -44,5 +44,21 @@ describe("places mapping (Places API New → app shape)", () => {
       types: ["postal_code"],
     });
     expect(toDetails({}).result.geometry).toBeNull();
+  });
+});
+
+describe("locationBias", () => {
+  it("biases to a circle around a point in India", () => {
+    expect(locationBias({ lat: 23.33, lng: 86.36 })).toEqual({
+      locationBias: { circle: { center: { latitude: 23.33, longitude: 86.36 }, radius: BIAS_RADIUS_M } },
+    });
+  });
+
+  it("ignores missing, junk, (0, 0) and out-of-India points", () => {
+    expect(locationBias(undefined)).toEqual({});
+    expect(locationBias({ lat: "23", lng: 86 })).toEqual({});
+    expect(locationBias({ lat: 0, lng: 0 })).toEqual({});
+    expect(locationBias({ lat: 51.5, lng: -0.1 })).toEqual({});
+    expect(locationBias({ lat: Number.NaN, lng: 86 })).toEqual({});
   });
 });
