@@ -27,6 +27,7 @@ export const LIMITS = {
   trackCampaignOpen: 60,
   rateRider: 10,
   rateSellers: 10,
+  logSearch: 60,
 } as const;
 export type LimitedCall = keyof typeof LIMITS;
 

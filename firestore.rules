@@ -116,6 +116,18 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Product-search totals (functions/src/search/search_stats.ts): written
+    // only by the logSearch callable; no uid is stored. The admin's Search
+    // insights page reads them through adminSearchInsights.
+    match /searchStats/{id} {
+      allow read: if hasRole(['catalog', 'ops']);
+      allow write: if false;
+    }
+    match /searchStatsDaily/{day} {
+      allow read: if hasRole(['catalog', 'ops']);
+      allow write: if false;
+    }
+
     // Delivery pricing (fee, free-above threshold, minimum order): the app
     // shows it; quoteOrder enforces it server-side.
     // Written only by adminSaveDeliveryConfig (validated, audited).
