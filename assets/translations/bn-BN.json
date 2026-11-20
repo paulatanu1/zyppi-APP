@@ -560,5 +560,10 @@
   "couponsHint": "কোড আছে?",
   "tipRider": "রাইডারকে টিপ",
   "billShort": "বিল",
-  "billSummary": "আইটেম {} · ডেলিভারি {} · হ্যান্ডলিং {}"
+  "billSummary": "আইটেম {} · ডেলিভারি {} · হ্যান্ডলিং {}",
+  "statOrders": "অর্ডার",
+  "statWallet": "ওয়ালেট",
+  "statAddresses": "ঠিকানা",
+  "cantBeEdited": "পরিবর্তন করা যাবে না",
+  "changePhoneChat": "পরিবর্তন করতে আমাদের সাথে চ্যাট করুন"
 }

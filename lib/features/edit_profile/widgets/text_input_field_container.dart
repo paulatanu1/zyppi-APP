@@ -63,7 +63,8 @@ class TextInputFieldContainer extends StatelessWidget {
                   onChanged?.call('');
                 },
               )
-            : null,
+            // Locked fields show why they can't be typed in.
+            : Icon(Icons.lock_outline_rounded, size: 18, color: z.ink3),
       ),
     );
   }

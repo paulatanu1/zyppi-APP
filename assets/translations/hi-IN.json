@@ -560,5 +560,10 @@
   "couponsHint": "कोड है?",
   "tipRider": "राइडर को टिप",
   "billShort": "बिल",
-  "billSummary": "आइटम {} · डिलीवरी {} · हैंडलिंग {}"
+  "billSummary": "आइटम {} · डिलीवरी {} · हैंडलिंग {}",
+  "statOrders": "ऑर्डर",
+  "statWallet": "वॉलेट",
+  "statAddresses": "पते",
+  "cantBeEdited": "बदला नहीं जा सकता",
+  "changePhoneChat": "बदलने के लिए हमसे चैट करें"
 }

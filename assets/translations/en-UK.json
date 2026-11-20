@@ -560,5 +560,10 @@
   "couponsHint": "Have a code?",
   "tipRider": "Tip rider",
   "billShort": "Bill",
-  "billSummary": "Items {} · Delivery {} · Handling {}"
+  "billSummary": "Items {} · Delivery {} · Handling {}",
+  "statOrders": "Orders",
+  "statWallet": "Wallet",
+  "statAddresses": "Addresses",
+  "cantBeEdited": "Can't be edited",
+  "changePhoneChat": "To change it, chat with us"
 }

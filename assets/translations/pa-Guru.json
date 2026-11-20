@@ -560,5 +560,10 @@
   "couponsHint": "ਕੋਡ ਹੈ?",
   "tipRider": "ਰਾਈਡਰ ਨੂੰ ਟਿਪ",
   "billShort": "ਬਿੱਲ",
-  "billSummary": "ਆਈਟਮ {} · ਡਿਲੀਵਰੀ {} · ਹੈਂਡਲਿੰਗ {}"
+  "billSummary": "ਆਈਟਮ {} · ਡਿਲੀਵਰੀ {} · ਹੈਂਡਲਿੰਗ {}",
+  "statOrders": "ਆਰਡਰ",
+  "statWallet": "ਵਾਲਿਟ",
+  "statAddresses": "ਪਤੇ",
+  "cantBeEdited": "ਬਦਲਿਆ ਨਹੀਂ ਜਾ ਸਕਦਾ",
+  "changePhoneChat": "ਬਦਲਣ ਲਈ ਸਾਡੇ ਨਾਲ ਚੈਟ ਕਰੋ"
 }
