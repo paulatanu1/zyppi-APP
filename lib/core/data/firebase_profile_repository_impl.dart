@@ -48,7 +48,18 @@ class FirebaseProfileRepository implements ProfileRepository {
       'email': email.isEmpty ? null : email,
       'dob': profile.dob?.toIso8601String().split('T').first,
       'gender': profile.gender,
-      if (_user.phoneNumber != null) 'phone': _user.phoneNumber,
+      // The phone isn't edited here; see savePhone.
+    });
+  }
+
+  @override
+  Future<void> savePhone(String phone, {String? fullName}) {
+    final user = _user;
+    final name = fullName?.trim() ?? '';
+    return _write(user.uid, {
+      'phone': phone,
+      if (name.isNotEmpty) 'fullName': name,
+      if (user.email != null) 'email': user.email,
     });
   }
 

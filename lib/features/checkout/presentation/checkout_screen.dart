@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/common_widgets/price_tag.dart';
+import 'package:zippy/core/data/profile_repository_impl.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/checkout/application/checkout_provider.dart';
@@ -15,6 +16,30 @@ import 'package:zippy/features/checkout/widgets/delivery_time_card.dart';
 import 'package:zippy/core/payments/presentation/payment_options.dart';
 import 'package:zippy/features/checkout/widgets/wallet_pay_card.dart';
 import 'package:zippy/features/wallet/data/wallet_repository.dart';
+
+/// Orders need a real account with a number the rider can call (the
+/// server refuses guests and accounts without one). Ask for whichever is
+/// missing first, then pay; backing out of either step cancels.
+Future<void> _payWithAccount(
+  BuildContext context,
+  WidgetRef ref,
+  Future<void> Function() pay,
+) async {
+  final profiles = ref.read(profileRepositoryProvider);
+  var profile = await profiles.fetchProfile();
+  if (!context.mounted) return;
+  if (profile.isGuest) {
+    await context.push('/guestUpgradeScreen');
+    if (!context.mounted) return;
+    profile = await profiles.fetchProfile();
+    if (profile.isGuest || !context.mounted) return;
+  }
+  if ((profile.phone ?? '').isEmpty) {
+    final added = await context.push<bool>('/addPhone');
+    if (added != true || !context.mounted) return;
+  }
+  await pay();
+}
 
 /// docs/screens/{light,dark}/10-checkout.png. Payment and the bill footer
 /// need no network data and render at once; only the address and delivery
@@ -123,7 +148,7 @@ class CheckoutScreen extends ConsumerWidget {
             _CheckoutFooter(
               state: state,
               walletPaise: walletApplied,
-              onPay: notifier.placeOrder,
+              onPay: () => _payWithAccount(context, ref, notifier.placeOrder),
             ),
           ],
         ),

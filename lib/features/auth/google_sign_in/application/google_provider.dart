@@ -1,10 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:zippy/core/data/provider/shared_preference_provider.dart';
-import 'package:zippy/core/push/data/push_token_repository_impl.dart';
-import 'package:zippy/core/push/push_notification_service.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
+import 'package:zippy/features/auth/session/auth_session.dart';
 import 'package:zippy/features/auth/google_sign_in/data/google_auth_repository_impl.dart';
 import 'package:zippy/features/auth/google_sign_in/domain/google_auth_repository.dart';
 
@@ -16,35 +13,32 @@ class GoogleLogin extends StateNotifier<GoogleState> {
 
   GoogleLogin(this.repository, this.ref) : super(GoogleState.initial());
 
-  Future<void> generateGoogleToken(BuildContext context) async {
+  /// Signs in with Google. Returns what to show next, or null when it
+  /// didn't happen (cancelled, or an error that was already shown).
+  Future<SignInResult?> signIn() async {
     state = state.copyWith(loading: true);
+    // Read up front: the redirect that follows a sign-in disposes this
+    // provider, and its ref with it.
+    final session = ref.read(authSessionProvider);
 
     try {
-      final accessToken = await repository.signIn();
-
-      state = state.copyWith(loading: false);
-
-      if (accessToken == null) {
+      final uid = await repository.signIn();
+      if (uid == null) {
+        if (mounted) state = state.copyWith(loading: false);
         showConnectionInterrupted();
-        return;
+        return null;
       }
-
-      // Read before logging in: the redirect that follows disposes this
-      // provider, and its ref with it.
-      final pushTokens = ref.read(pushTokenRepositoryProvider);
-      await ref
-          .read(sharedPreferenceProvider.notifier)
-          .setLocalStorage(authToken: accessToken);
-      PushNotificationService.registerTokenAfterLogin(pushTokens);
-      // The router's redirect (watching sharedPreferenceProvider) takes
-      // it from here — no manual navigation needed.
+      final result = await session.complete(uid);
+      if (mounted) state = state.copyWith(loading: false);
+      return result;
     } on GoogleSignInCancelled {
       if (mounted) state = state.copyWith(loading: false);
+      return null;
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted) return null;
       state = state.copyWith(loading: false);
-
       showError(error);
+      return null;
     }
   }
 }

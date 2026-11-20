@@ -1,7 +1,8 @@
 import { assertNotBlocked } from "../admin/customers";
 import { HttpsError, onCall } from "firebase-functions/https";
 import { db } from "../shared/firebase";
-import { requireString, requireUid, toHttpsError } from "../shared/callable";
+import { assertHasPhone } from "../shared/account_checks";
+import { requireAccount, requireString, toHttpsError } from "../shared/callable";
 import { assertCanOrder, getFeatures } from "../shared/features";
 import { COD, placeOrderInTx } from "./quote";
 import { WALLET_METHOD } from "../wallet/model";
@@ -22,7 +23,7 @@ import { rateLimit } from "../shared/rate_limit";
  * Response: {orderId}
  */
 export const placeOrder = onCall(HOT, async (request) => {
-  const uid = requireUid(request);
+  const uid = requireAccount(request);
   rateLimit("placeOrder", uid);
   const data = (request.data ?? {}) as Record<string, unknown>;
 
@@ -37,6 +38,7 @@ export const placeOrder = onCall(HOT, async (request) => {
   const features = await getFeatures();
   assertCanOrder(features, paymentMethod);
   await assertNotBlocked(uid);
+  await assertHasPhone(uid);
 
   const params = {
     uid,

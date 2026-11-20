@@ -3,7 +3,8 @@ import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 import { HttpsError, onCall } from "firebase-functions/https";
 import { db } from "../shared/firebase";
-import { requireString, requireUid, toHttpsError } from "../shared/callable";
+import { assertHasPhone } from "../shared/account_checks";
+import { requireAccount, requireString, requireUid, toHttpsError } from "../shared/callable";
 import { assertCanOrder, getFeatures } from "../shared/features";
 import { ONLINE_METHODS, quoteOrder } from "../orders/quote";
 import {
@@ -63,7 +64,7 @@ function payerDetails(user: Record<string, unknown>, authPhone: string | undefin
  *            environment, userCredential, amountPaise, walletPaise, totalPaise}
  */
 export const createPayUOrder = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (request) => {
-  const uid = requireUid(request);
+  const uid = requireAccount(request);
   rateLimit("createPayUOrder", uid);
   const data = (request.data ?? {}) as Record<string, unknown>;
 
@@ -74,6 +75,7 @@ export const createPayUOrder = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (
   const features = await getFeatures();
   assertCanOrder(features, paymentMethod);
   await assertNotBlocked(uid);
+  await assertHasPhone(uid);
 
   const params = {
     uid,
@@ -177,7 +179,7 @@ const SDK_EVENT_INTENT_AGE_MS = 15 * 60 * 1000;
  * Response: {[hashName]: hash}
  */
 export const signPayUHash = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (request) => {
-  const uid = requireUid(request);
+  const uid = requireAccount(request);
   rateLimit("signPayUHash", uid);
   const data = (request.data ?? {}) as Record<string, unknown>;
   const hashRequest = {

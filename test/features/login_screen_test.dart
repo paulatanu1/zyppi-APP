@@ -1,26 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
+import 'package:zippy/features/auth/email/data/email_auth_repository_impl.dart';
+import 'package:zippy/features/auth/email/domain/email_auth_repository.dart';
 import 'package:zippy/features/auth/google_sign_in/data/google_auth_repository_impl.dart';
 import 'package:zippy/features/auth/google_sign_in/domain/google_auth_repository.dart';
 import 'package:zippy/features/auth/guest/data/guest_auth_repository_impl.dart';
 import 'package:zippy/features/auth/guest/domain/guest_auth_repository.dart';
 import 'package:zippy/features/auth/login/presentation/login_screen.dart';
-import 'package:zippy/features/auth/otp_verification/data/otp_auth_repository_impl.dart';
-import 'package:zippy/features/auth/otp_verification/domain/otp_auth_repository.dart';
+import 'package:zippy/features/auth/session/auth_session.dart';
 
-class _Otp implements OtpAuthRepository {
-  final sent = <String>[];
-
-  @override
-  Future<void> sendOtp(String phoneNumber) async => sent.add(phoneNumber);
+class _Email implements EmailAuthRepository {
+  final signIns = <String>[];
+  EmailAuthFailure? failWith;
 
   @override
-  Future<String?> verifyOtp({
-    required String phoneNumber,
-    required String otp,
-  }) async => null;
+  Future<String> signIn({
+    required String email,
+    required String password,
+  }) async {
+    signIns.add(email);
+    if (failWith != null) throw failWith!;
+    return 'uid-1';
+  }
+
+  @override
+  Future<String> signUp({
+    required String email,
+    required String password,
+    required String fullName,
+  }) async => 'uid-1';
+
+  @override
+  Future<void> sendPasswordReset(String email) async {}
 }
 
 class _Google implements GoogleAuthRepository {
@@ -33,83 +47,131 @@ class _Guest implements GuestAuthRepository {
   Future<String?> signIn() async => null;
 }
 
-void main() {
-  late _Otp otp;
+/// Records completions; answers with [result] instead of reading a profile.
+class _Session extends AuthSession {
+  _Session(super.ref, this.result);
 
-  Future<void> pump(WidgetTester tester) async {
-    otp = _Otp();
+  final SignInResult result;
+  final completed = <String>[];
+
+  @override
+  Future<SignInResult> complete(String uid) async {
+    completed.add(uid);
+    return result;
+  }
+}
+
+void main() {
+  late _Email email;
+  late _Session session;
+
+  Future<void> pump(
+    WidgetTester tester, {
+    SignInResult result = SignInResult.signedIn,
+  }) async {
+    email = _Email();
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
+    final router = GoRouter(
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const LoginScreen()),
+        GoRoute(path: '/addPhone', builder: (_, _) => const Text('add-phone')),
+        GoRoute(path: '/register', builder: (_, _) => const Text('register')),
+      ],
+    );
+    addTearDown(router.dispose);
+
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          otpAuthRepositoryProvider.overrideWithValue(otp),
+          emailAuthRepositoryProvider.overrideWithValue(email),
           googleAuthRepositoryProvider.overrideWithValue(_Google()),
           guestAuthRepositoryProvider.overrideWithValue(_Guest()),
+          authSessionProvider.overrideWith(
+            (ref) => session = _Session(ref, result),
+          ),
         ],
-        child: MaterialApp(theme: ZyppiTheme.light, home: const LoginScreen()),
+        child: MaterialApp.router(
+          theme: ZyppiTheme.light,
+          routerConfig: router,
+        ),
       ),
     );
   }
 
-  testWidgets('rejects an invalid number without sending an OTP', (
-    tester,
-  ) async {
-    await pump(tester);
+  Finder field(String key) => find.descendant(
+    of: find.byKey(ValueKey(key)),
+    matching: find.byType(EditableText),
+  );
 
-    await tester.enterText(find.byType(TextField), '12345');
-    await tester.tap(find.byType(FilledButton));
+  Future<void> fill(
+    WidgetTester tester, {
+    String mail = 'riya@gmail.com',
+  }) async {
+    await tester.enterText(field('login-email'), mail);
+    await tester.enterText(find.byType(TextField).at(1), 'secret123');
+  }
+
+  Future<void> tapLogIn(WidgetTester tester) async {
+    await tester.ensureVisible(find.text('logIn'));
+    await tester.tap(find.text('logIn'));
     await tester.pump();
+  }
 
-    expect(find.text('invalidPhone'), findsOneWidget); // translation key
-    expect(otp.sent, isEmpty);
+  testWidgets('has no phone-number sign-in', (tester) async {
+    await pump(tester);
+    expect(find.text('mobileNumber'), findsNothing);
+    expect(find.byType(TextField), findsNWidgets(2)); // email + password
   });
 
-  testWidgets('only digits are accepted, at most 10', (tester) async {
+  testWidgets('rejects an invalid email without signing in', (tester) async {
     await pump(tester);
-
-    await tester.enterText(find.byType(TextField), '+91 98765-432109');
-    await tester.pump();
-
-    final field = tester.widget<TextField>(find.byType(TextField));
-    expect(field.controller!.text, '9198765432');
-  });
-
-  testWidgets('the typed number survives the rebuild after Continue', (
-    tester,
-  ) async {
-    await pump(tester);
-
-    await tester.enterText(find.byType(TextField), '9876543210');
+    await fill(tester, mail: 'riya@');
     await tester.tap(find.byType(Checkbox));
-    await tester.tap(find.byType(FilledButton));
-    await tester.pump();
+    await tapLogIn(tester);
 
-    expect(otp.sent, ['+919876543210']);
-    final field = tester.widget<TextField>(find.byType(TextField));
-    expect(field.controller!.text, '9876543210');
+    expect(find.text('invalidEmail'), findsOneWidget); // translation key
+    expect(email.signIns, isEmpty);
   });
 
-  testWidgets('needs the terms ticked before sending an OTP', (tester) async {
+  testWidgets('needs the terms ticked before signing in', (tester) async {
     await pump(tester);
+    await fill(tester);
+    await tapLogIn(tester);
 
-    expect(tester.widget<Checkbox>(find.byType(Checkbox)).value, isFalse);
-    await tester.enterText(find.byType(TextField), '9876543210');
-    await tester.tap(find.byType(FilledButton));
-    await tester.pump();
+    expect(email.signIns, isEmpty);
+    expect(find.text('legalAgreeRequired'), findsOneWidget);
 
-    expect(otp.sent, isEmpty);
-    expect(find.text('legalAgreeRequired'), findsOneWidget); // translation key
+    await tester.tap(find.byType(Checkbox));
+    await tapLogIn(tester);
+    await tester.pumpAndSettle();
+    expect(email.signIns, ['riya@gmail.com']);
+    expect(session.completed, ['uid-1']);
+  });
 
-    // Tapping the sentence ticks the box too.
-    await tester.tap(find.text('legalAgree'));
-    await tester.pump();
-    expect(find.text('legalAgreeRequired'), findsNothing);
-    await tester.tap(find.byType(FilledButton));
-    await tester.pump();
-    expect(otp.sent, ['+919876543210']);
+  testWidgets('a wrong password shows a readable message', (tester) async {
+    await pump(tester);
+    email.failWith = const EmailAuthFailure('authWrongCredentials');
+    await fill(tester);
+    await tester.tap(find.byType(Checkbox));
+    await tapLogIn(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.text('authWrongCredentials'), findsOneWidget);
+  });
+
+  testWidgets('an account without a number goes to "Add mobile number"', (
+    tester,
+  ) async {
+    await pump(tester, result: SignInResult.needsPhone);
+    await fill(tester);
+    await tester.tap(find.byType(Checkbox));
+    await tapLogIn(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.text('add-phone'), findsOneWidget);
   });
 
   testWidgets('guest sign-in also needs the terms ticked', (tester) async {

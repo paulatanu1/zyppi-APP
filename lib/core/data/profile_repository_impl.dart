@@ -31,6 +31,15 @@ class MockProfileRepository implements ProfileRepository {
     await MockDataSource.simulateLatency();
     _override = profile;
   }
+
+  @override
+  Future<void> savePhone(String phone, {String? fullName}) async {
+    final current = await fetchProfile();
+    _override = current.copyWith(
+      phone: phone,
+      fullName: fullName ?? current.fullName,
+    );
+  }
 }
 
 final profileRepositoryProvider = Provider<ProfileRepository>(

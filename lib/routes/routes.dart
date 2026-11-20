@@ -22,7 +22,9 @@ import 'package:zippy/features/account/presentation/notification_settings_screen
 import 'package:zippy/features/account/presentation/payment_settings_screen.dart';
 import 'package:zippy/features/auth/guest/presentation/guest_upgrade_screen.dart';
 import 'package:zippy/features/auth/login/presentation/login_screen.dart';
-import 'package:zippy/features/auth/otp_verification/presentation/otp_verification_screen.dart';
+import 'package:zippy/features/auth/add_phone/presentation/add_phone_screen.dart';
+import 'package:zippy/features/auth/email/presentation/forgot_password_screen.dart';
+import 'package:zippy/features/auth/email/presentation/register_screen.dart';
 import 'package:zippy/features/category_details/presentation/category_details_screen.dart';
 import 'package:zippy/core/common_widgets/nav_bar/presentation/nav_bar.dart';
 import 'package:zippy/design_v2/home_v2_screen.dart';
@@ -43,12 +45,15 @@ import 'package:zippy/features/search_address/presentation/search_address_screen
 import 'package:zippy/features/support_chat/presentation/support_chat_screen.dart';
 
 /// Open whether signed in or not (e.g. the terms from the login screen).
-const _publicRoutes = {'/legal'};
+/// `/addPhone` is shown both right after a first Google sign-in (not yet
+/// marked signed in) and to a guest saving their account (already in).
+const _publicRoutes = {'/legal', '/addPhone'};
 
 const _unauthenticatedRoutes = {
   '/slider',
   '/loginScreen',
-  '/otpVerificationScreen',
+  '/register',
+  '/forgotPassword',
 };
 
 class Routes {
@@ -106,16 +111,21 @@ class Routes {
           builder: (context, state) => LoginScreen(),
         ),
         GoRoute(
-          path: '/otpVerificationScreen',
-          name: 'OtpVerificationScreen',
-          // Without a number there's nothing to verify; start over.
-          redirect: (context, state) =>
-              (state.uri.queryParameters['phoneNumber'] ?? '').isEmpty
-              ? '/loginScreen'
-              : null,
-          builder: (context, state) => OtpVerificationScreen(
-            phoneNumber: state.uri.queryParameters['phoneNumber']!,
+          path: '/register',
+          name: 'Register',
+          builder: (context, state) => const RegisterScreen(),
+        ),
+        GoRoute(
+          path: '/forgotPassword',
+          name: 'ForgotPassword',
+          builder: (context, state) => ForgotPasswordScreen(
+            initialEmail: state.uri.queryParameters['email'],
           ),
+        ),
+        GoRoute(
+          path: '/addPhone',
+          name: 'AddPhone',
+          builder: (context, state) => const AddPhoneScreen(),
         ),
         GoRoute(
           path: '/navBar',

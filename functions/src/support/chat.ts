@@ -1,7 +1,7 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { pushToDevices } from "../notifications/tokens";
 import { HttpsError, onCall } from "firebase-functions/https";
-import { requireString, requireUid } from "../shared/callable";
+import { requireAccount, requireString, requireUid } from "../shared/callable";
 import { requireRole } from "../shared/roles";
 import { db } from "../shared/firebase";
 import { CHATS, postMessages } from "./bot";
@@ -42,7 +42,7 @@ async function welcome(lang: Lang, orderId: string | null): Promise<OutMessage> 
  * Request: {orderId?, locale?}. Response: {chatId}.
  */
 export const openSupportChat = onCall(async (request) => {
-  const uid = requireUid(request);
+  const uid = requireAccount(request);
   rateLimit("openSupportChat", uid);
   const rawOrderId = request.data?.orderId;
   const orderId = typeof rawOrderId === "string" && rawOrderId ? rawOrderId : null;

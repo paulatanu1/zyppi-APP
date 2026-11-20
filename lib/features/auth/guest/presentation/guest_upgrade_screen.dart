@@ -1,11 +1,9 @@
-import 'dart:async';
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/google_sign_in_button.dart';
+import 'package:zippy/core/data/profile_repository_impl.dart';
 import 'package:zippy/core/data/provider/profile_provider.dart';
 import 'package:zippy/core/data/provider/shared_preference_provider.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
@@ -13,9 +11,11 @@ import 'package:zippy/core/utils/phone.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
 import 'package:zippy/features/auth/guest/data/guest_upgrade_repository_impl.dart';
 import 'package:zippy/features/auth/guest/domain/guest_upgrade_repository.dart';
+import 'package:zippy/features/auth/widgets/auth_widgets.dart';
 
-/// "Save your account": attaches a phone number or Google account to the
-/// current guest, keeping their orders, addresses and favourites.
+/// "Save your account": links Google or an email to the current guest,
+/// keeping their orders, addresses and favourites. Then asks for the
+/// mobile number if the account has none (it's needed to order).
 class GuestUpgradeScreen extends ConsumerStatefulWidget {
   const GuestUpgradeScreen({super.key});
 
@@ -24,44 +24,24 @@ class GuestUpgradeScreen extends ConsumerStatefulWidget {
 }
 
 class _GuestUpgradeScreenState extends ConsumerState<GuestUpgradeScreen> {
-  static const _codeLength = 6;
-  static const _resendAfter = 30;
-
-  final _phone = TextEditingController();
-  final _code = TextEditingController();
-  String? _sentTo; // E.164 number the code went to; null = phone step
-  String? _error;
-  bool _busy = false;
-  int _secondsLeft = 0;
-  Timer? _timer;
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+  bool _emailForm = false, _busy = false;
+  String? _emailError, _passwordError;
 
   GuestUpgradeRepository get _repo => ref.read(guestUpgradeRepositoryProvider);
 
   @override
   void dispose() {
-    _timer?.cancel();
-    _phone.dispose();
-    _code.dispose();
+    _email.dispose();
+    _password.dispose();
     super.dispose();
-  }
-
-  void _startCountdown() {
-    _timer?.cancel();
-    setState(() => _secondsLeft = _resendAfter);
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) return timer.cancel();
-      setState(() => _secondsLeft--);
-      if (_secondsLeft <= 0) timer.cancel();
-    });
   }
 
   /// Runs [action], showing progress; maps the "already has an account"
   /// case to its own prompt.
   Future<bool> _run(Future<void> Function() action) async {
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
+    setState(() => _busy = true);
     try {
       await action();
       return true;
@@ -76,41 +56,41 @@ class _GuestUpgradeScreenState extends ConsumerState<GuestUpgradeScreen> {
     }
   }
 
-  Future<void> _sendCode() async {
-    final digits = _phone.text.trim();
-    if (!isValidIndianMobile(digits)) {
-      setState(() => _error = 'invalidPhone'.tr());
-      return;
-    }
-    final phone = '+91$digits';
-    if (await _run(() => _repo.sendPhoneCode(phone)) && mounted) {
-      setState(() => _sentTo = phone);
-      _startCountdown();
-    }
-  }
-
-  Future<void> _verify() async {
-    final code = _code.text;
-    if (code.length != _codeLength || _sentTo == null) return;
-    if (await _run(() => _repo.verifyPhoneCode(phone: _sentTo!, code: code)) &&
-        mounted) {
-      _done();
-    }
-  }
-
   Future<void> _linkGoogle() async {
     var linked = false;
     await _run(() async => linked = await _repo.linkGoogle());
-    if (linked && mounted) _done();
+    if (linked && mounted) await _done();
   }
 
-  void _done() {
+  Future<void> _linkEmail() async {
+    setState(() {
+      _emailError = isValidEmail(_email.text) ? null : 'invalidEmail'.tr();
+      _passwordError = _password.text.length < minPasswordLength
+          ? 'passwordTooShort'.tr()
+          : null;
+    });
+    if (_emailError != null || _passwordError != null) return;
+    FocusScope.of(context).unfocus();
+    if (await _run(
+          () => _repo.linkEmail(email: _email.text, password: _password.text),
+        ) &&
+        mounted) {
+      await _done();
+    }
+  }
+
+  Future<void> _done() async {
+    final profile = await ref.read(profileRepositoryProvider).fetchProfile();
+    if (!mounted) return;
     ref.invalidate(profileProvider); // isGuest → false
+    // Ordering needs a number the rider can call.
+    if ((profile.phone ?? '').isEmpty) await context.push('/addPhone');
+    if (!mounted) return;
     showSuccessToast(message: 'accountSaved'.tr());
     context.pop();
   }
 
-  /// The number/Google account already has its own Zyppi account. The
+  /// The email/Google account already has its own Zyppi account. The
   /// guest's data can't be merged into it, so be clear before switching.
   Future<void> _offerSignIn() async {
     final switchAccount = await showDialog<bool>(
@@ -140,127 +120,80 @@ class _GuestUpgradeScreenState extends ConsumerState<GuestUpgradeScreen> {
   Widget build(BuildContext context) {
     final z = context.z;
     final text = Theme.of(context).textTheme;
-    final codeStep = _sentTo != null;
 
     return Scaffold(
+      backgroundColor: z.bg,
       appBar: AppBar(title: Text('saveAccount'.tr())),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(ZSpace.x6),
-          children: [
-            Text(
-              codeStep ? 'phoneVerification'.tr() : 'saveAccountTitle'.tr(),
-              style: text.headlineSmall,
-            ),
-            const SizedBox(height: ZSpace.x2),
-            Text(
-              codeStep ? 'sentTo'.tr(args: [_sentTo!]) : 'saveAccountBody'.tr(),
-              style: text.bodyMedium?.copyWith(color: z.ink2),
-            ),
-            const SizedBox(height: ZSpace.x6),
-            if (!codeStep) ...[
-              TextField(
-                controller: _phone,
-                keyboardType: TextInputType.phone,
-                autofillHints: const [AutofillHints.telephoneNumberNational],
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(10),
-                ],
-                decoration: InputDecoration(
-                  prefixText: '+91  ',
-                  labelText: 'mobileNumber'.tr(),
-                  errorText: _error,
+        child: AutofillGroup(
+          child: ListView(
+            padding: const EdgeInsets.all(ZSpace.x5),
+            children: [
+              Container(
+                padding: const EdgeInsets.all(ZSpace.x3),
+                decoration: BoxDecoration(
+                  color: z.warnSoft,
+                  borderRadius: ZRadius.all(ZRadius.input),
                 ),
-                onChanged: (_) {
-                  if (_error != null) setState(() => _error = null);
-                },
-                onSubmitted: (_) => _sendCode(),
-              ),
-              const SizedBox(height: ZSpace.x4),
-              FilledButton(
-                onPressed: _busy ? null : _sendCode,
-                child: _busy
-                    ? const SizedBox.square(
-                        dimension: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2.5),
-                      )
-                    : Text('continueLabel'.tr()),
-              ),
-              const SizedBox(height: ZSpace.x6),
-              Center(child: Text('continueWith'.tr(), style: text.bodySmall)),
-              const SizedBox(height: ZSpace.x3),
-              Center(
-                child: GoogleSignInButton(action: _busy ? () {} : _linkGoogle),
-              ),
-            ] else ...[
-              TextField(
-                controller: _code,
-                autofocus: true,
-                keyboardType: TextInputType.number,
-                textAlign: TextAlign.center,
-                autofillHints: const [AutofillHints.oneTimeCode],
-                maxLength: _codeLength,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                style: text.headlineSmall?.copyWith(letterSpacing: 12),
-                decoration: InputDecoration(
-                  counterText: '',
-                  hintText: '• ' * _codeLength,
-                ),
-                onChanged: (code) {
-                  setState(() {});
-                  if (code.length == _codeLength) _verify();
-                },
-              ),
-              const SizedBox(height: ZSpace.x3),
-              Row(
-                children: [
-                  TextButton(
-                    onPressed: _busy
-                        ? null
-                        : () => setState(() {
-                            _sentTo = null;
-                            _code.clear();
-                          }),
-                    child: Text('edit'.tr()),
+                child: Text(
+                  'guestHint'.tr(),
+                  style: text.bodyMedium?.copyWith(
+                    color: z.warn,
+                    fontWeight: FontWeight.w700,
                   ),
-                  const Spacer(),
-                  if (_secondsLeft > 0)
-                    Text(
-                      'resendIn'.tr(args: ['$_secondsLeft']),
-                      style: text.bodySmall,
-                    )
-                  else
-                    TextButton(
-                      onPressed: _busy
-                          ? null
-                          : () async {
-                              if (await _run(
-                                    () => _repo.sendPhoneCode(_sentTo!),
-                                  ) &&
-                                  mounted) {
-                                _code.clear();
-                                _startCountdown();
-                              }
-                            },
-                      child: Text('resendCode'.tr()),
-                    ),
-                ],
+                ),
               ),
-              const SizedBox(height: ZSpace.x4),
-              FilledButton(
-                onPressed: _busy || _code.text.length != _codeLength
-                    ? null
-                    : _verify,
-                child: _busy
-                    ? const SizedBox.square(
-                        dimension: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2.5),
-                      )
-                    : Text('submit'.tr()),
+              const SizedBox(height: ZSpace.x5),
+              Text('saveAccountTitle'.tr(), style: text.headlineSmall),
+              const SizedBox(height: ZSpace.x2),
+              Text(
+                'saveAccountBody'.tr(),
+                style: text.bodyMedium?.copyWith(color: z.ink2),
               ),
+              const SizedBox(height: ZSpace.x5),
+              GoogleSignInButton(action: _busy ? () {} : _linkGoogle),
+              const SizedBox(height: ZSpace.x3),
+              if (!_emailForm)
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, ZSize.button),
+                  ),
+                  onPressed: _busy
+                      ? null
+                      : () => setState(() => _emailForm = true),
+                  icon: const Icon(Icons.mail_outline_rounded),
+                  label: Text('useEmailInstead'.tr()),
+                )
+              else ...[
+                AuthField(
+                  label: 'emailAddress'.tr(),
+                  controller: _email,
+                  error: _emailError,
+                  autofocus: true,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.email],
+                ),
+                const SizedBox(height: ZSpace.x3),
+                PasswordField(
+                  controller: _password,
+                  newPassword: true,
+                  error: _passwordError,
+                  onSubmitted: (_) => _linkEmail(),
+                  trailingLabel: Text(
+                    'passwordRule'.tr(),
+                    style: text.labelSmall!.copyWith(color: z.ink3),
+                  ),
+                ),
+                const SizedBox(height: ZSpace.x4),
+                BusyButton(
+                  label: 'saveAccount'.tr(),
+                  busy: _busy,
+                  onPressed: _linkEmail,
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

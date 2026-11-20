@@ -15,6 +15,26 @@ export function requireUid(request: CallableRequest, caller: Caller = "app"): st
   return uid;
 }
 
+/** True for a Firebase anonymous ("Continue as guest") sign-in. */
+export function isGuestToken(token: unknown): boolean {
+  const firebase = (token as { firebase?: { sign_in_provider?: unknown } } | undefined)?.firebase;
+  return firebase?.sign_in_provider === "anonymous";
+}
+
+/**
+ * Like [requireUid], but a guest (anonymous) caller is refused with
+ * ACCOUNT_REQUIRED: guests may browse, but anything that reserves stock,
+ * starts a payment or uses a paid service (support bot) needs a real
+ * account. The app sends guests to "Save your account" first.
+ */
+export function requireAccount(request: CallableRequest, caller: Caller = "app"): string {
+  const uid = requireUid(request, caller);
+  if (isGuestToken(request.auth?.token)) {
+    throw new HttpsError("failed-precondition", "ACCOUNT_REQUIRED");
+  }
+  return uid;
+}
+
 /** Any staff role (see shared/roles.ts; use requireRole to narrow it). */
 export function requireAdmin(request: CallableRequest): string {
   const uid = request.auth?.uid;

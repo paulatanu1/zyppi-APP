@@ -1,18 +1,23 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:zippy/core/app_settings/data/app_settings_repository.dart';
-import 'package:zippy/core/utils/phone.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/google_sign_in_button.dart';
-import 'package:zippy/features/auth/google_sign_in/application/google_provider.dart';
-import 'package:zippy/features/auth/guest/application/guest_provider.dart';
-import 'package:zippy/features/auth/otp_verification/application/otp_provider.dart';
 import 'package:zippy/core/legal/application/legal_providers.dart';
 import 'package:zippy/core/legal/presentation/legal_consent_row.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
+import 'package:zippy/core/utils/phone.dart';
+import 'package:zippy/core/utils/snack_bar.dart';
+import 'package:zippy/features/auth/email/data/email_auth_repository_impl.dart';
+import 'package:zippy/features/auth/email/domain/email_auth_repository.dart';
+import 'package:zippy/features/auth/google_sign_in/application/google_provider.dart';
+import 'package:zippy/features/auth/guest/application/guest_provider.dart';
+import 'package:zippy/features/auth/session/auth_session.dart';
+import 'package:zippy/features/auth/widgets/auth_widgets.dart';
 
-/// docs/mockups/Login.dc.html.
+/// "Log in or sign up": Google first, then email and password, then
+/// guest browsing. There is no phone-number sign-in; the number is
+/// collected at sign-up (or right after a first Google sign-in).
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -21,10 +26,10 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  // Lives across rebuilds (e.g. the loading state), so the typed number
-  // isn't wiped when Continue is tapped.
-  final _phoneController = TextEditingController();
-  String? _phoneError;
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+  String? _emailError, _passwordError, _formError;
+  bool _busy = false;
 
   // Terms, privacy and refund policy: unticked until the customer ticks it.
   bool _agreed = false;
@@ -32,20 +37,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   void dispose() {
-    _phoneController.dispose();
+    _email.dispose();
+    _password.dispose();
     super.dispose();
-  }
-
-  void _continue() {
-    final digits = _phoneController.text.trim();
-    if (!isValidIndianMobile(digits)) {
-      setState(() => _phoneError = 'invalidPhone'.tr());
-      return;
-    }
-    setState(() => _phoneError = null);
-    if (!_mustAgree()) return;
-    FocusScope.of(context).unfocus();
-    ref.read(otpProvider.notifier).generateOtp('+91$digits', context);
   }
 
   /// False (and the consent row turns red) until the box is ticked.
@@ -61,247 +55,288 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ref.read(legalAgreedAtLoginProvider.notifier).set(value);
   }
 
+  void _next(SignInResult? result) {
+    if (result == SignInResult.needsPhone && mounted) {
+      context.push('/addPhone');
+    }
+    // signedIn: the router's redirect goes to Home.
+  }
+
+  Future<void> _logIn() async {
+    final email = _email.text.trim();
+    setState(() {
+      _emailError = isValidEmail(email) ? null : 'invalidEmail'.tr();
+      _passwordError = _password.text.isEmpty ? 'passwordRequired'.tr() : null;
+      _formError = null;
+    });
+    if (_emailError != null || _passwordError != null) return;
+    if (!_mustAgree()) return;
+    FocusScope.of(context).unfocus();
+
+    final session = ref.read(authSessionProvider);
+    setState(() => _busy = true);
+    try {
+      final uid = await ref
+          .read(emailAuthRepositoryProvider)
+          .signIn(email: email, password: _password.text);
+      _next(await session.complete(uid));
+    } on EmailAuthFailure catch (e) {
+      if (mounted) setState(() => _formError = e.messageKey.tr());
+    } catch (e) {
+      showError(e);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _google() async {
+    if (!_mustAgree()) return;
+    _next(await ref.read(googleProvider.notifier).signIn());
+  }
+
   @override
   Widget build(BuildContext context) {
     final z = context.z;
     final t = Theme.of(context).textTheme;
-    final googleToken = ref.watch(googleProvider);
-    final otpState = ref.watch(otpProvider);
+    final googleLoading = ref.watch(googleProvider).loading == true;
     final guestLoading = ref.watch(guestProvider);
-    // Settings → Services can switch SMS sign-in off (cost); Google and
-    // guest stay.
-    final phoneOtp = ref.watch(featureFlagsProvider).phoneOtp;
-    final top = MediaQuery.paddingOf(context).top;
-    final consent = LegalConsentRow(
-      value: _agreed,
-      showError: _triedWithoutAgreeing,
-      onChanged: _setAgreed,
-    );
 
     return Scaffold(
       backgroundColor: z.bg,
-      body: SingleChildScrollView(
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Pink hero with the phone illustration (02-login.png).
-            Container(
-              height: top + 300,
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                color: z.brandSoft,
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(ZRadius.sheet),
+      body: AutofillGroup(
+        child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const AuthHeader(),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  ZSpace.x5,
+                  ZSpace.x5,
+                  ZSpace.x5,
+                  ZSpace.x6,
                 ),
-              ),
-              child: Stack(
-                children: [
-                  Positioned(
-                    left: -80,
-                    top: -60,
-                    child: _Blob(size: 240, color: z.brandSoft2),
-                  ),
-                  Positioned(
-                    right: -50,
-                    top: top + 40,
-                    child: _Blob(size: 130, color: z.blueSoft),
-                  ),
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: Image.asset(
-                      'assets/images/Splash-4.png',
-                      height: 260,
-                      fit: BoxFit.contain,
-                      excludeFromSemantics: true,
-                    ),
-                  ),
-                  if (Navigator.of(context).canPop())
-                    Positioned(
-                      left: ZSpace.screen,
-                      top: top + ZSpace.x2,
-                      child: Material(
-                        color: z.surface,
-                        borderRadius: ZRadius.all(ZRadius.input),
-                        child: IconButton(
-                          tooltip: 'back'.tr(),
-                          onPressed: () => Navigator.of(context).pop(),
-                          icon: Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            size: 20,
-                            color: z.ink,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                ZSpace.x5,
-                ZSpace.x6,
-                ZSpace.x5,
-                ZSpace.x6,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text('logInOrSignUp'.tr(), style: t.headlineMedium),
-                  const SizedBox(height: ZSpace.x2),
-                  if (!phoneOtp) ...[
-                    Text('phoneOtpOff'.tr(), style: t.bodyLarge),
-                    const SizedBox(height: ZSpace.x5),
-                    consent,
-                    const SizedBox(height: ZSpace.x4),
-                  ] else ...[
-                    Text('otpSentDescription'.tr(), style: t.bodyLarge),
-                    const SizedBox(height: ZSpace.x5),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text('logInOrSignUp'.tr(), style: t.headlineMedium),
+                    const SizedBox(height: ZSpace.x1),
                     Text(
-                      'mobileNumber'.tr(),
-                      style: t.labelMedium!.copyWith(color: z.ink2),
+                      'loginSubtitle'.tr(),
+                      style: t.bodyLarge!.copyWith(color: z.ink2),
                     ),
-                    const SizedBox(height: ZSpace.x2),
-                    Container(
-                      constraints: const BoxConstraints(minHeight: ZSize.input),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: ZSpace.x4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: z.surface,
-                        border: Border.all(
-                          color: _phoneError != null ? z.danger : z.brandText,
-                          width: 1.5,
+                    const SizedBox(height: ZSpace.x5),
+                    if (googleLoading)
+                      const SizedBox(
+                        height: ZSize.button,
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    else
+                      GoogleSignInButton(action: _google),
+                    const SizedBox(height: ZSpace.x4),
+                    _OrDivider(label: 'orWithEmail'.tr()),
+                    const SizedBox(height: ZSpace.x4),
+                    AuthField(
+                      fieldKey: const ValueKey('login-email'),
+                      label: 'emailAddress'.tr(),
+                      controller: _email,
+                      hint: 'name@gmail.com',
+                      error: _emailError,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [AutofillHints.email],
+                    ),
+                    const SizedBox(height: ZSpace.x3),
+                    PasswordField(
+                      controller: _password,
+                      error: _passwordError,
+                      onSubmitted: (_) => _logIn(),
+                      trailingLabel: AuthLink(
+                        label: 'forgotPasswordLink'.tr(),
+                        onTap: () => context.push(
+                          Uri(
+                            path: '/forgotPassword',
+                            queryParameters: {
+                              if (_email.text.trim().isNotEmpty)
+                                'email': _email.text.trim(),
+                            },
+                          ).toString(),
                         ),
-                        borderRadius: ZRadius.all(ZRadius.input),
-                      ),
-                      child: Row(
-                        children: [
-                          Text('🇮🇳 +91', style: t.titleMedium),
-                          const SizedBox(width: ZSpace.x3),
-                          Container(width: 1, height: 24, color: z.line),
-                          const SizedBox(width: ZSpace.x3),
-                          Expanded(
-                            child: TextField(
-                              controller: _phoneController,
-                              keyboardType: TextInputType.phone,
-                              autofillHints: const [
-                                AutofillHints.telephoneNumberNational,
-                              ],
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly,
-                                LengthLimitingTextInputFormatter(10),
-                              ],
-                              onChanged: (_) {
-                                if (_phoneError != null) {
-                                  setState(() => _phoneError = null);
-                                }
-                              },
-                              onSubmitted: (_) => _continue(),
-                              style: t.titleMedium,
-                              decoration: InputDecoration(
-                                hintText: 'mobileNumber'.tr(),
-                                filled: false,
-                                border: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                                disabledBorder: InputBorder.none,
-                                errorBorder: InputBorder.none,
-                                focusedErrorBorder: InputBorder.none,
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
                     ),
-                    if (_phoneError != null) ...[
+                    if (_formError != null) ...[
                       const SizedBox(height: ZSpace.x2),
                       Text(
-                        _phoneError!,
+                        _formError!,
                         style: t.bodySmall!.copyWith(color: z.danger),
                       ),
                     ],
-                    const SizedBox(height: ZSpace.x4),
-                    consent,
                     const SizedBox(height: ZSpace.x3),
-                    FilledButton(
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size(0, ZSize.button),
-                      ),
-                      onPressed: otpState.loading ? null : _continue,
-                      child: otpState.loading
-                          ? const SizedBox.square(
-                              dimension: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                              ),
-                            )
-                          : Text('continueLabel'.tr()),
+                    LegalConsentRow(
+                      value: _agreed,
+                      showError: _triedWithoutAgreeing,
+                      onChanged: _setAgreed,
                     ),
-                    const SizedBox(height: ZSpace.x5),
-                    Row(
+                    const SizedBox(height: ZSpace.x3),
+                    BusyButton(
+                      label: 'logIn'.tr(),
+                      busy: _busy,
+                      onPressed: _logIn,
+                    ),
+                    const SizedBox(height: ZSpace.x2),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Expanded(child: Divider(color: z.line)),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: ZSpace.x3,
-                          ),
-                          child: Text(
-                            'orDivider'.tr(),
-                            style: t.labelMedium!.copyWith(color: z.ink3),
-                          ),
+                        Text(
+                          'newToZyppi'.tr(),
+                          style: t.bodyMedium!.copyWith(color: z.ink2),
                         ),
-                        Expanded(child: Divider(color: z.line)),
+                        AuthLink(
+                          label: 'createAccount'.tr(),
+                          onTap: () => context.push('/register'),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: ZSpace.x5),
-                  ],
-                  if (googleToken.loading == true)
-                    const Center(child: CircularProgressIndicator())
-                  else
-                    GoogleSignInButton(
-                      action: () {
-                        if (!_mustAgree()) return;
-                        ref
-                            .read(googleProvider.notifier)
-                            .generateGoogleToken(context);
-                      },
+                    Center(
+                      child: guestLoading
+                          ? const CircularProgressIndicator()
+                          : TextButton(
+                              onPressed: () {
+                                if (!_mustAgree()) return;
+                                ref.read(guestProvider.notifier).signIn();
+                              },
+                              child: Text('continueAsGuest'.tr()),
+                            ),
                     ),
-                  const SizedBox(height: ZSpace.x2),
-                  Center(
-                    child: guestLoading
-                        ? const CircularProgressIndicator()
-                        : TextButton(
-                            onPressed: () {
-                              if (!_mustAgree()) return;
-                              ref.read(guestProvider.notifier).signIn();
-                            },
-                            child: Text('continueAsGuest'.tr()),
-                          ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-/// Soft decorative circle in the hero.
-class _Blob extends StatelessWidget {
-  const _Blob({required this.size, required this.color});
+/// Pink band with the Zyppi tile and the delivery promise, rounded at
+/// the bottom (approved mockup, "Log in").
+class AuthHeader extends StatelessWidget {
+  const AuthHeader({super.key, this.height = 150});
 
-  final double size;
-  final Color color;
+  final double height;
 
   @override
-  Widget build(BuildContext context) => Container(
-    width: size,
-    height: size,
-    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-  );
+  Widget build(BuildContext context) {
+    final z = context.z;
+    final t = Theme.of(context).textTheme;
+    final top = MediaQuery.paddingOf(context).top;
+    final canPop = Navigator.of(context).canPop();
+
+    return Container(
+      height: top + height,
+      padding: EdgeInsets.only(top: top),
+      decoration: BoxDecoration(
+        color: z.header,
+        borderRadius: const BorderRadius.vertical(
+          bottom: Radius.circular(ZRadius.sheet),
+        ),
+      ),
+      child: Stack(
+        children: [
+          Center(
+            child: Container(
+              width: 72,
+              height: 72,
+              padding: const EdgeInsets.all(ZSpace.x3),
+              decoration: BoxDecoration(
+                color: z.surface,
+                borderRadius: ZRadius.all(ZRadius.card + 4),
+                boxShadow: [
+                  BoxShadow(
+                    color: z.shadow,
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Image.asset(
+                'assets/brand/zyppi_mark.png',
+                excludeFromSemantics: true,
+              ),
+            ),
+          ),
+          Positioned(
+            left: canPop ? null : ZSpace.screen,
+            right: canPop ? ZSpace.screen : null,
+            top: ZSpace.x3,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: ZSpace.x3,
+                vertical: ZSpace.x1 + 2,
+              ),
+              decoration: BoxDecoration(
+                color: z.headerInk.withValues(alpha: .18),
+                borderRadius: ZRadius.all(ZRadius.chip),
+              ),
+              child: Text(
+                '⚡ ${'deliveryPromise'.tr()}',
+                style: t.labelSmall!.copyWith(
+                  color: z.headerInk,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+          if (canPop)
+            Positioned(
+              left: ZSpace.x2,
+              top: 0,
+              child: IconButton(
+                tooltip: 'back'.tr(),
+                onPressed: () => Navigator.of(context).pop(),
+                icon: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 20,
+                  color: z.headerInk,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OrDivider extends StatelessWidget {
+  const _OrDivider({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final z = context.z;
+    return Row(
+      children: [
+        Expanded(child: Divider(color: z.line2)),
+        // Flexible: at large text sizes the label wraps instead of
+        // pushing the row wider than the screen.
+        Flexible(
+          flex: 3,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: ZSpace.x3),
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.labelMedium!
+                  .copyWith(color: z.ink3),
+            ),
+          ),
+        ),
+        Expanded(child: Divider(color: z.line2)),
+      ],
+    );
+  }
 }

@@ -50,6 +50,9 @@ String friendlyOrderError(Object error) {
   // closed areas and switched-off payment methods (config/features).
   if (message.contains('STORES_CLOSED')) return 'errorStoresClosed'.tr();
   if (message.contains('ACCOUNT_BLOCKED')) return 'errorAccountBlocked'.tr();
+  // functions/src/shared: guests and accounts without a phone can't order.
+  if (message.contains('ACCOUNT_REQUIRED')) return 'errorAccountRequired'.tr();
+  if (message.contains('PHONE_REQUIRED')) return 'errorPhoneRequired'.tr();
   if (message.contains('Ordering is paused')) return 'errorOrderingPaused'.tr();
   if (message.contains('payment method is unavailable')) {
     return 'errorPaymentMethodOff'.tr();
