@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:zippy/core/firebase/report_error.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/config/env.dart';
@@ -79,8 +80,15 @@ class FirebaseWalletRepository implements WalletRepository {
             out.add(signedOut);
             return;
           }
-          inner = watch(db.collection('users').doc(user.uid))
-              .listen(out.add, onError: out.addError);
+          inner = watch(db.collection('users').doc(user.uid)).listen(
+            out.add,
+            onError: (Object e, StackTrace s) {
+              // Usually permission-denied when the deployed firestore.rules
+              // are older than the wallet rule. Reported so it's visible.
+              reportNonFatal(e, s, reason: 'wallet stream');
+              out.addError(e, s);
+            },
+          );
         }, onError: out.addError);
       },
       onCancel: () async {

@@ -578,7 +578,10 @@ class ZChip extends StatelessWidget {
       selected: selected,
       child: ZPressable(
         onTap: onTap,
+        // widthFactor 1: shrink to the pill. A plain Center fills a Wrap's
+        // whole row, so chips stacked one per line.
         child: Center(
+          widthFactor: 1,
           child: AnimatedContainer(
             duration: MediaQuery.disableAnimationsOf(context)
                 ? Duration.zero

@@ -87,7 +87,11 @@ class _RailItem extends StatelessWidget {
       excludeSemantics: true,
       child: ZPressable(
         onTap: onTap,
+        // Centre every item in the rail. Without this the Stack sits
+        // top-left, so short labels hug the left edge while long, wrapping
+        // ones fill the rail and look centred.
         child: Stack(
+          alignment: Alignment.topCenter,
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(

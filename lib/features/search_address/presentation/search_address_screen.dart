@@ -11,7 +11,6 @@ import 'package:zippy/core/app_settings/data/app_settings_repository.dart';
 import 'package:zippy/features/search_address/application/place_prediction_provider.dart';
 import 'package:zippy/features/search_address/domain/place_prediction.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
-import 'package:zippy/core/widgets/z_chrome.dart';
 import 'package:zippy/core/widgets/z_map.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
 
@@ -619,18 +618,13 @@ class _ConfirmSheet extends ConsumerWidget {
           decoration: InputDecoration(labelText: 'landmarkOptional'.tr()),
         ),
         if (addLocation) ...[
-          const SizedBox(height: ZSpace.x3),
-          Wrap(
-            spacing: ZSpace.x2,
-            children: [
-              for (final value in addressLabels)
-                ZChip(
-                  icon: _labelIcon(value),
-                  label: addressLabelText(value),
-                  selected: label == value,
-                  onTap: () => onLabelChanged(value),
-                ),
-            ],
+          const SizedBox(height: ZSpace.x4),
+          Text('saveAddressAs'.tr(), style: t.labelMedium),
+          const SizedBox(height: ZSpace.x2),
+          _LabelPicker(
+            value: label,
+            iconFor: _labelIcon,
+            onChanged: onLabelChanged,
           ),
         ],
         const SizedBox(height: ZSpace.x4),
@@ -689,6 +683,102 @@ class _ConfirmSheet extends ConsumerWidget {
                   ),
           ),
       ],
+    );
+  }
+}
+
+/// "Save address as": Home / Work / Other as one column of radio rows
+/// inside a single outlined box (approved issue-fixes mockup).
+class _LabelPicker extends StatelessWidget {
+  const _LabelPicker({
+    required this.value,
+    required this.iconFor,
+    required this.onChanged,
+  });
+
+  final String value;
+  final IconData Function(String) iconFor;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final z = context.z;
+    final t = Theme.of(context).textTheme;
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: ZRadius.all(ZRadius.input),
+        border: Border.all(color: z.line2),
+      ),
+      child: Column(
+        children: [
+          for (final (i, option) in addressLabels.indexed) ...[
+            if (i > 0) Divider(height: 1, thickness: 1, color: z.line),
+            Semantics(
+              inMutuallyExclusiveGroup: true,
+              selected: option == value,
+              button: true,
+              child: InkWell(
+                onTap: () => onChanged(option),
+                child: AnimatedContainer(
+                  duration: MediaQuery.disableAnimationsOf(context)
+                      ? Duration.zero
+                      : ZMotion.ui,
+                  constraints: const BoxConstraints(minHeight: ZSize.touch),
+                  padding: const EdgeInsets.symmetric(horizontal: ZSpace.x3),
+                  color: option == value ? z.brandSoft : Colors.transparent,
+                  child: Row(
+                    children: [
+                      Icon(
+                        iconFor(option),
+                        size: 20,
+                        color: option == value ? z.brandText : z.ink2,
+                      ),
+                      const SizedBox(width: ZSpace.x3),
+                      Expanded(
+                        child: Text(
+                          addressLabelText(option),
+                          style: t.labelLarge!.copyWith(
+                            fontWeight: option == value
+                                ? FontWeight.w800
+                                : FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      _Radio(selected: option == value),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _Radio extends StatelessWidget {
+  const _Radio({required this.selected});
+
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final z = context.z;
+    return AnimatedContainer(
+      duration: MediaQuery.disableAnimationsOf(context)
+          ? Duration.zero
+          : ZMotion.ui,
+      width: 20,
+      height: 20,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: selected ? z.brand : z.line2,
+          width: selected ? 6 : 2,
+        ),
+      ),
     );
   }
 }

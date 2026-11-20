@@ -79,14 +79,8 @@ class WalletScreen extends ConsumerWidget {
                   ],
                 ],
               ),
-              error: (_, _) => Column(
-                children: [
-                  Text('somethingWentWrong'.tr(), style: text.bodyMedium),
-                  TextButton(
-                    onPressed: () => ref.invalidate(walletHistoryProvider),
-                    child: Text('retry'.tr()),
-                  ),
-                ],
+              error: (_, _) => _HistoryError(
+                onRetry: () => ref.invalidate(walletHistoryProvider),
               ),
               data: (entries) => entries.isEmpty
                   ? Padding(
@@ -110,6 +104,50 @@ class WalletScreen extends ConsumerWidget {
                     ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// History failed to load: the balance above is still right, so say so,
+/// and offer a retry.
+class _HistoryError extends StatelessWidget {
+  const _HistoryError({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final z = context.z;
+    final text = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: ZSpace.x4),
+      child: Column(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: z.dangerSoft,
+              borderRadius: ZRadius.all(ZRadius.control + 3),
+            ),
+            child: Icon(Icons.error_outline_rounded, color: z.danger),
+          ),
+          const SizedBox(height: ZSpace.x3),
+          Text(
+            'walletHistoryErrorTitle'.tr(),
+            textAlign: TextAlign.center,
+            style: text.titleSmall,
+          ),
+          const SizedBox(height: ZSpace.x1),
+          Text(
+            'walletHistoryErrorBody'.tr(),
+            textAlign: TextAlign.center,
+            style: text.bodySmall?.copyWith(color: z.ink3),
+          ),
+          const SizedBox(height: ZSpace.x3),
+          FilledButton.tonal(onPressed: onRetry, child: Text('retry'.tr())),
         ],
       ),
     );

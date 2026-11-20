@@ -321,7 +321,6 @@
   "couldNotOpenLink": "Couldn't open that. Please try again.",
   "helpTitle": "How can we help?",
   "helpSubtitle": "Our support team usually replies within a few minutes.",
-  "helpUnavailable": "Support isn't available in this build.",
   "helpWhatsApp": "Chat on WhatsApp",
   "helpWhatsAppSubtitle": "Fastest way to reach us",
   "helpMessage": "Hi Zyppi, I need help.",
@@ -514,5 +513,8 @@
   "orderCancelledToast": "Your order was cancelled",
   "cancelTooLate": "Your order is already packed and can't be cancelled now. Contact support for help.",
   "deleteActiveOrders": "You have an order, payment or reported problem still in progress. You can delete your account once it's finished.",
-  "errorTooManyTries": "Too many tries. Wait a minute and try again."
+  "errorTooManyTries": "Too many tries. Wait a minute and try again.",
+  "saveAddressAs": "Save address as",
+  "walletHistoryErrorTitle": "Couldn't load your history",
+  "walletHistoryErrorBody": "Your balance is correct. Check your connection and try again."
 }
