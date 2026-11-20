@@ -62,6 +62,31 @@ export const deleteAccount = onCall(async (request) => {
   });
   if (blocker) throw new HttpsError("failed-precondition", blocker);
 
+  // Lock the account first: no new ID tokens while its data is removed, so
+  // a half-finished deletion can't leave a live session without a profile.
+  // If the cleanup fails the account is unlocked again; every step below is
+  // safe to repeat, so the customer can simply retry.
+  await auth.updateUser(uid, { disabled: true });
+  await auth.revokeRefreshTokens(uid);
+  try {
+    await removeAccountData(uid, { orders, intents, issues, returns, chats });
+  } catch (e) {
+    await auth.updateUser(uid, { disabled: false }).catch(() => undefined);
+    throw e;
+  }
+  // The data is gone; a disabled user is harmless if this last call fails.
+  await auth.deleteUser(uid).catch(async () => auth.deleteUser(uid));
+
+  return { deleted: true };
+});
+
+type Snap = FirebaseFirestore.QuerySnapshot;
+
+/** Unlinks kept records and deletes personal data. Idempotent. */
+async function removeAccountData(
+  uid: string,
+  { orders, intents, issues, returns, chats }: Record<"orders" | "intents" | "issues" | "returns" | "chats", Snap>,
+): Promise<void> {
   const writer = db.bulkWriter();
   for (const order of orders.docs) writer.update(order.ref, { userId: null, addressId: null, contactPhone: null });
   for (const intent of intents.docs) writer.update(intent.ref, { userId: null, addressId: null });
@@ -79,7 +104,4 @@ export const deleteAccount = onCall(async (request) => {
     .deleteFiles({ prefix: `users/${uid}/` })
     .catch(() => undefined);
   await db.recursiveDelete(db.collection("users").doc(uid));
-  await auth.deleteUser(uid);
-
-  return { deleted: true };
-});
+}

@@ -110,8 +110,10 @@ async function pushToCustomer(
   chat: { id: string; orderId: string | null },
   text: string,
 ) {
+  // A reply in a chat the customer opened, not an order update: it is sent
+  // even when they turned order notifications off.
   const profile = await db.collection("users").doc(userId).get();
-  if (profile.get("notifyOrderUpdates") === false) return;
+  if (!profile.exists) return;
   await pushToDevices(profile.ref, profile.data(), {
     notification: { title: COPY[lang].agentReplyPush, body: text.slice(0, 140) },
     data: { chatId: chat.id, chatOrderId: chat.orderId ?? "" },
