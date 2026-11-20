@@ -51,7 +51,9 @@ class HomeScreenHeader extends ConsumerWidget {
                     const SizedBox(height: ZSpace.x1),
                     Row(
                       children: [
+                        // A few pulses on arrival, then still.
                         ZLoop(
+                          repeats: 3,
                           child: Icon(
                             Icons.bolt_rounded,
                             color: z.deal,

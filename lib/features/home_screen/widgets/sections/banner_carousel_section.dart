@@ -29,6 +29,40 @@ class _BannerCarouselSectionState extends State<BannerCarouselSection> {
   /// Only the dots listen, so a page change doesn't rebuild every slide.
   final _page = ValueNotifier(0);
 
+  /// Banner images are drawn in the right 42% of the card.
+  static const _imageShare = 0.42;
+  static const _height = 140.0;
+
+  String? _precached;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _precacheSlides();
+  }
+
+  @override
+  void didUpdateWidget(BannerCarouselSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _precacheSlides();
+  }
+
+  /// The carousel builds slides lazily, so slide 2 only started loading
+  /// when it slid in, with an empty card for a moment. Fetch them all now.
+  void _precacheSlides() {
+    final urls = [
+      for (final item in widget.section.items) ?item.data.string('image_url'),
+    ];
+    final key = urls.join('|');
+    if (key == _precached) return;
+    _precached = key;
+    final width =
+        (MediaQuery.sizeOf(context).width - 2 * ZSpace.x4) * _imageShare;
+    for (final url in urls) {
+      CatalogImage.precache(context, url, width: width);
+    }
+  }
+
   @override
   void dispose() {
     _page.dispose();
@@ -53,7 +87,7 @@ class _BannerCarouselSectionState extends State<BannerCarouselSection> {
         CarouselSlider(
           carouselController: _controller,
           options: CarouselOptions(
-            height: 140,
+            height: _height,
             viewportFraction: 1,
             autoPlay: autoplay && items.length > 1,
             autoPlayInterval: const Duration(seconds: 5),
@@ -100,7 +134,7 @@ class _BannerCarouselSectionState extends State<BannerCarouselSection> {
                   // overlap whatever the image's aspect ratio.
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                      final imageWidth = constraints.maxWidth * 0.42;
+                      final imageWidth = constraints.maxWidth * _imageShare;
 
                       return Stack(
                         children: [
@@ -113,9 +147,13 @@ class _BannerCarouselSectionState extends State<BannerCarouselSection> {
                               borderRadius: BorderRadius.circular(
                                 ZRadius.banner,
                               ),
+                              // The real slot size, so it decodes at ~42%
+                              // of the screen, not the full width.
                               child: CatalogImage(
                                 image: imageUrl,
                                 fit: BoxFit.contain,
+                                width: imageWidth,
+                                height: _height,
                               ),
                             ),
                           ),

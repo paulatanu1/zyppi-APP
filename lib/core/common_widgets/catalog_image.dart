@@ -22,6 +22,30 @@ class CatalogImage extends StatelessWidget {
     this.height,
   });
 
+  static bool _isNetwork(String? source) =>
+      source != null &&
+      (source.startsWith('http://') || source.startsWith('https://'));
+
+  /// Starts downloading and decoding [image] for a [width]-wide slot, with
+  /// the same cache key [CatalogImage] uses, so it shows at once when it
+  /// scrolls or slides into view (e.g. the 2nd and 3rd home banners).
+  static Future<void> precache(
+    BuildContext context,
+    String? image, {
+    double? width,
+  }) {
+    if (!_isNetwork(image)) return Future.value();
+    final provider = ResizeImage.resizeIfNeeded(
+      _decodeWidth(
+        width ?? MediaQuery.sizeOf(context).width,
+        MediaQuery.devicePixelRatioOf(context),
+      ),
+      null,
+      CachedNetworkImageProvider(image!),
+    );
+    return precacheImage(provider, context, onError: (_, _) {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final source = image;
@@ -35,7 +59,7 @@ class CatalogImage extends StatelessWidget {
       );
     }
 
-    if (source.startsWith('http://') || source.startsWith('https://')) {
+    if (_isNetwork(source)) {
       // Decode at the size it's drawn (never wider than the screen), not
       // the uploaded size: a grid of full-size photos is what makes lists
       // stutter and run out of memory on low-end phones. No LayoutBuilder:

@@ -150,10 +150,15 @@ class ZLoop extends StatefulWidget {
     required this.child,
     this.kind = ZLoopKind.pulse,
     this.phase = 0,
+    this.repeats,
   });
 
   final Widget child;
   final ZLoopKind kind;
+
+  /// Stop after this many cycles (null: loop for as long as it's shown).
+  /// A loop that never ends keeps the GPU busy on a screen people sit on.
+  final int? repeats;
 
   /// 0..1 start offset so several loops don't move in sync.
   final double phase;
@@ -163,6 +168,8 @@ class ZLoop extends StatefulWidget {
 }
 
 class _ZLoopState extends State<ZLoop> with SingleTickerProviderStateMixin {
+  bool _finished = false;
+
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: switch (widget.kind) {
@@ -179,8 +186,17 @@ class _ZLoopState extends State<ZLoop> with SingleTickerProviderStateMixin {
     // No ticking at all when the user has turned animations off.
     if (_reduceMotion(context)) {
       _c.stop();
-    } else if (!_c.isAnimating) {
-      _c.repeat(reverse: true);
+    } else if (!_c.isAnimating && !_finished) {
+      final n = widget.repeats;
+      if (n == null) {
+        _c.repeat(reverse: true);
+      } else {
+        // Each cycle is there and back; end at rest.
+        _c.repeat(reverse: true, count: n * 2).whenComplete(() {
+          _finished = true;
+          if (mounted) _c.value = 0;
+        });
+      }
     }
   }
 

@@ -155,26 +155,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                           ),
                         ),
-                      for (final (i, section)
-                          in data.sections
-                              .where((s) => s != stickyTabs)
-                              .indexed) ...[
-                        SliverToBoxAdapter(
-                          // Sections rise in one after another when Home
-                          // first loads (Home stays mounted, so once).
-                          child: ZEntrance(
-                            index: i,
-                            child: HomeSectionWidget(
-                              section: section,
-                              categoriesById: data.categoriesById,
-                              productsById: data.productsById,
-                            ),
-                          ),
-                        ),
-                        const SliverToBoxAdapter(
-                          child: SizedBox(height: ZSpace.x4),
-                        ),
-                      ],
+                      // Built lazily: only the sections on (or near) the
+                      // screen exist. Building every rail, grid and carousel
+                      // up front was the main cause of the slow, janky
+                      // first frames on low-end phones.
+                      _SectionList(
+                        sections: [
+                          for (final s in data.sections)
+                            if (s != stickyTabs) s,
+                        ],
+                        data: data,
+                      ),
                       // Room for the floating cart bar so the last section
                       // isn't hidden behind it.
                       const SliverToBoxAdapter(
@@ -196,6 +187,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _SectionList extends StatelessWidget {
+  const _SectionList({required this.sections, required this.data});
+
+  final List<HomeSection> sections;
+  final HomeSectionsData data;
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverList.builder(
+      itemCount: sections.length,
+      itemBuilder: (context, i) {
+        final section = sections[i];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: ZSpace.x4),
+          // Sections rise in one after another when Home first loads; a
+          // section rebuilt after scrolling back doesn't play it again.
+          child: ZEntrance(
+            index: i,
+            once: 'home-section-${section.id}',
+            child: HomeSectionWidget(
+              section: section,
+              categoriesById: data.categoriesById,
+              productsById: data.productsById,
+            ),
+          ),
+        );
+      },
     );
   }
 }
