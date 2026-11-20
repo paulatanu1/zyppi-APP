@@ -8,8 +8,6 @@ import 'package:zippy/core/domain/delivery_config.dart';
 class BillCalculator {
   BillCalculator._();
 
-  static const handlingFeePaise = 500; // ₹5, matches docs/mockups/Cart.dc.html
-
   static BillBreakdown calculate({
     required List<CartLine> lines,
     int tipPaise = 0,
@@ -32,6 +30,7 @@ class BillCalculator {
 
     // Same rule as quoteOrder: fee below the free-delivery threshold.
     final deliveryFeePaise = delivery.feeFor(itemTotalPaise);
+    final handlingFeePaise = delivery.handlingFeePaise;
 
     final totalPaise =
         itemTotalPaise +

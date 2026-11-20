@@ -85,6 +85,16 @@ describe("settings validation", () => {
       minOrderPaise: 9900,
     });
     expect(() => validateDeliveryConfig({ feePaise: 25.5, freeAbovePaise: 0, minOrderPaise: 0 })).toThrow(/whole/);
+    // The handling fee is optional (left untouched when absent), may be 0, capped at ₹100.
+    expect(validateDeliveryConfig({ feePaise: 0, freeAbovePaise: 0, minOrderPaise: 0, handlingFeePaise: 0 })).toEqual({
+      feePaise: 0,
+      freeAbovePaise: 0,
+      minOrderPaise: 0,
+      handlingFeePaise: 0,
+    });
+    expect(() =>
+      validateDeliveryConfig({ feePaise: 0, freeAbovePaise: 0, minOrderPaise: 0, handlingFeePaise: 100_01 }),
+    ).toThrow(/Handling fee/);
   });
 
   it("needs announcement text before it can be turned on", () => {

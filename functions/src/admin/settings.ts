@@ -67,7 +67,7 @@ export const adminSaveDeliverySlot = onCall(async (request) => {
   return saveDoc(actor, "deliverySlot.save", `deliverySlots/${id}`, { ...input });
 });
 
-/** Request: {feePaise, freeAbovePaise, minOrderPaise} (int paise). */
+/** Request: {feePaise, freeAbovePaise, minOrderPaise, handlingFeePaise?} (int paise). */
 export const adminSaveDeliveryConfig = onCall(async (request) => {
   const actor = requireRole(request, ["ops", "finance"]);
   return saveDoc(actor, "delivery.update", DELIVERY_CONFIG_PATH, { ...validateDeliveryConfig(request.data) });

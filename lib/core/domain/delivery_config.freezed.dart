@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$DeliveryConfig {
 
- int get feePaise; int get freeAbovePaise; int get minOrderPaise;
+ int get feePaise; int get freeAbovePaise; int get minOrderPaise; int get handlingFeePaise;
 /// Create a copy of DeliveryConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $DeliveryConfigCopyWith<DeliveryConfig> get copyWith => _$DeliveryConfigCopyWith
 @override
 bool operator ==(Object other) {
   final _this = this as DeliveryConfig;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DeliveryConfig&&(identical(other.feePaise, _this.feePaise) || other.feePaise == _this.feePaise)&&(identical(other.freeAbovePaise, _this.freeAbovePaise) || other.freeAbovePaise == _this.freeAbovePaise)&&(identical(other.minOrderPaise, _this.minOrderPaise) || other.minOrderPaise == _this.minOrderPaise));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DeliveryConfig&&(identical(other.feePaise, _this.feePaise) || other.feePaise == _this.feePaise)&&(identical(other.freeAbovePaise, _this.freeAbovePaise) || other.freeAbovePaise == _this.freeAbovePaise)&&(identical(other.minOrderPaise, _this.minOrderPaise) || other.minOrderPaise == _this.minOrderPaise)&&(identical(other.handlingFeePaise, _this.handlingFeePaise) || other.handlingFeePaise == _this.handlingFeePaise));
 }
 
 
 @override
 int get hashCode {
   final _this = this as DeliveryConfig;
-  return Object.hash(runtimeType,_this.feePaise,_this.freeAbovePaise,_this.minOrderPaise);
+  return Object.hash(runtimeType,_this.feePaise,_this.freeAbovePaise,_this.minOrderPaise,_this.handlingFeePaise);
 }
 
 @override
 String toString() {
   final _this = this as DeliveryConfig;
-  return 'DeliveryConfig(feePaise: ${_this.feePaise}, freeAbovePaise: ${_this.freeAbovePaise}, minOrderPaise: ${_this.minOrderPaise})';
+  return 'DeliveryConfig(feePaise: ${_this.feePaise}, freeAbovePaise: ${_this.freeAbovePaise}, minOrderPaise: ${_this.minOrderPaise}, handlingFeePaise: ${_this.handlingFeePaise})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $DeliveryConfigCopyWith<$Res>  {
   factory $DeliveryConfigCopyWith(DeliveryConfig value, $Res Function(DeliveryConfig) _then) = _$DeliveryConfigCopyWithImpl;
 @useResult
 $Res call({
- int feePaise, int freeAbovePaise, int minOrderPaise
+ int feePaise, int freeAbovePaise, int minOrderPaise, int handlingFeePaise
 });
 
 
@@ -68,11 +68,12 @@ class _$DeliveryConfigCopyWithImpl<$Res>
 
 /// Create a copy of DeliveryConfig
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? feePaise = null,Object? freeAbovePaise = null,Object? minOrderPaise = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? feePaise = null,Object? freeAbovePaise = null,Object? minOrderPaise = null,Object? handlingFeePaise = null,}) {
   return _then(DeliveryConfig(
 feePaise: null == feePaise ? _self.feePaise : feePaise // ignore: cast_nullable_to_non_nullable
 as int,freeAbovePaise: null == freeAbovePaise ? _self.freeAbovePaise : freeAbovePaise // ignore: cast_nullable_to_non_nullable
 as int,minOrderPaise: null == minOrderPaise ? _self.minOrderPaise : minOrderPaise // ignore: cast_nullable_to_non_nullable
+as int,handlingFeePaise: null == handlingFeePaise ? _self.handlingFeePaise : handlingFeePaise // ignore: cast_nullable_to_non_nullable
 as int,
   ));
 }
@@ -158,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int feePaise,  int freeAbovePaise,  int minOrderPaise)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int feePaise,  int freeAbovePaise,  int minOrderPaise,  int handlingFeePaise)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DeliveryConfig() when $default != null:
-return $default(_that.feePaise,_that.freeAbovePaise,_that.minOrderPaise);case _:
+return $default(_that.feePaise,_that.freeAbovePaise,_that.minOrderPaise,_that.handlingFeePaise);case _:
   return orElse();
 
 }
@@ -179,10 +180,10 @@ return $default(_that.feePaise,_that.freeAbovePaise,_that.minOrderPaise);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int feePaise,  int freeAbovePaise,  int minOrderPaise)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int feePaise,  int freeAbovePaise,  int minOrderPaise,  int handlingFeePaise)  $default,) {final _that = this;
 switch (_that) {
 case _DeliveryConfig():
-return $default(_that.feePaise,_that.freeAbovePaise,_that.minOrderPaise);case _:
+return $default(_that.feePaise,_that.freeAbovePaise,_that.minOrderPaise,_that.handlingFeePaise);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -199,10 +200,10 @@ return $default(_that.feePaise,_that.freeAbovePaise,_that.minOrderPaise);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int feePaise,  int freeAbovePaise,  int minOrderPaise)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int feePaise,  int freeAbovePaise,  int minOrderPaise,  int handlingFeePaise)?  $default,) {final _that = this;
 switch (_that) {
 case _DeliveryConfig() when $default != null:
-return $default(_that.feePaise,_that.freeAbovePaise,_that.minOrderPaise);case _:
+return $default(_that.feePaise,_that.freeAbovePaise,_that.minOrderPaise,_that.handlingFeePaise);case _:
   return null;
 
 }
@@ -214,12 +215,13 @@ return $default(_that.feePaise,_that.freeAbovePaise,_that.minOrderPaise);case _:
 
 
 class _DeliveryConfig extends DeliveryConfig {
-  const _DeliveryConfig({this.feePaise = 0, this.freeAbovePaise = 0, this.minOrderPaise = 0}): super._();
+  const _DeliveryConfig({this.feePaise = 0, this.freeAbovePaise = 0, this.minOrderPaise = 0, this.handlingFeePaise = DeliveryConfig.defaultHandlingFeePaise}): super._();
   
 
 @override@JsonKey() final  int feePaise;
 @override@JsonKey() final  int freeAbovePaise;
 @override@JsonKey() final  int minOrderPaise;
+@override@JsonKey() final  int handlingFeePaise;
 
 /// Create a copy of DeliveryConfig
 /// with the given fields replaced by the non-null parameter values.
@@ -231,18 +233,18 @@ _$DeliveryConfigCopyWith<_DeliveryConfig> get copyWith => __$DeliveryConfigCopyW
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DeliveryConfig&&(identical(other.feePaise, feePaise) || other.feePaise == feePaise)&&(identical(other.freeAbovePaise, freeAbovePaise) || other.freeAbovePaise == freeAbovePaise)&&(identical(other.minOrderPaise, minOrderPaise) || other.minOrderPaise == minOrderPaise));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DeliveryConfig&&(identical(other.feePaise, feePaise) || other.feePaise == feePaise)&&(identical(other.freeAbovePaise, freeAbovePaise) || other.freeAbovePaise == freeAbovePaise)&&(identical(other.minOrderPaise, minOrderPaise) || other.minOrderPaise == minOrderPaise)&&(identical(other.handlingFeePaise, handlingFeePaise) || other.handlingFeePaise == handlingFeePaise));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,feePaise,freeAbovePaise,minOrderPaise);
+    return Object.hash(runtimeType,feePaise,freeAbovePaise,minOrderPaise,handlingFeePaise);
 }
 
 @override
 String toString() {
-    return 'DeliveryConfig(feePaise: $feePaise, freeAbovePaise: $freeAbovePaise, minOrderPaise: $minOrderPaise)';
+    return 'DeliveryConfig(feePaise: $feePaise, freeAbovePaise: $freeAbovePaise, minOrderPaise: $minOrderPaise, handlingFeePaise: $handlingFeePaise)';
 }
 
 
@@ -253,7 +255,7 @@ abstract mixin class _$DeliveryConfigCopyWith<$Res> implements $DeliveryConfigCo
   factory _$DeliveryConfigCopyWith(_DeliveryConfig value, $Res Function(_DeliveryConfig) _then) = __$DeliveryConfigCopyWithImpl;
 @override @useResult
 $Res call({
- int feePaise, int freeAbovePaise, int minOrderPaise
+ int feePaise, int freeAbovePaise, int minOrderPaise, int handlingFeePaise
 });
 
 
@@ -270,11 +272,12 @@ class __$DeliveryConfigCopyWithImpl<$Res>
 
 /// Create a copy of DeliveryConfig
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? feePaise = null,Object? freeAbovePaise = null,Object? minOrderPaise = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? feePaise = null,Object? freeAbovePaise = null,Object? minOrderPaise = null,Object? handlingFeePaise = null,}) {
   return _then(_DeliveryConfig(
 feePaise: null == feePaise ? _self.feePaise : feePaise // ignore: cast_nullable_to_non_nullable
 as int,freeAbovePaise: null == freeAbovePaise ? _self.freeAbovePaise : freeAbovePaise // ignore: cast_nullable_to_non_nullable
 as int,minOrderPaise: null == minOrderPaise ? _self.minOrderPaise : minOrderPaise // ignore: cast_nullable_to_non_nullable
+as int,handlingFeePaise: null == handlingFeePaise ? _self.handlingFeePaise : handlingFeePaise // ignore: cast_nullable_to_non_nullable
 as int,
   ));
 }

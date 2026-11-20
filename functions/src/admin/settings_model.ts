@@ -150,6 +150,8 @@ export interface DeliveryConfigInput {
   feePaise: number;
   freeAbovePaise: number;
   minOrderPaise: number;
+  /** Optional, so an older admin build that doesn't send it can't reset it. */
+  handlingFeePaise?: number;
 }
 
 /** Matches orders/delivery_config.ts (int paise, 0 = off). */
@@ -160,6 +162,9 @@ export function validateDeliveryConfig(raw: unknown): DeliveryConfigInput {
     feePaise: intIn(d.feePaise, "Delivery fee (paise)", 0, 500_00),
     freeAbovePaise: intIn(d.freeAbovePaise, "Free delivery above (paise)", 0, max),
     minOrderPaise: intIn(d.minOrderPaise, "Minimum order (paise)", 0, max),
+    ...(d.handlingFeePaise === undefined
+      ? {}
+      : { handlingFeePaise: intIn(d.handlingFeePaise, "Handling fee (paise)", 0, 100_00) }),
   };
 }
 

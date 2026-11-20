@@ -47,8 +47,6 @@ import { serviceAreas } from "../shared/area_cache";
 import { DELIVERY_CONFIG_PATH, deliveryConfigFrom, deliveryFeeFor } from "./delivery_config";
 import { AreaLike, findServiceableArea } from "../shared/geo";
 
-/** ₹5 handling fee and free delivery, matching the app's BillCalculator. */
-export const HANDLING_FEE_PAISE = 500;
 /** ₹500 tip cap, matching the app's tip selector. */
 export const MAX_TIP_PAISE = 50000;
 
@@ -418,7 +416,7 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
   }
   // A replacement is free: the whole item total is its discount.
   const deliveryFee = p.replacement ? 0 : deliveryFeeFor(itemTotal, delivery);
-  const handlingFee = p.replacement ? 0 : HANDLING_FEE_PAISE;
+  const handlingFee = p.replacement ? 0 : delivery.handlingFeePaise;
   if (p.replacement) discount = itemTotal;
 
   const addressText = [address.line1, address.area, address.city, address.postalCode]

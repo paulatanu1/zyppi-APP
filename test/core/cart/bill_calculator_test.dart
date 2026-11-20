@@ -69,8 +69,24 @@ void main() {
       );
 
       expect(bill.deliveryFeePaise, 0);
-      expect(bill.handlingFeePaise, BillCalculator.handlingFeePaise);
-      expect(bill.totalPaise, 10000 + BillCalculator.handlingFeePaise);
+      expect(bill.handlingFeePaise, DeliveryConfig.defaultHandlingFeePaise);
+      expect(bill.totalPaise, 10000 + DeliveryConfig.defaultHandlingFeePaise);
+    });
+
+    test('uses the configured handling fee, including none', () {
+      List<CartLine> lines() => [_line(pricePaise: 10000, quantity: 1)];
+      final nine = BillCalculator.calculate(
+        lines: lines(),
+        delivery: const DeliveryConfig(handlingFeePaise: 900),
+      );
+      expect(nine.handlingFeePaise, 900);
+      expect(nine.totalPaise, 10900);
+      final none = BillCalculator.calculate(
+        lines: lines(),
+        delivery: const DeliveryConfig(handlingFeePaise: 0),
+      );
+      expect(none.handlingFeePaise, 0);
+      expect(none.totalPaise, 10000);
     });
 
     const delivery = DeliveryConfig(
@@ -86,7 +102,10 @@ void main() {
       );
 
       expect(bill.deliveryFeePaise, 2500);
-      expect(bill.totalPaise, 10000 + 2500 + BillCalculator.handlingFeePaise);
+      expect(
+        bill.totalPaise,
+        10000 + 2500 + DeliveryConfig.defaultHandlingFeePaise,
+      );
     });
 
     test('delivery is free at and above the threshold', () {
@@ -125,7 +144,10 @@ void main() {
       );
 
       expect(bill.tipPaise, 2000);
-      expect(bill.totalPaise, 10000 + BillCalculator.handlingFeePaise + 2000);
+      expect(
+        bill.totalPaise,
+        10000 + DeliveryConfig.defaultHandlingFeePaise + 2000,
+      );
     });
 
     test('applies a coupon discount when the minimum order is met', () {
@@ -142,7 +164,10 @@ void main() {
       );
 
       expect(bill.discountPaise, 5000);
-      expect(bill.totalPaise, 25000 + BillCalculator.handlingFeePaise - 5000);
+      expect(
+        bill.totalPaise,
+        25000 + DeliveryConfig.defaultHandlingFeePaise - 5000,
+      );
     });
 
     test('ignores a coupon when the order is below its minimum', () {

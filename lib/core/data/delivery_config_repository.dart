@@ -25,6 +25,11 @@ class FirebaseDeliveryConfigRepository implements DeliveryConfigRepository {
       feePaise: paise('feePaise'),
       freeAbovePaise: paise('freeAbovePaise'),
       minOrderPaise: paise('minOrderPaise'),
+      // A set fee may be 0; missing or broken means the default.
+      handlingFeePaise: switch (data['handlingFeePaise']) {
+        final int v when v >= 0 => v,
+        _ => DeliveryConfig.defaultHandlingFeePaise,
+      },
     );
   }
 }

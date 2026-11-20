@@ -4,7 +4,8 @@ import type { DocumentSnapshot } from "firebase-admin/firestore";
  * `config/delivery` — admin-edited delivery pricing, read by `quoteOrder`
  * (and by the app, to show the free-delivery progress bar). All amounts
  * are integer paise. A missing doc or field means 0, i.e. free delivery
- * and no minimum, so the app keeps working before the doc exists.
+ * and no minimum, so the app keeps working before the doc exists — except
+ * the handling fee, which defaults to ₹5 (the long-standing fixed fee).
  */
 export interface DeliveryConfig {
   /** Charged when the item total is below [freeAbovePaise]. */
@@ -13,7 +14,12 @@ export interface DeliveryConfig {
   freeAbovePaise: number;
   /** Smallest item total that can be ordered (0 = no minimum). */
   minOrderPaise: number;
+  /** Added to every order except replacements (0 = none). */
+  handlingFeePaise: number;
 }
+
+/** Used while `handlingFeePaise` hasn't been set; keep in step with the app. */
+export const DEFAULT_HANDLING_FEE_PAISE = 500;
 
 export const DELIVERY_CONFIG_PATH = "config/delivery";
 
@@ -21,11 +27,17 @@ function paise(value: unknown): number {
   return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : 0;
 }
 
+/** A set fee may be 0; a missing or broken one is the default. */
+function handlingFee(value: unknown): number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0 ? value : DEFAULT_HANDLING_FEE_PAISE;
+}
+
 export function deliveryConfigFrom(snap: DocumentSnapshot): DeliveryConfig {
   return {
     feePaise: paise(snap.get("feePaise")),
     freeAbovePaise: paise(snap.get("freeAbovePaise")),
     minOrderPaise: paise(snap.get("minOrderPaise")),
+    handlingFeePaise: handlingFee(snap.get("handlingFeePaise")),
   };
 }
 
