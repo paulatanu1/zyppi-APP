@@ -92,13 +92,17 @@ describe("classifyHash", () => {
     expect(classifyHash({ hashName: "mcpLookup", hashString: "x" }, KEY).kind).toBe("reject");
   });
 
-  it("only allows V2 strings that name a txnid", () => {
-    expect(
-      classifyHash({ hashName: "payment", hashString: `{"txnid":"${TXN}"}|date|`, hashType: "V2" }, KEY),
-    ).toEqual({ kind: "v2", txnid: TXN, amountPaise: null });
-    expect(
-      classifyHash({ hashName: "payment", hashString: "{}|date|", hashType: "V2" }, KEY).kind,
-    ).toBe("reject");
+  it("only allows V2 JSON bodies that name a txnid and its amount", () => {
+    const v2 = (hashString: string) => classifyHash({ hashName: "payment", hashString, hashType: "V2" }, KEY);
+    expect(v2(`{"txnid":"${TXN}","amount":"10"}|date|`)).toEqual({ kind: "v2", txnid: TXN, amountPaise: 1000 });
+    expect(v2("{}|date|").kind).toBe("reject");
+    // A txnid alone, with no amount to bind it to, is refused.
+    expect(v2(`{"txnid":"${TXN}"}|date|`)).toEqual({ kind: "reject", reason: "v2 without amount" });
+    // Not PayU's body|date| shape, or not a JSON object: refused even with a txnid.
+    expect(v2(`${TXN}|anything`).kind).toBe("reject");
+    expect(v2(`x${TXN}x|date|`).kind).toBe("reject");
+    expect(v2(`["${TXN}",1]|date|`).kind).toBe("reject");
+    expect(v2(`{"txnid":"${TXN}","amount":"10"}|date|extra`).kind).toBe("reject");
   });
 
   it("binds a V2 body to one txnid, our key and its amount", () => {

@@ -32,7 +32,6 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = 'com.zyppi.one'
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
@@ -74,15 +73,26 @@ android {
 
     buildTypes {
         release {
-            // Falls back to the debug keystore when key.properties doesn't
-            // exist yet (so `flutter run --release` still works locally);
-            // real release/Play builds need a real keystore supplied via
-            // key.properties (gitignored - see key.properties.example).
+            // dev/staging release builds fall back to the debug keystore
+            // when key.properties doesn't exist (local testing). A prod
+            // release can't: see the taskGraph check below, so a missing
+            // keystore never yields a debug-signed Play build.
             signingConfig = keystorePropertiesFile.exists()
                 ? signingConfigs.release
                 : signingConfigs.debug
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+    }
+}
+
+// Play builds (prod release APK/AAB) must be signed with the upload key.
+gradle.taskGraph.whenReady { graph ->
+    def prodRelease = graph.allTasks.any { it.name ==~ /(assemble|bundle|package)ProdRelease/ }
+    if (prodRelease && !keystorePropertiesFile.exists()) {
+        throw new GradleException(
+            "android/key.properties is missing: a prod release must be signed with the " +
+            "upload key, not the debug key. See android/key.properties.example."
+        )
     }
 }
 

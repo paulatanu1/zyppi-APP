@@ -159,8 +159,8 @@ export type HashDecision =
   | {
       kind: "v2";
       txnid: string;
-      /** The JSON body's amount, when it has one: must be that intent's (checked by the caller). */
-      amountPaise: number | null;
+      /** The JSON body's amount: must be that intent's (checked by the caller). */
+      amountPaise: number;
     }
   | { kind: "reject"; reason: string };
 
@@ -211,33 +211,32 @@ export function classifyHash(
 }
 
 /**
- * A V2 (HMAC) string is signed only for exactly one of our txnids (checked
- * to be the caller's open intent). When it's PayU's `body|date|` with a
- * JSON body, the body's `key` must be ours and its `amount` the intent's,
- * so a valid txnid can't be wrapped around a different payment.
+ * A V2 (HMAC) string is signed only when it's PayU's `body|date|` with a
+ * JSON body naming exactly one of our txnids (checked to be the caller's
+ * open intent) and an `amount` (checked to be that intent's); a `key`, when
+ * present, must be ours. Anything else is refused, so the endpoint can't
+ * sign arbitrary payloads that merely mention a valid txnid.
  */
 function classifyV2(hashString: string, merchantKey: string): HashDecision {
   const txnids = [...new Set(hashString.match(TXNID_PATTERN) ?? [])];
   if (txnids.length === 0) return { kind: "reject", reason: "v2 without txnid" };
   if (txnids.length > 1) return { kind: "reject", reason: "v2 with several txnids" };
-  let amountPaise: number | null = null;
   const parts = hashString.split("|");
-  if (parts.length === 3 && parts[2] === "") {
-    let body: unknown = null;
-    try {
-      body = JSON.parse(parts[0]);
-    } catch {
-      body = null;
-    }
-    if (body && typeof body === "object" && !Array.isArray(body)) {
-      const record = body as Record<string, unknown>;
-      if ("key" in record && record.key !== merchantKey) return { kind: "reject", reason: "v2 other key" };
-      if ("amount" in record) {
-        amountPaise = amountToPaise(record.amount);
-        if (Number.isNaN(amountPaise)) return { kind: "reject", reason: "v2 amount" };
-      }
-    }
+  if (parts.length !== 3 || parts[2] !== "") return { kind: "reject", reason: "v2 not body|date|" };
+  let body: unknown = null;
+  try {
+    body = JSON.parse(parts[0]);
+  } catch {
+    body = null;
   }
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return { kind: "reject", reason: "v2 body not an object" };
+  }
+  const record = body as Record<string, unknown>;
+  if ("key" in record && record.key !== merchantKey) return { kind: "reject", reason: "v2 other key" };
+  if (!("amount" in record)) return { kind: "reject", reason: "v2 without amount" };
+  const amountPaise = amountToPaise(record.amount);
+  if (Number.isNaN(amountPaise)) return { kind: "reject", reason: "v2 amount" };
   return { kind: "v2", txnid: txnids[0], amountPaise };
 }
 

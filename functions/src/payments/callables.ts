@@ -215,7 +215,7 @@ export const signPayUHash = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (req
     case "v2": {
       const intent = await ownOpenIntent(decision.txnid);
       if (!intent) return refuse("unknown txnid");
-      if (decision.amountPaise !== null && intent.amountPaise !== decision.amountPaise) return refuse("amount differs");
+      if (intent.amountPaise !== decision.amountPaise) return refuse("amount differs");
       break;
     }
     case "command":
