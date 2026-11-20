@@ -136,6 +136,15 @@ void main() {
     expect(find.text('onboarding'), findsOneWidget);
   });
 
+  testWidgets('a tap in the first second does not skip', (tester) async {
+    await _pump(tester);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.byType(ZyppiSplashScreen));
+    await _play(tester, const Duration(milliseconds: 650));
+    await _settleRoute(tester);
+    expect(find.text('onboarding'), findsNothing);
+  });
+
   testWidgets('reduced motion: resting frame, then moves on quickly', (
     tester,
   ) async {

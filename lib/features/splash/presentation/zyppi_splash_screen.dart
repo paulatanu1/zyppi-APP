@@ -27,7 +27,15 @@ class _SplashRouteState extends ConsumerState<SplashRoute> {
   // The full animation plays on every launch (tap anywhere skips it).
   final SplashMode _mode = SplashMode.full;
 
-  late final Completer<void> _launchDone = ref.read(launchDoneProvider);
+  // Read up front: a lazy read from dispose() (splash left before it
+  // finished, e.g. a notification opened another screen) throws.
+  late final Completer<void> _launchDone;
+
+  @override
+  void initState() {
+    super.initState();
+    _launchDone = ref.read(launchDoneProvider);
+  }
 
   void _next() {
     if (!mounted) return;
@@ -66,8 +74,14 @@ class ZyppiSplashScreen extends StatefulWidget {
   final VoidCallback onFinished;
   final SplashMode mode;
 
-  /// How long the resting frame stays up when animations are off.
-  static const Duration reducedMotionHold = Duration(milliseconds: 300);
+  /// How long the resting frame stays up when animations are off. Long
+  /// enough to read the brand: many phones turn animations off (battery
+  /// saver, developer options), and at 300 ms the splash looked skipped.
+  static const Duration reducedMotionHold = Duration(milliseconds: 1200);
+
+  /// Taps before this point are ignored, so a tap left over from opening
+  /// the app (or an impatient double tap) can't skip the whole story.
+  static const Duration minBeforeSkip = Duration(milliseconds: 1000);
 
   static Duration durationOf(SplashMode mode) =>
       Duration(milliseconds: SplashTimeline.of(mode).totalMs);
@@ -120,6 +134,7 @@ class _ZyppiSplashScreenState extends State<ZyppiSplashScreen>
   void _skip() {
     if (_reduced || _done) return;
     final t = _controller.value * _timeline.totalMs;
+    if (t < ZyppiSplashScreen.minBeforeSkip.inMilliseconds) return;
     if (t >= _timeline.exitStart) return _finish();
     _skippedAt = t;
     _controller.forward(from: _timeline.exitStart / _timeline.totalMs);
