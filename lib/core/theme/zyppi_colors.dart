@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zippy/core/theme/zyppi_tokens.dart';
 
 /// Zyppi colour tokens (design v2). Read them with `context.z`.
 ///
@@ -131,7 +132,8 @@ class ZColors extends ThemeExtension<ZColors> {
 
   static const dark = ZColors(
     bg: Color(0xFF0D0E11),
-    surface: Color(0xFF16171C),
+    // Dark B ("depth"): cards a step lighter than the page.
+    surface: Color(0xFF1A1B21),
     surface2: Color(0xFF1E2026),
     surface3: Color(0xFF272930),
     line: Color(0xFF2A2C33),
@@ -172,7 +174,7 @@ class ZColors extends ThemeExtension<ZColors> {
     mapBlock: Color(0xFF1C1E24),
     mapPark: Color(0xFF16261B),
     mapWater: Color(0xFF14243A),
-    shadow: Color(0x59000000),
+    shadow: Color(0x8C000000),
     // Lighter tint so the tagline reads on near-black.
     logo: Color(0xFFB39DDB),
     splashBg: Color(0xFF673AB7),
@@ -182,6 +184,55 @@ class ZColors extends ThemeExtension<ZColors> {
   List<BoxShadow> get elevation => [
     BoxShadow(color: shadow, blurRadius: 24, offset: const Offset(0, 8)),
   ];
+
+  /// The dark set (its page colour is near-black).
+  bool get isDark => bg.computeLuminance() < 0.1;
+
+  /// Floating Cards: what lifts a borderless card off the page.
+  List<BoxShadow> get cardShadow => [
+    BoxShadow(
+      color: shadow,
+      blurRadius: isDark ? 26 : 18,
+      offset: Offset(0, isDark ? 10 : 6),
+    ),
+    BoxShadow(color: shadow, blurRadius: 2, offset: const Offset(0, 1)),
+  ];
+
+  /// A smaller lift for chips, tiles and other small floating controls.
+  List<BoxShadow> get softShadow => [
+    BoxShadow(color: shadow, blurRadius: 8, offset: const Offset(0, 2)),
+  ];
+
+  /// The standard card: surface, radius 22, no border, [cardShadow].
+  BoxDecoration card({Color? color, double radius = ZRadius.card}) =>
+      BoxDecoration(
+        color: color ?? surface,
+        borderRadius: ZRadius.all(radius),
+        boxShadow: cardShadow,
+      );
+
+  /// The header band's fill (home, login, account), painted by
+  /// `ZHeaderFill`: light runs a left-to-right brand sheen (so stacked
+  /// pieces of the band line up with no seam); dark (Dark B) is a pink
+  /// glow from the top-left that fades into [headerGlowBase].
+  List<Color> get headerSheen => isDark
+      ? const [Color(0xFF6A1652), Color(0xFF2A0C21)]
+      : const [Color(0xFFE0198A), Color(0xFFD4127B), Color(0xFFA80D60)];
+
+  /// What the dark glow fades to; also the flat fill below it.
+  Color get headerGlowBase =>
+      isDark ? const Color(0xFF2A0C21) : const Color(0xFFD4127B);
+
+  /// The glow under the header band in dark mode (none in light).
+  List<BoxShadow> get headerShadow => isDark
+      ? const [
+          BoxShadow(
+            color: Color(0x38E0198A),
+            blurRadius: 34,
+            offset: Offset(0, 14),
+          ),
+        ]
+      : const [];
 
   @override
   ZColors copyWith() => this;

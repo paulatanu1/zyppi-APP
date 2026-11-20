@@ -85,11 +85,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 slivers: [
                   const SliverToBoxAdapter(child: HomeScreenHeader()),
-                  SliverToBoxAdapter(
-                    child: HomeNotices(
-                      serviceAreaId: ref.watch(homeServiceAreaIdProvider),
-                    ),
-                  ),
                   SliverPersistentHeader(
                     pinned: true,
                     delegate: HomePinnedHeaderDelegate(
@@ -99,6 +94,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       searchHints:
                           ref.watch(searchSuggestionsProvider).value ??
                           const [],
+                    ),
+                  ),
+                  // Notices sit under the band so its rounded bottom and
+                  // the floating search bar stay together.
+                  SliverToBoxAdapter(
+                    child: HomeNotices(
+                      serviceAreaId: ref.watch(homeServiceAreaIdProvider),
                     ),
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: ZSpace.x3)),

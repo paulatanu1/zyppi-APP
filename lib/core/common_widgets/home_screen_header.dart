@@ -6,6 +6,7 @@ import 'package:zippy/core/data/provider/profile_provider.dart';
 import 'package:zippy/core/shared_providers/location/provider/get_current_location_provider.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/utils/address_label.dart';
+import 'package:zippy/core/widgets/z_chrome.dart';
 import 'package:zippy/core/widgets/z_motion.dart';
 import 'package:zippy/features/home_screen/widgets/address_sheet.dart';
 
@@ -22,67 +23,70 @@ class HomeScreenHeader extends ConsumerWidget {
     final z = context.z;
     final t = Theme.of(context).textTheme;
 
-    return Container(
-      width: double.infinity,
-      color: z.header,
-      padding: EdgeInsets.fromLTRB(
-        ZSpace.screen,
-        // HomeScreen's SafeArea already clears the status bar.
-        ZSpace.x3,
-        ZSpace.screen,
-        ZSpace.x3,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'zyppiExpress'.tr(),
-                      style: t.labelSmall!.copyWith(
-                        color: z.headerInk2,
-                        letterSpacing: 1.1,
-                      ),
-                    ),
-                    const SizedBox(height: ZSpace.x1),
-                    Row(
-                      children: [
-                        // A few pulses on arrival, then still.
-                        ZLoop(
-                          repeats: 3,
-                          child: Icon(
-                            Icons.bolt_rounded,
-                            color: z.deal,
-                            size: 24,
-                          ),
+    // The top of the rounded header band; HomePinnedHeaderDelegate draws
+    // its rounded bottom under the floating search bar.
+    return ZHeaderFill(
+      offsetY: MediaQuery.paddingOf(context).top,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          ZSpace.screen,
+          // HomeScreen's SafeArea already clears the status bar.
+          ZSpace.x3,
+          ZSpace.screen,
+          ZSpace.x3,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'zyppiExpress'.tr(),
+                        style: t.labelSmall!.copyWith(
+                          color: z.headerInk2,
+                          letterSpacing: 1.1,
                         ),
-                        const SizedBox(width: ZSpace.x1),
-                        Flexible(
-                          child: Text(
-                            'etaHeadline'.tr(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: t.headlineSmall!.copyWith(
-                              color: z.headerInk,
+                      ),
+                      const SizedBox(height: ZSpace.x1),
+                      Row(
+                        children: [
+                          // A few pulses on arrival, then still.
+                          ZLoop(
+                            repeats: 3,
+                            child: Icon(
+                              Icons.bolt_rounded,
+                              color: z.deal,
+                              size: 24,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: ZSpace.x1),
-                    const _AddressRow(),
-                  ],
+                          const SizedBox(width: ZSpace.x1),
+                          Flexible(
+                            child: Text(
+                              'etaHeadline'.tr(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: t.headlineSmall!.copyWith(
+                                color: z.headerInk,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: ZSpace.x1),
+                      const _AddressRow(),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: ZSpace.x3),
-              const _Avatar(),
-            ],
-          ),
-        ],
+                const SizedBox(width: ZSpace.x3),
+                const _Avatar(),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

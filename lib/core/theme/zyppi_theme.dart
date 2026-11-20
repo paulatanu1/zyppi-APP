@@ -69,14 +69,14 @@ abstract final class ZyppiTheme {
       splashFactory: InkSparkle.splashFactory,
       dividerTheme: DividerThemeData(color: c.line, thickness: 1, space: 1),
       appBarTheme: AppBarTheme(
-        backgroundColor: c.surface,
+        // Floating Cards: the bar sits on the page, no divider under it.
+        backgroundColor: c.bg,
         foregroundColor: c.ink,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
         titleTextStyle: text.titleLarge,
-        shape: Border(bottom: BorderSide(color: c.line)),
         systemOverlayStyle: b == Brightness.light
             ? SystemUiOverlayStyle.dark
             : SystemUiOverlayStyle.light,
@@ -143,15 +143,12 @@ abstract final class ZyppiTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: ZRadius.all(ZRadius.card),
-          side: BorderSide(color: c.line),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: ZRadius.all(ZRadius.card)),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: c.surface,
         selectedColor: c.ink,
-        side: BorderSide(color: c.line),
+        side: BorderSide.none,
         shape: const StadiumBorder(),
         labelStyle: text.labelMedium,
         secondaryLabelStyle: text.labelMedium!.copyWith(color: c.bg),

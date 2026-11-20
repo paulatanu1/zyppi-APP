@@ -304,16 +304,21 @@ void main() {
           ),
         ),
       );
-      final colors = dark ? ZColors.dark : ZColors.light;
-      final box = tester.widget<DecoratedBox>(
-        find
-            .descendant(
-              of: find.byType(CustomScrollView),
-              matching: find.byType(DecoratedBox),
-            )
-            .first,
+      // The tabs sit on the header band (Floating Cards: ZHeaderFill),
+      // which runs under the whole block when tabs are present.
+      expect(
+        find.descendant(
+          of: find.byType(CustomScrollView),
+          matching: find.byType(ZHeaderFill),
+        ),
+        findsOneWidget,
       );
-      expect((box.decoration as BoxDecoration).color, colors.header);
+      expect(
+        tester.getSize(find.byType(ZHeaderFill)).height,
+        tester.getSize(find.byType(CategoryTabsSection)).height +
+            ZSize.search +
+            ZSpace.x3,
+      );
       expect(find.byType(ZSearchBar), findsOneWidget);
       expect(find.text('Dairy & Bakery'), findsOneWidget);
       expect(

@@ -22,12 +22,15 @@ abstract final class ZRadius {
       chip = 18,
       input = 16,
       button = 16,
-      card = 18,
-      tile = 16,
+          // Floating Cards (approved 2026-11): borderless cards lifted by
+          // ZColors.cardShadow.
+          card =
+          22,
+      tile = 18,
       sheet = 26,
           // Home promo banner (Main.dc.html).
           banner =
-          20,
+          22,
           // Onboarding hero illustration (zyppi.css .illo).
           illo =
           28;

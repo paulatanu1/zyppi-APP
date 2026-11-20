@@ -67,7 +67,8 @@ class _CategoryTabsSectionState extends State<CategoryTabsSection> {
     final t = Theme.of(context).textTheme;
 
     return Container(
-      color: widget.onBrand ? z.header : z.surface,
+      // On the header band the band itself (ZHeaderFill) shows through.
+      color: widget.onBrand ? Colors.transparent : z.surface,
       padding: const EdgeInsets.only(bottom: ZSpace.x2),
       child: SizedBox(
         height: CategoryTabsSection._stripHeight,
@@ -181,38 +182,57 @@ class HomePinnedHeaderDelegate extends SliverPersistentHeaderDelegate {
   ) {
     final z = context.z;
     final raised = overlapsContent || shrinkOffset > 0;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: z.header,
-        boxShadow: [
-          if (raised)
-            BoxShadow(
-              color: z.shadow,
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+    const bottom = BorderRadius.vertical(
+      bottom: Radius.circular(ZRadius.sheet),
+    );
+    // Floating Cards: the header band ends in a rounded bottom halfway
+    // down the search bar, which floats over it. Pinned (or with category
+    // tabs on the band) the band runs under the whole block.
+    final bandHeight = raised || tabs != null ? _extent : ZSize.search / 2;
+    return Stack(
+      children: [
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 0,
+          height: bandHeight,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: bottom,
+              boxShadow: raised ? z.cardShadow : z.headerShadow,
             ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              ZSpace.screen,
-              0,
-              ZSpace.screen,
-              ZSpace.x3,
+            child: ZHeaderFill(
+              // Pinned it sits right under the status bar, so it carries
+              // on the glow there; otherwise it's below the header, where
+              // the glow has faded.
+              offsetY: raised
+                  ? MediaQuery.paddingOf(context).top
+                  : ZHeaderFill.glowRadius,
+              borderRadius: bottom,
             ),
-            child: ZSearchBar(onTap: onSearch, hints: searchHints),
           ),
-          if (tabs != null)
-            CategoryTabsSection(
-              section: tabs!,
-              onBrand: true,
-              onAllTap: onAllTap,
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                ZSpace.screen,
+                0,
+                ZSpace.screen,
+                ZSpace.x3,
+              ),
+              child: ZSearchBar(onTap: onSearch, hints: searchHints),
             ),
-        ],
-      ),
+            if (tabs != null)
+              CategoryTabsSection(
+                section: tabs!,
+                onBrand: true,
+                onAllTap: onAllTap,
+              ),
+          ],
+        ),
+      ],
     );
   }
 

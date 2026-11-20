@@ -129,6 +129,7 @@ class _BannerCarouselSectionState extends State<BannerCarouselSection> {
                   decoration: BoxDecoration(
                     color: context.z.deal,
                     borderRadius: BorderRadius.circular(ZRadius.banner),
+                    boxShadow: context.z.cardShadow,
                   ),
                   // Image owns the right ~42%, text the rest, so they never
                   // overlap whatever the image's aspect ratio.

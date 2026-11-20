@@ -286,12 +286,17 @@ class ZImageTile extends StatelessWidget {
     this.width,
     this.height = ZSize.productTile,
     this.fill = .82,
+    this.lifted = false,
   });
   final Widget image;
   final Color color;
   final double? width;
   final double height;
   final double fill;
+
+  /// Floats on a soft shadow (a tile on its own, e.g. a category);
+  /// leave off for a tile inside a card.
+  final bool lifted;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -300,6 +305,7 @@ class ZImageTile extends StatelessWidget {
     decoration: BoxDecoration(
       color: color,
       borderRadius: ZRadius.all(ZRadius.tile),
+      boxShadow: lifted ? context.z.softShadow : null,
     ),
     alignment: Alignment.center,
     child: FractionallySizedBox(

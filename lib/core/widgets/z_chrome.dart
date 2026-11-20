@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -104,6 +106,7 @@ class ZCategoryTile extends StatelessWidget {
                   ? constraints.maxWidth
                   : _tileWidth,
               height: ZSize.categoryTile,
+              lifted: true,
             ),
             const SizedBox(height: _gap),
             Text(
@@ -192,12 +195,13 @@ class _ZSearchBarState extends State<ZSearchBar> {
         padding: const EdgeInsets.only(left: 14, right: 6),
         decoration: BoxDecoration(
           color: z.surface,
-          borderRadius: ZRadius.all(15),
+          borderRadius: ZRadius.all(ZRadius.input),
+          // Floats over the header band's rounded bottom.
           boxShadow: [
             BoxShadow(
               color: z.shadow,
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
@@ -297,11 +301,11 @@ class ZCartBar extends StatelessWidget {
           padding: const EdgeInsets.only(left: 10, right: 8),
           decoration: BoxDecoration(
             color: z.brand,
-            borderRadius: ZRadius.all(ZRadius.card),
+            borderRadius: ZRadius.all(ZRadius.button),
             boxShadow: [
               BoxShadow(
-                color: z.brand.withValues(alpha: .35),
-                blurRadius: 20,
+                color: z.brand.withValues(alpha: z.isDark ? .22 : .35),
+                blurRadius: 18,
                 offset: const Offset(0, 8),
               ),
             ],
@@ -438,9 +442,16 @@ class ZNavBar extends StatelessWidget {
     final z = context.z;
     final t = Theme.of(context).textTheme;
     return Container(
+      // Floating Cards: no divider, a soft upward shadow instead.
       decoration: BoxDecoration(
         color: z.surface,
-        border: Border(top: BorderSide(color: z.line)),
+        boxShadow: [
+          BoxShadow(
+            color: z.shadow,
+            blurRadius: z.isDark ? 24 : 18,
+            offset: const Offset(0, -6),
+          ),
+        ],
       ),
       child: SafeArea(
         top: false,
@@ -530,7 +541,7 @@ class ZNavBar extends StatelessWidget {
                                 fontSize: 11,
                                 letterSpacing: 0,
                                 fontWeight: FontWeight.w700,
-                                color: i == index ? z.ink : z.ink3,
+                                color: i == index ? z.brandText : z.ink3,
                               ),
                             ),
                           ],
@@ -594,7 +605,8 @@ class ZChip extends StatelessWidget {
             decoration: BoxDecoration(
               color: selected ? z.ink : z.surface,
               borderRadius: ZRadius.all(ZRadius.chip),
-              border: Border.all(color: selected ? z.ink : z.line),
+              // Floating Cards: chips float on a soft shadow, no outline.
+              boxShadow: selected ? null : z.softShadow,
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -649,8 +661,93 @@ class ZStatusBarStrip extends StatelessWidget {
         value: SystemUiOverlayStyle.light.copyWith(
           statusBarColor: Colors.transparent,
         ),
-        child: ColoredBox(color: color ?? context.z.header),
+        child: color != null
+            ? ColoredBox(color: color!)
+            : const ZHeaderFill(offsetY: 0),
       ),
     );
   }
+}
+
+/// Paints the rounded header band (Floating Cards + Dark B). A band is
+/// often several boxes stacked (status-bar strip, header, pinned search);
+/// each passes [offsetY], its distance from the top of the screen, so the
+/// gradient is drawn in screen space and the pieces meet without a seam.
+class ZHeaderFill extends StatelessWidget {
+  const ZHeaderFill({
+    super.key,
+    required this.offsetY,
+    this.borderRadius = BorderRadius.zero,
+    this.child,
+  });
+
+  /// How far below the top of the screen this box starts.
+  final double offsetY;
+  final BorderRadius borderRadius;
+  final Widget? child;
+
+  /// Radius of the dark glow, measured from the top of the screen: it has
+  /// faded into the base colour by the bottom of a typical header, so
+  /// pieces of the band further down can be flat.
+  static const double glowRadius = 200;
+
+  @override
+  Widget build(BuildContext context) {
+    final z = context.z;
+    return ClipRRect(
+      borderRadius: borderRadius,
+      child: CustomPaint(
+        painter: _HeaderFillPainter(
+          colors: z.headerSheen,
+          base: z.headerGlowBase,
+          glow: z.isDark,
+          offsetY: offsetY,
+        ),
+        child: child ?? const SizedBox.expand(),
+      ),
+    );
+  }
+}
+
+class _HeaderFillPainter extends CustomPainter {
+  const _HeaderFillPainter({
+    required this.colors,
+    required this.base,
+    required this.glow,
+    required this.offsetY,
+  });
+
+  final List<Color> colors;
+  final Color base;
+  final bool glow;
+  final double offsetY;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final paint = Paint();
+    if (glow) {
+      canvas.drawRect(rect, Paint()..color = base);
+      paint.shader = ui.Gradient.radial(
+        Offset(size.width * .15, -offsetY),
+        ZHeaderFill.glowRadius,
+        colors,
+      );
+    } else {
+      paint.shader = ui.Gradient.linear(
+        Offset.zero,
+        Offset(size.width, 0),
+        colors,
+        const [0, .45, 1],
+      );
+    }
+    canvas.drawRect(rect, paint);
+  }
+
+  @override
+  bool shouldRepaint(_HeaderFillPainter old) =>
+      old.glow != glow ||
+      old.offsetY != offsetY ||
+      old.base != base ||
+      !listEquals(old.colors, colors);
 }

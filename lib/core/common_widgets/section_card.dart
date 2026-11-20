@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 
-/// White, flat, 1 px-bordered section card (docs/screens/light/10-checkout.png),
-/// shared by checkout, account settings and order details.
+/// Floating section card (radius 22, no border, ZColors.cardShadow), shared
+/// by checkout, account settings and order details.
 class SectionCard extends StatelessWidget {
   final String? title;
   final Widget child;
@@ -15,25 +15,25 @@ class SectionCard extends StatelessWidget {
 
     // A Material (not a decorated box) so ListTiles / switches inside get
     // their ink splashes, clipped to the rounded corners.
-    return Material(
-      color: z.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: ZRadius.all(ZRadius.card),
-        side: BorderSide(color: z.line),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(ZSpace.x4),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (title != null) ...[
-              Text(title!, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: ZSpace.x3),
+    return DecoratedBox(
+      decoration: z.card(),
+      child: Material(
+        color: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: ZRadius.all(ZRadius.card)),
+        clipBehavior: Clip.antiAlias,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(ZSpace.x4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (title != null) ...[
+                Text(title!, style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: ZSpace.x3),
+              ],
+              child,
             ],
-            child,
-          ],
+          ),
         ),
       ),
     );
@@ -60,21 +60,29 @@ class SelectableTile extends StatelessWidget {
     return Semantics(
       selected: selected,
       button: true,
-      child: Material(
-        color: selected ? z.brandSoft : z.surface,
-        shape: RoundedRectangleBorder(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
           borderRadius: ZRadius.all(ZRadius.tile),
-          side: BorderSide(
-            color: selected ? z.brand : z.line,
-            width: selected ? 1.5 : 1,
-          ),
+          boxShadow: selected ? null : z.softShadow,
         ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(ZSpace.x4),
-            child: child,
+        child: Material(
+          color: selected ? z.brandSoft : z.surface,
+          // Unselected options float like cards; the selected one is outlined.
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: ZRadius.all(ZRadius.tile),
+            side: selected
+                ? BorderSide(color: z.brand, width: 1.5)
+                : BorderSide.none,
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(ZSpace.x4),
+              child: child,
+            ),
           ),
         ),
       ),
