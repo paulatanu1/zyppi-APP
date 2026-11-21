@@ -9,6 +9,9 @@ import {
   readPlan,
   readSellerApplication,
   sellerApplicationProblems,
+  fssaiMissing,
+  newStoreCode,
+  STORE_CODE_PATTERN,
 } from "../../src/marketplace/model";
 import {
   PricingError,
@@ -193,6 +196,26 @@ describe("seller application", () => {
     expect(sellerApplicationProblems(full({ gstin: "19ZZZZZ9999Z1Z5" }), true, now)).toEqual(["GSTIN doesn't match the PAN"]);
     expect(sellerApplicationProblems(full({ fssaiExpiry: "2026-01-01" }), true, now)).toEqual(["Your FSSAI licence has expired"]);
     expect(sellerApplicationProblems(full({ pan: "1234" }), true, now)).toContain("PAN looks wrong (e.g. ABCDE1234F)");
+  });
+
+  it("lets a food shop apply without FSSAI and flags it", () => {
+    const a = full({ fssaiNo: "", fssaiExpiry: "", docs: { ...full().docs, fssaiCertificate: undefined } });
+    expect(sellerApplicationProblems(a, true, now)).toEqual([]);
+    expect(fssaiMissing(a)).toBe(true);
+    expect(fssaiMissing(full())).toBe(false);
+    expect(fssaiMissing(full({ shopCategory: "stationery", fssaiNo: "" }))).toBe(false);
+  });
+
+  it("still checks an FSSAI number once one is given", () => {
+    expect(sellerApplicationProblems(full({ fssaiNo: "123" }), true, now)).toContain("FSSAI number must be 14 digits");
+    const noPhoto = full({ docs: { ...full().docs, fssaiCertificate: undefined } });
+    expect(sellerApplicationProblems(noPhoto, true, now)).toEqual(["Upload a photo of your FSSAI certificate"]);
+  });
+
+  it("makes Store IDs like ZS123456", () => {
+    expect(newStoreCode(() => 0)).toBe("ZS100000");
+    expect(newStoreCode(() => 0.999999)).toBe("ZS999999");
+    expect(STORE_CODE_PATTERN.test(newStoreCode())).toBe(true);
   });
 
   it("doesn't need FSSAI for a stationery shop", () => {
