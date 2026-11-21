@@ -13,7 +13,7 @@ import {
   sellersToAccept,
   stopReady,
 } from "../../src/dispatch/pickups";
-import { myStops, sellerOrderView } from "../../src/marketplace/seller_orders";
+import { myStops, sellerCustomer, sellerOrderView } from "../../src/marketplace/seller_orders";
 
 // Along a line east of Purulia: dark store (west), Sima (middle), customer (east).
 const P = (lng: number) => ({ lat: 23.33, lng });
@@ -152,5 +152,32 @@ describe("seller's view of an order", () => {
     for (const secret of ["Secret street", "+91999", "customer-uid", "marginPaise", "pricePaise"]) {
       expect(json).not.toContain(secret);
     }
+  });
+});
+
+describe("customer on the seller's order view", () => {
+  const base = {
+    status: "packing",
+    userId: "customer-uid",
+    sellerStatus: { sima: "accepted" },
+    pickups: { seller_sima: { otpRequired: true, sellerId: "sima", status: "accepted" } },
+    items: [],
+  };
+  const customer = sellerCustomer({ fullName: "Rahul Sen Gupta", phone: "+919830041275", address: "Secret street" })!;
+
+  it("keeps only the first name and phone", () => {
+    expect(customer).toEqual({ firstName: "Rahul", phone: "+919830041275" });
+    expect(sellerCustomer({})).toEqual({ firstName: "Customer", phone: null });
+    expect(sellerCustomer(undefined)).toBeNull();
+  });
+
+  it("shows the customer only while the seller is working on the order", () => {
+    expect(sellerOrderView(base, "sima", customer).customer).toEqual(customer);
+    expect(sellerOrderView({ ...base, sellerStatus: { sima: "pending" } }, "sima", customer).customer).toBeNull();
+    expect(sellerOrderView({ ...base, status: "cancelled" }, "sima", customer).customer).toBeNull();
+    expect(sellerOrderView({ ...base, status: "delivered" }, "sima", customer).customer).toBeNull();
+    const picked = { ...base, pickups: { seller_sima: { otpRequired: true, sellerId: "sima", status: "ready", pickedAt: "t" } } };
+    expect(sellerOrderView(picked, "sima", customer).customer).toBeNull();
+    expect(JSON.stringify(sellerOrderView(base, "sima", customer))).not.toContain("Secret street");
   });
 });

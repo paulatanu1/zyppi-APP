@@ -116,7 +116,7 @@ describe("acceptProblems", () => {
     expect(acceptProblems(readAccept({ ...base, signaturePath: "sellers/u1/kyc/signature.png" }), ctx(), current)).toEqual([]);
     expect(acceptProblems(readAccept({ ...base, signaturePath: "sellers/u2/kyc/signature.png" }), ctx(), current)).toEqual(["Draw your signature to sign"]);
     expect(acceptProblems(readAccept({ ...base, signaturePath: "sellers/u1/kyc/signature.png" }), ctx({ authTime: nowS - 11 * 60 }), current)).toEqual(["OTP_REQUIRED"]);
-    expect(acceptProblems(readAccept({ ...base, signaturePath: "sellers/u1/kyc/s.png" }), ctx({ anonymous: true }), current)).toEqual(["Sign in with your phone number to sign"]);
+    expect(acceptProblems(readAccept({ ...base, signaturePath: "sellers/u1/kyc/s.png" }), ctx({ anonymous: true }), current)).toEqual(["Sign in to sign"]);
   });
 
   it("rejects malformed requests", () => {

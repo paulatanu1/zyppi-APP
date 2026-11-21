@@ -9,6 +9,15 @@ import { type Payout, payoutSummary } from "../riders/model";
  */
 export const SELLERS = "sellers";
 export const SELLER_USERS = "sellerUsers";
+/** Store ID → seller, for "Log in with Store ID". Server-only (no client rules). */
+export const SELLER_STORE_CODES = "sellerStoreCodes";
+
+/** A Store ID like ZS482913. */
+export function newStoreCode(random: () => number = Math.random): string {
+  return `ZS${100000 + Math.floor(random() * 900000)}`;
+}
+
+export const STORE_CODE_PATTERN = /^ZS\d{6}$/;
 export const SELLER_PLANS = "sellerPlans";
 export const LISTINGS = "listings";
 export const OFFERS = "offers";
@@ -173,9 +182,14 @@ export function readSellerApplication(raw: Record<string, unknown>, sellerId: st
   };
 }
 
-/** Food categories need an FSSAI licence (FSS Act 2006). */
+/**
+ * Food categories need an FSSAI licence (FSS Act 2006). Not required to
+ * apply; [fssaiMissing] marks food shops that haven't given one yet.
+ */
 export const needsFssai = (a: Pick<SellerApplication, "shopCategory">) =>
   a.shopCategory !== "stationery" && a.shopCategory !== "household" && a.shopCategory !== "personal_care";
+
+export const fssaiMissing = (a: Pick<SellerApplication, "shopCategory" | "fssaiNo">) => needsFssai(a) && !a.fssaiNo;
 
 /** Metres between two points (haversine). */
 export function metresBetween(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
@@ -216,9 +230,10 @@ export function sellerApplicationProblems(a: SellerApplication, complete: boolea
 
   if (a.gstin && !/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(a.gstin)) out.push("GSTIN looks wrong");
   if (a.gstin && a.pan && a.gstin.slice(2, 12) !== a.pan) out.push("GSTIN doesn't match the PAN");
-  if (needsFssai(a) || a.fssaiNo) {
-    need(!!a.fssaiNo, "FSSAI licence number is required for food");
-    if (a.fssaiNo && !/^\d{14}$/.test(a.fssaiNo)) out.push("FSSAI number must be 14 digits");
+  // FSSAI is optional when applying (food shops without one are flagged
+  // fssaiMissing for ops). Once a number is given, the rest must match.
+  if (a.fssaiNo) {
+    if (!/^\d{14}$/.test(a.fssaiNo)) out.push("FSSAI number must be 14 digits");
     need(!!a.fssaiExpiry, "FSSAI licence expiry date is required");
     if (a.fssaiExpiry) {
       const exp = Date.parse(`${a.fssaiExpiry}T00:00:00Z`);
