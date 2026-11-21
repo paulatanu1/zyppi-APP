@@ -238,7 +238,9 @@ service cloud.firestore {
       // Doc id = product variant id (Zyppi's own stock), or an offer id
       // (marketplace: offers/{offerId}) with `offerId` + `variantId`.
       match /cart/{variantId} {
-        allow read, delete: if isOwner(uid);
+        // Staff read it from the admin panel's customer page.
+        allow read: if isOwner(uid) || isAdmin();
+        allow delete: if isOwner(uid);
         allow create, update: if isOwner(uid)
           && request.resource.data.keys().hasOnly(['productId', 'quantity', 'updatedAt', 'offerId', 'variantId'])
           && (!('offerId' in request.resource.data)
@@ -253,7 +255,9 @@ service cloud.firestore {
       // (notifications/inbox.ts). The customer may mark entries read or
       // remove them; `expireAt` lets the TTL policy delete old ones.
       match /notifications/{id} {
-        allow read, delete: if isOwner(uid);
+        // Staff read it from the admin panel's customer page.
+        allow read: if isOwner(uid) || isAdmin();
+        allow delete: if isOwner(uid);
         allow update: if isOwner(uid)
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
           && request.resource.data.read == true;
@@ -262,7 +266,9 @@ service cloud.firestore {
 
       // Doc id = product id.
       match /favourites/{productId} {
-        allow read, delete: if isOwner(uid);
+        // Staff read it from the admin panel's customer page.
+        allow read: if isOwner(uid) || isAdmin();
+        allow delete: if isOwner(uid);
         allow create: if isOwner(uid)
           && request.resource.data.keys().hasOnly(['createdAt']);
       }

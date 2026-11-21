@@ -6,7 +6,7 @@ import {
   assertSucceeds,
   initializeTestEnvironment,
 } from "@firebase/rules-unit-testing";
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { deleteDoc, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { afterAll, beforeAll, beforeEach, describe, it } from "vitest";
 
 let env: RulesTestEnvironment;
@@ -144,6 +144,27 @@ describe("stores in firestore.rules", () => {
     });
     await assertSucceeds(getDoc(doc(env.authenticatedContext("rider-new").firestore(), "stores/s1")));
     await assertFails(getDoc(doc(env.authenticatedContext("rider-applied").firestore(), "stores/s1")));
+  });
+});
+
+describe("customer data for the admin customer page", () => {
+  const paths = ["users/c1/cart/v1", "users/c1/favourites/p1", "users/c1/notifications/n1"];
+
+  it("staff read a customer's cart, favourites and inbox, but can't change them", async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      for (const p of paths) await setDoc(doc(ctx.firestore(), p), { productId: "p1", quantity: 1 });
+    });
+    const support = as({ role: "support" });
+    for (const p of paths) {
+      await assertSucceeds(getDoc(doc(support, p)));
+      await assertFails(deleteDoc(doc(support, p)));
+    }
+    const owner = env.authenticatedContext("c1").firestore();
+    const other = env.authenticatedContext("c2").firestore();
+    for (const p of paths) {
+      await assertSucceeds(getDoc(doc(owner, p)));
+      await assertFails(getDoc(doc(other, p)));
+    }
   });
 });
 
