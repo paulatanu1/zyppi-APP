@@ -565,5 +565,7 @@
   "statWallet": "Wallet",
   "statAddresses": "Addresses",
   "cantBeEdited": "Can't be edited",
-  "changePhoneChat": "To change it, chat with us"
+  "changePhoneChat": "To change it, chat with us",
+  "cartItemOutOfStock": "Out of stock here. Remove it to check out.",
+  "errorCartOutOfStock": "Remove the out-of-stock items to check out."
 }

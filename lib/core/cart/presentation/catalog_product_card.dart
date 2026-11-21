@@ -54,6 +54,7 @@ class CatalogProductCard extends ConsumerWidget {
       heroTag: heroTag,
       price: offer?.price,
       mrp: offer?.mrp,
+      soldOut: offer?.inStock == false,
       quantity: quantity,
       favourite: favourite,
       onTap: () => context.push(

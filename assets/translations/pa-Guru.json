@@ -565,5 +565,7 @@
   "statWallet": "ਵਾਲਿਟ",
   "statAddresses": "ਪਤੇ",
   "cantBeEdited": "ਬਦਲਿਆ ਨਹੀਂ ਜਾ ਸਕਦਾ",
-  "changePhoneChat": "ਬਦਲਣ ਲਈ ਸਾਡੇ ਨਾਲ ਚੈਟ ਕਰੋ"
+  "changePhoneChat": "ਬਦਲਣ ਲਈ ਸਾਡੇ ਨਾਲ ਚੈਟ ਕਰੋ",
+  "cartItemOutOfStock": "ਇੱਥੇ ਸਟਾਕ ਵਿੱਚ ਨਹੀਂ। ਚੈੱਕਆਊਟ ਲਈ ਇਸਨੂੰ ਹਟਾਓ।",
+  "errorCartOutOfStock": "ਚੈੱਕਆਊਟ ਲਈ ਸਟਾਕ ਤੋਂ ਬਾਹਰ ਆਈਟਮ ਹਟਾਓ।"
 }

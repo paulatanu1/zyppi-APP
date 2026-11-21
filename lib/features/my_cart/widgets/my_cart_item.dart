@@ -1,8 +1,10 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/cart/domain/cart_line.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
+import 'package:zippy/core/marketplace/application/marketplace_providers.dart';
 import 'package:zippy/core/marketplace/presentation/sold_by.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/widgets/z_commerce.dart';
@@ -18,6 +20,11 @@ class MyCartItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final z = context.z;
     final t = Theme.of(context).textTheme;
+    final inStock = variantInStock(
+      line.product,
+      line.variant.id,
+      ref.watch(shoppingAreaIdProvider),
+    );
     // Live quantity at tap time, so quick taps all count.
     void step(int delta) {
       final cart = ref.read(cartProvider.notifier);
@@ -74,6 +81,17 @@ class MyCartItem extends ConsumerWidget {
                   SoldByLink(
                     sellerId: offer.sellerId,
                     sellerName: offer.sellerName,
+                  ),
+                if (!inStock)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      'cartItemOutOfStock'.tr(),
+                      style: t.bodySmall!.copyWith(
+                        color: z.danger,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
               ],
             ),

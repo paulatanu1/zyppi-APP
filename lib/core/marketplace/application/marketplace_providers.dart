@@ -39,19 +39,34 @@ final sellerProfileProvider = FutureProvider.autoDispose
 
 /// What a product card shows and adds for [variant]: the area's top offer
 /// (another seller may be cheaper or have stock), else Zyppi's own price.
-({int price, int? mrp, OfferPick? pick}) cardPrice(
+/// [inStock] is false when the area's best offer has no units (the server
+/// keeps `areaBest` in step with inventory); unknown counts as in stock and
+/// placeOrder still has the final say.
+({int price, int? mrp, OfferPick? pick, bool inStock}) cardPrice(
   Product product,
   ProductVariant variant,
   String? areaId,
 ) {
   final best = product.bestOfferFor(areaId, variant.id);
   if (best == null) {
-    return (price: variant.pricePaise, mrp: variant.mrpPaise, pick: null);
+    return (
+      price: variant.pricePaise,
+      mrp: variant.mrpPaise,
+      pick: null,
+      inStock: true,
+    );
   }
   return (
     price: best.pricePaise,
     mrp: best.mrpPaise,
     // Zyppi's lines stay keyed by variant (the server reads them as Zyppi's).
     pick: best.sellerId == zyppiSellerId ? null : best.pick,
+    inStock: best.inStock,
   );
 }
+
+/// False when nothing is in stock for [variantId] where the customer shops:
+/// offers are ranked in-stock first, so an out-of-stock top offer means
+/// every offer is out. Unknown (no area / no offers) counts as in stock.
+bool variantInStock(Product product, String variantId, String? areaId) =>
+    product.bestOfferFor(areaId, variantId)?.inStock ?? true;

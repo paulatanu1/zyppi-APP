@@ -565,5 +565,7 @@
   "statWallet": "ওয়ালেট",
   "statAddresses": "ঠিকানা",
   "cantBeEdited": "পরিবর্তন করা যাবে না",
-  "changePhoneChat": "পরিবর্তন করতে আমাদের সাথে চ্যাট করুন"
+  "changePhoneChat": "পরিবর্তন করতে আমাদের সাথে চ্যাট করুন",
+  "cartItemOutOfStock": "এখানে স্টকে নেই। চেকআউট করতে এটি সরান।",
+  "errorCartOutOfStock": "চেকআউট করতে স্টকে নেই এমন আইটেম সরান।"
 }

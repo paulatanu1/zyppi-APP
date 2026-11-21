@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/cart/application/cart_state.dart';
 import 'package:zippy/core/domain/coupon.dart';
+import 'package:zippy/core/marketplace/application/marketplace_providers.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/utils/address_label.dart';
 import 'package:zippy/core/utils/snack_bar.dart';
@@ -472,16 +473,16 @@ class _TipCard extends ConsumerWidget {
 
 /// The sticky sheet: "Items ₹447 · Delivery ₹25 · Handling ₹5 · Bill ▴"
 /// (expands to the full bill) and the "₹477 TO PAY · Checkout ›" button.
-class _CheckoutSheet extends StatefulWidget {
+class _CheckoutSheet extends ConsumerStatefulWidget {
   const _CheckoutSheet({required this.cart});
 
   final CartState cart;
 
   @override
-  State<_CheckoutSheet> createState() => _CheckoutSheetState();
+  ConsumerState<_CheckoutSheet> createState() => _CheckoutSheetState();
 }
 
-class _CheckoutSheetState extends State<_CheckoutSheet> {
+class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
   bool _billOpen = false;
 
   @override
@@ -492,6 +493,11 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
     final bill = cart.bill;
     final belowMinimum =
         cart.delivery.remainingForMinimum(bill.itemTotalPaise) > 0;
+    final areaId = ref.watch(shoppingAreaIdProvider);
+    final hasOutOfStock = cart.lines.any(
+      (l) => !variantInStock(l.product, l.variant.id, areaId),
+    );
+    final blocked = belowMinimum || hasOutOfStock;
     final motion = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
         : ZMotion.ui;
@@ -588,7 +594,9 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
                 child: ZPressable(
                   // Below the minimum order the button explains why instead
                   // of opening checkout.
-                  onTap: belowMinimum
+                  onTap: hasOutOfStock
+                      ? () => showError('errorCartOutOfStock'.tr())
+                      : belowMinimum
                       ? () => showError(
                           'errorMinOrder'.tr(
                             args: [rupees(cart.delivery.minOrderPaise)],
@@ -603,7 +611,7 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
                       vertical: ZSpace.x2,
                     ),
                     decoration: BoxDecoration(
-                      color: belowMinimum ? z.ink3 : z.brand,
+                      color: blocked ? z.ink3 : z.brand,
                       borderRadius: ZRadius.all(ZRadius.button),
                     ),
                     child: Row(

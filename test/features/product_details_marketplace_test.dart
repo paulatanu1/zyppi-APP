@@ -194,8 +194,14 @@ void main() {
       price: 5800,
       mrp: 6400,
       pick: _milk.areaBest['pur']!['v1']!.pick,
+      inStock: true,
     ));
-    expect(cardPrice(_milk, v, 'rag'), (price: 6000, mrp: 6400, pick: null));
+    expect(cardPrice(_milk, v, 'rag'), (
+      price: 6000,
+      mrp: 6400,
+      pick: null,
+      inStock: true,
+    ));
     final zyppiBest = _milk.copyWith(
       areaBest: {
         'pur': {

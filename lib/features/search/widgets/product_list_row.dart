@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/widgets/z_product_card.dart';
 import 'package:zippy/core/marketplace/application/marketplace_providers.dart';
 import 'package:zippy/core/cart/application/cart_provider.dart';
 import 'package:zippy/core/common_widgets/catalog_image.dart';
@@ -113,11 +114,14 @@ class ProductListRow extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: ZSpace.x3),
-            ZAddStepper(
-              quantity: quantity,
-              onAdd: () => step(1),
-              onRemove: () => step(-1),
-            ),
+            if (!offer.inStock && quantity == 0)
+              const ZSoldOutTag()
+            else
+              ZAddStepper(
+                quantity: quantity,
+                onAdd: () => step(1),
+                onRemove: () => step(-1),
+              ),
           ],
         ),
       ),

@@ -203,4 +203,33 @@ void main() {
     await pumpCard(tester, sold, area: 'rag');
     expect(find.text('₹179'), findsOneWidget);
   });
+
+  testWidgets('out of stock in the area: "outOfStock" instead of ADD', (
+    tester,
+  ) async {
+    final soldOut = _apple.copyWith(
+      areaBest: {
+        'pur': {
+          'v1': const BestOffer(
+            offerId: 'zyppi_pur_v1',
+            sellerId: 'zyppi',
+            pricePaise: 17900,
+            mrpPaise: 19900,
+            inStock: false,
+          ),
+        },
+      },
+    );
+    expect(variantInStock(soldOut, 'v1', 'pur'), isFalse);
+    // Unknown area / no offers: counted as in stock (the server decides).
+    expect(variantInStock(soldOut, 'v1', 'rag'), isTrue);
+    expect(variantInStock(_apple, 'v1', 'pur'), isTrue);
+
+    await pumpCard(tester, soldOut, area: 'pur');
+    expect(find.text('outOfStock'), findsOneWidget);
+    expect(find.text('add'), findsNothing);
+
+    await pumpCard(tester, soldOut, area: 'rag');
+    expect(find.text('outOfStock'), findsNothing);
+  });
 }

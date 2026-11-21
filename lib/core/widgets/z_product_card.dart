@@ -31,7 +31,13 @@ class ZProductCard extends StatelessWidget {
     this.width,
     this.eta,
     this.heroTag,
+    this.soldOut = false,
   });
+
+  /// No stock where the customer shops: the photo dims and "Out of stock"
+  /// replaces ADD (a stepper still shows if some is already in the cart,
+  /// so it can be taken out).
+  final bool soldOut;
 
   final String name, weight;
 
@@ -149,9 +155,12 @@ class ZProductCard extends StatelessWidget {
             Stack(
               children: [
                 ZImageTile(
-                  image: heroTag == null
-                      ? image
-                      : Hero(tag: heroTag!, child: image),
+                  image: Opacity(
+                    opacity: soldOut ? .45 : 1,
+                    child: heroTag == null
+                        ? image
+                        : Hero(tag: heroTag!, child: image),
+                  ),
                   color: tileColor ?? z.surface2,
                 ),
                 if (_offPercent != null)
@@ -243,7 +252,9 @@ class ZProductCard extends StatelessWidget {
                             child: ZPrice(price: price!, mrp: mrp),
                           ),
                   ),
-                  if (price != null && onAdd != null && onRemove != null)
+                  if (price != null && soldOut && quantity == 0)
+                    const ZSoldOutTag()
+                  else if (price != null && onAdd != null && onRemove != null)
                     ZAddStepper(
                       quantity: quantity,
                       onAdd: onAdd!,
@@ -300,6 +311,31 @@ class ZProductCardSkeleton extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// "Out of stock" in place of ADD (product cards, search rows).
+class ZSoldOutTag extends StatelessWidget {
+  const ZSoldOutTag({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final z = context.z;
+    return Container(
+      height: ZSize.addButton,
+      padding: const EdgeInsets.symmetric(horizontal: ZSpace.x2),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: z.surface2,
+        borderRadius: ZRadius.all(ZRadius.control),
+      ),
+      child: Text(
+        'outOfStock'.tr(),
+        maxLines: 1,
+        style: Theme.of(context).textTheme.labelSmall!
+            .copyWith(color: z.ink3, fontWeight: FontWeight.w800),
       ),
     );
   }

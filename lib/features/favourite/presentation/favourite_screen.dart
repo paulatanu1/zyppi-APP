@@ -87,11 +87,14 @@ class FavouriteScreen extends ConsumerWidget {
                           for (final product in products) {
                             if (product.variants.isEmpty) continue;
                             final variant = product.variants.first;
-                            final pick = cardPrice(
+                            final offer = cardPrice(
                               product,
                               variant,
                               ref.read(shoppingAreaIdProvider),
-                            ).pick;
+                            );
+                            // "Add all" skips what's out of stock here.
+                            if (!offer.inStock) continue;
+                            final pick = offer.pick;
                             // Already in the cart: leave its quantity alone,
                             // so tapping twice doesn't double everything.
                             if (cart.quantityOf(

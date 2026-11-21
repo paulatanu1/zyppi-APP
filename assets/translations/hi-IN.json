@@ -565,5 +565,7 @@
   "statWallet": "वॉलेट",
   "statAddresses": "पते",
   "cantBeEdited": "बदला नहीं जा सकता",
-  "changePhoneChat": "बदलने के लिए हमसे चैट करें"
+  "changePhoneChat": "बदलने के लिए हमसे चैट करें",
+  "cartItemOutOfStock": "यहाँ स्टॉक में नहीं है। चेकआउट के लिए इसे हटाएं।",
+  "errorCartOutOfStock": "चेकआउट के लिए स्टॉक से बाहर आइटम हटाएं।"
 }
