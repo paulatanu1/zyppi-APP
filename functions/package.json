@@ -16,6 +16,7 @@
     "set-admin": "tsx scripts/set-admin.ts",
     "deploy": "firebase deploy --only functions",
     "backfill-user-stats": "tsx scripts/backfill-user-stats.ts",
+    "backfill-user-created-at": "tsx scripts/backfill-user-created-at.ts",
     "backfill-stats": "tsx scripts/backfill-stats.ts",
     "backfill-zyppi-seller": "tsx scripts/backfill-zyppi-seller.ts",
     "backfill-rider-trips": "tsx scripts/backfill-rider-trips.ts",

@@ -1,4 +1,6 @@
+import { Timestamp } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
+import { onDocumentCreated } from "firebase-functions/firestore";
 import { HttpsError, onCall } from "firebase-functions/https";
 import { auth, db } from "./shared/firebase";
 import { requireUid } from "./shared/callable";
@@ -105,3 +107,25 @@ async function removeAccountData(
     .catch(() => undefined);
   await db.recursiveDelete(db.collection("users").doc(uid));
 }
+
+/**
+ * The sign-up time for users/{uid}.createdAt: Firebase Auth's creation
+ * time when it parses, otherwise `now`.
+ */
+export function signUpTime(authCreationTime: string | undefined, now: Date = new Date()): Timestamp {
+  const ms = authCreationTime ? Date.parse(authCreationTime) : Number.NaN;
+  return Timestamp.fromMillis(Number.isNaN(ms) ? now.getTime() : ms);
+}
+
+/**
+ * The app saves profiles without createdAt, and the admin panel's
+ * Customers list sorts by it (Firestore leaves out docs missing the
+ * field), so it's filled here from the Auth account when a profile is
+ * created. scripts/backfill-user-created-at.ts did the existing ones.
+ */
+export const onUserProfileCreated = onDocumentCreated("users/{uid}", async (event) => {
+  const snap = event.data;
+  if (!snap || snap.get("createdAt") != null) return;
+  const user = await auth.getUser(event.params.uid).catch(() => null);
+  await snap.ref.update({ createdAt: signUpTime(user?.metadata.creationTime) });
+});
