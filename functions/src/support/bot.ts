@@ -5,6 +5,7 @@ import { getFeatures } from "../shared/features";
 import { db } from "../shared/firebase";
 import { COPY } from "./copy";
 import { embed, type Embedder } from "./kb/embed";
+import { prepareMessage } from "./smalltalk";
 import { loadRetriever } from "./kb/store";
 import { detectLang, isLang, type Lang } from "./lang";
 import {
@@ -122,12 +123,14 @@ export async function handleUserMessage(
   }
 
   try {
-    const needsSearch = !message.quickReplyId;
+    // Small talk and empty messages are answered without the model.
+    const prepared = prepareMessage(text);
+    const needsSearch = !message.quickReplyId && !prepared.smallTalk && !prepared.empty;
     const [retriever, order, queryVector] = await Promise.all([
       loadRetriever(firestore, nowMs),
       findOrder(firestore, state.userId, state.orderId),
       needsSearch
-        ? embedder([text], "query")
+        ? embedder([prepared.text], "query")
             .then(([v]) => v ?? null)
             .catch((error) => {
               // Model failed to load: fall back to BM25 only.

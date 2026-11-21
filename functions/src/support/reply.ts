@@ -2,6 +2,7 @@ import { COPY, orderStatusText } from "./copy";
 import type { Lang } from "./lang";
 import type { Retriever } from "./kb/retrieve";
 import type { KbEntry } from "./kb/types";
+import { prepareMessage } from "./smalltalk";
 
 /** Chip under a bot message. `kb:<entryId>` answers that topic; `agent` hands off. */
 export interface QuickReply {
@@ -77,9 +78,14 @@ export function composeReply(input: {
   const tapped = input.quickReplyId?.startsWith("kb:")
     ? retriever.byId(input.quickReplyId.slice(3))
     : undefined;
-  const decision = tapped
-    ? ({ kind: "answer", entry: tapped, confidence: 1 } as const)
-    : retriever.decide(input.text, input.queryVector);
+  const prepared = prepareMessage(input.text);
+  const smallTalk = !tapped && prepared.smallTalk ? retriever.byId(prepared.smallTalk) : undefined;
+  const known = tapped ?? smallTalk;
+  const decision = known
+    ? ({ kind: "answer", entry: known, confidence: 1 } as const)
+    : prepared.empty
+      ? ({ kind: "unknown", confidence: 0 } as const)
+      : retriever.decide(prepared.text, input.queryVector);
 
   if (decision.kind === "suggest") {
     return {

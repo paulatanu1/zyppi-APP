@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { Bm25, rankBy, reciprocalRankFusion, tokenize } from "../../src/support/kb/bm25";
 import { decodeVector, encodeVector } from "../../src/support/kb/embed";
-import { Retriever, THRESHOLDS, type IndexedEntry } from "../../src/support/kb/retrieve";
+import { Retriever, type IndexedEntry } from "../../src/support/kb/retrieve";
 import { KB_SEED } from "../../src/support/kb/seed";
 import { detectLang, langFromLocale, LANGS } from "../../src/support/lang";
 
 /** Unit vector pointing mostly along axis [i] (cosine to its own axis = [strength]). */
-function axis(i: number, strength = 1, dims = 16): Float32Array {
+function axis(i: number, strength = 1, dims = 64): Float32Array {
   const v = new Float32Array(dims).fill(Math.sqrt((1 - strength ** 2) / (dims - 1)));
   v[i] = strength;
   return v;
@@ -76,23 +76,48 @@ describe("Retriever", () => {
   });
 
   it("suggests visible topics when unsure", () => {
-    const vector = axis(idx("coupons"), (THRESHOLDS.answer + THRESHOLDS.suggest) / 2);
+    // Halfway between two entries: both relevant, neither stands out.
+    const vector = new Float32Array(64);
+    vector[idx("coupons")] = Math.SQRT1_2;
+    vector[idx("delivery_fee")] = Math.SQRT1_2;
     const d = retriever.decide("anything", vector);
     expect(d.kind).toBe("suggest");
     if (d.kind === "suggest") {
-      expect(d.entries[0].id).toBe("coupons");
+      expect(d.entries.map((e) => e.id).sort()).toEqual(["coupons", "delivery_fee"]);
       expect(d.entries.every((e) => !e.hidden)).toBe(true);
     }
   });
 
   it("admits it doesn't know off-topic text", () => {
-    const d = retriever.decide("weather forecast", axis(0, 0.2));
+    const d = retriever.decide("weather forecast", new Float32Array(64).fill(1 / 8));
     expect(d.kind).toBe("unknown");
   });
 
   it("still answers exact words without the model", () => {
     const d = retriever.decide("purulia", null);
     expect(d.kind === "answer" && d.entry.id).toBe("delivery_areas");
+  });
+});
+
+describe("Retriever relevance gate", () => {
+  const retriever = new Retriever(seedIndex());
+  const idx = (id: string) => KB_SEED.findIndex((e) => e.id === id);
+  /** Same cosine to every entry: what e5 does with "?" or "tell me a joke". */
+  const flat = (dims = 64) => new Float32Array(dims).fill(1 / Math.sqrt(dims));
+
+  it("doesn't suggest anything when no entry stands out", () => {
+    expect(retriever.decide("tell me a joke", flat()).kind).toBe("unknown");
+  });
+
+  it("answers a hidden small-talk entry instead of offering unrelated chips", () => {
+    const d = retriever.decide("anything", axis(idx("greeting"), 0.86));
+    expect(d.kind === "answer" && d.entry.id).toBe("greeting");
+  });
+
+  it("only offers chips that are themselves relevant", () => {
+    const d = retriever.decide("anything", axis(idx("coupons"), 0.86));
+    if (d.kind === "suggest") expect(d.entries.map((e) => e.id)).toEqual(["coupons"]);
+    else expect(d.kind === "answer" && d.entry.id).toBe("coupons");
   });
 });
 

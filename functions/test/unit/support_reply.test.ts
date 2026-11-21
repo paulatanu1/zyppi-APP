@@ -4,7 +4,7 @@ import { Retriever } from "../../src/support/kb/retrieve";
 import { KB_SEED } from "../../src/support/kb/seed";
 import { AGENT_REPLY_ID, composeReply, type OrderSummary } from "../../src/support/reply";
 
-const DIMS = 16;
+const DIMS = 64;
 function axis(i: number, strength = 1): Float32Array {
   const v = new Float32Array(DIMS).fill(Math.sqrt((1 - strength ** 2) / (DIMS - 1)));
   v[i] = strength;
@@ -65,8 +65,8 @@ describe("composeReply", () => {
     expect(r.messages[0].quickReplies?.at(-1)?.label).toBe("কারও সঙ্গে কথা বলুন");
   });
 
-  it("hands refunds to the team with contact options", () => {
-    const r = reply({ queryVector: vectorFor("refund") });
+  it("hands payment problems to the team with contact options", () => {
+    const r = reply({ queryVector: vectorFor("payment_failed") });
     expect(r.handoff).toBe(true);
     expect(r.messages.map((m) => m.from)).toEqual(["bot", "system"]);
     expect(r.messages[1].action).toBe("contact_options");
@@ -93,8 +93,24 @@ describe("composeReply", () => {
     expect(r.messages).toHaveLength(1);
   });
 
+  it("answers small talk from the knowledge base without searching", () => {
+    expect(reply({ text: "Good morning!!" }).topic).toBe("greeting");
+    expect(reply({ text: "gud nyt" }).topic).toBe("goodbye");
+    expect(reply({ text: "ok thanks" }).topic).toBe("thanks");
+    expect(reply({ text: "👍" }).topic).toBe("acknowledge");
+    expect(reply({ text: "শুভ রাত্রি" }).messages[0].text).toBe(
+      KB_SEED.find((e) => e.id === "goodbye")!.answers.en,
+    );
+  });
+
+  it("treats punctuation-only messages as unknown", () => {
+    const r = reply({ text: "???", queryVector: vectorFor("refund") });
+    expect(r.topic).toBeNull();
+    expect(r.messages[0].quickReplies?.[0].id).toBe(AGENT_REPLY_ID);
+  });
+
   it("offers a person and starter topics when it doesn't know", () => {
-    const r = reply({ text: "weather forecast", queryVector: axis(0, 0.2) });
+    const r = reply({ text: "weather forecast", queryVector: new Float32Array(DIMS).fill(1 / Math.sqrt(DIMS)) });
     expect(r.handoff).toBe(false);
     expect(r.messages[0].quickReplies?.[0].id).toBe(AGENT_REPLY_ID);
     expect(r.messages[0].quickReplies?.map((q) => q.id)).toContain("kb:refund");
