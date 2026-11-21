@@ -154,6 +154,8 @@ export type HashDecision =
       amountPaise: number | null;
       txnid: string | null;
       credential: string | null;
+      /** Last 10 digits of the body's phone, when present. */
+      phone: string | null;
     }
   | { kind: "payment"; txnid: string; amountPaise: number }
   | {
@@ -277,13 +279,21 @@ function classifySdkEvent(hashName: string, hashString: string, now: number): Ha
     if (Number.isNaN(amountPaise)) return { kind: "reject", reason: "sdk event amount" };
   }
   const text = (field: string) => (field in record ? String(record[field] ?? "") : null);
+  const phone = text("phone");
   return {
     kind: "sdkEvent",
     bodyShape: describeBody(parts[0]),
     amountPaise,
     txnid: text("txnId"),
     credential: text("userCredential"),
+    // Quick-pay looks up saved instruments by phone: only the payer's own.
+    phone: phone === null ? null : phoneDigits(phone),
   };
+}
+
+/** A phone number's last 10 digits ("+91 98765-43210" → "9876543210"). */
+export function phoneDigits(phone: string): string {
+  return phone.replace(/\D/g, "").slice(-10);
 }
 
 /** A body's field names (never values), for the audit log. */

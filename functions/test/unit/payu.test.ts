@@ -135,6 +135,7 @@ describe("SDK event hashes (offers / quick-pay)", () => {
       amountPaise: 3000,
       txnid: null,
       credential: null,
+      phone: null,
     });
     expect(
       classifyHash(
@@ -145,7 +146,15 @@ describe("SDK event hashes (offers / quick-pay)", () => {
         KEY,
         now,
       ),
-    ).toMatchObject({ kind: "sdkEvent", amountPaise: 3000, credential: `${KEY}:uid1` });
+    ).toMatchObject({ kind: "sdkEvent", amountPaise: 3000, credential: `${KEY}:uid1`, phone: "9" });
+    // Quick-pay's phone is normalised to its last 10 digits, for matching the payer's.
+    expect(
+      classifyHash(
+        { hashName: "quickPayEvent", hashString: `{"phone":"+91 98765-43210","requestId":"r"}|${date}|` },
+        KEY,
+        now,
+      ),
+    ).toMatchObject({ kind: "sdkEvent", phone: "9876543210", amountPaise: null });
     expect(
       classifyHash(
         { hashName: "binBaseDetails", hashString: `{"amount":"30.00","cardNumber":"512345","txnId":"${TXN}","merchantKey":"${KEY}"}|${date}|` },

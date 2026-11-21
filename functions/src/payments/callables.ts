@@ -126,6 +126,9 @@ export const createPayUOrder = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (
         orderId: null,
         failureReason: null,
         stockHold,
+        // The phone PayU is given for this checkout: quick-pay hashes are
+        // signed only for it (signPayUHash).
+        payerPhone: payerDetails(snap.data() ?? {}, request.auth?.token.phone_number).phone,
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
       });
@@ -245,10 +248,11 @@ export const signPayUHash = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (req
           createdAt &&
           Date.now() - createdAt.toMillis() <= SDK_EVENT_INTENT_AGE_MS &&
           (decision.amountPaise === null || doc.get("amountPaise") === decision.amountPaise) &&
-          (decision.txnid === null || doc.id === decision.txnid)
+          (decision.txnid === null || doc.id === decision.txnid) &&
+          (decision.phone === null || doc.get("payerPhone") === decision.phone)
         );
       });
-      if (!fresh) return refuse("no open checkout for this amount / txnid");
+      if (!fresh) return refuse("no open checkout for this amount / txnid / phone");
       logger.info("Signed PayU SDK event hash", {
         uid,
         hashName: hashRequest.hashName,

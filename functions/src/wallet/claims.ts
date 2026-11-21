@@ -5,7 +5,7 @@ import { HttpsError, onCall } from "firebase-functions/https";
 import { ZYPPI_SELLER_ID, OFFERS } from "../marketplace/model";
 import { returnSellerItem } from "../marketplace/settlement";
 import { OrderError, placeOrderInTx } from "../orders/quote";
-import { PAYU_SECRETS } from "../payments/payu";
+import { PAYU_SECRETS, type PayURefunds, payURefunds } from "../payments/payu";
 import { createRefund } from "../payments/refunds";
 import { pushOrderCustomer } from "../push";
 import { addToInbox } from "../notifications/inbox";
@@ -196,7 +196,11 @@ export const adminResolveIssue = onCall({ secrets: PAYU_SECRETS }, async (reques
   return resolveIssue(actor, request.data ?? {});
 });
 
-export async function resolveIssue(actor: Actor, data: Record<string, unknown>) {
+export async function resolveIssue(
+  actor: Actor,
+  data: Record<string, unknown>,
+  payu: PayURefunds = payURefunds,
+) {
   const issueId = requireString(data.issueId, "issueId");
   const resolution = data.resolution;
   if (resolution !== "wallet" && resolution !== "original" && resolution !== "replacement") {
@@ -262,7 +266,7 @@ export async function resolveIssue(actor: Actor, data: Record<string, unknown>) 
           amountPaise: split.onlinePaise,
           reason: `Claim ${issueId.slice(0, 8)}: ${note || "item problem"}`,
           link: { issueId },
-        });
+        }, payu);
         refundId = r.refundId;
         refundPaise = split.onlinePaise;
       }

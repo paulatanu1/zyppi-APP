@@ -6,6 +6,7 @@ import { createRefund, refreshRefund, resolveIntent } from "../../src/payments/r
 import { settleIntent } from "../../src/payments/settle";
 import { db } from "../../src/shared/firebase";
 import type { Actor } from "../../src/shared/roles";
+import { resolveIssue } from "../../src/wallet/claims";
 import { STORE_A, STORE_B, UID, params, resetData } from "./fixtures";
 
 const ops: Actor = { uid: "ops-1", role: "ops", email: "ops@zyppi.test" };
@@ -231,6 +232,15 @@ describe("needs-review payments", () => {
       resolvedBy: "fin-1",
     });
   });
+
+  it("won't dismiss once a refund has taken it", async () => {
+    // A refund clicked at the same moment: amount reserved, PayU not answered yet.
+    await createRefund(fin, { intentId: "zT" }, { amountPaise: 20000, reason: "Paid, no order" }, fakePayU("down").payu);
+    await expect(
+      resolveIntent(fin, { intentId: "zT", action: "dismiss", note: "Refunded from PayU dashboard" }),
+    ).rejects.toThrow("no longer waiting for review");
+    expect((await db.doc("paymentIntents/zT").get()).get("status")).toBe("needs_review");
+  });
 });
 
 describe("concurrent cancels", () => {
@@ -247,5 +257,46 @@ describe("concurrent cancels", () => {
     expect(calls).toHaveLength(1);
     expect((await db.collection("refunds").where("orderId", "==", id).get()).size).toBe(1);
     expect([await stock(STORE_A, "v-milk"), await stock(STORE_B, "v-milk")]).toEqual([3, 2]);
+  });
+});
+
+describe("claim approval", () => {
+  beforeEach(async () => {
+    await resetData();
+    await db.doc("orders/o-claim").set({
+      userId: UID, status: "delivered", totalPaise: 30000,
+      payment: { method: "UPI", status: "succeeded", amountPaise: 30000, providerReference: "mih-c" },
+    });
+    await db.doc("orderIssues/i-1").set({
+      orderId: "o-claim", userId: UID, status: "open", amountPaise: 10000, lines: [],
+    });
+  });
+
+  it("reopens the claim when it failed before any refund", async () => {
+    const { payu, calls } = fakePayU();
+    await expect(resolveIssue(ops, { issueId: "i-1", resolution: "original", amountPaise: 99999 }, payu)).rejects.toThrow(
+      "Enter an amount",
+    );
+    expect(calls).toHaveLength(0);
+    expect((await db.doc("orderIssues/i-1").get()).get("status")).toBe("open");
+  });
+
+  it("is never reopened once PayU accepted the refund, even if closing it fails", async () => {
+    const payu: PayURefunds = {
+      // PayU accepts, then the order vanishes so recording the answer fails.
+      request: async () => {
+        await db.doc("orders/o-claim").delete();
+        return { ok: true, requestId: "req-1" };
+      },
+      check: async () => "succeeded",
+    };
+    // sendRefund swallows the failed write (refund stays "requesting");
+    // closing the claim then fails, outside the reopen path.
+    await expect(resolveIssue(ops, { issueId: "i-1", resolution: "original" }, payu)).rejects.toThrow();
+    const issue = (await db.doc("orderIssues/i-1").get()).data()!;
+    expect(issue.status).toBe("resolving");
+    expect(issue.resolvingPlan).toMatchObject({ refundPaise: 10000 });
+    const refunds = await db.collection("refunds").where("issueId", "==", "i-1").get();
+    expect(refunds.size).toBe(1);
   });
 });

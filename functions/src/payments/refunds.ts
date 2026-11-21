@@ -239,6 +239,12 @@ export async function resolveIntent(
   if (input.action === "dismiss") {
     if (note.length < 3) throw new HttpsError("invalid-argument", "Add a note saying how it was handled");
     await db.runTransaction(async (tx) => {
+      // Re-checked here: a refund clicked at the same time may already
+      // have taken it (refundedPaise reserved, or status "refunded").
+      const current = (await tx.get(ref)).data();
+      if (current?.status !== "needs_review" || ((current.refundedPaise as number | undefined) ?? 0) > 0) {
+        throw new HttpsError("failed-precondition", "This payment is no longer waiting for review");
+      }
       tx.update(ref, {
         status: "dismissed",
         resolutionNote: note,
