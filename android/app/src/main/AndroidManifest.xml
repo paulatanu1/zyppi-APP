@@ -11,6 +11,12 @@
         tools:node="remove" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- PayU's screens lock to portrait and its OTP helper reads Wi-Fi
+         state, which makes Play treat both as required hardware and hide
+         the app from some tablets, TVs and cars. Neither is needed. -->
+    <uses-feature android:name="android.hardware.screen.portrait" android:required="false" />
+    <uses-feature android:name="android.hardware.wifi" android:required="false" />
+
     <application
         android:label="@string/app_name"
         android:name="${applicationName}"

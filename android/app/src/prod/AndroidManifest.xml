@@ -1,0 +1,23 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!--
+      Prod only, while online payments are off (env/prod.json
+      ONLINE_PAYMENTS_ENABLED=false): PayU's OTP-assist SDK adds a dataSync
+      foreground service that checks a card payment's status. Play requires a
+      declaration with a demo video for FOREGROUND_SERVICE_DATA_SYNC, which
+      can't be recorded while payments are off, so it is stripped here.
+      Before turning online payments on in prod: delete this file, rebuild,
+      and declare the permission in Play Console (App content → Foreground
+      service permissions → Network processing: Other, with a video).
+      Dev/staging keep it so card payments can still be tested.
+    -->
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"
+        tools:node="remove" />
+
+    <application>
+        <service
+            android:name="com.payu.otpassist.CheckTxnStatusForegroundService"
+            tools:node="remove" />
+    </application>
+</manifest>
