@@ -139,7 +139,7 @@ export interface AcceptInput {
 export interface AcceptContext {
   uid: string;
   anonymous: boolean;
-  /** Seconds since epoch of the last sign-in / OTP (ID token `auth_time`). */
+  /** Seconds since epoch of the last sign-in / re-auth (ID token `auth_time`). */
   authTime: number | null;
   ip: string | null;
   userAgent: string | null;
@@ -169,7 +169,8 @@ export function readAccept(raw: Record<string, unknown>): AcceptInput {
 /**
  * Checks an acceptance against what is live. Signed agreements (rider,
  * seller) need a drawn signature in the caller's own KYC folder and a
- * phone OTP in the last 10 minutes. Pure, for the tests.
+ * fresh sign-in in the last 10 minutes (phone OTP, or re-entering the
+ * password / Google for email accounts). Pure, for the tests.
  */
 export function acceptProblems(input: AcceptInput, ctx: AcceptContext, current: CurrentDoc[]): string[] {
   const out: string[] = [];
@@ -184,7 +185,7 @@ export function acceptProblems(input: AcceptInput, ctx: AcceptContext, current: 
   }
   const signed = input.items.some((i) => SIGNED_TYPES.includes(i.type) && AUDIENCE_DOCS[input.audience].includes(i.type));
   if (signed) {
-    if (ctx.anonymous) out.push("Sign in with your phone number to sign");
+    if (ctx.anonymous) out.push("Sign in to sign");
     const folder = `${AUDIENCE_COLLECTION[input.audience]}/${ctx.uid}/kyc/`;
     const p = input.signaturePath;
     if (!p || !p.startsWith(folder) || p.includes("..")) out.push("Draw your signature to sign");
@@ -227,9 +228,10 @@ export const acceptLegal = onCall(async (request) => {
         version: item.version,
         sha256: doc.sha256,
         acceptedAt: FieldValue.serverTimestamp(),
-        method: SIGNED_TYPES.includes(item.type) ? "signature+otp" : "checkbox",
+        method: SIGNED_TYPES.includes(item.type) ? (typeof request.auth?.token.phone_number === "string" ? "signature+otp" : "signature+reauth") : "checkbox",
         signaturePath: signed ? input.signaturePath : null,
         phone: typeof request.auth?.token.phone_number === "string" ? request.auth.token.phone_number : null,
+        email: typeof request.auth?.token.email === "string" ? request.auth.token.email : null,
         appId: input.appId || null,
         appVersion: input.appVersion || null,
         platform: input.platform || null,

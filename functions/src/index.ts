@@ -169,3 +169,4 @@ export {
   sellerDaily,
 } from "./marketplace/settlement";
 export { rateSellers } from "./marketplace/ratings";
+export { sellerStoreIdSignIn, sellerStoreCode } from "./marketplace/store_code_auth";

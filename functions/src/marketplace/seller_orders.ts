@@ -215,11 +215,42 @@ export const sellerRegisterDevice = onCall(async (request) => {
   return { ok: true };
 });
 
+/** The customer as a seller sees them: first name and phone only. */
+export interface SellerCustomer {
+  firstName: string;
+  phone: string | null;
+}
+
+/**
+ * The customer is shown to a seller only while the seller is working on
+ * the order (accepted or ready, not yet picked up, order not cancelled or
+ * delivered) — never the address. Pure, for the tests.
+ */
+export function showsCustomer(order: Record<string, unknown>, sellerId: string): boolean {
+  const mine = ((order.sellerStatus ?? {}) as Record<string, string>)[sellerId];
+  if (mine !== "accepted" && mine !== "ready") return false;
+  if (order.status === "cancelled" || order.status === "delivered") return false;
+  const pickups = (order.pickups ?? {}) as Stops;
+  return myStops(pickups, sellerId).some((s) => !pickups[s]?.pickedAt);
+}
+
+export function sellerCustomer(user: Record<string, unknown> | undefined): SellerCustomer | null {
+  if (!user) return null;
+  const full = typeof user.fullName === "string" ? user.fullName.trim() : "";
+  const phone = typeof user.phone === "string" && user.phone.trim() ? user.phone.trim() : null;
+  return { firstName: full.split(/\s+/)[0] || "Customer", phone };
+}
+
 /**
  * What a seller may see of an order: their own items, payout and stop,
- * the order's progress and the rider — no customer name, phone or address.
+ * the order's progress and the rider. The customer's first name and phone
+ * are added by the trigger only while [showsCustomer]; never the address.
  */
-export function sellerOrderView(order: Record<string, unknown>, sellerId: string): Record<string, unknown> {
+export function sellerOrderView(
+  order: Record<string, unknown>,
+  sellerId: string,
+  customer: SellerCustomer | null = null,
+): Record<string, unknown> {
   const items = ((order.items ?? []) as Record<string, unknown>[]).filter((i) => i.sellerId === sellerId);
   const pickups = (order.pickups ?? {}) as Stops;
   const stops = myStops(pickups, sellerId);
@@ -251,6 +282,7 @@ export function sellerOrderView(order: Record<string, unknown>, sellerId: string
     riderPhone: order.riderPhone ?? null,
     late: !!((order.sellerLate ?? {}) as Record<string, unknown>)[sellerId],
     paymentMethod: order.paymentMethod ?? null,
+    customer: customer && showsCustomer(order, sellerId) ? customer : null,
   };
 }
 
@@ -275,6 +307,12 @@ export const onOrderForSellers = onDocumentWritten(`${ORDERS}/{orderId}`, async 
       { id: taskId("seller-accept", orderId), scheduleTime: new Date(deadline.toMillis() + 2_000) },
     );
   }
+  // Read the customer once, and only if some seller is working on the order.
+  let customer: SellerCustomer | null = null;
+  const userId = typeof after?.userId === "string" ? after.userId : null;
+  if (after && userId && [...ids].some((id) => showsCustomer(after, id))) {
+    customer = sellerCustomer((await db.collection("users").doc(userId).get()).data());
+  }
   await Promise.all(
     [...ids].map(async (sellerId) => {
       const ref = db.collection(SELLERS).doc(sellerId).collection("orders").doc(orderId);
@@ -282,8 +320,8 @@ export const onOrderForSellers = onDocumentWritten(`${ORDERS}/{orderId}`, async 
         await ref.delete();
         return;
       }
-      const view = sellerOrderView(after, sellerId);
-      const prev = before ? sellerOrderView(before, sellerId) : null;
+      const view = sellerOrderView(after, sellerId, customer);
+      const prev = before ? sellerOrderView(before, sellerId, customer) : null;
       if (JSON.stringify(view) !== JSON.stringify(prev)) {
         await ref.set({ ...view, updatedAt: FieldValue.serverTimestamp() });
       }

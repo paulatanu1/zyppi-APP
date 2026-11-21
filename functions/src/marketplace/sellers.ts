@@ -14,7 +14,10 @@ import {
   SELLER_USERS,
   type SellerRole,
   type SellerStatus,
+  SELLER_STORE_CODES,
   assertNoProblems,
+  fssaiMissing,
+  newStoreCode,
   payoutSummary,
   planProblems,
   readPlan,
@@ -55,7 +58,7 @@ export async function saveSellerApplication(
   // Someone already working for another shop can't open a second one.
   const member = await db.collection(SELLER_USERS).doc(uid).get();
   if (member.exists && member.get("sellerId") !== uid) {
-    throw new HttpsError("failed-precondition", "This number is already a staff login for another shop");
+    throw new HttpsError("failed-precondition", "This login is already staff of another shop");
   }
 
   // The seller agreement + privacy policy (once published; legal/legal.ts).
@@ -72,12 +75,24 @@ export async function saveSellerApplication(
       );
     }
     const status: SellerStatus = submit ? "applied" : (current ?? "draft");
+    // Store ID for "Log in with Store ID": given once, on the first save.
+    let storeCode = (snap.get("storeCode") as string | undefined) ?? null;
+    if (!storeCode) {
+      for (let i = 0; i < 6 && !storeCode; i++) {
+        const candidate = newStoreCode();
+        if (!(await tx.get(db.collection(SELLER_STORE_CODES).doc(candidate))).exists) storeCode = candidate;
+      }
+      if (!storeCode) throw new HttpsError("unavailable", "Couldn't create a Store ID. Try again.");
+      tx.create(db.collection(SELLER_STORE_CODES).doc(storeCode), { sellerId: uid, createdAt: FieldValue.serverTimestamp() });
+    }
     const { payout, ...rest } = app;
     tx.set(
       ref,
       {
         ...rest,
         ownerUid: uid,
+        storeCode,
+        fssaiMissing: fssaiMissing(app),
         payout: payoutSummary(payout),
         status,
         updatedAt: FieldValue.serverTimestamp(),
@@ -109,7 +124,7 @@ export async function saveSellerApplication(
 export const sellerSaveApplication = onCall(async (request) => {
   const uid = requireUid(request);
   if (request.auth?.token.firebase?.sign_in_provider === "anonymous") {
-    throw new HttpsError("permission-denied", "Sign in with your phone number");
+    throw new HttpsError("permission-denied", "Sign in with your email or Google to apply");
   }
   const phone = request.auth?.token.phone_number;
   return saveSellerApplication(uid, typeof phone === "string" ? phone : null, request.data ?? {});
@@ -292,22 +307,36 @@ export const sellerSetOnline = onCall(async (request) => {
 });
 
 /**
- * Owner adds a staff login by phone number (the person must have signed
- * in to the seller app once). Request: {phone}.
+ * The Auth user a shop owner / ops typed in: an email (seller logins now
+ * use email, Google or Store ID) or, for older logins, a 10-digit mobile.
+ */
+export async function findLogin(rawInput: unknown) {
+  const raw = typeof rawInput === "string" ? rawInput.trim() : "";
+  if (raw.includes("@")) {
+    const email = raw.toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new HttpsError("invalid-argument", "Enter a valid email address");
+    return { user: await auth.getUserByEmail(email).catch(() => null), label: email };
+  }
+  const digits = raw.replace(/[\s-]/g, "");
+  const phone = /^[6-9]\d{9}$/.test(digits) ? `+91${digits}` : digits;
+  if (!/^\+91[6-9]\d{9}$/.test(phone)) throw new HttpsError("invalid-argument", "Enter an email address or a 10-digit mobile number");
+  return { user: await auth.getUserByPhoneNumber(phone).catch(() => null), label: phone };
+}
+
+/**
+ * Owner adds a staff login by email (or, for older logins, phone). The
+ * person must have signed in to the seller app once. Request: {email} or {phone}.
  */
 export const sellerAddStaff = onCall(async (request) => {
   const me = await requireSeller(request, ["owner"]);
-  const raw = typeof request.data?.phone === "string" ? request.data.phone.replace(/[\s-]/g, "") : "";
-  const phone = /^[6-9]\d{9}$/.test(raw) ? `+91${raw}` : raw;
-  if (!/^\+91[6-9]\d{9}$/.test(phone)) throw new HttpsError("invalid-argument", "Enter a 10-digit mobile number");
-  const user = await auth.getUserByPhoneNumber(phone).catch(() => null);
+  const { user } = await findLogin(request.data?.email ?? request.data?.phone);
   if (!user) throw new HttpsError("not-found", "Ask them to sign in to the Zyppi Seller app once first");
   if (user.uid === me.uid) throw new HttpsError("invalid-argument", "That's you");
   const ref = db.collection(SELLER_USERS).doc(user.uid);
   await db.runTransaction(async (tx) => {
     const existing = await tx.get(ref);
     if (existing.exists && existing.get("sellerId") !== me.sellerId) {
-      throw new HttpsError("failed-precondition", "This number already works for another shop");
+      throw new HttpsError("failed-precondition", "This login already works for another shop");
     }
     const team = await tx.get(db.collection(SELLER_USERS).where("sellerId", "==", me.sellerId));
     if (team.size >= 10 && !existing.exists) throw new HttpsError("resource-exhausted", "At most 10 logins per shop");
@@ -342,22 +371,19 @@ export const sellerRemoveStaff = onCall(async (request) => {
  * Ops: dark-store staff log in to the Zyppi Seller app as staff of the
  * "zyppi" seller (Zyppi's own stores have no owner login), so they get
  * return alerts and can receive returns (functions/src/returns/store.ts).
- * Request: {phone, action: "add" | "remove"}
+ * Request: {email (or phone), action: "add" | "remove"}
  */
 export const adminSetZyppiStoreStaff = onCall(async (request) => {
   const actor = requireRole(request, ["ops"]);
-  const raw = typeof request.data?.phone === "string" ? request.data.phone.replace(/[\s-]/g, "") : "";
-  const phone = /^[6-9]\d{9}$/.test(raw) ? `+91${raw}` : raw;
-  if (!/^\+91[6-9]\d{9}$/.test(phone)) throw new HttpsError("invalid-argument", "Enter a 10-digit mobile number");
   const action = request.data?.action;
   if (action !== "add" && action !== "remove") throw new HttpsError("invalid-argument", "Choose add or remove");
-  const user = await auth.getUserByPhoneNumber(phone).catch(() => null);
+  const { user, label } = await findLogin(request.data?.email ?? request.data?.phone);
   if (!user) throw new HttpsError("not-found", "Ask them to sign in to the Zyppi Seller app once first");
   const ref = db.collection(SELLER_USERS).doc(user.uid);
   const existing = await ref.get();
   if (action === "add") {
     if (existing.exists && existing.get("sellerId") !== "zyppi") {
-      throw new HttpsError("failed-precondition", "This number already works for another shop");
+      throw new HttpsError("failed-precondition", "This login already works for another shop");
     }
     await ref.set({ sellerId: "zyppi", role: "staff" satisfies SellerRole, addedBy: actor.uid, addedAt: FieldValue.serverTimestamp() });
     await auth.setCustomUserClaims(user.uid, { ...(user.customClaims ?? {}), sellerId: "zyppi", sellerRole: "staff" });
@@ -370,6 +396,6 @@ export const adminSetZyppiStoreStaff = onCall(async (request) => {
     await auth.setCustomUserClaims(user.uid, claims);
     await auth.revokeRefreshTokens(user.uid);
   }
-  await writeAudit(actor, { action: `zyppiStaff.${action}`, target: `${SELLER_USERS}/${user.uid}`, after: { phone } });
+  await writeAudit(actor, { action: `zyppiStaff.${action}`, target: `${SELLER_USERS}/${user.uid}`, after: { login: label } });
   return { uid: user.uid };
 });
