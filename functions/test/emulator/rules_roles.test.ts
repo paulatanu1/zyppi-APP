@@ -126,6 +126,27 @@ describe("staff roles in firestore.rules", () => {
   });
 });
 
+describe("stores in firestore.rules", () => {
+  it("are read only by staff and approved riders (they hold the seller's phone)", async () => {
+    await assertSucceeds(getDoc(doc(as({ role: "ops" }), "stores/s1")));
+    await assertSucceeds(getDoc(doc(as({ role: "catalog" }), "stores/s1")));
+    await assertSucceeds(getDoc(doc(env.authenticatedContext("rider-1", { rider: true }).firestore(), "stores/s1")));
+
+    await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(), "stores/s1")));
+    await assertFails(getDoc(doc(env.authenticatedContext("customer-1").firestore(), "stores/s1")));
+    await assertFails(getDoc(doc(env.authenticatedContext("rider-2", { rider: false }).firestore(), "stores/s1")));
+  });
+
+  it("let a just-approved rider in before their token carries the claim, but not an applicant", async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "riders/rider-new"), { status: "approved" });
+      await setDoc(doc(ctx.firestore(), "riders/rider-applied"), { status: "submitted" });
+    });
+    await assertSucceeds(getDoc(doc(env.authenticatedContext("rider-new").firestore(), "stores/s1")));
+    await assertFails(getDoc(doc(env.authenticatedContext("rider-applied").firestore(), "stores/s1")));
+  });
+});
+
 describe("refunds in firestore.rules", () => {
   it("are readable by finance and ops, writable by nobody", async () => {
     await env.withSecurityRulesDisabled(async (ctx) => {

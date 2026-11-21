@@ -78,9 +78,16 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Written only by adminSaveStore (validated, audited).
+    // Written only by adminSaveStore (validated, audited). Holds the shop's
+    // phone (a seller's own mobile) and location, so only staff (admin
+    // panel) and approved riders (pickup screen) read it; the customer and
+    // seller apps never do, and the functions use the Admin SDK. The rider
+    // doc check covers a just-approved rider whose token has no claim yet.
     match /stores/{id} {
-      allow read: if true;
+      allow read: if isAdmin()
+        || (signedIn() && request.auth.token.get('rider', false) == true)
+        || (signedIn()
+            && get(/databases/$(database)/documents/riders/$(request.auth.uid)).data.get('status', '') == 'approved');
       allow write: if false;
     }
 
