@@ -63,8 +63,15 @@ describe("support bot", () => {
     expect((await chatRef().get()).get("lang")).toBe("bn");
   });
 
-  it("hands refunds to the team and then stays quiet", async () => {
+  it("answers refund questions itself (the KB's refund entry has no handoff)", async () => {
     await send("I want a refund");
+    expect((await chatRef().get()).get("status")).toBe("bot");
+    const bot = (await messages()).filter((m) => m.from === "bot");
+    expect(bot.at(-1)!.text).toBe(KB_SEED.find((e) => e.id === "refund")!.answers.en);
+  });
+
+  it("hands a request for a person to the team and then stays quiet", async () => {
+    await send("I want to talk to a person");
     const chat = await chatRef().get();
     expect(chat.get("status")).toBe("waiting_agent");
     const all = await messages();
