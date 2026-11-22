@@ -248,6 +248,15 @@
       ]
     },
     {
+      "collectionGroup": "orders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "dispatch.state", "order": "ASCENDING" },
+        { "fieldPath": "serviceAreaId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "riders",
       "queryScope": "COLLECTION",
       "fields": [
