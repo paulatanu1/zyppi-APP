@@ -72,11 +72,40 @@ describe("firestore.rules", () => {
     await assertFails(setDoc(doc(admin, "config/app"), { supportPhone: "+919830012345" }));
   });
 
-  it("hides inactive coupons and the coupon list", async () => {
+  it("keeps coupons staff-only (customers use checkCoupon)", async () => {
     const alice = env.authenticatedContext("alice").firestore();
-    await assertSucceeds(getDoc(doc(alice, "coupons/ON")));
+    await assertFails(getDoc(doc(alice, "coupons/ON")));
     await assertFails(getDoc(doc(alice, "coupons/OFF")));
     await assertFails(getDocs(collection(alice, "coupons")));
+    const admin = env.authenticatedContext("boss", { admin: true }).firestore();
+    await assertSucceeds(getDoc(doc(admin, "coupons/ON")));
+    await assertSucceeds(getDocs(collection(admin, "coupons")));
+  });
+
+  it("accepts the profile writes the app makes, and nothing oversized or mistyped", async () => {
+    const alice = env.authenticatedContext("alice").firestore();
+    const me = doc(alice, "users/alice");
+    // savePhone, updateProfile, updatePreferences, push token (merge writes).
+    await assertSucceeds(setDoc(me, { phone: "+919830012345", fullName: "Alice", email: "a@x.in", updatedAt: serverTimestamp() }, { merge: true }));
+    await assertSucceeds(setDoc(me, { fullName: null, email: null, dob: "1990-04-02", gender: "Female", updatedAt: serverTimestamp() }, { merge: true }));
+    await assertSucceeds(setDoc(me, { preferredPaymentMethod: "UPI", notifyOrderUpdates: true, notifyOffers: false, updatedAt: serverTimestamp() }, { merge: true }));
+    await assertSucceeds(setDoc(me, { fcmToken: "t".repeat(300), lang: "bn" }, { merge: true }));
+    await assertSucceeds(setDoc(me, { fcmToken: null }, { merge: true }));
+
+    await assertFails(setDoc(me, { fullName: "x".repeat(101) }, { merge: true }));
+    await assertFails(setDoc(me, { fcmToken: "t".repeat(4097) }, { merge: true }));
+    await assertFails(setDoc(me, { phone: 9830012345 }, { merge: true }));
+    await assertFails(setDoc(me, { notifyOffers: "yes" }, { merge: true }));
+    await assertFails(setDoc(me, { updatedAt: "now" }, { merge: true }));
+    await assertFails(setDoc(doc(env.authenticatedContext("bob").firestore(), "users/bob"), { gender: "g".repeat(31) }));
+  });
+
+  it("still lets an older profile with an odd value be edited", async () => {
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "users/old"), { fullName: "n".repeat(500), lang: "en" });
+    });
+    const old = env.authenticatedContext("old").firestore();
+    await assertSucceeds(updateDoc(doc(old, "users/old"), { lang: "hi" }));
   });
 
   it("keeps each user's data private", async () => {

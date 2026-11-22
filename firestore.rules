@@ -55,6 +55,34 @@ service cloud.firestore {
       ];
     }
 
+    // Types and sizes of the profile fields among [keys] (create: all of
+    // the doc's keys; update: only the keys that change, so an older doc
+    // with an odd value can still be edited). Keeps users/{uid} small:
+    // every staff, seller and function read of it pays for its size.
+    function profileStr(d, keys, k, max) {
+      return !(k in keys) || d[k] == null || (d[k] is string && d[k].size() <= max);
+    }
+    function profileBool(d, keys, k) {
+      return !(k in keys) || d[k] is bool;
+    }
+    function profileTime(d, keys, k) {
+      return !(k in keys) || d[k] == null || d[k] is timestamp;
+    }
+    function validProfile(d, keys) {
+      return profileStr(d, keys, 'phone', 20)
+        && profileStr(d, keys, 'fullName', 100)
+        && profileStr(d, keys, 'email', 254)
+        && profileStr(d, keys, 'dob', 10)
+        && profileStr(d, keys, 'gender', 30)
+        && profileStr(d, keys, 'preferredPaymentMethod', 50)
+        && profileStr(d, keys, 'lang', 10)
+        && profileStr(d, keys, 'fcmToken', 4096)
+        && profileBool(d, keys, 'notifyOrderUpdates')
+        && profileBool(d, keys, 'notifyOffers')
+        && profileTime(d, keys, 'createdAt')
+        && profileTime(d, keys, 'updatedAt');
+    }
+
     // ---------------------------------------------------------------
     // Catalog (public read, admin write)
     // ---------------------------------------------------------------
@@ -173,15 +201,11 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Customers may look up one active, unexpired coupon by its code
-    // (doc id = upper-cased code); they can't list them all. The app
-    // checks eligibility (per-customer limits, first order, area) with the
-    // checkCoupon callable. Written only by adminSaveCoupon /
+    // Staff only. Customers check a code (eligibility, per-customer
+    // limits, first order, area) with the checkCoupon callable, so codes
+    // can't be probed one by one from the client. Written only by adminSaveCoupon /
     // adminDeleteCoupon (validated, audited) and by orders (usage counts).
     match /coupons/{code} {
-      allow get: if resource.data.isActive == true
-        && (resource.data.expiresAt == null
-            || resource.data.expiresAt > request.time);
       allow read: if isAdmin();
       allow write: if false;
 
@@ -203,9 +227,11 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if isOwner(uid) || isAdmin();
       allow create: if isOwner(uid)
-        && request.resource.data.keys().hasOnly(profileFields());
+        && request.resource.data.keys().hasOnly(profileFields())
+        && validProfile(request.resource.data, request.resource.data.keys());
       allow update: if isOwner(uid)
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(profileFields());
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(profileFields())
+        && validProfile(request.resource.data, request.resource.data.diff(resource.data).affectedKeys());
       // Account deletion goes through the deleteAccount function.
       allow delete: if false;
 
