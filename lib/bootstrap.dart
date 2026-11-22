@@ -13,6 +13,7 @@ import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:zippy/app/app.dart';
 import 'package:zippy/core/cart/data/local_cart_store.dart';
+import 'package:zippy/core/data/catalog_store.dart';
 import 'package:zippy/core/common_widgets/app_error_widget.dart';
 import 'package:zippy/core/config/env.dart';
 import 'package:zippy/core/constants/constants.dart';
@@ -69,10 +70,17 @@ Future<void> bootstrap() async {
 
   // Opened together: each is a disk read, and the first frame waits on all.
   await Hive.initFlutter();
-  final (cartBox, orderBox, favouritesBox, sharedPreferences) = await (
+  final (
+    cartBox,
+    orderBox,
+    favouritesBox,
+    catalogBox,
+    sharedPreferences,
+  ) = await (
     Hive.openBox('cart'),
     Hive.openBox('orders'),
     Hive.openBox('favourites'),
+    Hive.openBox('catalog'),
     SharedPreferences.getInstance(),
   ).wait;
 
@@ -81,6 +89,7 @@ Future<void> bootstrap() async {
       cartBoxProvider.overrideWithValue(cartBox),
       orderBoxProvider.overrideWithValue(orderBox),
       favouritesBoxProvider.overrideWithValue(favouritesBox),
+      catalogBoxProvider.overrideWithValue(catalogBox),
       sharedPreferencesProvider.overrideWithValue(sharedPreferences),
     ],
   );
