@@ -4,6 +4,7 @@ import { onSchedule } from "firebase-functions/scheduler";
 import { db } from "../shared/firebase";
 import { PAYU_SECRETS, PayUOutcome, verifyPayUTxn } from "./payu";
 import { settleIntent } from "./settle";
+import { forEachLimit } from "../shared/concurrency";
 import { giveBackWallet } from "../wallet/ledger";
 import { STOCK_HOLD_MS, releaseStockHold } from "./stock_hold";
 
@@ -13,6 +14,8 @@ export const RECONCILE_MIN_AGE_MS = 5 * 60 * 1000;
 export const RECONCILE_MAX_AGE_MS = 48 * 60 * 60 * 1000;
 /** Intents per run; the rest wait for the next run. */
 export const RECONCILE_BATCH = 100;
+/** Intents checked with PayU at the same time. */
+export const RECONCILE_CONCURRENCY = 5;
 
 /** What the reconciler does with an open intent of [ageMs]. */
 export function reconcileAction(ageMs: number): "skip" | "settle" | "expire" {
@@ -46,24 +49,26 @@ export async function reconcileOpenIntents(
     .get();
 
   const summary: ReconcileSummary = { settled: {}, expired: 0, errors: 0 };
-  for (const doc of snap.docs) {
+  // A few at a time (audit DA-07): one slow PayU answer no longer holds
+  // up the whole batch. Each intent is settled in its own transactions.
+  await forEachLimit(snap.docs, RECONCILE_CONCURRENCY, async (doc) => {
     const createdAt = doc.get("createdAt") as Timestamp | undefined;
     const action = reconcileAction(createdAt ? now - createdAt.toMillis() : Infinity);
     try {
-      if (action === "skip") continue;
+      if (action === "skip") return;
       if (action === "settle") {
         const { state } = await settleIntent(doc.id, verify);
         summary.settled[state] = (summary.settled[state] ?? 0) + 1;
         // Still not paid after the hold window: the stock goes back on sale
         // (a later capture still becomes an order if stock allows).
         if (state === "pending" && holdExpired(createdAt, now)) await releaseExpiredHold(doc.ref);
-        continue;
+        return;
       }
       // One last look before closing it, so a capture isn't missed.
       const { state } = await settleIntent(doc.id, verify);
       if (state !== "pending") {
         summary.settled[state] = (summary.settled[state] ?? 0) + 1;
-        continue;
+        return;
       }
       await db.runTransaction(async (tx) => {
         const current = await tx.get(doc.ref);
@@ -81,7 +86,7 @@ export async function reconcileOpenIntents(
       summary.errors += 1;
       logger.warn("PayU reconcile failed", { txnid: doc.id, error: String(error) });
     }
-  }
+  });
   return summary;
 }
 

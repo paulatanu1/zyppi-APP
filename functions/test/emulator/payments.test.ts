@@ -106,6 +106,28 @@ describe("reconcileOpenIntents", () => {
     expect(await statusOf("fresh")).toBe("created");
   });
 
+  it("checks intents in parallel, so a slow PayU answer doesn't hold up the rest", async () => {
+    // Oldest first, so a one-at-a-time loop would wait on "slow" forever.
+    await intent("slow", 31 * MIN);
+    await intent("quick", 30 * MIN);
+    let quickAsked!: () => void;
+    const quickSeen = new Promise<void>((r) => (quickAsked = r));
+    // "slow" answers only once "quick" has been asked: a one-at-a-time
+    // reconciler would never get there.
+    const verify = async (txnid: string): Promise<PayUOutcome> => {
+      if (txnid === "slow") {
+        await quickSeen;
+        return { state: "pending" };
+      }
+      quickAsked();
+      return { state: "failed", reason: "bounced" };
+    };
+    const summary = await reconcileOpenIntents(NOW, verify);
+    expect(summary.errors).toBe(0);
+    expect(await statusOf("quick")).toBe("failed");
+    expect(await statusOf("slow")).toBe("created");
+  });
+
   it("keeps going when PayU can't be reached for one intent", async () => {
     await intent("down", 30 * MIN);
     await intent("ok", 30 * MIN);
