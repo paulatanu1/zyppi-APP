@@ -2,6 +2,7 @@ import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { defineString } from "firebase-functions/params";
 import { HttpsError, onCall } from "firebase-functions/https";
 import { checkAppCheck } from "../shared/hardening";
+import { fetchWithTimeout } from "../shared/http";
 import { auth, db } from "../shared/firebase";
 import { SELLERS, SELLER_STORE_CODES, STORE_CODE_PATTERN, newStoreCode } from "./model";
 import { requireSeller } from "./sellers";
@@ -45,12 +46,18 @@ export function readStoreSignIn(raw: Record<string, unknown>): { code: string; p
   return { code, password };
 }
 
-async function passwordMatches(email: string, password: string): Promise<boolean> {
-  const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${WEB_API_KEY.value()}`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ email, password, returnSecureToken: false }),
-  });
+/** Checks the owner's password with Identity Toolkit. Unreachable → NO_NETWORK. */
+export async function passwordMatches(email: string, password: string): Promise<boolean> {
+  let res: Response;
+  try {
+    res = await fetchWithTimeout(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${WEB_API_KEY.value()}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email, password, returnSecureToken: false }),
+    });
+  } catch {
+    throw new HttpsError("unavailable", "NO_NETWORK");
+  }
   if (res.ok) return true;
   const body = (await res.json().catch(() => ({}))) as { error?: { message?: string } };
   const msg = body.error?.message ?? "";
