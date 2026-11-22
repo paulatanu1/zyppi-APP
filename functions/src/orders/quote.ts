@@ -60,6 +60,10 @@ export const ONLINE_METHODS = ["UPI", "Credit or debit card"];
  */
 export class OrderError extends Error {}
 
+/** Most distinct lines one order can have (a real cart is far below). */
+export const MAX_CART_LINES = 100;
+export const TOO_MANY_CART_LINES = "Too many items in cart";
+
 export interface OrderParams {
   uid: string;
   /**
@@ -299,7 +303,9 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
 
   // Cart rows: legacy ones are keyed by variant id (Zyppi's own stock);
   // marketplace ones by offer id with `offerId` + `variantId` fields.
-  const cartSnap = p.replacement ? null : await tx.get(userRef.collection("cart"));
+  // Bounded: the rules cap each row, not how many rows a client writes.
+  const cartSnap = p.replacement ? null : await tx.get(userRef.collection("cart").limit(MAX_CART_LINES + 1));
+  if (cartSnap && cartSnap.size > MAX_CART_LINES) throw new OrderError(TOO_MANY_CART_LINES);
   const cart = (
     cartSnap
       ? cartSnap.docs.map((d) => ({

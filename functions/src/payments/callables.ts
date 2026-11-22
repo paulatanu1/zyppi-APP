@@ -231,10 +231,14 @@ export const signPayUHash = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (req
     case "sdkEvent": {
       // Only during the caller's own checkout: an open intent from the
       // last 15 minutes.
+      // Bounded: only the window checked below, newest first.
       const open = await db
         .collection("paymentIntents")
         .where("userId", "==", uid)
         .where("status", "==", "created")
+        .where("createdAt", ">=", Timestamp.fromMillis(Date.now() - SDK_EVENT_INTENT_AGE_MS))
+        .orderBy("createdAt", "desc")
+        .limit(10)
         .get();
       if (
         decision.credential !== null &&

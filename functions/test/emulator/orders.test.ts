@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "../../src/shared/firebase";
-import { OrderError, placeOrderInTx, quoteOrder } from "../../src/orders/quote";
+import { MAX_CART_LINES, OrderError, TOO_MANY_CART_LINES, placeOrderInTx, quoteOrder } from "../../src/orders/quote";
 import { placePaidOrder } from "../../src/payments/place_paid_order";
 import { STORE_A, STORE_B, UID, params, resetData } from "./fixtures";
 
@@ -21,6 +21,15 @@ async function intent(id: string, amountPaise: number) {
 
 describe("quoteOrder", () => {
   beforeEach(() => resetData());
+
+  it("refuses a cart with more lines than an order can have", async () => {
+    const b = db.batch();
+    for (let i = 0; i <= MAX_CART_LINES; i++) {
+      b.set(db.doc(`users/${UID}/cart/junk-${i}`), { productId: "p-milk", quantity: 1 });
+    }
+    await b.commit();
+    await expect(quote()).rejects.toThrow(new OrderError(TOO_MANY_CART_LINES));
+  });
 
   it("prices the cart with the handling fee and tip", async () => {
     const q = await quote(params({ tipPaise: 2000 }));
