@@ -150,6 +150,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Catalog sync epoch: bumping config/catalogSync.epoch makes every app
+    // drop its local catalog and re-download it. Changed only by hand/admin.
+    match /config/catalogSync {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Support contacts and the in-app announcement; the app shows them.
     // Written only by adminSaveAppConfig.
     match /config/app {
