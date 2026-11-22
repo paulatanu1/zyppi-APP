@@ -22,6 +22,8 @@ export const DAILY = "daily";
 export const AREAS = "areas";
 /** Event ids already applied (triggers can fire twice). */
 export const EVENTS = "events";
+/** How long an applied-event marker (stats/events/ids/{id}) is kept; TTL field `expireAt`. */
+export const EVENT_MARKER_TTL_MS = 7 * 24 * 3600_000;
 
 const IST_OFFSET_MS = (5 * 60 + 30) * 60_000;
 

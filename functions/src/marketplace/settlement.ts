@@ -2,11 +2,13 @@ import { type DocumentReference, FieldValue, Timestamp, type Transaction } from 
 import { onDocumentWritten } from "firebase-functions/firestore";
 import { HttpsError, onCall } from "firebase-functions/https";
 import { onSchedule } from "firebase-functions/scheduler";
+import { logger } from "firebase-functions";
 import { istDayAndWeek } from "../dispatch/earnings";
 import { writeAudit } from "../shared/audit";
 import { db } from "../shared/firebase";
 import { type Actor, requireRole } from "../shared/roles";
 import { MARKETPLACE_CONFIG_DOC, SELLERS, ZYPPI_SELLER_ID } from "./model";
+import { EVENTS, EVENT_MARKER_TTL_MS, STATS } from "../stats/model";
 import { PERIODS, openPeriod, readPlan } from "./periods";
 import { notifySeller } from "./seller_notify";
 import { requireSeller } from "./sellers";
@@ -44,7 +46,10 @@ async function config(tx?: Transaction): Promise<SettlementConfig> {
  * Delivered → each seller's net (payout − TCS − TDS) is held for the return
  * window. Cancelled after that → a reversal. Idempotent: deterministic ids.
  */
-export const onOrderSettleSellers = onDocumentWritten("orders/{orderId}", async (e) => {
+// Retried on failure (audit DA-03): credits and reversals have
+// deterministic ids, and the cancel count has an event marker, so a retry
+// applies nothing twice. repairSellerCredits is the daily safety net.
+export const onOrderSettleSellers = onDocumentWritten({ document: "orders/{orderId}", retry: true }, async (e) => {
   const before = e.data?.before?.data();
   const after = e.data?.after?.data();
   if (!after) return;
@@ -56,11 +61,11 @@ export const onOrderSettleSellers = onDocumentWritten("orders/{orderId}", async 
   const orderId = e.params.orderId;
   for (const sellerId of Object.keys(totals)) {
     if (delivered) await creditSeller(sellerId, orderId, totals[sellerId]);
-    else await reverseSeller(sellerId, orderId, !!issues[sellerId]);
+    else await reverseSeller(sellerId, orderId, !!issues[sellerId], e.id);
   }
 });
 
-async function creditSeller(sellerId: string, orderId: string, totals: { itemTotalPaise?: number; payoutPaise?: number }) {
+export async function creditSeller(sellerId: string, orderId: string, totals: { itemTotalPaise?: number; payoutPaise?: number }) {
   const seller = db.collection(SELLERS).doc(sellerId);
   const row = seller.collection(EARNINGS).doc(`${orderId}_order`);
   await db.runTransaction(async (tx) => {
@@ -91,14 +96,20 @@ async function creditSeller(sellerId: string, orderId: string, totals: { itemTot
   });
 }
 
-async function reverseSeller(sellerId: string, orderId: string, sellerAtFault: boolean) {
+export async function reverseSeller(sellerId: string, orderId: string, sellerAtFault: boolean, eventId: string) {
   const seller = db.collection(SELLERS).doc(sellerId);
   const credit = seller.collection(EARNINGS).doc(`${orderId}_order`);
   const reversal = seller.collection(EARNINGS).doc(`${orderId}_reversal`);
+  // The cancel count has no row of its own: this marker keeps a retried
+  // event from counting it twice.
+  const marker = db.collection(STATS).doc(EVENTS).collection("ids").doc(`seller_${eventId}_${sellerId}`);
   await db.runTransaction(async (tx) => {
-    const [c, r, s] = [await tx.get(credit), await tx.get(reversal), await tx.get(seller)];
+    const [c, r, s, m] = [await tx.get(credit), await tx.get(reversal), await tx.get(seller), await tx.get(marker)];
     if (!s.exists) return;
-    if (sellerAtFault) tx.update(seller, { "stats.cancelled": FieldValue.increment(1) });
+    if (sellerAtFault && !m.exists) {
+      tx.update(seller, { "stats.cancelled": FieldValue.increment(1) });
+      tx.create(marker, { orderId, sellerId, expireAt: Timestamp.fromMillis(Date.now() + EVENT_MARKER_TTL_MS) });
+    }
     if (!c.exists || r.exists) return;
     // Units already returned were taken back by their own rows.
     const share = 1 - ((c.get("returnedPaise") as number) ?? 0) / Math.max(1, (c.get("amountPaise") as number) ?? 0);
@@ -411,10 +422,59 @@ export async function returnSellerItem(actor: Actor, data: Record<string, unknow
 export const sellerDaily = onSchedule(
   { schedule: "30 0 * * *", timeZone: "Asia/Kolkata", timeoutSeconds: 540 },
   async () => {
+    await repairSellerCredits();
     await releaseHeld();
     await subscriptionsAndLicences();
   },
 );
+
+/** How far back the daily repair looks (it runs daily; the rest is overlap). */
+export const REPAIR_LOOKBACK_MS = 3 * 86_400_000;
+/** Orders this fresh are left to the trigger (and its retries). */
+export const REPAIR_MIN_AGE_MS = 10 * 60_000;
+
+/**
+ * Safety net for onOrderSettleSellers (audit DA-03): delivered orders of
+ * the last few days whose seller credit row is missing get it now. Keyed
+ * on `updatedAt` (set by both the rider and the admin delivery paths; the
+ * admin one sets no `deliveredAt`). A repaired credit's hold starts today.
+ * Returns how many credits were repaired.
+ */
+export async function repairSellerCredits(nowMs = Date.now()): Promise<number> {
+  let repaired = 0;
+  let cursor: FirebaseFirestore.QueryDocumentSnapshot | null = null;
+  for (;;) {
+    let q = db
+      .collection("orders")
+      .where("status", "==", "delivered")
+      .where("updatedAt", ">=", Timestamp.fromMillis(nowMs - REPAIR_LOOKBACK_MS))
+      .where("updatedAt", "<=", Timestamp.fromMillis(nowMs - REPAIR_MIN_AGE_MS))
+      .orderBy("updatedAt")
+      .limit(500);
+    if (cursor) q = q.startAfter(cursor);
+    const page = await q.get();
+    for (const order of page.docs) {
+      const totals = (order.get("sellerTotals") ?? {}) as Record<string, { itemTotalPaise?: number; payoutPaise?: number }>;
+      const sellerIds = Object.keys(totals);
+      if (!sellerIds.length) continue;
+      const rows = await db.getAll(
+        ...sellerIds.map((id) => db.collection(SELLERS).doc(id).collection(EARNINGS).doc(`${order.id}_order`)),
+      );
+      for (const [i, row] of rows.entries()) {
+        if (row.exists) continue;
+        await creditSeller(sellerIds[i], order.id, totals[sellerIds[i]]);
+        // creditSeller does nothing for a seller that no longer exists.
+        if ((await row.ref.get()).exists) {
+          repaired += 1;
+          logger.warn("Seller credit repaired", { orderId: order.id, sellerId: sellerIds[i] });
+        }
+      }
+    }
+    if (page.size < 500) break;
+    cursor = page.docs[page.docs.length - 1];
+  }
+  return repaired;
+}
 
 export async function releaseHeld(now = Timestamp.now()): Promise<number> {
   const due = await db
