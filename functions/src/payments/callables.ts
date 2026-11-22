@@ -19,7 +19,7 @@ import {
   userCredential,
 } from "./payu";
 import { settleIntent } from "./settle";
-import { writeStockHold } from "./stock_hold";
+import { clearPriorHolds, readPriorHolds, writeStockHold } from "./stock_hold";
 import { holdId, writeWalletEntry } from "../wallet/ledger";
 import { WALLET_BALANCE_CHANGED, WALLET_COVERS_ORDER, walletBalanceOf, walletToApply } from "../wallet/model";
 import { HOT } from "../shared/scaling";
@@ -96,10 +96,14 @@ export const createPayUOrder = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (
   let result: { user: Record<string, unknown>; walletPaise: number; totalPaise: number };
   try {
     // One transaction: the quote's stock is held for this payment (so the
-    // last unit can't be sold to someone else while PayU is open) with the
+    // last unit can't be sold to someone else while PayU is open), taking
+    // over any hold of the customer's earlier open checkouts, with the
     // wallet part and the intent.
     result = await db.runTransaction(async (tx) => {
-      const quote = await quoteOrder(tx, params);
+      // The customer's earlier open checkouts: their stock moves to this
+      // one, so at most one cart per customer is held (stock_hold.ts).
+      const prior = await readPriorHolds(tx, uid);
+      const quote = await quoteOrder(tx, { ...params, heldUnits: prior.held });
       const totalPaise = quote.totalPaise;
       const snap = await tx.get(userDocRef);
       const balance = walletBalanceOf(snap.data());
@@ -109,7 +113,8 @@ export const createPayUOrder = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (
       const walletPaise = walletToApply(balance, totalPaise, useWallet);
       if (walletPaise >= totalPaise) throw new HttpsError("failed-precondition", WALLET_COVERS_ORDER);
       // Writes from here on.
-      const stockHold = writeStockHold(tx, quote);
+      const stockHold = writeStockHold(tx, quote, prior.held);
+      clearPriorHolds(tx, prior, txnid);
       tx.create(intentRef, {
         userId: uid,
         // What PayU charges; plus walletPaise = totalPaise.
