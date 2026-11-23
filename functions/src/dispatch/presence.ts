@@ -11,6 +11,7 @@ import { respondReturnOffer } from "../returns/dispatch";
 import { istDayAndWeek } from "./earnings";
 import { distanceM, etaMinutes, impossibleJump, isPoint, requirePoint } from "./model";
 import { HOT } from "../shared/scaling";
+import { requireDutySelfie } from "./selfie";
 
 const ms = (v: unknown) => (v instanceof Timestamp ? v.toMillis() : null);
 
@@ -23,7 +24,10 @@ function addOnlineMinutes(rider: DocumentSnapshot, batch: FirebaseFirestore.Writ
   batch.set(rider.ref.collection("days").doc(day), { day, onlineMinutes: FieldValue.increment(minutes) }, { merge: true });
 }
 
-/** Request: {online, lat?, lng?, accuracy?}. Going online needs a position. */
+/**
+ * Request: {online, lat?, lng?, accuracy?, selfie?}. Going online needs a
+ * position and a fresh duty selfie ({path, score, noReference}, selfie.ts).
+ */
 export const riderSetOnline = onCall(async (request) => {
   const rider = await requireRider(request);
   const online = request.data?.online === true;
@@ -32,6 +36,8 @@ export const riderSetOnline = onCall(async (request) => {
   if (online) {
     const p = requirePoint(request.data);
     if (request.data?.mocked === true) throw new HttpsError("failed-precondition", "MOCK_LOCATION");
+    // Live selfie matched to the application selfie, every go-online.
+    await requireDutySelfie(rider, request.data?.selfie);
     const wasOnline = rider.get("presence.online") === true;
     batch.update(rider.ref, {
       "presence.online": true,
