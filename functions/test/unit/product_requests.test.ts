@@ -37,3 +37,47 @@ describe("online / offline", () => {
     expect(sellerCanSell({ ...shop, fulfilment: "zyppi_store", online: false })).toBe(true);
   });
 });
+
+describe("seller requests with barcodes", () => {
+  it("normalizes the barcode and lists the request's gtins", () => {
+    const { input, problems } = readProductRequest(
+      { name: "Nutella", brand: " Ferrero ", categoryId: "c1", imageUrl: img("u1"), variants: [{ label: "400 g", mrpPaise: 39900, gtin: "3017620422003" }] },
+      "u1",
+    );
+    expect(problems).toEqual([]);
+    expect(input.product.variants[0].gtin).toBe("03017620422003");
+    expect(input.product.brand).toBe("Ferrero");
+    expect(input.gtins).toEqual(["03017620422003"]);
+  });
+
+  it("rejects bad and in-store barcodes", () => {
+    const { problems } = readProductRequest(
+      {
+        name: "Loose dal",
+        categoryId: "c1",
+        variants: [
+          { label: "1 kg", mrpPaise: 100, gtin: "3017620422004" },
+          { label: "2 kg", mrpPaise: 100, gtin: "2012345001003" },
+        ],
+      },
+      "u1",
+    );
+    expect(problems).toEqual(expect.arrayContaining(["Variant 1: barcode is not a valid EAN / UPC", "Variant 2: barcode is not a valid EAN / UPC"]));
+  });
+
+  it("leaves gtin out (not undefined) when a variant has none, so Firestore can store it", () => {
+    const { input } = readProductRequest({ name: "Pickle", categoryId: "c1", variants: [{ label: "250 g", mrpPaise: 100 }] }, "u1");
+    expect("gtin" in input.product.variants[0]).toBe(false);
+    expect("brand" in input.product).toBe(false);
+    expect("details" in input.product).toBe(false);
+    expect(input.gtins).toEqual([]);
+  });
+
+  it("reports detail problems with the rest", () => {
+    const { problems } = readProductRequest(
+      { name: "Chips", categoryId: "c1", variants: [{ label: "50 g", mrpPaise: 100 }], details: { nutrition: { basis: "per100g", fat: 500 } } },
+      "u1",
+    );
+    expect(problems).toContain("Nutrition: fat is out of range");
+  });
+});

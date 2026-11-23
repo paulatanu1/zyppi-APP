@@ -129,6 +129,8 @@ export async function importProducts(actor: Actor, rows: unknown) {
       imageUrl: text(pick("imageUrl")) || ((before?.imageUrl as string | null) ?? null),
       isActive: (pick("active") as boolean | undefined) ?? (before ? before.isActive !== false : true),
       variants: before && variants.length === 0 ? ((before.variants as Variant[]) ?? []) : variants,
+      // Not in the sheet: keep the stored brand (and its search keywords).
+      brand: typeof before?.brand === "string" ? before.brand : undefined,
     };
     const problems = [
       ...productProblems(product),

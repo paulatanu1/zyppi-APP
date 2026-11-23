@@ -48,6 +48,7 @@ export {
   adminPushCustomer,
 } from "./admin/customers";
 export { adminSaveProduct, onProductWritten } from "./catalog/products";
+export { sellerLookupBarcode } from "./catalog/barcode_lookup";
 export {
   adminSaveCategory,
   adminDeleteCategory,

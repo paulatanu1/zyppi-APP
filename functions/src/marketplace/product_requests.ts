@@ -1,7 +1,17 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/https";
-import { type ProductInput, productProblems } from "../catalog/model";
-import { categoryProblem, loadCategories, saveProduct } from "../catalog/products";
+import { withoutOffClaims } from "../catalog/details";
+import {
+  BARCODES,
+  BARCODE_LOOKUPS,
+  PRODUCTS,
+  type ProductInput,
+  productProblems,
+  readBrandField,
+  readDetailsField,
+  readGtinField,
+} from "../catalog/model";
+import { DUPLICATE_BARCODE, categoryProblem, loadCategories, productHasGtin, saveProduct } from "../catalog/products";
 import { writeAudit } from "../shared/audit";
 import { db } from "../shared/firebase";
 import { type Actor, requireRole } from "../shared/roles";
@@ -36,7 +46,11 @@ export function sellerImageOk(url: unknown, sellerId: string): url is string {
 export interface ProductRequestInput {
   productId: string | null;
   product: ProductInput;
+  /** The request's barcodes, for the duplicate checks and index. */
+  gtins: string[];
 }
+
+export const BARCODE_PENDING = "BARCODE_PENDING";
 
 /**
  * Reads what the seller app sent. Sellers don't price the master product:
@@ -44,12 +58,19 @@ export interface ProductRequestInput {
  * priced by catalog staff); the seller's price lives in their listing.
  */
 export function readProductRequest(raw: Record<string, unknown>, sellerId: string): { input: ProductRequestInput; problems: string[] } {
-  const variants = (Array.isArray(raw.variants) ? raw.variants : []).slice(0, 20).map((v: Record<string, unknown>) => ({
-    id: typeof v?.id === "string" ? v.id : null,
-    label: typeof v?.label === "string" ? v.label.trim() : "",
-    pricePaise: Number(v?.mrpPaise),
-    mrpPaise: Number(v?.mrpPaise),
-  }));
+  const variants = (Array.isArray(raw.variants) ? raw.variants : []).slice(0, 20).map((v: Record<string, unknown>) => {
+    const gtin = readGtinField(v?.gtin);
+    return {
+      id: typeof v?.id === "string" ? v.id : null,
+      label: typeof v?.label === "string" ? v.label.trim() : "",
+      pricePaise: Number(v?.mrpPaise),
+      mrpPaise: Number(v?.mrpPaise),
+      // Firestore stores no undefined: leave the key out to keep the stored one.
+      ...(gtin !== undefined ? { gtin } : {}),
+    };
+  });
+  const { details, problems: detailProblems } = readDetailsField(raw.details);
+  const brand = readBrandField(raw.brand);
   const product: ProductInput = {
     name: typeof raw.name === "string" ? raw.name.trim() : "",
     description: typeof raw.description === "string" ? raw.description.trim().slice(0, 2000) : "",
@@ -58,11 +79,14 @@ export function readProductRequest(raw: Record<string, unknown>, sellerId: strin
     imageUrl: raw.imageUrl == null || raw.imageUrl === "" ? null : (raw.imageUrl as string),
     isActive: true,
     variants,
+    ...(brand !== undefined ? { brand } : {}),
+    ...(details !== undefined ? { details } : {}),
   };
-  const problems = productProblems(product);
+  const problems = [...productProblems(product), ...detailProblems];
   if (product.imageUrl && !sellerImageOk(product.imageUrl, sellerId)) problems.push("Upload the photo from the app");
   const productId = typeof raw.productId === "string" && /^[\w-]{1,128}$/.test(raw.productId) ? raw.productId : null;
-  return { input: { productId, product }, problems };
+  const gtins = [...new Set(variants.map((v) => v.gtin).filter((g): g is string => typeof g === "string"))];
+  return { input: { productId, product, gtins }, problems };
 }
 
 /** Request: {productId?, name, description, categoryId, subcategoryId?, imageUrl?, variants: [{id?, label, mrpPaise}]}. */
@@ -72,6 +96,10 @@ export const sellerSubmitProduct = onCall(async (request) => {
   const catProblem = categoryProblem(await loadCategories(), input.product.categoryId, input.product.subcategoryId);
   if (catProblem) problems.push(catProblem);
   if (problems.length) throw new HttpsError("invalid-argument", problems.join("; "));
+  await assertBarcodesFree(input.gtins, input.productId);
+  if (input.product.details !== undefined) {
+    input.product.details = await confirmOffSource(input.product.details, input.gtins);
+  }
 
   let ownProduct = !input.productId;
   if (input.productId) {
@@ -86,6 +114,7 @@ export const sellerSubmitProduct = onCall(async (request) => {
     kind: input.productId ? "edit" : "new",
     productId: input.productId,
     payload: input.product,
+    gtins: input.gtins,
     status: "pending",
     submittedBy: me.uid,
     at: FieldValue.serverTimestamp(),
@@ -97,6 +126,43 @@ export const sellerSubmitProduct = onCall(async (request) => {
   }
   return { requestId: ref.id, status: "pending" };
 });
+
+/**
+ * Early, friendly duplicate check (the transactional reservation in
+ * saveProduct is what actually guarantees uniqueness at approval).
+ */
+async function assertBarcodesFree(gtins: string[], productId: string | null): Promise<void> {
+  for (const gtin of gtins) {
+    const owner = (await db.collection(BARCODES).doc(gtin).get()).get("productId") as string | undefined;
+    if (owner && owner !== productId) {
+      const p = await db.collection(PRODUCTS).doc(owner).get();
+      if (productHasGtin(p.data(), gtin)) {
+        throw new HttpsError("already-exists", DUPLICATE_BARCODE, { gtin, productId: owner });
+      }
+    }
+    const pending = await db
+      .collection(PRODUCT_REQUESTS)
+      .where("gtins", "array-contains", gtin)
+      .where("status", "==", "pending")
+      .limit(1)
+      .get();
+    if (!pending.empty) throw new HttpsError("already-exists", BARCODE_PENDING, { gtin });
+  }
+}
+
+/**
+ * Open Food Facts attribution is kept only when the server really looked
+ * this barcode up (barcodeLookups cache); otherwise the fields count as
+ * typed in, so nobody can pass their own text off as OFF data.
+ */
+async function confirmOffSource(details: ProductInput["details"], gtins: string[]): Promise<ProductInput["details"]> {
+  if (!details?.source && !Object.values(details?.provenance ?? {}).some((p) => p !== "manual")) return details;
+  for (const gtin of gtins) {
+    const c = await db.collection(BARCODE_LOOKUPS).doc(gtin).get();
+    if (c.get("status") === "found") return details;
+  }
+  return withoutOffClaims(details ?? null);
+}
 
 async function applyRequest(actor: Actor, requestId: string, action: "approve" | "reject", reason: string) {
   const ref = db.collection(PRODUCT_REQUESTS).doc(requestId);

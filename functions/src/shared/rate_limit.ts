@@ -28,6 +28,7 @@ export const LIMITS = {
   rateRider: 10,
   rateSellers: 10,
   logSearch: 60,
+  sellerLookupBarcode: 20,
 } as const;
 export type LimitedCall = keyof typeof LIMITS;
 

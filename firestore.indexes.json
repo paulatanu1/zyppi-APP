@@ -34,6 +34,14 @@
       ]
     },
     {
+      "collectionGroup": "productRequests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "gtins", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "earnings",
       "queryScope": "COLLECTION_GROUP",
       "fields": [
@@ -391,6 +399,12 @@
     },
     {
       "collectionGroup": "tracking",
+      "fieldPath": "expireAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "barcodeLookups",
       "fieldPath": "expireAt",
       "ttl": true,
       "indexes": []

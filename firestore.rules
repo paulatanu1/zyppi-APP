@@ -72,6 +72,19 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Barcode → product variant reservations (docs/BARCODES.md). Written
+    // only inside saveProduct's transaction, which is what keeps one GTIN
+    // on one variant. Public like the products they point at.
+    match /barcodes/{gtin} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Open Food Facts lookup cache: server only (sellerLookupBarcode).
+    match /barcodeLookups/{gtin} {
+      allow read, write: if false;
+    }
+
     // Written only by adminSaveServiceArea (validated, audited).
     match /serviceAreas/{id} {
       allow read: if true;
