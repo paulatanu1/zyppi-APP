@@ -44,11 +44,13 @@ export const SELLER_STATUSES = [
   "approved",
   "rejected",
   "suspended",
+  // The owner closed the shop and deleted the account (marketplace/seller_delete.ts).
+  "deleted",
 ] as const;
 export type SellerStatus = (typeof SELLER_STATUSES)[number];
 
 /** Statuses in which the applicant may edit and (re)submit. */
-export const SELLER_EDITABLE: SellerStatus[] = ["draft", "changes_requested", "rejected"];
+export const SELLER_EDITABLE: SellerStatus[] = ["draft", "changes_requested", "rejected", "deleted"];
 
 export const SELLER_ROLES = ["owner", "staff"] as const;
 export type SellerRole = (typeof SELLER_ROLES)[number];

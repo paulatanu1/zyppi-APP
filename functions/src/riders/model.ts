@@ -16,11 +16,13 @@ export const RIDER_STATUSES = [
   "approved",
   "rejected",
   "suspended",
+  // The rider deleted their account (riders/delete.ts); records kept, personal data removed.
+  "deleted",
 ] as const;
 export type RiderStatus = (typeof RIDER_STATUSES)[number];
 
 /** Statuses in which the rider may edit and (re)submit. */
-export const EDITABLE: RiderStatus[] = ["draft", "changes_requested", "rejected"];
+export const EDITABLE: RiderStatus[] = ["draft", "changes_requested", "rejected", "deleted"];
 
 export const DOC_KEYS = ["aadhaarFront", "aadhaarBack", "selfie", "drivingLicence", "rc"] as const;
 export type DocKey = (typeof DOC_KEYS)[number];
