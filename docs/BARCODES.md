@@ -77,3 +77,11 @@ At 1,000 scans a day, the worst case is about 3k reads and 1k writes a day plus 
 ## Known gaps
 - Edits made in the Console or by scripts bypass the reservation transaction, so they can't be kept unique.
 - A recycled GTIN can be moved by catalog staff: clear it on the old variant, then set it on the new one.
+- OFF attribution follows the barcode: if a seller clears the scanned barcode before sending, the server can't confirm the lookup, so it marks every field `manual` and drops `details.source`, even when the text came from OFF.
+- The admin panel shows barcodes and OFF details, but can't look a barcode up itself yet. `sellerLookupBarcode` already accepts catalog staff.
+- The buyer app doesn't scan. `barcodes/{gtin}` is public-read, so a later buyer scan can be 1 read with no function call.
+- Android can't tell "denied" from "denied permanently". The scanner always shows Try again and Open settings, and retries on return only after Settings was opened.
+
+## Clients
+- Seller app (`Zyppi-Marketplace`): `lib/core/barcode/gtin.dart` mirrors `gtin.ts`. `lib/features/barcode/` holds the scanner, the lookup cache (10 min, in flight shared, never caches `unavailable`), the flow, and the review values (provenance, nutrition checks). `lib/features/products/request_product_screen.dart` is the review form.
+- Admin (`zyppi-delivery-admin`): `features/catalog/gtin.ts` is a copy of `gtin.ts`. The product editor has a brand field and a barcode per size. Product requests show barcodes, details, provenance and the source link.
