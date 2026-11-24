@@ -40,6 +40,12 @@ export type Caller = "app" | "web";
 
 export const APP_CHECK_FAILED = "APP_CHECK_FAILED";
 
+/** Share of tokenless calls logged in monitor mode (audit OPT-05). */
+export const APP_CHECK_LOG_SAMPLE = 0.01;
+
+/** Swappable in tests. */
+export const appCheckLogSampler = { pick: (): boolean => Math.random() < APP_CHECK_LOG_SAMPLE };
+
 /** Throws (enforce) or logs (monitor) when the call has no App Check token. */
 export function checkAppCheck(
   request: Pick<CallableRequest, "app" | "rawRequest">,
@@ -51,8 +57,12 @@ export function checkAppCheck(
     throw new HttpsError("unauthenticated", APP_CHECK_FAILED);
   }
   // Monitor mode: shows in Logs Explorer which callers still lack tokens.
+  // Sampled, since every tokenless call would otherwise be a log line;
+  // multiply counts by 1 / sampleRate.
+  if (!appCheckLogSampler.pick()) return;
   logger.info("Callable without App Check", {
     caller,
     path: request.rawRequest?.path ?? null,
+    sampleRate: APP_CHECK_LOG_SAMPLE,
   });
 }

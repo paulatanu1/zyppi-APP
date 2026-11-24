@@ -5,6 +5,12 @@ rules_version = '2';
 // super_admin — see firestore.rules) may upload or replace them.
 service firebase.storage {
   match /b/{bucket}/o {
+    // A real account, not a guest (anonymous) session: guests can't
+    // apply, so they can't fill KYC folders either.
+    function notGuest() {
+      return request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
     function catalogStaff() {
       return request.auth != null
         && (request.auth.token.get('admin', false) == true
@@ -20,6 +26,7 @@ service firebase.storage {
             || request.auth.token.get('role', '') in ['super_admin', 'ops']);
       allow create, update: if request.auth != null
         && request.auth.uid == uid
+        && notGuest()
         && request.resource.size < 5 * 1024 * 1024
         && (request.resource.contentType.matches('image/.*')
             || request.resource.contentType == 'application/pdf');
@@ -36,8 +43,13 @@ service firebase.storage {
             || request.auth.token.get('sellerId', '') == sellerId
             || request.auth.token.get('admin', false) == true
             || request.auth.token.get('role', '') in ['super_admin', 'ops', 'finance']);
+      // Only the documents the application has (SELLER_DOC_KEYS in
+      // functions/src/marketplace/model.ts), named as the Seller app
+      // names them: {key}-{millis}.{ext}.
       allow create, update: if request.auth != null
         && request.auth.uid == sellerId
+        && notGuest()
+        && file.matches('^(selfie|shopPhoto[1-3]|fssaiCertificate|gstCertificate|signature)-[0-9]+[.](jpg|jpeg|png|pdf)$')
         && request.resource.size < 5 * 1024 * 1024
         && (request.resource.contentType.matches('image/.*')
             || request.resource.contentType == 'application/pdf');
