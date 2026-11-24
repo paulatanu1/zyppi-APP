@@ -100,3 +100,96 @@ describe("searchFieldsPatch", () => {
     expect(searchFieldsPatch({ ...data, ...patch })).toBeNull();
   });
 });
+
+describe("barcodes on variants", () => {
+  const G1 = "03017620422003";
+  const G2 = "08901058851298";
+
+  it("validates canonical GTINs and one barcode per pack size", async () => {
+    const { productProblems } = await import("../../src/catalog/model");
+    expect(productProblems({ ...valid, variants: [{ label: "1 L", pricePaise: 1, mrpPaise: 1, gtin: G1 }] })).toEqual([]);
+    expect(productProblems({ ...valid, variants: [{ label: "1 L", pricePaise: 1, mrpPaise: 1, gtin: "3017620422003" }] })).toEqual([
+      "Variant 1: barcode is not a valid EAN / UPC",
+    ]);
+    expect(
+      productProblems({
+        ...valid,
+        variants: [
+          { label: "1 L", pricePaise: 1, mrpPaise: 1, gtin: G1 },
+          { label: "2 L", pricePaise: 1, mrpPaise: 1, gtin: G1 },
+        ],
+      }),
+    ).toEqual(["Variant 2: barcode is on two pack sizes"]);
+  });
+
+  it("an edit that doesn't send gtin keeps it; null clears; a new value replaces", () => {
+    const existing = [{ id: "v1", label: "1 L", pricePaise: 1, mrpPaise: 1, gtin: G1 }];
+    expect(mergeVariants(existing, [{ label: "1 L", pricePaise: 2, mrpPaise: 2 }])[0]).toEqual({ id: "v1", label: "1 L", pricePaise: 2, mrpPaise: 2, gtin: G1 });
+    expect(mergeVariants(existing, [{ id: "v1", label: "1 L", pricePaise: 2, mrpPaise: 2, gtin: null }])[0]).toEqual({ id: "v1", label: "1 L", pricePaise: 2, mrpPaise: 2 });
+    expect(mergeVariants(existing, [{ id: "v1", label: "1 L", pricePaise: 2, mrpPaise: 2, gtin: G2 }])[0].gtin).toBe(G2);
+    // A brand-new variant never inherits a barcode.
+    expect(mergeVariants(existing, [{ label: "5 L", pricePaise: 2, mrpPaise: 2 }])[0].gtin).toBeUndefined();
+  });
+
+  it("plans which reservations to add, re-point and release", async () => {
+    const { planBarcodeChanges } = await import("../../src/catalog/products");
+    expect(planBarcodeChanges([], [{ id: "v1", gtin: G1 }, { id: "v2" }])).toEqual({ add: [{ gtin: G1, variantId: "v1" }], remove: [] });
+    expect(planBarcodeChanges([{ id: "v1", gtin: G1 }], [{ id: "v1", gtin: G1 }])).toEqual({ add: [], remove: [] });
+    expect(planBarcodeChanges([{ id: "v1", gtin: G1 }], [{ id: "v2", gtin: G1 }])).toEqual({ add: [{ gtin: G1, variantId: "v2" }], remove: [] });
+    expect(planBarcodeChanges([{ id: "v1", gtin: G1 }], [{ id: "v1", gtin: G2 }])).toEqual({ add: [{ gtin: G2, variantId: "v1" }], remove: [G1] });
+  });
+
+  it("brand words are searchable and survive the keywords safety net", async () => {
+    const { productDoc, brandWords } = await import("../../src/catalog/products");
+    expect(brandWords("Haldiram's")).toEqual(["haldiram"]);
+    const doc = productDoc({ ...valid, brand: "Amul" }, []);
+    expect(doc.keywords).toContain("amu");
+    expect(doc.brand).toBe("Amul");
+    expect(searchFieldsPatch({ ...doc })).toBeNull();
+    // Without brand in the input (import), the stored brand isn't touched.
+    expect("brand" in productDoc(valid, [])).toBe(false);
+    expect("details" in productDoc(valid, [])).toBe(false);
+  });
+});
+
+describe("product details", () => {
+  it("keeps known fields, drops unknown, validates nutrition with its basis", async () => {
+    const { readDetails } = await import("../../src/catalog/details");
+    const { details, problems } = readDetails({
+      genericName: " Noodles ",
+      quantity: { value: 70, unit: "g" },
+      allergens: ["gluten", "gluten", 5],
+      nutrition: { basis: "per100g", energyKcal: 437, fat: 15.7, protein: "x" },
+      provenance: { name: "off", brand: "off_edited", ingredients: "verified" },
+      source: { provider: "openfoodfacts", url: "https://world.openfoodfacts.org/product/8901058851298", fetchedAt: "2026-11-24" },
+      hack: true,
+    });
+    expect(problems).toEqual(["Nutrition: protein must be a number"]);
+    expect(details).toEqual({
+      genericName: "Noodles",
+      quantity: { value: 70, unit: "g" },
+      allergens: ["gluten"],
+      nutrition: { basis: "per100g", energyKcal: 437, fat: 15.7 },
+      provenance: { name: "off", brand: "off_edited" },
+      source: { provider: "openfoodfacts", url: "https://world.openfoodfacts.org/product/8901058851298", fetchedAt: "2026-11-24" },
+    });
+  });
+
+  it("rejects impossible nutrition and unknown sources", async () => {
+    const { readDetails } = await import("../../src/catalog/details");
+    expect(readDetails({ nutrition: { basis: "per100g", fat: 120 } }).problems).toContain("Nutrition: fat is out of range");
+    expect(readDetails({ nutrition: { basis: "per100g", fat: 60, carbohydrates: 60 } }).problems[0]).toMatch(/over 100 g/);
+    expect(readDetails({ nutrition: { basis: "per100g", energyKcal: 100, energyKj: 900 } }).problems).toContain("Nutrition: kcal and kJ don't match");
+    expect(readDetails({ nutrition: { basis: "perServing", fat: 4 } }).problems).toContain("Nutrition per serving needs the serving size");
+    expect(readDetails({ nutrition: { fat: 4 } }).problems[0]).toMatch(/basis/);
+    expect(readDetails({ quantity: { value: -1, unit: "g" } }).problems[0]).toMatch(/Quantity/);
+    expect(readDetails({ source: { provider: "openfoodfacts", url: "https://evil.example/p", fetchedAt: "x" } }).problems).toEqual(["Data source is invalid"]);
+  });
+
+  it("unconfirmed OFF claims become manual", async () => {
+    const { withoutOffClaims } = await import("../../src/catalog/details");
+    expect(
+      withoutOffClaims({ origin: "India", provenance: { origin: "off" }, source: { provider: "openfoodfacts", url: "https://world.openfoodfacts.org/product/1", fetchedAt: "x" } }),
+    ).toEqual({ origin: "India", provenance: { origin: "manual" } });
+  });
+});

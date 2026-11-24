@@ -43,6 +43,7 @@ These are one pure, unit-tested function, `functions/src/marketplace/pricing.ts`
   - Running numbers: `rating{avg,count}`, `stats{orders,cancelled,lateAccepts}`, `subscription{planId,status: active|grace|expired,periodEnd}`.
   - Balances: `earningsBalancePaise, heldPaise, earnedTotalPaise, paidOutTotalPaise, duesPaise`.
   - Subcollections: `private/bank` (finance and owner only), `earnings/`, `payouts/`, `subscriptions/` (billing periods), `inbox/`.
+- **`products/{id}`** (changed): `variants[].gtin` (canonical GTIN-14 string, optional), `brand`, `details` (quantity, ingredients, allergens, nutrition with basis, origin, labels, provenance, Open Food Facts source). **`barcodes/{gtin14}`** → `{productId, variantId}` keeps one barcode on one variant; **`barcodeLookups/{gtin14}`** is the server-only Open Food Facts cache. See [BARCODES.md](BARCODES.md).
 - **`sellerUsers/{uid}` → `{sellerId, role: owner|staff}`** (new). Also set as custom claim `sellerId`, so security rules can check it.
 - **`sellerPlans/{planId}`** (new): `name, months (1|3|6), feePaise, maxListings, isActive`.
 - **`listings/{sellerId}_{areaId}_{variantId}`** (new, private: readable only by that seller and staff).
@@ -132,7 +133,7 @@ Clone it as a sibling, `../Zyppi-Marketplace`, when S1 starts. The display name 
    - A pack checklist per item, then a "Mark ready" step.
    - The rider's name and ETA, and the 4-digit handover code shown to the rider.
 5. **Products.**
-   - **Add product:** search the Zyppi master catalog first. If the product isn't there, create a new one (name, images, category, variants, MRP, barcode scan).
+   - **Add product:** search the Zyppi master catalog first. If the product isn't there, create a new one (name, images, category, variants, MRP, barcode scan). Scanning, the Open Food Facts pre-fill and barcode uniqueness: [BARCODES.md](BARCODES.md).
    - **Edit product:** name, images, description and variants.
      - Changes to a product the seller created go live after a quick admin approval. Trusted sellers can be set to auto-approve.
      - Edits to a shared master product become a change request instead.

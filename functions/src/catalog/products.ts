@@ -8,6 +8,7 @@ import { db } from "../shared/firebase";
 import { productKeywords } from "../shared/keywords";
 import { type Actor, requireRole } from "../shared/roles";
 import {
+  BARCODES,
   CATEGORIES,
   PRODUCTS,
   type ProductInput,
@@ -15,6 +16,9 @@ import {
   assertProduct,
   mergeVariants,
   productAuditView,
+  readBrandField,
+  readDetailsField,
+  readGtinField,
 } from "./model";
 
 export interface CategoryRow {
@@ -49,7 +53,20 @@ export function categoryProblem(
   return null;
 }
 
-/** The stored product document (search fields derived here, once). */
+/** Brand words searchable like the name ("amul" finds Amul Taaza). */
+export function brandWords(brand: unknown): string[] {
+  if (typeof brand !== "string") return [];
+  return brand
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .split(/\s+/)
+    .filter((w) => w.length >= 2);
+}
+
+/**
+ * The stored product document (search fields derived here, once). brand /
+ * details are written only when the input has them (merge keeps the rest).
+ */
 export function productDoc(p: ProductInput, variants: Variant[]) {
   const name = p.name.trim();
   return {
@@ -61,13 +78,42 @@ export function productDoc(p: ProductInput, variants: Variant[]) {
     isActive: p.isActive,
     variants,
     variantIds: variants.map((v) => v.id),
-    keywords: productKeywords(name),
+    keywords: productKeywords(name, brandWords(p.brand)),
+    ...(p.brand !== undefined ? { brand: p.brand } : {}),
+    ...(p.details !== undefined ? { details: p.details } : {}),
   };
+}
+
+/**
+ * Barcode reservations to add (or re-point to another variant) and release
+ * when a product's variants change. Pure, for the tests.
+ */
+export function planBarcodeChanges(
+  before: Pick<Variant, "id" | "gtin">[],
+  after: Pick<Variant, "id" | "gtin">[],
+): { add: { gtin: string; variantId: string }[]; remove: string[] } {
+  const was = new Map(before.filter((v) => v.gtin).map((v) => [v.gtin!, v.id]));
+  const now = new Map(after.filter((v) => v.gtin).map((v) => [v.gtin!, v.id]));
+  const add = [...now].filter(([g, id]) => was.get(g) !== id).map(([gtin, variantId]) => ({ gtin, variantId }));
+  const remove = [...was.keys()].filter((g) => !now.has(g));
+  return { add, remove };
+}
+
+export const DUPLICATE_BARCODE = "DUPLICATE_BARCODE";
+
+/** True if `data` (another product) still carries `gtin` on a variant. */
+export function productHasGtin(data: Record<string, unknown> | undefined, gtin: string): boolean {
+  const variants = Array.isArray(data?.variants) ? (data!.variants as Partial<Variant>[]) : [];
+  return variants.some((v) => v?.gtin === gtin);
 }
 
 function readInput(raw: Record<string, unknown>): ProductInput {
   const variants = Array.isArray(raw.variants) ? raw.variants : [];
+  const { details, problems } = readDetailsField(raw.details);
+  if (problems.length) throw new HttpsError("invalid-argument", problems.join("; "));
   return {
+    brand: readBrandField(raw.brand),
+    details,
     name: typeof raw.name === "string" ? raw.name : "",
     description: typeof raw.description === "string" ? raw.description : "",
     categoryId: typeof raw.categoryId === "string" ? raw.categoryId : "",
@@ -79,6 +125,7 @@ function readInput(raw: Record<string, unknown>): ProductInput {
       label: typeof v?.label === "string" ? v.label : "",
       pricePaise: Number(v?.pricePaise),
       mrpPaise: Number(v?.mrpPaise),
+      gtin: readGtinField(v?.gtin),
     })),
   };
 }
@@ -100,6 +147,25 @@ export async function saveProduct(
     if (id && !snap.exists) throw new HttpsError("not-found", "Product not found");
     const before = snap.data();
     const variants = mergeVariants((before?.variants as Variant[]) ?? [], input.variants);
+
+    // Barcode uniqueness: reservations are read (and so locked) in this
+    // transaction; a concurrent save of the same GTIN retries and fails.
+    const plan = planBarcodeChanges((before?.variants as Variant[]) ?? [], variants);
+    const addRefs = plan.add.map((a) => db.collection(BARCODES).doc(a.gtin));
+    const removeRefs = plan.remove.map((g) => db.collection(BARCODES).doc(g));
+    const addSnaps = addRefs.length ? await tx.getAll(...addRefs) : [];
+    const removeSnaps = removeRefs.length ? await tx.getAll(...removeRefs) : [];
+    const owners = addSnaps.map((s) => s.get("productId") as string | undefined);
+    const otherIds = [...new Set(owners.filter((o): o is string => !!o && o !== ref.id))];
+    const otherSnaps = otherIds.length ? await tx.getAll(...otherIds.map((o) => db.collection(PRODUCTS).doc(o))) : [];
+    const others = new Map(otherSnaps.map((s) => [s.id, s.data()]));
+    plan.add.forEach((a, i) => {
+      const owner = owners[i];
+      if (owner && owner !== ref.id && productHasGtin(others.get(owner), a.gtin)) {
+        throw new HttpsError("already-exists", DUPLICATE_BARCODE, { gtin: a.gtin, productId: owner });
+      }
+    });
+
     const doc = {
       ...productDoc(input, variants),
       updatedAt: FieldValue.serverTimestamp(),
@@ -107,6 +173,15 @@ export async function saveProduct(
       ...(before ? {} : { createdAt: FieldValue.serverTimestamp() }),
     };
     tx.set(ref, doc, { merge: true });
+    plan.add.forEach((a, i) => {
+      const reservation = { productId: ref.id, variantId: a.variantId, updatedAt: FieldValue.serverTimestamp() };
+      // create() where nothing was there: a racing writer can't slip in.
+      if (addSnaps[i].exists) tx.set(addRefs[i], reservation);
+      else tx.create(addRefs[i], reservation);
+    });
+    removeSnaps.forEach((s, i) => {
+      if (s.get("productId") === ref.id) tx.delete(removeRefs[i]);
+    });
     writeAudit(
       actor,
       {
@@ -164,7 +239,7 @@ export function searchFieldsPatch(
 ): { keywords: string[]; variantIds: string[] } | null {
   const name = typeof data.name === "string" ? data.name : "";
   const variants = Array.isArray(data.variants) ? (data.variants as Partial<Variant>[]) : [];
-  const keywords = productKeywords(name);
+  const keywords = productKeywords(name, brandWords(data.brand));
   const variantIds = variants.map((v) => v?.id).filter((x): x is string => typeof x === "string");
   if (sameList(data.keywords, keywords) && sameList(data.variantIds, variantIds)) return null;
   return { keywords, variantIds };
