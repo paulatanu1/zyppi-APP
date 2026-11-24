@@ -33,6 +33,20 @@ service firebase.storage {
       allow delete: if false;
     }
 
+    // Go-online selfies (rider app selfie check, functions/src/dispatch/
+    // selfie.ts): the rider adds one per go-online and can't change or
+    // remove it; operations staff audit them.
+    match /riders/{uid}/duty/{file} {
+      allow read: if request.auth != null
+        && (request.auth.token.get('admin', false) == true
+            || request.auth.token.get('role', '') in ['super_admin', 'ops']);
+      allow create: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size < 2 * 1024 * 1024
+        && request.resource.contentType == 'image/jpeg';
+      allow update, delete: if false;
+    }
+
     // Seller KYC (selfie, shop photos, FSSAI / GST certificate, drawn
     // signature, signed agreement): never public. The applicant uploads
     // into their own folder (sellers/{ownerUid}); operations and finance

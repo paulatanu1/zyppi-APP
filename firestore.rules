@@ -516,6 +516,11 @@ service cloud.firestore {
         allow read: if isOwner(uid) || hasRole(['ops', 'finance']);
         allow write: if false;
       }
+      // Go-online selfie checks (functions/src/dispatch/selfie.ts).
+      match /selfies/{id} {
+        allow read: if isOwner(uid) || hasRole(['ops']);
+        allow write: if false;
+      }
       // Bank account / UPI for payouts.
       match /private/{doc} {
         allow read: if isOwner(uid) || hasRole(['finance']);
