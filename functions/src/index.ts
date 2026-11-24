@@ -3,10 +3,11 @@ import { REGION } from "./shared/firebase";
 import { DEFAULT_MAX_INSTANCES } from "./shared/scaling";
 
 // Small, short functions: a fraction of a vCPU ("gcf_gen1" = 1st-gen sizing,
-// ~0.17 vCPU at 256 MiB, one request per instance). Cloud Run counts
-// cpu x maxInstances of every service against the project's regional CPU
-// quota: ~150 functions x 5 hit it, so the default is 2 and only the busy
-// paths (shared/scaling.ts HOT) get 5.
+// ~0.17 vCPU at 256 MiB, one request per instance). The regional Cloud Run
+// CPU quota (20 vCPU in asia-south1) counts running instances, and a deploy
+// starts one per updated function: deploy with scripts/deploy-functions.sh
+// (batches). maxInstances caps a runaway function; busy paths get 5
+// (shared/scaling.ts HOT).
 setGlobalOptions({ region: REGION, maxInstances: DEFAULT_MAX_INSTANCES, cpu: "gcf_gen1" });
 
 export { placeOrder } from "./orders/place_order";
