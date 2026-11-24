@@ -4,6 +4,7 @@ import { HttpsError, onCall } from "firebase-functions/https";
 import { onSchedule } from "firebase-functions/scheduler";
 import { writeAudit } from "../shared/audit";
 import { db } from "../shared/firebase";
+import { forEachLimit } from "../shared/concurrency";
 import { type Actor, requireRole } from "../shared/roles";
 import { PAYU_SECRETS, type PayURefunds, type RefundState, payURefunds } from "./payu";
 
@@ -297,10 +298,14 @@ export const reconcileRefunds = onSchedule(
       .where("status", "in", ["requesting", "requested"])
       .limit(50)
       .get();
-    for (const doc of open.docs) {
+    // A few at a time; one refund PayU can't answer doesn't stop the rest.
+    const due = open.docs.filter((doc) => {
       const updated = doc.get("updatedAt") as Timestamp | undefined;
-      if (updated && updated.toMillis() > tenMinAgo.toMillis()) continue;
-      await refreshRefund(doc.id);
+      return !updated || updated.toMillis() <= tenMinAgo.toMillis();
+    });
+    const failed = await forEachLimit(due, 5, (doc) => refreshRefund(doc.id).then(() => undefined));
+    for (const f of failed) {
+      logger.warn("Refund reconcile failed", { refundId: due[f.index].id, error: String(f.error) });
     }
   },
 );

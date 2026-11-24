@@ -206,6 +206,7 @@ export async function dispatchWaiting(serviceAreaId: string): Promise<void> {
     .collection(ORDERS)
     .where("dispatch.state", "==", "unassigned")
     .where("serviceAreaId", "==", serviceAreaId)
+    .where("status", "in", OPEN)
     .limit(5)
     .get();
   for (const o of waiting.docs) {
@@ -232,6 +233,20 @@ export const onOrderDispatch = onDocumentWritten({ ...HOT, document: "orders/{or
 });
 
 /**
+ * Orders the sweep retries: open ones only (a cancelled order can keep
+ * dispatch.state "unassigned"), the longest-waiting attempt first, so 50
+ * stuck orders can't starve the rest (audit DA-10).
+ */
+export function waitingOrders(limit = 50) {
+  return db
+    .collection(ORDERS)
+    .where("dispatch.state", "==", "unassigned")
+    .where("status", "in", OPEN)
+    .orderBy("dispatch.updatedAt")
+    .limit(limit);
+}
+
+/**
  * Every minute: expired offers go to the next rider, waiting orders are
  * retried, and riders whose app stopped pinging go offline.
  */
@@ -239,7 +254,7 @@ export const dispatchSweep = onSchedule({ schedule: "every 1 minutes", timeoutSe
   const now = Timestamp.now();
   const [expired, waiting, stale] = await Promise.all([
     db.collection(ORDERS).where("dispatch.state", "==", "offered").where("offer.expiresAt", "<=", now).limit(50).get(),
-    db.collection(ORDERS).where("dispatch.state", "==", "unassigned").limit(50).get(),
+    waitingOrders().get(),
     db
       .collection(RIDERS)
       .where("presence.online", "==", true)
