@@ -125,8 +125,10 @@ deploy_batch() {
   firebase deploy --only "$only" --project "$PROJECT" 2>&1 | tee "$log" >&2
   code=${PIPESTATUS[0]}
   # "Functions deploy had errors with the following functions:\n    name(region)"
-  names=$(sed -n '/had errors with the following functions/,/^[^ ]/p' "$log" |
-    sed -n 's/^ *\([A-Za-z0-9_-]*\)(.*/\1/p')
+  # The names are indented with a tab (or spaces); the list ends at the
+  # first line that isn't indented.
+  names=$(sed -n '/had errors with the following functions/,/^[^[:space:]]/p' "$log" |
+    sed -n 's/^[[:space:]][[:space:]]*\([A-Za-z0-9_-]*\)(.*/\1/p')
   rm -f "$log"
   if [ -n "$names" ]; then
     echo "$names"
