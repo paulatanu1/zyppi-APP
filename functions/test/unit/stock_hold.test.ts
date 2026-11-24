@@ -1,4 +1,4 @@
-import { Timestamp } from "firebase-admin/firestore";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { describe, expect, it, vi } from "vitest";
 import { holdExpired } from "../../src/payments/reconcile";
 import { STOCK_HOLD_MS, heldUnitsOf, holdRowsFrom, releaseStockHold, writeStockHold } from "../../src/payments/stock_hold";
@@ -24,6 +24,32 @@ describe("PayU stock hold", () => {
     expect(tx.update).toHaveBeenCalledTimes(3);
     expect(tx.update.mock.calls[0][1]).toMatchObject({ quantity: 3 });
     expect(holdRowsFrom(quote)).toEqual(rows);
+  });
+
+  it("moves an earlier checkout's hold instead of reserving twice", () => {
+    const tx = { update: vi.fn() };
+    // inventory/s1_v1: 2 held before (already in `current` via heldUnits);
+    // inventory/old: held before, not in this cart.
+    const prior = new Map([["inventory/s1_v1", 2], ["inventory/old", 4]]);
+    writeStockHold(tx as never, quote, prior);
+    const byPath = new Map(tx.update.mock.calls.map(([r, f]) => [(r as { path: string }).path, f as Record<string, unknown>]));
+    expect(byPath.size).toBe(4);
+    expect(byPath.get("inventory/s1_v1")).toMatchObject({ quantity: 3, reserved: FieldValue.increment(0) });
+    expect(byPath.get("inventory/s1_v2")).toMatchObject({ quantity: 0, reserved: FieldValue.increment(1) });
+    expect(byPath.get("inventory/old")).toMatchObject({
+      quantity: FieldValue.increment(4),
+      reserved: FieldValue.increment(-4),
+    });
+  });
+
+  it("with no earlier hold, reserves exactly what it takes", () => {
+    const tx = { update: vi.fn() };
+    writeStockHold(tx as never, quote);
+    expect(tx.update.mock.calls.map(([, f]) => (f as Record<string, unknown>).reserved)).toEqual([
+      FieldValue.increment(2),
+      FieldValue.increment(1),
+      FieldValue.increment(3),
+    ]);
   });
 
   it("reads only well-formed held rows", () => {

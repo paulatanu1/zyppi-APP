@@ -1,6 +1,7 @@
 import { createHash, createHmac, randomInt } from "node:crypto";
 import { logger } from "firebase-functions";
 import { defineSecret, defineString } from "firebase-functions/params";
+import { fetchWithTimeout } from "../shared/http";
 
 // PayU CheckoutPro. The salt never reaches the client; the merchant key is
 // sent to the app (the SDK needs it) but is useless without the salt.
@@ -362,7 +363,7 @@ export function mapVerifyResult(detail: Record<string, unknown> | undefined): Pa
 export async function verifyPayUTxn(txnid: string): Promise<PayUOutcome> {
   const key = merchantKey();
   const command = "verify_payment";
-  const response = await fetch(`${payUBase()}/merchant/postservice.php?form=2`, {
+  const response = await fetchWithTimeout(`${payUBase()}/merchant/postservice.php?form=2`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
@@ -426,7 +427,7 @@ export function mapRefundStatus(data: Record<string, unknown>, requestId: string
 
 async function postService(command: string, vars: Record<string, string>) {
   const key = merchantKey();
-  const response = await fetch(`${payUBase()}/merchant/postservice.php?form=2`, {
+  const response = await fetchWithTimeout(`${payUBase()}/merchant/postservice.php?form=2`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({

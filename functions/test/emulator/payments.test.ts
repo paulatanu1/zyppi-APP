@@ -1,4 +1,4 @@
-import { Timestamp } from "firebase-admin/firestore";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "../../src/shared/firebase";
 import type { PayUOutcome } from "../../src/payments/payu";
@@ -9,7 +9,9 @@ import {
   reconcileOpenIntents,
 } from "../../src/payments/reconcile";
 import { settleIntent } from "../../src/payments/settle";
-import { UID, resetData } from "./fixtures";
+import { quoteOrder } from "../../src/orders/quote";
+import { clearPriorHolds, readPriorHolds, writeStockHold } from "../../src/payments/stock_hold";
+import { SLOT, STORE_A, STORE_B, UID, params, resetData } from "./fixtures";
 
 const NOW = Date.parse("2026-11-09T12:00:00Z");
 const MIN = 60 * 1000;
@@ -116,5 +118,68 @@ describe("reconcileOpenIntents", () => {
     expect(summary.errors).toBe(1);
     expect(await statusOf("down")).toBe("created");
     expect(await statusOf("ok")).toBe("failed");
+  });
+});
+
+describe("one stock hold per customer (createPayUOrder's transaction)", () => {
+  beforeEach(() => resetData());
+
+  /** The stock part of createPayUOrder: same calls, same order. */
+  const checkout = (txnid: string) =>
+    db.runTransaction(async (tx) => {
+      const prior = await readPriorHolds(tx, UID);
+      const quote = await quoteOrder(tx, { ...params({ paymentMethod: "UPI" }), heldUnits: prior.held } as never);
+      const stockHold = writeStockHold(tx, quote, prior.held);
+      clearPriorHolds(tx, prior, txnid);
+      tx.create(db.doc(`paymentIntents/${txnid}`), {
+        userId: UID, amountPaise: quote.totalPaise, walletPaise: 0, totalPaise: quote.totalPaise,
+        paymentMethod: "UPI", addressId: "home", deliverySlotId: SLOT, couponCode: null, tipPaise: 0,
+        status: "created", orderId: null, transactionId: null, failureReason: null, stockHold,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+    });
+
+  const milk = async () => {
+    const docs = await Promise.all(
+      [`inventory/${STORE_A}_v-milk`, `inventory/${STORE_B}_v-milk`].map((p) => db.doc(p).get()),
+    );
+    const sum = (f: string) => docs.reduce((n, d) => n + ((d.get(f) as number | undefined) ?? 0), 0);
+    return { quantity: sum("quantity"), reserved: sum("reserved") };
+  };
+
+  it("a retried checkout holds one cart, not two", async () => {
+    await checkout("h1");
+    await checkout("h2");
+    expect(await milk()).toEqual({ quantity: 3, reserved: 2 });
+    const first = (await db.doc("paymentIntents/h1").get()).data()!;
+    expect(first.status).toBe("created");
+    expect(first.stockHold).toEqual([]);
+    expect(first.stockReleasedFor).toBe("h2");
+    expect((await db.doc("paymentIntents/h2").get()).get("stockHold")).not.toEqual([]);
+  });
+
+  it("a retry of a cart holding the last units still succeeds", async () => {
+    await resetData({ "v-milk": 5 });
+    await checkout("h1");
+    expect(await milk()).toEqual({ quantity: 0, reserved: 5 });
+    await checkout("h2");
+    expect(await milk()).toEqual({ quantity: 0, reserved: 5 });
+  });
+
+  it("gives back units the new cart no longer has", async () => {
+    await checkout("h1");
+    await db.doc(`users/${UID}/cart/v-milk`).delete();
+    await db.doc(`users/${UID}/cart/v-rice`).set({ productId: "p-rice", quantity: 1 });
+    await checkout("h2");
+    expect(await milk()).toEqual({ quantity: 5, reserved: 0 });
+  });
+
+  it("a late capture of the earlier checkout still becomes an order", async () => {
+    await checkout("h1");
+    await checkout("h2");
+    const { verify } = payu({ h1: paid("M9") });
+    expect((await settleIntent("h1", verify)).state).toBe("completed");
+    // h1's order came from live stock; h2 still holds its cart.
+    expect(await milk()).toEqual({ quantity: 1, reserved: 4 });
   });
 });
