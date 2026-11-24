@@ -322,6 +322,14 @@
       "collectionGroup": "orderIssues",
       "queryScope": "COLLECTION",
       "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "orderIssues",
+      "queryScope": "COLLECTION",
+      "fields": [
         { "fieldPath": "orderId", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
