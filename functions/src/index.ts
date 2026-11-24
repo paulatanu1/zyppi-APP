@@ -32,6 +32,8 @@ export { adminSaveClaimsConfig } from "./returns/admin";
 export { placesProxy } from "./places";
 export { logSearch, adminSearchInsights } from "./search/search_stats";
 export { deleteAccount, onUserProfileCreated } from "./account";
+export { riderDeleteAccount } from "./riders/delete";
+export { sellerDeleteAccount } from "./marketplace/seller_delete";
 export { onOrderEventCreated } from "./push";
 export { adminUpdateOrderStatus } from "./admin/orders";
 export { adminUpdateFeatures } from "./admin/features";

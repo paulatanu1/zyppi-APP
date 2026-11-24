@@ -1,6 +1,7 @@
 import { Timestamp } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { onDocumentCreated } from "firebase-functions/firestore";
+import { logger } from "firebase-functions";
 import { HttpsError, onCall } from "firebase-functions/https";
 import { auth, db } from "./shared/firebase";
 import { requireUid } from "./shared/callable";
@@ -76,11 +77,57 @@ export const deleteAccount = onCall(async (request) => {
     await auth.updateUser(uid, { disabled: false }).catch(() => undefined);
     throw e;
   }
-  // The data is gone; a disabled user is harmless if this last call fails.
+  // The data is gone. The same login may also be a rider, a shop login or
+  // staff (one Firebase project); then only the customer part goes.
+  if (await loginStillUsed(uid)) {
+    await auth.updateUser(uid, { disabled: false });
+    return { deleted: true };
+  }
+  // A disabled user is harmless if this last call fails.
   await auth.deleteUser(uid).catch(async () => auth.deleteUser(uid));
 
   return { deleted: true };
 });
+
+/**
+ * True while something else still uses this login: a customer profile, a
+ * rider or seller application that isn't deleted, a shop login, or staff.
+ */
+export async function loginStillUsed(uid: string): Promise<boolean> {
+  const [user, rider, member, shop, staff] = await Promise.all([
+    db.collection("users").doc(uid).get(),
+    db.collection("riders").doc(uid).get(),
+    db.collection("sellerUsers").doc(uid).get(),
+    db.collection("sellers").doc(uid).get(),
+    db.collection("staff").doc(uid).get(),
+  ]);
+  const live = (s: FirebaseFirestore.DocumentSnapshot) => s.exists && s.get("status") !== "deleted";
+  return user.exists || live(rider) || member.exists || live(shop) || staff.exists;
+}
+
+/**
+ * The last step of a rider / seller deletion: the Auth user is deleted,
+ * unless the login is still used elsewhere; then only `claims` are removed
+ * and its sessions ended. Returns whether the login was deleted.
+ */
+export async function retireLogin(uid: string, claims: string[]): Promise<boolean> {
+  const user = await auth.getUser(uid).catch(() => null);
+  if (!user) return true;
+  if (!(await loginStillUsed(uid))) {
+    await auth.deleteUser(uid).catch(async () => auth.deleteUser(uid));
+    return true;
+  }
+  const kept: Record<string, unknown> = { ...(user.customClaims ?? {}) };
+  for (const c of claims) delete kept[c];
+  await auth.setCustomUserClaims(uid, kept);
+  await auth.revokeRefreshTokens(uid);
+  return false;
+}
+
+/** The fields of `data` not in `keep` (to remove). Pure, for the tests. */
+export function dropFieldsExcept(data: Record<string, unknown>, keep: readonly string[]): string[] {
+  return Object.keys(data).filter((k) => !keep.includes(k));
+}
 
 type Snap = FirebaseFirestore.QuerySnapshot;
 
@@ -101,10 +148,7 @@ async function removeAccountData(
   await writer.close();
 
   // Claim photos (users/{uid}/claims/...).
-  await getStorage()
-    .bucket()
-    .deleteFiles({ prefix: `users/${uid}/` })
-    .catch(() => undefined);
+  await deleteStorageFolder(`users/${uid}/`);
   await db.recursiveDelete(db.collection("users").doc(uid));
 }
 
@@ -129,3 +173,15 @@ export const onUserProfileCreated = onDocumentCreated("users/{uid}", async (even
   const user = await auth.getUser(event.params.uid).catch(() => null);
   await snap.ref.update({ createdAt: signUpTime(user?.metadata.creationTime) });
 });
+
+/**
+ * Deletes every Storage file under `prefix`. A failure is logged, not
+ * thrown: the account deletion goes on, and ops can rerun it from the log.
+ */
+export async function deleteStorageFolder(prefix: string): Promise<void> {
+  try {
+    await getStorage().bucket().deleteFiles({ prefix });
+  } catch (e) {
+    logger.warn("Storage cleanup failed", { prefix, error: String(e) });
+  }
+}
