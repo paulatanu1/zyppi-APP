@@ -4,7 +4,7 @@ import { type RulesTestEnvironment, assertFails, assertSucceeds, initializeTestE
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { firestoreLookupStore } from "../../src/catalog/barcode_lookup";
-import { saveProduct } from "../../src/catalog/products";
+import { DUPLICATE_BARCODE, saveProduct } from "../../src/catalog/products";
 import { db } from "../../src/shared/firebase";
 import type { Actor } from "../../src/shared/roles";
 import { resetData } from "./fixtures";
@@ -63,13 +63,24 @@ describe("saveProduct barcode reservations", () => {
     });
   });
 
-  it("two simultaneous creations: exactly one wins", async () => {
+  it("two simultaneous creations: never two owners; a retry settles it", async () => {
+    // The guarantee is uniqueness. Which caller wins is up to Firestore's
+    // lock handling: production lets the older transaction win, while the
+    // emulator can abort both contenders (seen in CI since 2026-11-24).
     const results = await Promise.allSettled([saveProduct(riya, product(G, "A")), saveProduct(riya, product(G, "B"))]);
-    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
-    expect(results.filter((r) => r.status === "rejected")).toHaveLength(1);
-    const owners = await db.collection("products").where("variants", "!=", null).get();
-    const withG = owners.docs.filter((d) => (d.get("variants") as { gtin?: string }[]).some((v) => v.gtin === G));
-    expect(withG).toHaveLength(1);
+    const won = results.filter((r) => r.status === "fulfilled").length;
+    expect(won).toBeLessThanOrEqual(1);
+    const holders = async () =>
+      (await db.collection("products").where("variants", "!=", null).get()).docs.filter((d) =>
+        (d.get("variants") as { gtin?: string }[]).some((v) => v.gtin === G),
+      );
+    expect(await holders()).toHaveLength(won);
+    if (won === 0) {
+      // Both aborted: saving again works, and a second copy is refused.
+      await expect(saveProduct(riya, product(G, "A"))).resolves.toMatchObject({ created: true });
+      await expect(saveProduct(riya, product(G, "B"))).rejects.toMatchObject({ message: DUPLICATE_BARCODE });
+    }
+    expect(await holders()).toHaveLength(1);
   });
 
   it("a stale reservation (barcode no longer on that product) can be taken over", async () => {
