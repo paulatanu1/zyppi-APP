@@ -175,7 +175,7 @@ async function applyRequest(actor: Actor, requestId: string, action: "approve" |
     const saved = await saveProduct(actor, { ...(req.get("payload") as Record<string, unknown>), ...(productId ? { id: productId } : {}) });
     productId = saved.id;
     if (saved.created) {
-      await db.collection("products").doc(productId).update({ createdBySeller: sellerId });
+      await db.collection("products").doc(productId).update({ createdBySeller: sellerId, updatedAt: FieldValue.serverTimestamp() });
     }
   }
   await ref.update({

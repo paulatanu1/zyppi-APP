@@ -3,6 +3,7 @@ import { deleteCategory, reorderCategories, saveCategory } from "../../src/catal
 import { importProducts } from "../../src/catalog/import";
 import { adjustStock } from "../../src/catalog/inventory";
 import { saveProduct } from "../../src/catalog/products";
+import { rebuildProductOffers } from "../../src/marketplace/offers_sync";
 import { db } from "../../src/shared/firebase";
 import type { Actor } from "../../src/shared/roles";
 import { STORE_A, resetData } from "./fixtures";
@@ -186,5 +187,22 @@ describe("importProducts", () => {
 
   it("caps the request size", async () => {
     await expect(importProducts(riya, [])).rejects.toThrow("Send 1–300 rows");
+  });
+});
+
+describe("rebuildProductOffers", () => {
+  it("bumps updatedAt when the product's areaBest changes (catalog delta sync)", async () => {
+    const stale = { a1: { v1: { offerId: "o1", sellerId: "s1", pricePaise: 100, mrpPaise: 100 } } };
+    await db.doc("products/p1").set({ ...product(), variants: [], areaBest: stale, rank: {} });
+    await rebuildProductOffers("p1");
+    const snap = await db.doc("products/p1").get();
+    expect(snap.get("areaBest")).toEqual({});
+    expect(snap.get("updatedAt")).toBeDefined();
+  });
+
+  it("leaves updatedAt alone when nothing changed", async () => {
+    await db.doc("products/p1").set({ ...product(), variants: [], areaBest: {}, rank: {} });
+    await rebuildProductOffers("p1");
+    expect((await db.doc("products/p1").get()).get("updatedAt")).toBeUndefined();
   });
 });

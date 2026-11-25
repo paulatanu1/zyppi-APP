@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zippy/core/config/env.dart';
 import 'package:zippy/core/data/cached_catalog_repository.dart';
 import 'package:zippy/core/data/catalog_repository.dart';
+import 'package:zippy/core/data/catalog_store.dart';
 import 'package:zippy/core/data/mock/mock_data_source.dart';
 import 'package:zippy/core/data/firebase_catalog_repository_impl.dart';
 import 'package:zippy/core/domain/category.dart';
@@ -74,6 +75,9 @@ final catalogRepositoryProvider = Provider<CachedCatalogRepository>(
   (ref) => CachedCatalogRepository(
     Env.isMockDataSource
         ? MockCatalogRepository()
-        : FirebaseCatalogRepository(FirebaseFirestore.instance),
+        : FirebaseCatalogRepository(
+            FirebaseFirestore.instance,
+            store: CatalogStore(ref.watch(catalogBoxProvider)),
+          ),
   ),
 );

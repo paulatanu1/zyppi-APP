@@ -111,7 +111,8 @@ export async function rebuildProductOffers(productId: string, now = new Date()):
     const summary = { areaBest: built.areaBest, rank: built.rank };
     if (stable({ areaBest: product.get("areaBest") ?? {}, rank: product.get("rank") ?? {} }) !== stable(summary)) {
       // update() replaces each map whole (stale areas disappear).
-      writer.update(productRef, summary);
+      // updatedAt lets the app's delta catalog sync pick up the new prices.
+      writer.update(productRef, { ...summary, updatedAt: FieldValue.serverTimestamp() });
     }
   }
   await writer.close();
