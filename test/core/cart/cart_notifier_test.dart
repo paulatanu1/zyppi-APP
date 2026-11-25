@@ -275,4 +275,106 @@ void main() {
 
     cart.dispose();
   });
+
+  group('limits', () {
+    // Eleven different items, to fill an order.
+    final variants = [
+      for (var i = 0; i < 11; i++)
+        ProductVariant(id: 'x$i', label: '1 pc', pricePaise: 100),
+    ];
+    final products = [
+      for (var i = 0; i < 11; i++)
+        Product(
+          id: 'px$i',
+          name: 'Item $i',
+          categoryId: 'c1',
+          variants: [variants[i]],
+        ),
+    ];
+
+    test('at most 5 of one item; the 6th says why', () {
+      final cart = build(withRemote: false);
+      final hits = <CartLimit>[];
+      cart.onLimit = hits.add;
+
+      for (var i = 0; i < 5; i++) {
+        expect(cart.addItem(product: _apple, variant: _appleKg), isNull);
+      }
+      expect(
+        cart.addItem(product: _apple, variant: _appleKg),
+        CartLimit.perItem,
+      );
+      expect(cart.state.lines.single.quantity, 5);
+      expect(hits, [CartLimit.perItem]);
+      expect(cart.canAddOne(_appleKg.id), isFalse);
+
+      // A big jump (a reorder of 8) stops at 5 too.
+      cart.setQuantity(product: _pear, variant: _pearKg, quantity: 8);
+      expect(cart.quantityOf(_pear.id, _pearKg.id), 5);
+
+      // Going down is never blocked.
+      cart.removeOne(product: _apple, variant: _appleKg);
+      expect(cart.quantityOf(_apple.id, _appleKg.id), 4);
+
+      cart.dispose();
+    });
+
+    test('at most 50 units in an order', () {
+      final cart = build(withRemote: false);
+      final hits = <CartLimit>[];
+      cart.onLimit = hits.add;
+
+      for (var i = 0; i < 10; i++) {
+        cart.setQuantity(
+          product: products[i],
+          variant: variants[i],
+          quantity: 5,
+        );
+      }
+      expect(hits, isEmpty);
+      expect(
+        cart.addItem(product: products[10], variant: variants[10]),
+        CartLimit.perOrder,
+      );
+      expect(cart.state.lines, hasLength(10));
+      expect(hits, [CartLimit.perOrder]);
+
+      cart.dispose();
+    });
+
+    testWidgets('an old cart over the limits is cut down and synced', (
+      tester,
+    ) async {
+      store.writeLines([
+        CartLine(product: _apple, variant: _appleKg, quantity: 207),
+        CartLine(product: _pear, variant: _pearKg, quantity: 109),
+      ]);
+
+      final cart = build();
+      expect(cart.state.lines.map((l) => l.quantity), [5, 5]);
+      expect(store.readLines().map((l) => l.quantity), [5, 5]);
+
+      await tester.pump(CartNotifier.pushDebounce);
+      expect(remote.server['v1']?.quantity, 5);
+      expect(remote.server['v2']?.quantity, 5);
+
+      cart.dispose();
+    });
+
+    test('withinLimits trims later lines first', () {
+      final (lines, changed) = CartNotifier.withinLimits([
+        for (var i = 0; i < 11; i++)
+          CartLine(product: products[i], variant: variants[i], quantity: 9),
+      ]);
+      expect(lines.map((l) => l.quantity), List.filled(10, 5));
+      expect(changed, hasLength(11)); // the 11th is dropped
+    });
+
+    test('a tip is capped at ₹100', () {
+      final cart = build(withRemote: false);
+      cart.setTip(15000);
+      expect(cart.state.tipPaise, 10000);
+      cart.dispose();
+    });
+  });
 }

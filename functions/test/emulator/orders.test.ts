@@ -77,7 +77,7 @@ describe("quoteOrder", () => {
   });
 
   it("rejects an empty cart and a tip over the cap", async () => {
-    await expect(quote(params({ tipPaise: 50001 }))).rejects.toThrow("Invalid tip");
+    await expect(quote(params({ tipPaise: 10001 }))).rejects.toThrow("Invalid tip");
     await resetData({});
     await expect(quote()).rejects.toThrow("Cart is empty");
   });

@@ -567,5 +567,8 @@
   "cantBeEdited": "Can't be edited",
   "changePhoneChat": "To change it, chat with us",
   "cartItemOutOfStock": "Out of stock here. Remove it to check out.",
-  "errorCartOutOfStock": "Remove the out-of-stock items to check out."
+  "errorCartOutOfStock": "Remove the out-of-stock items to check out.",
+  "cartMaxPerItem": "You can add up to {} of this item",
+  "cartMaxPerOrder": "Order limit reached: up to {} items per order",
+  "errorMaxPerItem": "You can order up to {} of {}. Please reduce it in your cart."
 }

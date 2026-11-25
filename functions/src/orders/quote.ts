@@ -47,8 +47,8 @@ import { serviceAreas } from "../shared/area_cache";
 import { DELIVERY_CONFIG_PATH, deliveryConfigFrom, deliveryFeeFor } from "./delivery_config";
 import { AreaLike, findServiceableArea } from "../shared/geo";
 
-/** ₹500 tip cap, matching the app's tip selector. */
-export const MAX_TIP_PAISE = 50000;
+/** ₹100 tip cap, matching the app (CartNotifier.maxTipPaise). */
+export const MAX_TIP_PAISE = 10000;
 
 export const COD = "Cash on delivery";
 export const ONLINE_METHODS = ["UPI", "Credit or debit card"];
@@ -63,6 +63,37 @@ export class OrderError extends Error {}
 /** Most distinct lines one order can have (a real cart is far below). */
 export const MAX_CART_LINES = 100;
 export const TOO_MANY_CART_LINES = "Too many items in cart";
+
+/**
+ * Units of one variant per order (all sellers' lines together), and units
+ * per order. Must match CartNotifier.maxPerItem / maxUnitsPerOrder in the
+ * app and the cart row cap in firestore.rules.
+ */
+export const MAX_QTY_PER_ITEM = 5;
+export const MAX_UNITS_PER_ORDER = 50;
+
+/**
+ * The cart-limit problem with [lines], as the OrderError message the app
+ * maps (checkout_errors.dart), or null. Pure, for tests.
+ */
+export function quantityLimitProblem(
+  lines: { variantId: string; productId: string; quantity: number }[],
+  nameOf: (productId: string) => string,
+): string | null {
+  const perVariant = new Map<string, number>();
+  let total = 0;
+  for (const l of lines) {
+    total += l.quantity;
+    perVariant.set(l.variantId, (perVariant.get(l.variantId) ?? 0) + l.quantity);
+  }
+  for (const l of lines) {
+    if ((perVariant.get(l.variantId) ?? 0) > MAX_QTY_PER_ITEM) {
+      return `MAX_PER_ITEM:${MAX_QTY_PER_ITEM}:${nameOf(l.productId)}`;
+    }
+  }
+  if (total > MAX_UNITS_PER_ORDER) return `MAX_UNITS_PER_ORDER:${MAX_UNITS_PER_ORDER}`;
+  return null;
+}
 
 export interface OrderParams {
   uid: string;
@@ -330,6 +361,11 @@ export async function quoteOrder(tx: Transaction, p: OrderParams): Promise<Quote
   const offerSnaps = offerIds.length ? await tx.getAll(...offerIds.map((id) => db.collection(OFFERS).doc(id))) : [];
   const offers = new Map(offerSnaps.map((s) => [s.id, s]));
   const nameOf = (productId: string) => (products.get(productId)?.get("name") as string | undefined) ?? "item";
+  // A replacement re-sends an order that was already accepted.
+  if (!p.replacement) {
+    const limit = quantityLimitProblem(cart, nameOf);
+    if (limit) throw new OrderError(limit);
+  }
   const sellerOf = cart.map((c) => {
     if (!c.offerId) return ZYPPI_SELLER_ID;
     const offer = offers.get(c.offerId);

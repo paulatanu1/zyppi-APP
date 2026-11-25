@@ -462,6 +462,7 @@ class _BottomBar extends ConsumerWidget {
                         quantity: quantity,
                         height: ZSize.button,
                         minWidth: 132,
+                        canAdd: quantity < CartNotifier.maxPerItem,
                         // Live quantity: quick taps must all count.
                         onAdd: () => cart.setQuantity(
                           product: product,

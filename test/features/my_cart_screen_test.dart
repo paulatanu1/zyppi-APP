@@ -133,6 +133,38 @@ void main() {
     expect(find.text('Checkout'), findsNothing);
   });
 
+  testWidgets('the coupon sheet sits above the navigation bar', (tester) async {
+    // A 48 dp Android navigation bar (edge-to-edge).
+    final dpr = tester.view.devicePixelRatio;
+    tester.view.viewPadding = FakeViewPadding(bottom: 48 * dpr);
+    tester.view.padding = FakeViewPadding(bottom: 48 * dpr);
+    addTearDown(tester.view.reset);
+    await pumpCart(tester);
+
+    await tester.tap(find.text('Coupons'));
+    await tester.pumpAndSettle();
+
+    final screen = tester.view.physicalSize.height / dpr;
+    final apply = tester.getRect(find.text('Apply coupon'));
+    expect(apply.bottom, lessThanOrEqualTo(screen - 48));
+    final field = tester.getRect(find.byType(TextField));
+    expect(field.bottom, lessThanOrEqualTo(screen - 48));
+  });
+
+  testWidgets('+ stops at 5 of an item', (tester) async {
+    final container = await pumpCart(tester);
+
+    for (var i = 0; i < 6; i++) {
+      await tester.tap(find.bySemanticsLabel('Add one').first);
+      await tester.pump();
+    }
+    final apples = container
+        .read(cartProvider)
+        .lines
+        .firstWhere((l) => l.product.id == 'p1');
+    expect(apples.quantity, CartNotifier.maxPerItem);
+  });
+
   for (final dark in [false, true]) {
     for (final scale in [1.0, 2.0]) {
       testWidgets('no overflow (${dark ? 'dark' : 'light'}, $scale× text)', (

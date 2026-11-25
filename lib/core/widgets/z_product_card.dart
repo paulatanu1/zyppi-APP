@@ -32,12 +32,16 @@ class ZProductCard extends StatelessWidget {
     this.eta,
     this.heroTag,
     this.soldOut = false,
+    this.canAdd = true,
   });
 
   /// No stock where the customer shops: the photo dims and "Out of stock"
   /// replaces ADD (a stepper still shows if some is already in the cart,
   /// so it can be taken out).
   final bool soldOut;
+
+  /// False at a cart limit (see [ZAddStepper.canAdd]).
+  final bool canAdd;
 
   final String name, weight;
 
@@ -260,6 +264,7 @@ class ZProductCard extends StatelessWidget {
                       onAdd: onAdd!,
                       onRemove: onRemove!,
                       minWidth: 76,
+                      canAdd: canAdd,
                     ),
                 ],
               ),

@@ -56,6 +56,7 @@ class CatalogProductCard extends ConsumerWidget {
       mrp: offer?.mrp,
       soldOut: offer?.inStock == false,
       quantity: quantity,
+      canAdd: quantity < CartNotifier.maxPerItem,
       favourite: favourite,
       onTap: () => context.push(
         Uri(

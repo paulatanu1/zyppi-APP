@@ -294,7 +294,7 @@ service cloud.firestore {
           && request.resource.data.productId is string
           && request.resource.data.quantity is int
           && request.resource.data.quantity > 0
-          && request.resource.data.quantity <= 99;
+          && request.resource.data.quantity <= 5; // CartNotifier.maxPerItem, MAX_QTY_PER_ITEM
       }
 
       // In-app notification list, written only by functions

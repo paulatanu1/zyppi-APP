@@ -99,6 +99,7 @@ class MyCartItem extends ConsumerWidget {
           const SizedBox(width: ZSpace.x3),
           ZAddStepper(
             quantity: line.quantity,
+            canAdd: line.quantity < CartNotifier.maxPerItem,
             onAdd: () => step(1),
             onRemove: () => step(-1),
           ),
