@@ -1,4 +1,5 @@
 import { FieldValue } from "firebase-admin/firestore";
+import { logLifecycle } from "../shared/log";
 import { logger } from "firebase-functions";
 import { db } from "../shared/firebase";
 import { OrderError, placeOrderInTx } from "../orders/quote";
@@ -27,7 +28,7 @@ export async function placePaidOrder(
   const referenceRef = db.collection("paymentReferences").doc(transactionId);
 
   try {
-    return await db.runTransaction(async (tx) => {
+    const placed = await db.runTransaction(async (tx) => {
       const [intentSnap, referenceSnap] = await tx.getAll(intentRef, referenceRef);
       const intent = intentSnap.data();
       if (!intent) throw new Error("Unknown payment");
@@ -83,6 +84,8 @@ export async function placePaidOrder(
       });
       return orderId;
     });
+    if (placed) logLifecycle("payment.completed", { txnid: merchantOrderId, orderId: placed, mihpayid: transactionId });
+    return placed;
   } catch (error) {
     if (!(error instanceof OrderError)) throw error;
 

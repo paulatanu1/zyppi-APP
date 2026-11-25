@@ -1,4 +1,5 @@
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import { logLifecycle } from "../shared/log";
 import { cashToCollect } from "../wallet/model";
 import { pushToDevices, tokensOf } from "../notifications/tokens";
 import { logger } from "firebase-functions";
@@ -196,6 +197,7 @@ export async function respondOffer(uid: string, orderIdRaw: unknown, accept: unk
       },
     });
   });
+  logLifecycle("order.rider", { orderId, riderId: uid, step: accept ? "offer_accepted" : "offer_declined" });
   if (!accept) await offerOrder(orderId);
   return { ok: true };
 }

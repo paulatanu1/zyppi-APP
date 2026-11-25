@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { logLifecycle } from "../shared/log";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { onDocumentWritten } from "firebase-functions/firestore";
 import { HttpsError, onCall } from "firebase-functions/https";
@@ -48,7 +49,7 @@ export function myStops(pickups: Stops, sellerId: string): string[] {
 export const sellerAcceptOrder = onCall(async (request) => {
   const me = await requireSeller(request);
   const ref = db.collection(ORDERS).doc(orderIdOf(request.data?.orderId));
-  return db.runTransaction(async (tx) => {
+  const res = await db.runTransaction(async (tx) => {
     const order = await tx.get(ref);
     const status = (order.get("sellerStatus") ?? {}) as Record<string, string>;
     if (!order.exists || !(me.sellerId in status)) throw new HttpsError("permission-denied", "NOT_YOUR_ORDER");
@@ -64,6 +65,8 @@ export const sellerAcceptOrder = onCall(async (request) => {
     });
     return { ok: true, status: "accepted" };
   });
+  logLifecycle("order.seller", { orderId: ref.id, sellerId: me.sellerId, step: res.status });
+  return res;
 });
 
 /** Why a seller can't take an order (seller app). */
@@ -113,12 +116,12 @@ export const sellerRejectOrder = onCall({ secrets: PAYU_SECRETS }, async (reques
 export const sellerMarkReady = onCall(async (request) => {
   const me = await requireSeller(request);
   const ref = db.collection(ORDERS).doc(orderIdOf(request.data?.orderId));
-  return db.runTransaction(async (tx) => {
+  const res = await db.runTransaction(async (tx) => {
     const order = await tx.get(ref);
     const status = (order.get("sellerStatus") ?? {}) as Record<string, string>;
     if (!order.exists || !(me.sellerId in status)) throw new HttpsError("permission-denied", "NOT_YOUR_ORDER");
     if (order.get("status") === "cancelled") throw new HttpsError("failed-precondition", "ORDER_CANCELLED");
-    if (status[me.sellerId] === "ready") return { ok: true };
+    if (status[me.sellerId] === "ready") return { ok: true, packed: false };
     if (status[me.sellerId] !== "accepted") throw new HttpsError("failed-precondition", "ACCEPT_FIRST");
     const pickups = (order.get("pickups") ?? {}) as Stops;
     const stops = myStops(pickups, me.sellerId);
@@ -133,6 +136,8 @@ export const sellerMarkReady = onCall(async (request) => {
     if (packNow) event(tx, order, "packed", `seller:${me.sellerId}`);
     return { ok: true, packed: packNow };
   });
+  logLifecycle("order.seller", { orderId: ref.id, sellerId: me.sellerId, step: "ready", packed: res.packed });
+  return res;
 });
 
 /**

@@ -1,4 +1,5 @@
 import { type DocumentSnapshot, FieldValue, type Transaction } from "firebase-admin/firestore";
+import { logLifecycle } from "../shared/log";
 import { HttpsError, onCall } from "firebase-functions/https";
 import { db } from "../shared/firebase";
 import { pushOrderCustomer } from "../push";
@@ -44,7 +45,10 @@ export async function onMyOrder<T>(
   step: (tx: Transaction, c: Ctx) => Promise<T>,
 ): Promise<T> {
   const orderRef = db.collection(ORDERS).doc(orderIdOf(orderIdRaw));
-  return db.runTransaction(async (tx) => {
+  let steps: string[] = [];
+  const result = await db.runTransaction(async (tx) => {
+    steps = [];
+    stepsOf.set(tx, steps);
     const [order, rider] = await Promise.all([tx.get(orderRef), tx.get(db.collection("riders").doc(riderId))]);
     if (!order.exists || order.get("riderId") !== riderId) {
       throw new HttpsError("permission-denied", "NOT_YOUR_ORDER");
@@ -54,11 +58,18 @@ export async function onMyOrder<T>(
     if (status === "delivered") throw new HttpsError("failed-precondition", "ALREADY_DELIVERED");
     return step(tx, { order, data: order.data()!, rider });
   });
+  // After commit, so a retried transaction logs once.
+  for (const s of steps) logLifecycle("order.rider", { orderId: orderRef.id, riderId, step: s });
+  return result;
 }
+
+/** Events written by each rider transaction, logged once it commits. */
+const stepsOf = new WeakMap<Transaction, string[]>();
 
 const stageOf = (d: Record<string, unknown>) => (d.riderStage as RiderStage | undefined) ?? "accepted";
 
 export function event(tx: Transaction, order: DocumentSnapshot, status: string, by: string, note?: string) {
+  stepsOf.get(tx)?.push(status);
   tx.create(order.ref.collection("events").doc(), {
     status,
     createdAt: FieldValue.serverTimestamp(),
