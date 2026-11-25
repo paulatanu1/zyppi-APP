@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { silentAlertDue } from "../../src/dispatch/dispatch";
 import { istDayAndWeek } from "../../src/dispatch/earnings";
 import {
   type Candidate,
@@ -229,5 +230,13 @@ describe("pay and gigs", async () => {
     const c = parseRiderConfig({ slotTemplates: { a1: [{ start: "08:00", end: "12:00", capacity: 3 }] } });
     expect(templatesFor(c, "a1")).toEqual([{ start: "08:00", end: "12:00", capacity: 3, bonusPaise: 0 }]);
     expect(templatesFor(c, "a2")).toHaveLength(4);
+  });
+});
+
+describe("silentAlertDue (audit S8)", () => {
+  it("alerts once per silence", () => {
+    expect(silentAlertDue(0, 1000)).toBe(true); // never alerted
+    expect(silentAlertDue(5000, 1000)).toBe(false); // already alerted this silence
+    expect(silentAlertDue(5000, 9000)).toBe(true); // pinged since, silent again
   });
 });
