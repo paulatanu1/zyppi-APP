@@ -23,6 +23,15 @@ String friendlyOrderError(Object error) {
   if (unavailable != null) {
     return 'errorProductUnavailable'.tr(args: [unavailable.group(1)!]);
   }
+  // functions/src/orders/quote.ts: MAX_QTY_PER_ITEM / MAX_UNITS_PER_ORDER.
+  final perItem = RegExp(r'MAX_PER_ITEM:(\d+):(.+)').firstMatch(message);
+  if (perItem != null) {
+    return 'errorMaxPerItem'.tr(args: [perItem.group(1)!, perItem.group(2)!]);
+  }
+  final perOrder = RegExp(r'MAX_UNITS_PER_ORDER:(\d+)').firstMatch(message);
+  if (perOrder != null) {
+    return 'cartMaxPerOrder'.tr(args: [perOrder.group(1)!]);
+  }
   final minOrder = RegExp(r'MIN_ORDER_NOT_MET:(\d+)').firstMatch(message);
   if (minOrder != null) {
     return 'errorMinOrder'.tr(args: [rupees(int.parse(minOrder.group(1)!))]);

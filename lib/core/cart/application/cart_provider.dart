@@ -24,6 +24,22 @@ import 'package:zippy/core/domain/product_variant.dart';
 import 'package:zippy/core/marketplace/data/marketplace_repository_impl.dart';
 import 'package:zippy/core/marketplace/domain/marketplace_repository.dart';
 import 'package:zippy/core/marketplace/domain/offer.dart';
+import 'package:zippy/core/utils/snack_bar.dart';
+
+/// Which cart limit stopped an increase.
+enum CartLimit {
+  /// [CartNotifier.maxPerItem] units of one item.
+  perItem,
+
+  /// [CartNotifier.maxUnitsPerOrder] units in the order.
+  perOrder;
+
+  String get messageKey =>
+      this == perItem ? 'cartMaxPerItem' : 'cartMaxPerOrder';
+
+  int get value =>
+      this == perItem ? CartNotifier.maxPerItem : CartNotifier.maxUnitsPerOrder;
+}
 
 /// Local-first cart. A tap changes [state] and [store] synchronously, so
 /// the UI updates on the same frame; the server ([remote], firebase data source
@@ -62,8 +78,9 @@ class CartNotifier extends StateNotifier<CartState> {
     this.couponRepository, {
     this.marketplace,
   }) : super(CartState(loading: false)) {
-    final lines = store.readLines();
-    _setLines(lines, persist: false);
+    final (lines, over) = withinLimits(store.readLines());
+    _setLines(lines, persist: over.isNotEmpty);
+    over.forEach(_markChanged);
     // Only a first-ever launch (nothing on the device yet) waits on the
     // server; otherwise the saved cart shows straight away.
     state = state.copyWith(loading: remote != null && lines.isEmpty);
@@ -90,7 +107,36 @@ class CartNotifier extends StateNotifier<CartState> {
 
   // ---- Local writes (synchronous) ---------------------------------------
 
-  void setQuantity({
+  /// Most units of one variant in a cart (all sellers' lines together).
+  /// Must match MAX_QTY_PER_ITEM in functions/src/orders/quote.ts and the
+  /// cart row cap in firestore.rules.
+  static const maxPerItem = 5;
+
+  /// Most units in one order. Must match MAX_UNITS_PER_ORDER in
+  /// functions/src/orders/quote.ts.
+  static const maxUnitsPerOrder = 50;
+
+  /// Called when a tap asked for more than a limit allows (the app shows a
+  /// message; see [cartProvider]).
+  void Function(CartLimit limit)? onLimit;
+
+  /// Units of [variantId] in lines other than [exceptKey].
+  int _variantUnits(String variantId, String exceptKey) => state.lines
+      .where((l) => l.variant.id == variantId && l.key != exceptKey)
+      .fold(0, (sum, l) => sum + l.quantity);
+
+  /// Units in the cart outside the line [exceptKey].
+  int _orderUnits(String exceptKey) => state.lines
+      .where((l) => l.key != exceptKey)
+      .fold(0, (sum, l) => sum + l.quantity);
+
+  /// Whether one more unit of [variantId] fits both limits.
+  bool canAddOne(String variantId) =>
+      _variantUnits(variantId, '') < maxPerItem &&
+      _orderUnits('') < maxUnitsPerOrder;
+
+  /// Returns the limit that stopped an increase, if any.
+  CartLimit? setQuantity({
     required Product product,
     required ProductVariant variant,
     required int quantity,
@@ -98,14 +144,32 @@ class CartNotifier extends StateNotifier<CartState> {
   }) {
     final seller = _seller(offer);
     final key = CartLine.keyFor(variant.id, seller);
-    final next = max(0, quantity);
     final lines = [...state.lines];
     final index = lines.indexWhere(
       (l) => l.product.id == product.id && l.key == key,
     );
+    final current = index < 0 ? 0 : lines[index].quantity;
+
+    final itemRoom = maxPerItem - _variantUnits(variant.id, key);
+    final orderRoom = maxUnitsPerOrder - _orderUnits(key);
+    var next = max(0, quantity);
+    CartLimit? limit;
+    if (next > current) {
+      // Never above a limit; a line already over one (an old cart) only
+      // goes down.
+      final room = max(current, min(itemRoom, orderRoom));
+      if (next > room) {
+        limit = itemRoom <= orderRoom ? CartLimit.perItem : CartLimit.perOrder;
+        next = room;
+      }
+    }
+    if (limit != null) {
+      onLimit?.call(limit);
+      if (next == current) return limit;
+    }
 
     if (next == 0) {
-      if (index < 0) return;
+      if (index < 0) return limit;
       lines.removeAt(index);
     } else if (index < 0) {
       lines.add(
@@ -122,34 +186,42 @@ class CartNotifier extends StateNotifier<CartState> {
     }
 
     _setLines(lines);
+    _markChanged(key);
+    return limit;
+  }
 
+  void _markChanged(String key) {
     if (remote == null) return;
     _versions[key] = (_versions[key] ?? 0) + 1;
     store.markDirty(key);
     _schedulePush(pushDebounce);
   }
 
-  void addItem({
+  CartLimit? addItem({
     required Product product,
     required ProductVariant variant,
     int quantity = 1,
     OfferPick? offer,
   }) {
-    setQuantity(
+    final before = quantityOf(product.id, variant.id, offer: offer);
+    final limit = setQuantity(
       product: product,
       variant: variant,
       offer: offer,
-      quantity: quantityOf(product.id, variant.id, offer: offer) + quantity,
+      quantity: before + quantity,
     );
+    final added = quantityOf(product.id, variant.id, offer: offer) - before;
+    if (added <= 0) return limit;
 
     unawaited(
       AnalyticsService.logAddToCart(
         itemId: variant.id,
         itemName: product.name,
         pricePaise: _seller(offer)?.pricePaise ?? variant.pricePaise,
-        quantity: quantity,
+        quantity: added,
       ).catchError((_) {}),
     );
+    return limit;
   }
 
   /// Product cards show every seller's line of a variant as one count:
@@ -172,6 +244,30 @@ class CartNotifier extends StateNotifier<CartState> {
       offer: line.offer,
       quantity: line.quantity - 1,
     );
+  }
+
+  /// [lines] cut down to the limits (a cart saved before them can hold
+  /// 207 of one item), with the keys of the lines that changed. Later
+  /// lines give way first.
+  @visibleForTesting
+  static (List<CartLine>, List<String>) withinLimits(List<CartLine> lines) {
+    final perVariant = <String, int>{};
+    var total = 0;
+    final out = <CartLine>[];
+    final changed = <String>[];
+    for (final line in lines) {
+      final used = perVariant[line.variant.id] ?? 0;
+      final q = min(
+        line.quantity,
+        min(maxPerItem - used, maxUnitsPerOrder - total),
+      );
+      if (q != line.quantity) changed.add(line.key);
+      if (q <= 0) continue;
+      perVariant[line.variant.id] = used + q;
+      total += q;
+      out.add(q == line.quantity ? line : line.copyWith(quantity: q));
+    }
+    return (out, changed);
   }
 
   void _setLines(List<CartLine> lines, {bool persist = true}) {
@@ -340,7 +436,9 @@ class CartNotifier extends StateNotifier<CartState> {
         );
       }
 
-      _setLines(merged);
+      final (clamped, over) = withinLimits(merged);
+      _setLines(clamped);
+      over.forEach(_markChanged);
     } catch (error) {
       // Offline etc.: keep showing the local cart; only surface an error
       // when there's nothing local to show.
@@ -367,9 +465,9 @@ class CartNotifier extends StateNotifier<CartState> {
 
   // ---- Bill extras -------------------------------------------------------
 
-  /// The server rejects tips above this (orders_tip_cap in
-  /// 20261101120000_secure_payments.sql).
-  static const maxTipPaise = 50000;
+  /// ₹100. The server rejects tips above this (MAX_TIP_PAISE in
+  /// functions/src/orders/quote.ts).
+  static const maxTipPaise = 10000;
 
   /// New delivery rule (config/delivery): re-price the bill.
   void setDeliveryConfig(DeliveryConfig delivery) {
@@ -476,7 +574,7 @@ final cartProvider = StateNotifierProvider<CartNotifier, CartState>((ref) {
     ref.read(catalogRepositoryProvider),
     ref.read(couponRepositoryProvider),
     marketplace: ref.read(marketplaceRepositoryProvider),
-  );
+  )..onLimit = showCartLimit;
   ref.listen(deliveryConfigProvider, (_, next) {
     final config = next.value;
     if (config != null) notifier.setDeliveryConfig(config);

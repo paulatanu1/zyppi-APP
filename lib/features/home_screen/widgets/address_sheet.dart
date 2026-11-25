@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
@@ -21,8 +23,19 @@ void bottomSheet(BuildContext context, WidgetRef ref) {
       borderRadius: BorderRadius.vertical(top: Radius.circular(ZRadius.sheet)),
     ),
     builder: (context) {
+      // Edge-to-edge: stay above the navigation bar, and above the
+      // keyboard while searching.
       return Padding(
-        padding: const EdgeInsets.all(ZSpace.x4),
+        padding: EdgeInsets.fromLTRB(
+          ZSpace.x4,
+          ZSpace.x4,
+          ZSpace.x4,
+          ZSpace.x4 +
+              max(
+                MediaQuery.viewInsetsOf(context).bottom,
+                MediaQuery.viewPaddingOf(context).bottom,
+              ),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -328,12 +330,18 @@ class _CouponCard extends StatelessWidget {
       onTap: () => showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
+        // Edge-to-edge: keep the field above Android's navigation bar, and
+        // above the keyboard while typing.
         builder: (context) => Padding(
           padding: EdgeInsets.fromLTRB(
             ZSpace.screen,
             0,
             ZSpace.screen,
-            ZSpace.x6 + MediaQuery.viewInsetsOf(context).bottom,
+            ZSpace.x6 +
+                max(
+                  MediaQuery.viewInsetsOf(context).bottom,
+                  MediaQuery.viewPaddingOf(context).bottom,
+                ),
           ),
           child: Consumer(
             builder: (context, ref, _) => Column(
@@ -400,11 +408,11 @@ class _TipCard extends ConsumerWidget {
       onTap: () => showModalBottomSheet<void>(
         context: context,
         builder: (context) => Padding(
-          padding: const EdgeInsets.fromLTRB(
+          padding: EdgeInsets.fromLTRB(
             ZSpace.screen,
             0,
             ZSpace.screen,
-            ZSpace.x6,
+            ZSpace.x6 + MediaQuery.viewPaddingOf(context).bottom,
           ),
           child: Consumer(
             builder: (context, ref, _) => Column(

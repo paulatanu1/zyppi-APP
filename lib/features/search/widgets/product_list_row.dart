@@ -119,6 +119,7 @@ class ProductListRow extends ConsumerWidget {
             else
               ZAddStepper(
                 quantity: quantity,
+                canAdd: quantity < CartNotifier.maxPerItem,
                 onAdd: () => step(1),
                 onRemove: () => step(-1),
               ),

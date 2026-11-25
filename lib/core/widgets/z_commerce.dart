@@ -143,11 +143,16 @@ class ZAddStepper extends StatelessWidget {
     required this.onRemove,
     this.height = ZSize.addButton,
     this.minWidth = 84,
+    this.canAdd = true,
   });
 
   final int quantity;
   final VoidCallback onAdd, onRemove;
   final double height, minWidth;
+
+  /// False at a cart limit: "+" is dimmed. Tapping it still calls [onAdd],
+  /// which says why nothing was added.
+  final bool canAdd;
 
   // A light tick on every change: a firmer one for the first add.
   void _add() {
@@ -229,9 +234,10 @@ class ZAddStepper extends StatelessWidget {
                   ),
                   _StepBtn(
                     icon: Icons.add_rounded,
-                    onTap: _add,
+                    onTap: canAdd ? _add : onAdd,
                     semantic: 'addOne'.tr(),
                     size: height,
+                    dimmed: !canAdd,
                   ),
                 ],
               ),
@@ -246,11 +252,13 @@ class _StepBtn extends StatelessWidget {
     required this.onTap,
     required this.semantic,
     required this.size,
+    this.dimmed = false,
   });
   final IconData icon;
   final VoidCallback onTap;
   final String semantic;
   final double size;
+  final bool dimmed;
 
   @override
   Widget build(BuildContext context) => Semantics(
@@ -262,7 +270,11 @@ class _StepBtn extends StatelessWidget {
       child: SizedBox(
         width: size - 4,
         height: size,
-        child: Icon(icon, size: 18, color: context.z.onBrand),
+        child: Icon(
+          icon,
+          size: 18,
+          color: context.z.onBrand.withValues(alpha: dimmed ? .4 : 1),
+        ),
       ),
     ),
   );
