@@ -570,5 +570,12 @@
   "errorCartOutOfStock": "Remove the out-of-stock items to check out.",
   "cartMaxPerItem": "You can add up to {} of this item",
   "cartMaxPerOrder": "Order limit reached: up to {} items per order",
-  "errorMaxPerItem": "You can order up to {} of {}. Please reduce it in your cart."
+  "errorMaxPerItem": "You can order up to {} of {}. Please reduce it in your cart.",
+  "errorPriceChanged": "Some prices changed since you opened your cart. We’ve updated your bill — please check it and place the order again.",
+  "refundInProgress": "Refund {} is on its way to your bank or UPI (usually 5–7 working days).",
+  "refundDone": "Refunded {} to your bank or UPI.",
+  "refundFailed": "Your refund {} couldn’t be sent. Please contact support.",
+  "paymentsUnderReviewTitle": "Payment received, order not confirmed",
+  "paymentUnderReviewLine": "{} paid online",
+  "paymentsUnderReviewBody": "Our team will deliver the order or refund you in full. You don’t need to pay again."
 }

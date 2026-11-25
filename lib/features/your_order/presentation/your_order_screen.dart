@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:zippy/core/common_widgets/price_tag.dart';
 import 'package:zippy/core/domain/order.dart';
 import 'package:zippy/core/domain/order_status.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
@@ -65,79 +66,145 @@ class _YourOrderScreenState extends ConsumerState<YourOrderScreen> {
       appBar: AppBar(title: Text('yourOrder'.tr())),
       body: SafeArea(
         top: false,
-        child: ordersAsync.when(
-          skipLoadingOnRefresh: true,
-          loading: () => ListView(
-            padding: const EdgeInsets.all(ZSpace.screen),
-            children: [
-              for (var i = 0; i < 3; i++)
-                const Padding(
-                  padding: EdgeInsets.only(bottom: ZSpace.x3),
-                  child: ZSkeleton(height: 150, radius: ZRadius.card),
-                ),
-            ],
-          ),
-          error: (error, stackTrace) => message(
-            'somethingWentWrong'.tr(),
-            action: TextButton(
-              onPressed: () => ref.invalidate(ordersProvider),
-              child: Text('retry'.tr()),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const PaymentsUnderReviewBanner(),
+            Expanded(child: _ordersBody(ordersAsync, message)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _ordersBody(
+    AsyncValue<List<Order>> ordersAsync,
+    Widget Function(String text, {Widget? action}) message,
+  ) {
+    return ordersAsync.when(
+      skipLoadingOnRefresh: true,
+      loading: () => ListView(
+        padding: const EdgeInsets.all(ZSpace.screen),
+        children: [
+          for (var i = 0; i < 3; i++)
+            const Padding(
+              padding: EdgeInsets.only(bottom: ZSpace.x3),
+              child: ZSkeleton(height: 150, radius: ZRadius.card),
             ),
-          ),
-          data: (orders) {
-            if (orders.isEmpty) return message('noOrdersYet'.tr());
-            final shown = orders.where(_filter.matches).toList();
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: ZSpace.x3),
-                SizedBox(
-                  height: ZSize.touch,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: ZSpace.screen,
+        ],
+      ),
+      error: (error, stackTrace) => message(
+        'somethingWentWrong'.tr(),
+        action: TextButton(
+          onPressed: () => ref.invalidate(ordersProvider),
+          child: Text('retry'.tr()),
+        ),
+      ),
+      data: (orders) {
+        if (orders.isEmpty) return message('noOrdersYet'.tr());
+        final shown = orders.where(_filter.matches).toList();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: ZSpace.x3),
+            SizedBox(
+              height: ZSize.touch,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: ZSpace.screen),
+                children: [
+                  for (final f in _OrdersFilter.values) ...[
+                    if (f != _OrdersFilter.all)
+                      const SizedBox(width: ZSpace.x2),
+                    ZChip(
+                      label: f.label,
+                      selected: f == _filter,
+                      onTap: () => setState(() => _filter = f),
                     ),
-                    children: [
-                      for (final f in _OrdersFilter.values) ...[
-                        if (f != _OrdersFilter.all)
-                          const SizedBox(width: ZSpace.x2),
-                        ZChip(
-                          label: f.label,
-                          selected: f == _filter,
-                          onTap: () => setState(() => _filter = f),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: RefreshIndicator(
-                    onRefresh: () => ref.refresh(ordersProvider.future),
-                    child: shown.isEmpty
-                        ? ListView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            children: [
-                              SizedBox(
-                                height: 240,
-                                child: message('noOrdersInFilter'.tr()),
-                              ),
-                            ],
-                          )
-                        : ListView.separated(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.all(ZSpace.screen),
-                            itemCount: shown.length,
-                            separatorBuilder: (_, _) =>
-                                const SizedBox(height: ZSpace.x3),
-                            itemBuilder: (context, index) =>
-                                YourOrderWidget(order: shown[index]),
+                  ],
+                ],
+              ),
+            ),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () => ref.refresh(ordersProvider.future),
+                child: shown.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(
+                            height: 240,
+                            child: message('noOrdersInFilter'.tr()),
                           ),
-                  ),
-                ),
-              ],
-            );
-          },
+                        ],
+                      )
+                    : ListView.separated(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.all(ZSpace.screen),
+                        itemCount: shown.length,
+                        separatorBuilder: (_, _) =>
+                            const SizedBox(height: ZSpace.x3),
+                        itemBuilder: (context, index) =>
+                            YourOrderWidget(order: shown[index]),
+                      ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// Paid checkouts that couldn't become an order (audit S2): a lasting
+/// notice, so the customer isn't left with a vanished snackbar and money
+/// gone. Support fulfils or refunds them.
+class PaymentsUnderReviewBanner extends ConsumerWidget {
+  const PaymentsUnderReviewBanner({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final payments = ref.watch(paymentsUnderReviewProvider).value ?? const [];
+    if (payments.isEmpty) return const SizedBox.shrink();
+    final z = context.z;
+    final t = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        ZSpace.screen,
+        ZSpace.x3,
+        ZSpace.screen,
+        0,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(ZSpace.x3),
+        decoration: BoxDecoration(
+          color: z.warnSoft,
+          borderRadius: ZRadius.all(ZRadius.card),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.hourglass_top_rounded, color: z.warn),
+            const SizedBox(width: ZSpace.x3),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('paymentsUnderReviewTitle'.tr(), style: t.labelLarge),
+                  const SizedBox(height: ZSpace.x1),
+                  for (final p in payments)
+                    Text(
+                      'paymentUnderReviewLine'.tr(
+                        args: [PriceTag.format(p.amountPaise)],
+                      ),
+                      style: t.bodySmall,
+                    ),
+                  const SizedBox(height: ZSpace.x1),
+                  Text('paymentsUnderReviewBody'.tr(), style: t.bodySmall),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

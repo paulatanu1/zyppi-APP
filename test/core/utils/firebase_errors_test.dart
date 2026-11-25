@@ -45,5 +45,28 @@ void main() {
       expect(keyFor('Cart is empty'), 'errorCartEmpty');
       expect(keyFor('INTERNAL'), 'errorOrderFailed');
     });
+
+    test('a changed total is its own message and is detectable', () {
+      final changed = FirebaseFunctionsException(
+        code: 'failed-precondition',
+        message: 'PRICE_CHANGED',
+      );
+      expect(friendlyOrderError(changed), 'errorPriceChanged');
+      expect(isPriceChanged(changed), isTrue);
+      expect(
+        isPriceChanged(
+          FirebaseFunctionsException(
+            code: 'failed-precondition',
+            message: 'Cart is empty',
+          ),
+        ),
+        isFalse,
+      );
+    });
+
+    test('cart limit messages from the server', () {
+      expect(keyFor('MAX_PER_ITEM:5:Toned Milk'), 'errorMaxPerItem');
+      expect(keyFor('MAX_UNITS_PER_ORDER:50'), 'cartMaxPerOrder');
+    });
   });
 }

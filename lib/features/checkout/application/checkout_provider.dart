@@ -219,9 +219,11 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
               couponCode: cart.appliedCoupon?.code,
               useWallet: wallet.applied > 0,
               walletBalancePaise: wallet.applied > 0 ? wallet.balance : null,
+              expectedTotalPaise: cart.bill.totalPaise,
             );
         await _onOrderPlaced(orderId, cart.bill.totalPaise);
       } catch (error) {
+        _refreshIfPricesChanged(error);
         _fail(friendlyOrderError(error));
       }
       return;
@@ -251,8 +253,10 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
             tipPaise: cart.tipPaise,
             useWallet: wallet.applied > 0,
             walletBalancePaise: wallet.applied > 0 ? wallet.balance : null,
+            expectedTotalPaise: cart.bill.totalPaise,
           );
     } catch (error) {
+      _refreshIfPricesChanged(error);
       _fail(friendlyOrderError(error));
       return;
     }
@@ -389,6 +393,15 @@ class CheckoutProvider extends StateNotifier<CheckoutState> {
   void _fail(String message) {
     if (!mounted) return;
     state = state.copyWith(placingOrder: false, paymentError: message);
+  }
+
+  /// The server's total differed from the bill shown (a price changed):
+  /// re-read the cart's prices so the bill on screen is the one that will
+  /// be charged, and the customer can place the order again.
+  void _refreshIfPricesChanged(Object error) {
+    if (isPriceChanged(error)) {
+      unawaited(ref.read(cartProvider.notifier).retry());
+    }
   }
 
   /// The client-side view of the order; only the mock repository stores
