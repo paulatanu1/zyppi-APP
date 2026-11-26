@@ -27,8 +27,10 @@ export async function placePaidOrder(
   // One real payment can never back two orders.
   const referenceRef = db.collection("paymentReferences").doc(transactionId);
 
+  let mismatched = false;
   try {
     const placed = await db.runTransaction(async (tx) => {
+      mismatched = false;
       const [intentSnap, referenceSnap] = await tx.getAll(intentRef, referenceRef);
       const intent = intentSnap.data();
       if (!intent) throw new Error("Unknown payment");
@@ -52,6 +54,7 @@ export async function placePaidOrder(
           ...releaseStockHold(tx, intent),
           updatedAt: FieldValue.serverTimestamp(),
         });
+        mismatched = true;
         return null;
       }
 
@@ -85,6 +88,11 @@ export async function placePaidOrder(
       return orderId;
     });
     if (placed) logLifecycle("payment.completed", { txnid: merchantOrderId, orderId: placed, mihpayid: transactionId });
+    // Paid amount differed: same log line as below, so the "paid but no
+    // order" alert sees it too.
+    else if (mismatched) {
+      logger.warn("Paid order needs review", { merchantOrderId, reason: "Paid amount differs from quote" });
+    }
     return placed;
   } catch (error) {
     if (!(error instanceof OrderError)) throw error;
