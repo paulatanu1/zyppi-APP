@@ -8,8 +8,12 @@ import { type CallableRequest, HttpsError } from "firebase-functions/https";
  * Starts in monitor mode so nothing breaks on deploy. Turn it on in
  * functions/.env.<project> (then redeploy functions):
  *
- *   APP_CHECK_ENFORCE=true        app calls (customer, rider, seller apps)
- *                                 without a valid App Check token fail
+ *   APP_CHECK_ENFORCE=true        customer-app calls without a valid App
+ *                                 Check token fail
+ *   APP_CHECK_ENFORCE_PARTNER=true  same for the rider and seller apps
+ *                                 (their calls still arrive without
+ *                                 tokens as of 2026-11-26: check Logs
+ *                                 Explorer before turning this on)
  *   APP_CHECK_ENFORCE_WEB=true    same for web calls: staff in the admin
  *                                 panel and its rider sign-up portal
  *                                 (needs the admin's reCAPTCHA Enterprise
@@ -26,17 +30,22 @@ import { type CallableRequest, HttpsError } from "firebase-functions/https";
 export interface HardeningEnv {
   appCheckEnforce: boolean;
   appCheckEnforceWeb: boolean;
+  appCheckEnforcePartner?: boolean;
 }
 
 export function hardeningEnv(env: NodeJS.ProcessEnv = process.env): HardeningEnv {
   return {
     appCheckEnforce: env.APP_CHECK_ENFORCE === "true",
     appCheckEnforceWeb: env.APP_CHECK_ENFORCE_WEB === "true",
+    appCheckEnforcePartner: env.APP_CHECK_ENFORCE_PARTNER === "true",
   };
 }
 
-/** Who is calling: the Android apps, or the web (admin panel, rider portal). */
-export type Caller = "app" | "web";
+/**
+ * Who is calling: the customer app, the rider / seller apps ("partner"),
+ * or the web (admin panel, rider portal).
+ */
+export type Caller = "app" | "partner" | "web";
 
 export const APP_CHECK_FAILED = "APP_CHECK_FAILED";
 
@@ -53,7 +62,9 @@ export function checkAppCheck(
   caller: Caller = "app",
 ): void {
   if (request.app) return;
-  if (caller === "web" ? env.appCheckEnforceWeb : env.appCheckEnforce) {
+  const enforce =
+    caller === "web" ? env.appCheckEnforceWeb : caller === "partner" ? env.appCheckEnforcePartner === true : env.appCheckEnforce;
+  if (enforce) {
     throw new HttpsError("unauthenticated", APP_CHECK_FAILED);
   }
   // Monitor mode: shows in Logs Explorer which callers still lack tokens.

@@ -94,7 +94,7 @@ export async function passwordMatches(email: string, password: string): Promise<
 
 /** Request: {storeId, password}. Response: {token} (a custom token for signInWithCustomToken). */
 export const sellerStoreIdSignIn = onCall(async (request) => {
-  checkAppCheck(request);
+  checkAppCheck(request, undefined, "partner");
   const { code, password } = readStoreSignIn(request.data ?? {});
   const codeRef = db.collection(SELLER_STORE_CODES).doc(code);
   const attemptRef = codeRef.collection("attempts").doc(callerKey(request.rawRequest as never));

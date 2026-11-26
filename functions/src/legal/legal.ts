@@ -119,7 +119,8 @@ function audienceOf(request: CallableRequest): Audience {
 
 /** Request: {audience}. Reply: {pending: [{type, version, title, sha256, signed}]}. */
 export const legalStatus = onCall(async (request) => {
-  const uid = requireUid(request);
+  // All three apps read it: follows the partner switch until those send tokens.
+  const uid = requireUid(request, "partner");
   const audience = audienceOf(request);
   const pending = await pendingFor(audience, uid);
   return { pending: pending.map((d) => ({ ...d, signed: SIGNED_TYPES.includes(d.type) })) };
