@@ -19,6 +19,7 @@ import { updateOrderStatus } from "../admin/orders";
 import { PAYU_SECRETS } from "../payments/payu";
 import { logger } from "firebase-functions";
 import { marketplaceConfigFrom } from "./ranking";
+import { WHOLE_ORDER, dropSellers } from "../orders/partial_cancel";
 
 /**
  * A marketplace seller's side of an order (docs/MARKETPLACE.md → Seller
@@ -77,10 +78,12 @@ export const SELLER_CANCEL_ACTOR: Actor = { uid: "system:seller", role: "ops", e
 
 /**
  * Request: {orderId, reason}. Before accepting, the seller can't fulfil
- * the order: it is cancelled like an ops cancel (stock back, wallet /
- * online refund, customer told), and counts against the seller
+ * the order. Only their lines are dropped and refunded when the order has
+ * others (orders/partial_cancel.ts, audit S5); an order with nothing else
+ * in it is cancelled like an ops cancel (stock back, wallet / online
+ * refund, customer told). Either way it counts against the seller
  * (sellerIssues → stats.cancelled, ranking). Lines aren't moved to another
- * seller: the customer can order again.
+ * seller.
  */
 export const sellerRejectOrder = onCall({ secrets: PAYU_SECRETS }, async (request) => {
   const me = await requireSeller(request);
@@ -88,16 +91,28 @@ export const sellerRejectOrder = onCall({ secrets: PAYU_SECRETS }, async (reques
   const reason = request.data?.reason;
   if (!(SELLER_REJECT_REASONS as readonly unknown[]).includes(reason)) throw new HttpsError("invalid-argument", "Pick a reason");
   const label = String(reason).replace(/_/g, " ");
+  const guard = (d: Record<string, unknown>) => {
+    const status = (d.sellerStatus ?? {}) as Record<string, string>;
+    if (!(me.sellerId in status)) throw new HttpsError("permission-denied", "NOT_YOUR_ORDER");
+    if (d.status === "cancelled") throw new HttpsError("failed-precondition", "ORDER_CANCELLED");
+    if (status[me.sellerId] !== "pending") throw new HttpsError("failed-precondition", "ALREADY_ACCEPTED");
+  };
+  try {
+    const dropped = await dropSellers({ ...SELLER_CANCEL_ACTOR, uid: `seller:${me.sellerId}` }, orderId, [me.sellerId], {
+      reason: `Seller can't fulfil: ${label}`,
+      statusLabel: "rejected",
+      guard,
+      issueBy: me.uid,
+    });
+    return { ok: true, partial: true, refund: dropped.refund };
+  } catch (e) {
+    if (!(e instanceof HttpsError && e.message === WHOLE_ORDER)) throw e;
+  }
   const res = await updateOrderStatus(
     { ...SELLER_CANCEL_ACTOR, uid: `seller:${me.sellerId}` },
     { orderId, status: "cancelled", reason: `Seller can't fulfil: ${label}` },
     undefined,
-    (d) => {
-      const status = (d.sellerStatus ?? {}) as Record<string, string>;
-      if (!(me.sellerId in status)) throw new HttpsError("permission-denied", "NOT_YOUR_ORDER");
-      if (d.status === "cancelled") throw new HttpsError("failed-precondition", "ORDER_CANCELLED");
-      if (status[me.sellerId] !== "pending") throw new HttpsError("failed-precondition", "ALREADY_ACCEPTED");
-    },
+    guard,
     () => ({
       [`sellerStatus.${me.sellerId}`]: "rejected",
       [`sellerIssues.${me.sellerId}`]: { note: `Rejected: ${label}`, at: FieldValue.serverTimestamp(), by: me.uid },
@@ -105,7 +120,7 @@ export const sellerRejectOrder = onCall({ secrets: PAYU_SECRETS }, async (reques
       sellerAcceptDeadline: null,
     }),
   );
-  return { ok: true, refund: res.refund ?? null };
+  return { ok: true, partial: false, refund: res.refund ?? null };
 });
 
 /**
@@ -419,17 +434,46 @@ async function cancelLateOrders(nowMs = Date.now()): Promise<void> {
     .limit(50)
     .get();
   for (const o of late.docs) {
+    // Only the late sellers' lines go when the order has others (audit S5).
+    const lateGuard = (d: Record<string, unknown>) => {
+      const alerted = (d.opsAlerts as { sellerLate?: Timestamp } | undefined)?.sellerLate?.toMillis() ?? null;
+      if (d.status !== "placed" || d.sellersPending !== true || !lateCancelDue(alerted, cfg.autoCancelLateMinutes, Date.now())) {
+        throw new HttpsError("failed-precondition", "NOT_LATE");
+      }
+    };
+    const status = (o.get("sellerStatus") ?? {}) as Record<string, string>;
+    const pendingNow = Object.keys(status).filter((id) => status[id] === "pending");
+    if (pendingNow.length) {
+      try {
+        await dropSellers(SELLER_CANCEL_ACTOR, o.id, pendingNow, {
+          reason: "Seller didn't accept in time",
+          statusLabel: "expired",
+          issueBy: "system",
+          guard: (d) => {
+            lateGuard(d);
+            const s = (d.sellerStatus ?? {}) as Record<string, string>;
+            const p = Object.keys(s).filter((id) => s[id] === "pending");
+            // Someone accepted meanwhile: decide again next run.
+            if (p.length !== pendingNow.length || p.some((id) => !pendingNow.includes(id))) {
+              throw new HttpsError("failed-precondition", "NOT_LATE");
+            }
+          },
+        });
+        continue;
+      } catch (e) {
+        if (e instanceof HttpsError && e.message === "NOT_LATE") continue;
+        if (!(e instanceof HttpsError && e.message === WHOLE_ORDER)) {
+          logger.warn("late seller drop failed", { orderId: o.id, e });
+          continue;
+        }
+      }
+    }
     try {
       await updateOrderStatus(
         SELLER_CANCEL_ACTOR,
         { orderId: o.id, status: "cancelled", reason: "Seller didn't accept in time" },
         undefined,
-        (d) => {
-          const alerted = (d.opsAlerts as { sellerLate?: Timestamp } | undefined)?.sellerLate?.toMillis() ?? null;
-          if (d.status !== "placed" || d.sellersPending !== true || !lateCancelDue(alerted, cfg.autoCancelLateMinutes, Date.now())) {
-            throw new HttpsError("failed-precondition", "NOT_LATE");
-          }
-        },
+        lateGuard,
         (d) => {
           const status = (d.sellerStatus ?? {}) as Record<string, string>;
           const pending = Object.keys(status).filter((id) => status[id] === "pending");

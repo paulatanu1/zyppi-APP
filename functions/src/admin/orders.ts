@@ -310,10 +310,10 @@ export function queueCancelRefund(
 const label = (s: string) => s.replace(/_/g, " ");
 
 /**
- * Puts a cancelled order's stock back. Orders placed before `allocations`
+ * Puts a cancelled order's (or dropped lines') stock back. Orders placed before `allocations`
  * existed go back to the first active store of their area.
  */
-async function restock(
+export async function restock(
   tx: Transaction,
   orderId: string,
   order: Record<string, unknown>,

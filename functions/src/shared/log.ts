@@ -16,6 +16,7 @@ export type LifecycleEvent =
   | "order.status"
   | "order.seller"
   | "order.rider"
+  | "order.partial"
   | "payment.intent"
   | "payment.refused"
   | "payment.completed";
