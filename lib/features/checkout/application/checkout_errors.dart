@@ -9,11 +9,8 @@ import 'package:zippy/core/widgets/z_commerce.dart';
 /// unrecognised falls back to a generic message rather than a raw
 /// exception dump.
 String friendlyOrderError(Object error) {
-  final message = switch (error) {
-    FirebaseFunctionsException(:final message) => message ?? '',
-    PaymentException(:final message) => message,
-    _ => '',
-  };
+  final message = _messageOf(error);
+  if (message == 'PRICE_CHANGED') return 'errorPriceChanged'.tr();
 
   final outOfStock = RegExp(r'Insufficient stock for (.+)').firstMatch(message);
   if (outOfStock != null) {
@@ -82,3 +79,13 @@ String friendlyOrderError(Object error) {
   if (coupon != null) return coupon.tr();
   return 'errorOrderFailed'.tr();
 }
+
+String _messageOf(Object error) => switch (error) {
+  FirebaseFunctionsException(:final message) => message ?? '',
+  PaymentException(:final message) => message,
+  _ => '',
+};
+
+/// The server's total differed from the bill shown (functions/src/orders/
+/// place_order.ts PRICE_CHANGED): nothing was charged.
+bool isPriceChanged(Object error) => _messageOf(error) == 'PRICE_CHANGED';

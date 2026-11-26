@@ -49,6 +49,7 @@ class FirebaseOrderRepository implements OrderRepository {
     String? couponCode,
     bool useWallet = false,
     int? walletBalancePaise,
+    int? expectedTotalPaise,
   }) async {
     final result = await functions.httpsCallable('placeOrder').call({
       'addressId': order.addressId,
@@ -58,6 +59,9 @@ class FirebaseOrderRepository implements OrderRepository {
       'couponCode': couponCode,
       'useWallet': useWallet,
       'walletBalancePaise': ?walletBalancePaise,
+      // The bill the customer saw: a different server total is refused
+      // (PRICE_CHANGED) instead of charged.
+      'expectedTotalPaise': ?expectedTotalPaise,
     });
     return (result.data as Map)['orderId'] as String;
   }
@@ -80,6 +84,7 @@ class FirebaseOrderRepository implements OrderRepository {
     } on FirebaseFunctionsException catch (e) {
       if (e.code == 'failed-precondition' &&
           (e.message == 'TOO_LATE_TO_CANCEL' ||
+              e.message == 'SHOP_PACKED' ||
               e.message == 'ALREADY_CANCELLED')) {
         throw const OrderCancelTooLate();
       }
@@ -95,6 +100,29 @@ class FirebaseOrderRepository implements OrderRepository {
         .limit(limit)
         .snapshots()
         .map((snap) => snap.docs.map(orderFromDoc).toList());
+  }
+
+  @override
+  Stream<List<PaymentUnderReview>> watchPaymentsUnderReview() {
+    final uid = auth.currentUser?.uid;
+    if (uid == null) return Stream.value(const []);
+    // Rules: a customer reads only their own intents (firestore.rules).
+    return firestore
+        .collection('paymentIntents')
+        .where('userId', isEqualTo: uid)
+        .where('status', isEqualTo: 'needs_review')
+        .limit(10)
+        .snapshots()
+        .map(
+          (snap) => [
+            for (final d in snap.docs)
+              PaymentUnderReview(
+                txnid: d.id,
+                amountPaise: (d.data()['amountPaise'] as num?)?.round() ?? 0,
+                createdAt: (d.data()['createdAt'] as Timestamp?)?.toDate(),
+              ),
+          ],
+        );
   }
 
   @override
@@ -154,6 +182,19 @@ Order orderFromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
         if (e.value is num) '${e.key}': (e.value as num).round(),
     },
     replacementOf: d['replacementOf'] as String?,
+    refundStatus: d['refundStatus'] as String?,
+    refundedPaise: (d['refundedPaise'] as num?)?.round(),
+    removedItemNames: [
+      for (final r in (d['removedItems'] as List?) ?? const [])
+        if (r is Map)
+          for (final i in (r['items'] as List?) ?? const [])
+            if (i is Map && i['name'] is String) i['name'] as String,
+    ],
+    removedValuePaise: [
+      for (final r in (d['removedItems'] as List?) ?? const [])
+        if (r is Map && r['valuePaise'] is num)
+          (r['valuePaise'] as num).round(),
+    ].fold(0, (a, b) => a + b),
   );
 }
 

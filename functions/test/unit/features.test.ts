@@ -90,4 +90,13 @@ describe("roles", () => {
     expect(roleAllows("support", ["support", "ops"])).toBe(true);
     expect(roleAllows(null, ["ops"])).toBe(false);
   });
+
+  it("keeps a minimum version per app (rider, seller) and validates each", () => {
+    const base = parseFeatures({ minRiderAppVersion: "2.0.1", minSellerAppVersion: "bad" });
+    expect(base.minRiderAppVersion).toBe("2.0.1");
+    expect(base.minSellerAppVersion).toBeNull();
+    const next = applyFeaturesPatch(base, { minSellerAppVersion: "1.3.0" });
+    expect([next.minRiderAppVersion, next.minSellerAppVersion]).toEqual(["2.0.1", "1.3.0"]);
+    expect(() => applyFeaturesPatch(base, { minSellerAppVersion: "1.3" })).toThrow();
+  });
 });

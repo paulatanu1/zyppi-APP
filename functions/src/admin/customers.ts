@@ -5,6 +5,7 @@ import { HttpsError, onCall } from "firebase-functions/https";
 import { writeAudit } from "../shared/audit";
 import { requireString } from "../shared/callable";
 import { auth, db } from "../shared/firebase";
+import { hasContactPhone } from "../shared/account_checks";
 import { type Actor, requireRole } from "../shared/roles";
 
 /**
@@ -97,4 +98,30 @@ export const adminSetCustomerBlocked = onCall(async (request) =>
 /** Request: {uid, title, body}. A one-off push to one customer's phone. */
 export const adminPushCustomer = onCall(async (request) =>
   pushCustomer(requireRole(request, ["ops", "support"]), (request.data ?? {}) as Record<string, unknown>),
+);
+
+/**
+ * Support changes a customer's phone (the app sets it only once:
+ * firestore.rules users/{uid}, audit SEC-A03). Needs a reason; audited.
+ * Request: {uid, phone, reason}.
+ */
+export async function setCustomerPhone(actor: Actor, input: { uid?: unknown; phone?: unknown; reason?: unknown }) {
+  const uid = requireString(input.uid, "uid");
+  const phone = typeof input.phone === "string" ? input.phone.trim().replace(/[\s-]/g, "") : "";
+  if (!hasContactPhone(phone)) throw new HttpsError("invalid-argument", "Enter a valid phone number");
+  const reason = typeof input.reason === "string" ? input.reason.trim().slice(0, 300) : "";
+  if (reason.length < 3) throw new HttpsError("invalid-argument", "Give a reason");
+  const ref = db.collection("users").doc(uid);
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) throw new HttpsError("not-found", "Customer not found");
+    const before = (snap.get("phone") as string | undefined) ?? null;
+    tx.update(ref, { phone, updatedAt: FieldValue.serverTimestamp() });
+    writeAudit(actor, { action: "customer.phone", target: ref.path, before: { phone: before }, after: { phone, reason } }, tx);
+  });
+  return { ok: true };
+}
+
+export const adminSetCustomerPhone = onCall(async (request) =>
+  setCustomerPhone(requireRole(request, ["ops", "support"]), (request.data ?? {}) as Record<string, unknown>),
 );

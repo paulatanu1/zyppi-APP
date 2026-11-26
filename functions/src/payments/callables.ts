@@ -6,7 +6,9 @@ import { db } from "../shared/firebase";
 import { assertHasPhone } from "../shared/account_checks";
 import { requireAccount, requireString, requireUid, toHttpsError } from "../shared/callable";
 import { assertCanOrder, getFeatures } from "../shared/features";
-import { ONLINE_METHODS, quoteOrder } from "../orders/quote";
+import { ONLINE_METHODS, OrderError, quoteOrder } from "../orders/quote";
+import { PRICE_CHANGED, shownTotalOf } from "../orders/place_order";
+import { logLifecycle } from "../shared/log";
 import {
   PAYU_SECRETS,
   amountString,
@@ -59,7 +61,10 @@ function payerDetails(user: Record<string, unknown>, authPhone: string | undefin
  * wallet covers it all, use placeOrder with "Wallet" (WALLET_COVERS_ORDER).
  *
  * Request: {paymentMethod: "UPI" | "Credit or debit card", addressId,
- *           deliverySlotId, couponCode?, tipPaise?, useWallet?, walletBalancePaise?}
+ *           deliverySlotId, couponCode?, tipPaise?, useWallet?, walletBalancePaise?,
+ *           expectedTotalPaise?}
+ * A total different from `expectedTotalPaise` (the bill the app showed) is
+ * refused with PRICE_CHANGED before PayU opens.
  * Response: {txnid, key, amount, productInfo, firstName, email, phone,
  *            environment, userCredential, amountPaise, walletPaise, totalPaise}
  */
@@ -88,6 +93,7 @@ export const createPayUOrder = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (
     paymentMethod,
   };
 
+  const shownTotal = shownTotalOf(data);
   const useWallet = data.useWallet === true;
   const shownBalancePaise = Number.isInteger(data.walletBalancePaise) ? (data.walletBalancePaise as number) : null;
   const txnid = newTxnId();
@@ -105,6 +111,7 @@ export const createPayUOrder = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (
       const prior = await readPriorHolds(tx, uid);
       const quote = await quoteOrder(tx, { ...params, heldUnits: prior.held });
       const totalPaise = quote.totalPaise;
+      if (shownTotal != null && totalPaise !== shownTotal) throw new OrderError(PRICE_CHANGED);
       const snap = await tx.get(userDocRef);
       const balance = walletBalanceOf(snap.data());
       if (useWallet && shownBalancePaise != null && shownBalancePaise !== balance) {
@@ -149,9 +156,10 @@ export const createPayUOrder = onCall({ ...HOT, secrets: PAYU_SECRETS }, async (
       return { user: snap.data() ?? {}, walletPaise, totalPaise };
     });
   } catch (error) {
-    toHttpsError(error);
+    toHttpsError(error, { event: "payment.refused", uid, paymentMethod, shownTotalPaise: shownTotal ?? null });
   }
   const { user, walletPaise, totalPaise } = result;
+  logLifecycle("payment.intent", { txnid, uid, paymentMethod, totalPaise, walletPaise });
   const amountPaise = totalPaise - walletPaise;
   const payer = payerDetails(user, request.auth?.token.phone_number);
 

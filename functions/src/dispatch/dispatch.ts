@@ -1,4 +1,5 @@
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import { logLifecycle } from "../shared/log";
 import { cashToCollect } from "../wallet/model";
 import { pushToDevices, tokensOf } from "../notifications/tokens";
 import { logger } from "firebase-functions";
@@ -196,6 +197,7 @@ export async function respondOffer(uid: string, orderIdRaw: unknown, accept: unk
       },
     });
   });
+  logLifecycle("order.rider", { orderId, riderId: uid, step: accept ? "offer_accepted" : "offer_declined" });
   if (!accept) await offerOrder(orderId);
   return { ok: true };
 }
@@ -271,7 +273,34 @@ export const dispatchSweep = onSchedule({ schedule: "every 1 minutes", timeoutSe
     }
   }
   for (const r of stale.docs) {
-    if (r.get("presence.activeOrderId") || r.get("presence.activeReturnId")) continue; // keep them on their job
+    const activeOrderId = r.get("presence.activeOrderId") as string | undefined;
+    const activeReturnId = r.get("presence.activeReturnId") as string | undefined;
+    if (activeOrderId || activeReturnId) {
+      // Kept on their job, but silent for 10+ minutes mid-delivery: tell
+      // ops (audit S8). Once per silence; a ping clears it (riderPing
+      // rewrites presence).
+      const alerted = (r.get("presence.silentAlertedAt") as Timestamp | undefined)?.toMillis() ?? 0;
+      const lastPing = (r.get("presence.at") as Timestamp | undefined)?.toMillis() ?? 0;
+      if (silentAlertDue(alerted, lastPing)) {
+        logger.error("rider.silent", {
+          event: "rider.silent",
+          riderId: r.id,
+          orderId: activeOrderId ?? null,
+          returnId: activeReturnId ?? null,
+          silentMinutes: Math.round((now.toMillis() - lastPing) / 60_000),
+        });
+        await r.ref.update({ "presence.silentAlertedAt": now });
+        if (activeOrderId) {
+          await db.collection(ORDERS).doc(activeOrderId).update({ "opsAlerts.riderSilent": now }).catch(() => undefined);
+        }
+      }
+      continue;
+    }
     await r.ref.update({ "presence.online": false, "presence.offlineReason": "no_signal" });
   }
 });
+
+/** One alert per silence: none yet, or the last one predates the last ping. */
+export function silentAlertDue(alertedAtMs: number, lastPingMs: number): boolean {
+  return alertedAtMs === 0 || alertedAtMs < lastPingMs;
+}

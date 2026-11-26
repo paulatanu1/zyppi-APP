@@ -23,7 +23,14 @@ export interface Features {
   closedAreaIds: string[];
   /** Oldest app version allowed (x.y.z); older apps must update. */
   minAppVersion: string | null;
+  /** Same for the rider app (zyppi-delivery-app AppGate). */
+  minRiderAppVersion: string | null;
+  /** Same for the seller app (Zyppi-Marketplace UpdateGate). */
+  minSellerAppVersion: string | null;
 }
+
+/** The per-app minimum versions; same rules for each. */
+export const VERSION_KEYS = ["minAppVersion", "minRiderAppVersion", "minSellerAppVersion"] as const;
 
 export const DEFAULT_FEATURES: Features = {
   placesSearch: true,
@@ -33,12 +40,15 @@ export const DEFAULT_FEATURES: Features = {
   maintenance: { enabled: false, message: "" },
   closedAreaIds: [],
   minAppVersion: null,
+  minRiderAppVersion: null,
+  minSellerAppVersion: null,
 };
 
 export const MAX_MAINTENANCE_MESSAGE = 300;
 const VERSION = /^\d{1,3}\.\d{1,3}\.\d{1,3}$/;
 
 const bool = (v: unknown, fallback: boolean) => (typeof v === "boolean" ? v : fallback);
+const version = (v: unknown) => (typeof v === "string" && VERSION.test(v) ? v : null);
 
 /** Tolerant read: anything missing or malformed falls back to the default. */
 export function parseFeatures(raw: Record<string, unknown> | undefined): Features {
@@ -58,10 +68,9 @@ export function parseFeatures(raw: Record<string, unknown> | undefined): Feature
     closedAreaIds: Array.isArray(raw.closedAreaIds)
       ? raw.closedAreaIds.filter((x): x is string => typeof x === "string")
       : [],
-    minAppVersion:
-      typeof raw.minAppVersion === "string" && VERSION.test(raw.minAppVersion)
-        ? raw.minAppVersion
-        : null,
+    minAppVersion: version(raw.minAppVersion),
+    minRiderAppVersion: version(raw.minRiderAppVersion),
+    minSellerAppVersion: version(raw.minSellerAppVersion),
   };
 }
 
@@ -111,8 +120,10 @@ export function applyFeaturesPatch(current: Features, patch: unknown): Features 
         next.closedAreaIds = [...new Set(value as string[])];
         break;
       case "minAppVersion":
+      case "minRiderAppVersion":
+      case "minSellerAppVersion":
         if (value !== null && !(typeof value === "string" && VERSION.test(value))) bad(key);
-        next.minAppVersion = value as string | null;
+        next[key] = value as string | null;
         break;
       default:
         bad(key);

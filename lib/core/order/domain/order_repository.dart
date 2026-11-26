@@ -20,12 +20,15 @@ abstract class OrderRepository {
   /// [Order.paymentMethod] 'Wallet' = the wallet pays it all.
   /// [walletBalancePaise] is the balance the customer was shown: the
   /// server refuses (WALLET_BALANCE_CHANGED) if the live one differs.
+  /// [expectedTotalPaise] is the bill total shown: the server refuses
+  /// (PRICE_CHANGED) if its total differs.
   Future<String> placeOrder(
     Order order, {
     required String deliverySlotId,
     String? couponCode,
     bool useWallet = false,
     int? walletBalancePaise,
+    int? expectedTotalPaise,
   });
 
   Future<void> updateStatus(String orderId, OrderStatus status);
@@ -39,6 +42,11 @@ abstract class OrderRepository {
   /// The newest [limit] orders, re-emitted on every change. One live
   /// query: a change costs one read, not a re-read of the whole list.
   Stream<List<Order>> watchOrders({int limit});
+
+  /// The customer's online payments that were taken but couldn't become
+  /// an order (paymentIntents status `needs_review`): support fulfils or
+  /// refunds them. Shown on "Your orders" until resolved.
+  Stream<List<PaymentUnderReview>> watchPaymentsUnderReview();
 
   /// One order, re-emitted on every change (null if it doesn't exist).
   Stream<Order?> watchOrder(String id);
@@ -68,3 +76,19 @@ class OrderCancelTooLate implements Exception {
 
 /// How many orders "Your orders" shows.
 const recentOrdersLimit = 50;
+
+/// A paid online checkout that is waiting for support (see
+/// [OrderRepository.watchPaymentsUnderReview]).
+class PaymentUnderReview {
+  const PaymentUnderReview({
+    required this.txnid,
+    required this.amountPaise,
+    this.createdAt,
+  });
+
+  final String txnid;
+
+  /// What the customer paid online (the wallet part was given back).
+  final int amountPaise;
+  final DateTime? createdAt;
+}

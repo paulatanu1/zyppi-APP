@@ -16,7 +16,7 @@ export const SOS_KINDS = ["ambulance", "accident", "police"] as const;
  * can raise one; one open alert per rider is updated rather than repeated.
  */
 export const riderSos = onCall(async (request) => {
-  const uid = requireUid(request);
+  const uid = requireUid(request, "partner");
   const kind = request.data?.kind;
   if (!(SOS_KINDS as readonly string[]).includes(kind)) throw new HttpsError("invalid-argument", "Invalid kind");
   const rider = await db.collection(RIDERS).doc(uid).get();

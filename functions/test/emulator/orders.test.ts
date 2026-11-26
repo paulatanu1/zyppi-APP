@@ -72,8 +72,15 @@ describe("quoteOrder", () => {
   });
 
   it("rejects too little stock across the area's stores", async () => {
-    await resetData({ "v-milk": 6 });
+    // 5 is within the per-item limit; the two stores hold 3 + 1 = 4.
+    await resetData({ "v-milk": 5 });
+    await db.doc(`inventory/${STORE_B}_v-milk`).set({ quantity: 1 });
     await expect(quote()).rejects.toThrow("Insufficient stock for Toned Milk");
+  });
+
+  it("rejects more than 5 of an item before checking stock", async () => {
+    await resetData({ "v-milk": 6 });
+    await expect(quote()).rejects.toThrow("MAX_PER_ITEM:5:Toned Milk");
   });
 
   it("rejects an empty cart and a tip over the cap", async () => {

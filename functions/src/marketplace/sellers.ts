@@ -122,7 +122,7 @@ export async function saveSellerApplication(
 }
 
 export const sellerSaveApplication = onCall(async (request) => {
-  const uid = requireUid(request);
+  const uid = requireUid(request, "partner");
   if (request.auth?.token.firebase?.sign_in_provider === "anonymous") {
     throw new HttpsError("permission-denied", "Sign in with your email or Google to apply");
   }
@@ -281,7 +281,7 @@ export interface SellerCaller {
  * staff login stops working at once.
  */
 export async function requireSeller(request: CallableRequest, roles: readonly SellerRole[] = ["owner", "staff"]): Promise<SellerCaller> {
-  const uid = requireUid(request);
+  const uid = requireUid(request, "partner");
   const member = await db.collection(SELLER_USERS).doc(uid).get();
   if (!member.exists) throw new HttpsError("permission-denied", "NOT_A_SELLER");
   const sellerId = member.get("sellerId") as string;

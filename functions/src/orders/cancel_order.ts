@@ -19,14 +19,20 @@ const PICKED_UP = ["picked_up", "at_customer", "returning", "delivered"];
 
 /**
  * Null when the customer `uid` may still cancel `order`, else the reason
- * code: only their own order, only while it's "placed" (not packed) and no
- * rider has picked anything up.
+ * code: only their own order, only while it's "placed" (not packed), no
+ * shop has packed its part yet (audit S6: their work isn't wasted; support
+ * can still cancel) and no rider has picked anything up. A customer cancel
+ * never counts against a seller (no sellerIssues).
  */
 export function customerCancelProblem(order: Record<string, unknown>, uid: string): string | null {
   if (order.userId !== uid) return "NOT_YOUR_ORDER";
   if (order.status === "cancelled") return "ALREADY_CANCELLED";
   if (order.status !== "placed") return "TOO_LATE_TO_CANCEL";
   if (PICKED_UP.includes(order.riderStage as string)) return "TOO_LATE_TO_CANCEL";
+  const sellers = Object.values((order.sellerStatus ?? {}) as Record<string, string>);
+  if (sellers.includes("ready")) return "SHOP_PACKED";
+  const stops = Object.values((order.pickups ?? {}) as Record<string, { status?: string }>);
+  if (stops.some((s) => s?.status === "ready" || s?.status === "picked")) return "SHOP_PACKED";
   return null;
 }
 

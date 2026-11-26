@@ -50,6 +50,21 @@ abstract class Order with _$Order {
 
     /// Set on a free replacement: the order it replaces.
     String? replacementOf,
+
+    /// Online refund to the customer's bank or UPI, mirrored by the server
+    /// (functions/src/payments/refunds.ts): requesting → requested →
+    /// succeeded, or failed. Null when nothing was refunded online.
+    String? refundStatus,
+
+    /// Paise refunded online so far.
+    int? refundedPaise,
+
+    /// Items a shop couldn't supply, dropped from the order after it was
+    /// placed (functions/src/orders/partial_cancel.ts). Empty usually.
+    @Default(<String>[]) List<String> removedItemNames,
+
+    /// What came back for [removedItemNames] (refund, wallet or less cash).
+    @Default(0) int removedValuePaise,
   }) = _Order;
 
   factory Order.fromJson(Map<String, dynamic> json) => _$OrderFromJson(json);

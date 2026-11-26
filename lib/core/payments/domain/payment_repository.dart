@@ -33,6 +33,7 @@ abstract class PaymentRepository {
     int tipPaise = 0,
     bool useWallet = false,
     int? walletBalancePaise,
+    int? expectedTotalPaise,
   });
 
   /// Checks a payment and, once it has completed, lets the server create

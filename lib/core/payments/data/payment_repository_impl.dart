@@ -19,6 +19,7 @@ class MockPaymentRepository implements PaymentRepository {
     int tipPaise = 0,
     bool useWallet = false,
     int? walletBalancePaise,
+    int? expectedTotalPaise,
   }) async {
     throw UnsupportedError('No PayU gateway in the mock flavor');
   }

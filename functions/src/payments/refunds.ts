@@ -260,6 +260,57 @@ export async function resolveIntent(
   throw new HttpsError("invalid-argument", "Choose refund or dismiss");
 }
 
+/** Who the automatic needs-review refund is recorded as (audit, refunds/{id}.createdBy). */
+export const AUTO_REFUND_ACTOR: Actor = { uid: "system:auto-refund", role: "finance", email: null };
+
+/** How long finance has to fulfil a paid-but-no-order payment by hand first. */
+export const AUTO_REFUND_AFTER_MS = 30 * 60_000;
+
+/**
+ * Reasons that are never refunded automatically: the PayU id already backs
+ * an order (refunding it would refund that order), or PayU's amount differs
+ * from the quote (a person has to see what was really paid).
+ */
+export const NO_AUTO_REFUND = ["Payment reference already used", "Paid amount differs from quote"];
+
+/**
+ * True when a needs-review intent should be refunded in full without a
+ * person (audit S2): waiting longer than [AUTO_REFUND_AFTER_MS], nothing
+ * refunded or tried yet, a PayU id on record, a safe reason, and finance hasn't
+ * switched it off (`autoRefund: false`). Pure.
+ */
+export function autoRefundDue(intent: Record<string, unknown>, nowMs: number): boolean {
+  if (intent.status !== "needs_review" || intent.autoRefund === false) return false;
+  if (((intent.refundedPaise as number | undefined) ?? 0) > 0) return false;
+  // Tried once already (e.g. PayU refused it): a person takes over.
+  if (intent.refundStatus != null) return false;
+  if (typeof intent.transactionId !== "string" || !intent.transactionId) return false;
+  if (!Number.isInteger(intent.amountPaise) || (intent.amountPaise as number) <= 0) return false;
+  if (NO_AUTO_REFUND.includes(String(intent.failureReason ?? ""))) return false;
+  const at = (intent.updatedAt as Timestamp | undefined)?.toMillis?.();
+  return typeof at === "number" && nowMs - at >= AUTO_REFUND_AFTER_MS;
+}
+
+/** Refunds every due needs-review payment (a few at a time). Returns the refunded ids. */
+export async function autoRefundNeedsReview(nowMs = Date.now(), payu: PayURefunds = payURefunds): Promise<string[]> {
+  const open = await db.collection("paymentIntents").where("status", "==", "needs_review").limit(50).get();
+  const due = open.docs.filter((d) => autoRefundDue(d.data(), nowMs));
+  const done: string[] = [];
+  const failed = await forEachLimit(due, 5, async (doc) => {
+    await resolveIntent(
+      AUTO_REFUND_ACTOR,
+      { intentId: doc.id, action: "refund", note: `Automatic refund: ${String(doc.get("failureReason") ?? "no order could be made")}`.slice(0, 300) },
+      payu,
+    );
+    done.push(doc.id);
+    logger.info("payment.auto_refund", { event: "payment.auto_refund", txnid: doc.id, amountPaise: doc.get("amountPaise") });
+  });
+  for (const f of failed) {
+    logger.error("payment.auto_refund failed", { txnid: due[f.index].id, error: String(f.error) });
+  }
+  return done;
+}
+
 /** Payments → Refund. Request: {orderId, amountPaise, reason}. */
 export const adminRefundPayment = onCall({ secrets: PAYU_SECRETS }, async (request) => {
   const actor = requireRole(request, ["finance"]);
@@ -286,8 +337,9 @@ export const adminResolveIntent = onCall({ secrets: PAYU_SECRETS }, async (reque
 
 /**
  * Every 15 minutes: re-sends refunds PayU never acknowledged ("requesting",
- * e.g. a cancel whose PayU call failed) and chases ones it hasn't confirmed.
- * Cheap when there are none.
+ * e.g. a cancel whose PayU call failed), chases ones it hasn't confirmed,
+ * and refunds paid-but-no-order payments nobody handled in 30 minutes
+ * ([autoRefundNeedsReview]). Cheap when there are none.
  */
 export const reconcileRefunds = onSchedule(
   { schedule: "every 15 minutes", secrets: PAYU_SECRETS, timeoutSeconds: 120 },
@@ -307,5 +359,7 @@ export const reconcileRefunds = onSchedule(
     for (const f of failed) {
       logger.warn("Refund reconcile failed", { refundId: due[f.index].id, error: String(f.error) });
     }
+    // Paid but no order, and nobody handled it in time: give the money back.
+    await autoRefundNeedsReview();
   },
 );

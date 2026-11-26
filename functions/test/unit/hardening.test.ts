@@ -3,9 +3,9 @@ import { logger } from "firebase-functions";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { APP_CHECK_LOG_SAMPLE, appCheckLogSampler, checkAppCheck, hardeningEnv } from "../../src/shared/hardening";
 
-const monitor = { appCheckEnforce: false, appCheckEnforceWeb: false };
-const strict = { appCheckEnforce: true, appCheckEnforceWeb: true };
-const appsOnly = { appCheckEnforce: true, appCheckEnforceWeb: false };
+const monitor = { appCheckEnforce: false, appCheckEnforceWeb: false, appCheckEnforcePartner: false };
+const strict = { appCheckEnforce: true, appCheckEnforceWeb: true, appCheckEnforcePartner: false };
+const appsOnly = { appCheckEnforce: true, appCheckEnforceWeb: false, appCheckEnforcePartner: false };
 const req = (app?: object) => ({ app, rawRequest: { path: "/" } }) as Parameters<typeof checkAppCheck>[0];
 
 describe("hardeningEnv", () => {
@@ -50,5 +50,13 @@ describe("monitor-mode logging", () => {
 
   it("samples about 1%", () => {
     expect(APP_CHECK_LOG_SAMPLE).toBe(0.01);
+  });
+
+  it("enforces the customer app without locking out riders and sellers", () => {
+    const tokenless = { app: undefined, rawRequest: { path: "/" } } as never;
+    expect(() => checkAppCheck(tokenless, appsOnly, "app")).toThrow();
+    expect(() => checkAppCheck(tokenless, appsOnly, "partner")).not.toThrow();
+    expect(() => checkAppCheck(tokenless, { ...appsOnly, appCheckEnforcePartner: true }, "partner")).toThrow();
+    expect(hardeningEnv({ APP_CHECK_ENFORCE_PARTNER: "true" } as never).appCheckEnforcePartner).toBe(true);
   });
 });

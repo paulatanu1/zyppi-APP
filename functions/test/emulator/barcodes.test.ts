@@ -4,7 +4,7 @@ import { type RulesTestEnvironment, assertFails, assertSucceeds, initializeTestE
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { firestoreLookupStore } from "../../src/catalog/barcode_lookup";
-import { saveProduct } from "../../src/catalog/products";
+import { DUPLICATE_BARCODE, saveProduct } from "../../src/catalog/products";
 import { db } from "../../src/shared/firebase";
 import type { Actor } from "../../src/shared/roles";
 import { resetData } from "./fixtures";
@@ -64,9 +64,15 @@ describe("saveProduct barcode reservations", () => {
   });
 
   it("two simultaneous creations: exactly one wins", async () => {
-    const results = await Promise.allSettled([saveProduct(riya, product(G, "A")), saveProduct(riya, product(G, "B"))]);
+    // Valid names (2–120 characters): with one-letter names both saves were
+    // refused by validation, which looked like a lock problem.
+    const results = await Promise.allSettled([
+      saveProduct(riya, product(G, "Nutella A")),
+      saveProduct(riya, product(G, "Nutella B")),
+    ]);
     expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
-    expect(results.filter((r) => r.status === "rejected")).toHaveLength(1);
+    const lost = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
+    expect(lost.reason).toMatchObject({ message: DUPLICATE_BARCODE });
     const owners = await db.collection("products").where("variants", "!=", null).get();
     const withG = owners.docs.filter((d) => (d.get("variants") as { gtin?: string }[]).some((v) => v.gtin === G));
     expect(withG).toHaveLength(1);

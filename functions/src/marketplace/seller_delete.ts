@@ -30,7 +30,7 @@ const SELLER_CLAIMS = ["sellerId", "sellerRole"];
  * login (account.ts → retireLogin). Request: {confirm: "DELETE"}.
  */
 export const sellerDeleteAccount = onCall(async (request) => {
-  const uid = requireUid(request);
+  const uid = requireUid(request, "partner");
   if (request.data?.confirm !== "DELETE") throw new HttpsError("invalid-argument", "Confirmation required");
   return deleteSellerAccount(uid);
 });

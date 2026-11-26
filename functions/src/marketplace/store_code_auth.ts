@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { defineString } from "firebase-functions/params";
 import { HttpsError, onCall } from "firebase-functions/https";
@@ -15,8 +16,12 @@ import { requireSeller } from "./sellers";
  * Toolkit REST API, and returns a custom token. The owner's email never
  * reaches the app, so a Store ID can't be used to discover it.
  *
- * Wrong passwords are counted on sellerStoreCodes/{code}: after
- * [MAX_FAILS] the Store ID is locked for [LOCK_MINUTES].
+ * Wrong passwords are counted per caller (a hash of their IP) under
+ * sellerStoreCodes/{code}/attempts: after [MAX_FAILS] that caller is
+ * locked out for [LOCK_MINUTES]. Counting per Store ID alone let anyone
+ * who knew a shop's ID lock the owner out (audit SEC-A02). A shop-wide
+ * ceiling ([STORE_MAX_FAILS] an hour from all callers) still stops a
+ * distributed guess.
  */
 
 /** The Firebase Web API key (public client config), used only for password checks. */
@@ -24,6 +29,26 @@ const WEB_API_KEY = defineString("SELLER_WEB_API_KEY");
 
 export const MAX_FAILS = 5;
 export const LOCK_MINUTES = 15;
+/** Wrong passwords per hour, from all callers, before the Store ID locks. */
+export const STORE_MAX_FAILS = 30;
+const HOUR_MS = 60 * 60_000;
+
+/** Who is trying: a hash of the caller's IP (never stored in the clear). */
+export function callerKey(raw: { ip?: string; headers?: Record<string, unknown> } | undefined): string {
+  const fwd = raw?.headers?.["x-forwarded-for"];
+  const ip = (typeof fwd === "string" ? fwd.split(",")[0] : "").trim() || raw?.ip || "unknown";
+  return createHash("sha256").update(ip).digest("hex").slice(0, 32);
+}
+
+/** The shop-wide failure window after one more failure. Pure, for the tests. */
+export function nextStoreWindow(
+  prev: { windowStart?: number | null; fails?: number },
+  nowMs: number,
+): { windowStart: number; fails: number; lock: boolean } {
+  const fresh = prev.windowStart == null || nowMs - prev.windowStart > HOUR_MS;
+  const fails = (fresh ? 0 : (prev.fails ?? 0)) + 1;
+  return { windowStart: fresh ? nowMs : (prev.windowStart as number), fails, lock: fails >= STORE_MAX_FAILS };
+}
 
 /** What to do after a password check. Pure, for the tests. */
 export function nextLockState(
@@ -69,15 +94,20 @@ export async function passwordMatches(email: string, password: string): Promise<
 
 /** Request: {storeId, password}. Response: {token} (a custom token for signInWithCustomToken). */
 export const sellerStoreIdSignIn = onCall(async (request) => {
-  checkAppCheck(request);
+  checkAppCheck(request, undefined, "partner");
   const { code, password } = readStoreSignIn(request.data ?? {});
   const codeRef = db.collection(SELLER_STORE_CODES).doc(code);
-  const codeSnap = await codeRef.get();
+  const attemptRef = codeRef.collection("attempts").doc(callerKey(request.rawRequest as never));
+  const [codeSnap, attemptSnap] = await Promise.all([codeRef.get(), attemptRef.get()]);
   // Same answer for an unknown Store ID and a wrong password.
   if (!codeSnap.exists) throw new HttpsError("permission-denied", "WRONG_PASSWORD");
 
-  const lockedUntil = (codeSnap.get("lockedUntil") as Timestamp | null | undefined)?.toMillis() ?? null;
-  if (lockedUntil && lockedUntil > Date.now()) throw new HttpsError("resource-exhausted", "STORE_ID_LOCKED");
+  const now = Date.now();
+  const storeLocked = (codeSnap.get("lockedUntil") as Timestamp | null | undefined)?.toMillis() ?? null;
+  const lockedUntil = (attemptSnap.get("lockedUntil") as Timestamp | null | undefined)?.toMillis() ?? null;
+  if ((storeLocked && storeLocked > now) || (lockedUntil && lockedUntil > now)) {
+    throw new HttpsError("resource-exhausted", "STORE_ID_LOCKED");
+  }
 
   const sellerId = codeSnap.get("sellerId") as string;
   const seller = await db.collection(SELLERS).doc(sellerId).get();
@@ -89,15 +119,34 @@ export const sellerStoreIdSignIn = onCall(async (request) => {
 
   const ok = await passwordMatches(owner.email, password);
   const next = nextLockState(
-    { failCount: (codeSnap.get("failCount") as number | undefined) ?? 0, lockedUntil },
+    { failCount: (attemptSnap.get("failCount") as number | undefined) ?? 0, lockedUntil },
     ok,
     Date.now(),
   );
-  await codeRef.update({
-    failCount: next.failCount,
-    lockedUntil: next.lockedUntil ? Timestamp.fromMillis(next.lockedUntil) : null,
-    ...(ok ? { lastSignInAt: FieldValue.serverTimestamp() } : {}),
-  });
+  await attemptRef.set(
+    {
+      failCount: next.failCount,
+      lockedUntil: next.lockedUntil ? Timestamp.fromMillis(next.lockedUntil) : null,
+      updatedAt: FieldValue.serverTimestamp(),
+    },
+    { merge: true },
+  );
+  if (ok) {
+    await codeRef.update({ lastSignInAt: FieldValue.serverTimestamp() });
+  } else {
+    const win = nextStoreWindow(
+      {
+        windowStart: (codeSnap.get("failWindowStart") as Timestamp | undefined)?.toMillis() ?? null,
+        fails: (codeSnap.get("failWindowCount") as number | undefined) ?? 0,
+      },
+      Date.now(),
+    );
+    await codeRef.update({
+      failWindowStart: Timestamp.fromMillis(win.windowStart),
+      failWindowCount: win.fails,
+      ...(win.lock ? { lockedUntil: Timestamp.fromMillis(Date.now() + LOCK_MINUTES * 60_000) } : {}),
+    });
+  }
   if (!ok) throw new HttpsError("permission-denied", next.lockedUntil ? "STORE_ID_LOCKED" : "WRONG_PASSWORD");
   return { token: await auth.createCustomToken(ownerUid) };
 });

@@ -52,6 +52,7 @@ class HiveOrderRepository implements OrderRepository {
     String? couponCode,
     bool useWallet = false,
     int? walletBalancePaise,
+    int? expectedTotalPaise,
   }) async {
     final orders = await getOrders();
     orders.insert(0, order);
@@ -80,6 +81,10 @@ class HiveOrderRepository implements OrderRepository {
 
     await box.put(_ordersKey, orders.map((o) => o.toJson()).toList());
   }
+
+  @override
+  Stream<List<PaymentUnderReview>> watchPaymentsUnderReview() =>
+      Stream.value(const []);
 
   @override
   Stream<List<Order>> watchOrders({int limit = recentOrdersLimit}) async* {

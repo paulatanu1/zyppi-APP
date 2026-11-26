@@ -1,4 +1,5 @@
 import { FieldValue, type Transaction } from "firebase-admin/firestore";
+import { logLifecycle } from "../shared/log";
 import { inventoryIdFor, isZyppiStore } from "../marketplace/model";
 import { HttpsError, onCall } from "firebase-functions/https";
 import { db } from "../shared/firebase";
@@ -75,12 +76,14 @@ export async function updateOrderStatus(
   const reason = typeof input.reason === "string" ? input.reason.trim() : "";
 
   const orderRef = db.collection("orders").doc(orderId);
+  let fromStatus: string | null = null;
   const queued = await db.runTransaction(async (tx): Promise<QueuedCancelRefund | null> => {
     const order = await tx.get(orderRef);
     if (!order.exists) throw new HttpsError("not-found", `Order not found: ${orderId}`);
     const d = order.data()!;
     guard?.(d);
     const from = d.status as string;
+    fromStatus = from;
 
     const update: Record<string, unknown> = { updatedAt: FieldValue.serverTimestamp() };
     for (const field of ["riderName", "riderPhone"] as const) {
@@ -256,6 +259,7 @@ export async function updateOrderStatus(
     return refund;
   });
 
+  logLifecycle("order.status", { orderId, from: fromStatus, to: status, by: actor.uid, reason: reason || null });
   if (queued) {
     // The refund is already recorded with the cancel; if PayU is down this
     // stays "requesting" and reconcileRefunds sends it again.
@@ -306,10 +310,10 @@ export function queueCancelRefund(
 const label = (s: string) => s.replace(/_/g, " ");
 
 /**
- * Puts a cancelled order's stock back. Orders placed before `allocations`
+ * Puts a cancelled order's (or dropped lines') stock back. Orders placed before `allocations`
  * existed go back to the first active store of their area.
  */
-async function restock(
+export async function restock(
   tx: Transaction,
   orderId: string,
   order: Record<string, unknown>,

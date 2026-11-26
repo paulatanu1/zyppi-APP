@@ -154,7 +154,7 @@ export const riderBreak = onCall(async (request) => {
 
 /** Request: {token, appVersion}. Where to ring new-order offers. */
 export const riderRegisterDevice = onCall(async (request) => {
-  const uid = requireUid(request);
+  const uid = requireUid(request, "partner");
   const token = typeof request.data?.token === "string" ? request.data.token.slice(0, 4096) : "";
   const appVersion = typeof request.data?.appVersion === "string" ? request.data.appVersion.slice(0, 20) : null;
   if (!token) throw new HttpsError("invalid-argument", "Invalid token");

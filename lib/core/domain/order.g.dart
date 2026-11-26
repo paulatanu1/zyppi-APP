@@ -38,6 +38,14 @@ _Order _$OrderFromJson(Map<String, dynamic> json) => _Order(
       ) ??
       const <String, int>{},
   replacementOf: json['replacementOf'] as String?,
+  refundStatus: json['refundStatus'] as String?,
+  refundedPaise: (json['refundedPaise'] as num?)?.toInt(),
+  removedItemNames:
+      (json['removedItemNames'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const <String>[],
+  removedValuePaise: (json['removedValuePaise'] as num?)?.toInt() ?? 0,
 );
 
 Map<String, dynamic> _$OrderToJson(_Order instance) => <String, dynamic>{
@@ -64,6 +72,10 @@ Map<String, dynamic> _$OrderToJson(_Order instance) => <String, dynamic>{
   'openIssueId': instance.openIssueId,
   'claimedQty': instance.claimedQty,
   'replacementOf': instance.replacementOf,
+  'refundStatus': instance.refundStatus,
+  'refundedPaise': instance.refundedPaise,
+  'removedItemNames': instance.removedItemNames,
+  'removedValuePaise': instance.removedValuePaise,
 };
 
 const _$OrderStatusEnumMap = {

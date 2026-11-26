@@ -265,6 +265,20 @@ class _OrderDetailsBody extends ConsumerWidget {
                   style: text.bodySmall,
                 ),
               ),
+              if (order.removedItemNames.isNotEmpty) ...[
+                const SizedBox(height: ZSpace.x2),
+                RemovedItemsLine(
+                  names: order.removedItemNames,
+                  valuePaise: order.removedValuePaise,
+                ),
+              ],
+              if (order.refundStatus case final status?) ...[
+                const SizedBox(height: ZSpace.x2),
+                RefundStatusLine(
+                  status: status,
+                  amountPaise: order.refundedPaise ?? 0,
+                ),
+              ],
             ],
           ),
         ),
@@ -297,6 +311,78 @@ class _OrderDetailsBody extends ConsumerWidget {
             onPressed: () => reorder(context, ref, order),
             child: Text('reOrder'.tr()),
           ),
+      ],
+    );
+  }
+}
+
+/// An online refund's progress, as the server mirrors it on the order
+/// (functions/src/payments/refunds.ts): requesting / requested →
+/// "on its way", succeeded → "refunded", failed → "contact support".
+/// A shop couldn't supply some items: they were dropped and paid back.
+class RemovedItemsLine extends StatelessWidget {
+  const RemovedItemsLine({
+    super.key,
+    required this.names,
+    required this.valuePaise,
+  });
+
+  final List<String> names;
+  final int valuePaise;
+
+  @override
+  Widget build(BuildContext context) {
+    final z = context.z;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(Icons.remove_shopping_cart_outlined, size: 18, color: z.warn),
+        const SizedBox(width: ZSpace.x2),
+        Expanded(
+          child: Text(
+            'itemsRemoved'.tr(
+              args: [names.join(', '), PriceTag.format(valuePaise)],
+            ),
+            style: Theme.of(context).textTheme.bodySmall!
+                .copyWith(color: z.ink2),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class RefundStatusLine extends StatelessWidget {
+  const RefundStatusLine({
+    super.key,
+    required this.status,
+    required this.amountPaise,
+  });
+
+  final String status;
+  final int amountPaise;
+
+  @override
+  Widget build(BuildContext context) {
+    final z = context.z;
+    final (key, color, icon) = switch (status) {
+      'succeeded' => ('refundDone', z.ok, Icons.check_circle_outline_rounded),
+      'failed' => ('refundFailed', z.danger, Icons.error_outline_rounded),
+      _ => ('refundInProgress', z.ink2, Icons.schedule_rounded),
+    };
+    final amount = amountPaise > 0 ? PriceTag.format(amountPaise) : '';
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 18, color: color),
+        const SizedBox(width: ZSpace.x2),
+        Expanded(
+          child: Text(
+            key.tr(args: [amount]),
+            style: Theme.of(context).textTheme.bodySmall!
+                .copyWith(color: color),
+          ),
+        ),
       ],
     );
   }

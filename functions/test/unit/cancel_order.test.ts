@@ -22,6 +22,13 @@ describe("customerCancelProblem", () => {
     expect(customerCancelProblem(order({ status: "cancelled" }), "u1")).toBe("ALREADY_CANCELLED");
   });
 
+  it("refuses once a shop has packed its part (audit S6), not just accepted", () => {
+    expect(customerCancelProblem(order({ sellerStatus: { s1: "accepted" } }), "u1")).toBeNull();
+    expect(customerCancelProblem(order({ sellerStatus: { s1: "accepted", s2: "ready" } }), "u1")).toBe("SHOP_PACKED");
+    expect(customerCancelProblem(order({ pickups: { st1: { status: "ready" } } }), "u1")).toBe("SHOP_PACKED");
+    expect(customerCancelProblem(order({ pickups: { st1: { status: "pending" } } }), "u1")).toBeNull();
+  });
+
   it("records the customer, not a staff member, as the canceller", () => {
     expect(customerActor("u1")).toEqual({ uid: "customer:u1", role: "ops", email: null });
   });

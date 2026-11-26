@@ -2,6 +2,7 @@ import { CallableRequest, HttpsError } from "firebase-functions/https";
 import { OrderError } from "../orders/quote";
 import { type Caller, checkAppCheck } from "./hardening";
 import { roleOf } from "./roles";
+import { logLifecycle } from "./log";
 
 /**
  * The caller's uid; anonymous (guest) users count as signed in. `caller`
@@ -53,8 +54,23 @@ export function requireString(value: unknown, field: string): string {
   return value;
 }
 
-/** OrderError → `failed-precondition` carrying the readable reason. */
-export function toHttpsError(error: unknown): never {
+/**
+ * OrderError → `failed-precondition` carrying the readable reason. With
+ * [refused], the refusal is logged too (why checkouts fail: stock, closed
+ * stores, limits, price changes…).
+ */
+export function toHttpsError(
+  error: unknown,
+  refused?: { event: "order.refused" | "payment.refused"; uid: string; [key: string]: unknown },
+): never {
+  if (refused && (error instanceof OrderError || error instanceof HttpsError)) {
+    const { event, ...fields } = refused;
+    logLifecycle(event, {
+      ...fields,
+      reason: error.message,
+      code: error instanceof HttpsError ? error.code : "failed-precondition",
+    });
+  }
   if (error instanceof HttpsError) throw error;
   if (error instanceof OrderError) {
     throw new HttpsError("failed-precondition", error.message);

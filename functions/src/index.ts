@@ -49,6 +49,7 @@ export {
   adminGetCustomerAuth,
   adminSetCustomerBlocked,
   adminPushCustomer,
+  adminSetCustomerPhone,
 } from "./admin/customers";
 export { adminSaveProduct, onProductWritten } from "./catalog/products";
 export { sellerLookupBarcode } from "./catalog/barcode_lookup";
