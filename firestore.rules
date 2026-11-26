@@ -249,9 +249,15 @@ service cloud.firestore {
       allow create: if isOwner(uid)
         && request.resource.data.keys().hasOnly(profileFields())
         && validProfile(request.resource.data, request.resource.data.keys());
+      // The phone is set once (sign-up / "Add mobile number"); after that
+      // only support changes it (adminSetCustomerPhone): riders and shops
+      // call it, so a customer can't swap it per order (audit SEC-A03).
       allow update: if isOwner(uid)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(profileFields())
-        && validProfile(request.resource.data, request.resource.data.diff(resource.data).affectedKeys());
+        && validProfile(request.resource.data, request.resource.data.diff(resource.data).affectedKeys())
+        && (!('phone' in request.resource.data.diff(resource.data).affectedKeys())
+            || resource.data.get('phone', null) == null
+            || resource.data.get('phone', null) == '');
       // Account deletion goes through the deleteAccount function.
       allow delete: if false;
 

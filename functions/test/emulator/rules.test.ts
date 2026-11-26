@@ -95,6 +95,10 @@ describe("firestore.rules", () => {
     await assertFails(setDoc(me, { fullName: "x".repeat(101) }, { merge: true }));
     await assertFails(setDoc(me, { fcmToken: "t".repeat(4097) }, { merge: true }));
     await assertFails(setDoc(me, { phone: 9830012345 }, { merge: true }));
+    // Set once: the same number again is fine, a different one isn't (SEC-A03).
+    await assertSucceeds(setDoc(me, { phone: "+919830012345" }, { merge: true }));
+    await assertFails(setDoc(me, { phone: "+919999999999" }, { merge: true }));
+    await assertFails(setDoc(me, { phone: null }, { merge: true }));
     await assertFails(setDoc(me, { notifyOffers: "yes" }, { merge: true }));
     await assertFails(setDoc(me, { updatedAt: "now" }, { merge: true }));
     await assertFails(setDoc(doc(env.authenticatedContext("bob").firestore(), "users/bob"), { gender: "g".repeat(31) }));
