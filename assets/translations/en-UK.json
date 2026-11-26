@@ -110,6 +110,7 @@
   "legalRefund": "Refund Policy",
   "legalAgree": "I have read and agree to Zyppi's",
   "legalAgreeRequired": "Please accept the terms to continue",
+  "legalByContinuing": "By continuing, you agree to Zyppi's",
   "legalNotPublished": "This document will be available soon.",
   "legalVersion": "Version {}",
   "legalUpdatedTitle": "We've updated our terms",

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:zippy/core/common_widgets/google_sign_in_button.dart';
+import 'package:zippy/core/legal/application/legal_providers.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/features/auth/email/data/email_auth_repository_impl.dart';
 import 'package:zippy/features/auth/email/domain/email_auth_repository.dart';
@@ -101,6 +103,9 @@ void main() {
     );
   }
 
+  ProviderContainer container(WidgetTester tester) =>
+      ProviderScope.containerOf(tester.element(find.byType(LoginScreen)));
+
   Finder field(String key) => find.descendant(
     of: find.byKey(ValueKey(key)),
     matching: find.byType(EditableText),
@@ -129,33 +134,41 @@ void main() {
   testWidgets('rejects an invalid email without signing in', (tester) async {
     await pump(tester);
     await fill(tester, mail: 'riya@');
-    await tester.tap(find.byType(Checkbox));
     await tapLogIn(tester);
 
     expect(find.text('invalidEmail'), findsOneWidget); // translation key
     expect(email.signIns, isEmpty);
   });
 
-  testWidgets('needs the terms ticked before signing in', (tester) async {
+  testWidgets('signs in without a checkbox and records the consent', (
+    tester,
+  ) async {
     await pump(tester);
+    expect(find.byType(Checkbox), findsNothing);
+    expect(container(tester).read(legalAgreedAtLoginProvider), isFalse);
+
     await fill(tester);
     await tapLogIn(tester);
-
-    expect(email.signIns, isEmpty);
-    expect(find.text('legalAgreeRequired'), findsOneWidget);
-
-    await tester.tap(find.byType(Checkbox));
-    await tapLogIn(tester);
     await tester.pumpAndSettle();
+
+    expect(find.text('legalAgreeRequired'), findsNothing);
     expect(email.signIns, ['riya@gmail.com']);
     expect(session.completed, ['uid-1']);
+    expect(container(tester).read(legalAgreedAtLoginProvider), isTrue);
+  });
+
+  testWidgets('an invalid form does not record consent', (tester) async {
+    await pump(tester);
+    await fill(tester, mail: 'riya@');
+    await tapLogIn(tester);
+
+    expect(container(tester).read(legalAgreedAtLoginProvider), isFalse);
   });
 
   testWidgets('a wrong password shows a readable message', (tester) async {
     await pump(tester);
     email.failWith = const EmailAuthFailure('authWrongCredentials');
     await fill(tester);
-    await tester.tap(find.byType(Checkbox));
     await tapLogIn(tester);
     await tester.pumpAndSettle();
 
@@ -167,21 +180,31 @@ void main() {
   ) async {
     await pump(tester, result: SignInResult.needsPhone);
     await fill(tester);
-    await tester.tap(find.byType(Checkbox));
     await tapLogIn(tester);
     await tester.pumpAndSettle();
 
     expect(find.text('add-phone'), findsOneWidget);
   });
 
-  testWidgets('guest sign-in also needs the terms ticked', (tester) async {
+  testWidgets('guest goes straight through and records consent', (
+    tester,
+  ) async {
     await pump(tester);
-
     await tester.ensureVisible(find.text('continueAsGuest'));
     await tester.tap(find.text('continueAsGuest'));
     await tester.pump();
 
-    expect(find.text('legalAgreeRequired'), findsOneWidget);
+    expect(find.text('legalAgreeRequired'), findsNothing);
+    expect(container(tester).read(legalAgreedAtLoginProvider), isTrue);
+  });
+
+  testWidgets('Google sign-in records consent', (tester) async {
+    await pump(tester);
+    await tester.ensureVisible(find.byType(GoogleSignInButton));
+    await tester.tap(find.byType(GoogleSignInButton));
+    await tester.pumpAndSettle();
+
+    expect(container(tester).read(legalAgreedAtLoginProvider), isTrue);
   });
 
   testWidgets('shows a link to each customer document', (tester) async {
@@ -190,5 +213,6 @@ void main() {
     expect(find.text('legalTerms'), findsOneWidget);
     expect(find.text('legalPrivacy'), findsOneWidget);
     expect(find.text('legalRefund'), findsOneWidget);
+    expect(find.text('legalByContinuing'), findsOneWidget);
   });
 }
