@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:zippy/core/common_widgets/google_sign_in_button.dart';
 import 'package:zippy/core/legal/application/legal_providers.dart';
-import 'package:zippy/core/legal/presentation/legal_consent_row.dart';
+import 'package:zippy/core/legal/presentation/legal_consent_notice.dart';
 import 'package:zippy/core/theme/zyppi_theme.dart';
 import 'package:zippy/core/widgets/z_chrome.dart';
 import 'package:zippy/core/utils/phone.dart';
@@ -32,10 +32,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   String? _emailError, _passwordError, _formError;
   bool _busy = false;
 
-  // Terms, privacy and refund policy: unticked until the customer ticks it.
-  bool _agreed = false;
-  bool _triedWithoutAgreeing = false;
-
   @override
   void dispose() {
     _email.dispose();
@@ -43,18 +39,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  /// False (and the consent row turns red) until the box is ticked.
-  bool _mustAgree() {
-    if (_agreed) return true;
-    setState(() => _triedWithoutAgreeing = true);
-    return false;
-  }
-
-  void _setAgreed(bool value) {
-    setState(() => _agreed = value);
-    // The legal gate records the acceptance right after sign-in.
-    ref.read(legalAgreedAtLoginProvider.notifier).set(value);
-  }
+  /// Continuing past this screen accepts the terms, privacy and refund
+  /// policy (the notice under the buttons says so). The legal gate
+  /// records the acceptance right after sign-in.
+  void _consent() => ref.read(legalAgreedAtLoginProvider.notifier).set(true);
 
   void _next(SignInResult? result) {
     if (result == SignInResult.needsPhone && mounted) {
@@ -71,7 +59,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _formError = null;
     });
     if (_emailError != null || _passwordError != null) return;
-    if (!_mustAgree()) return;
+    _consent();
     FocusScope.of(context).unfocus();
 
     final session = ref.read(authSessionProvider);
@@ -91,7 +79,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _google() async {
-    if (!_mustAgree()) return;
+    _consent();
     _next(await ref.read(googleProvider.notifier).signIn());
   }
 
@@ -173,13 +161,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         style: t.bodySmall!.copyWith(color: z.danger),
                       ),
                     ],
-                    const SizedBox(height: ZSpace.x3),
-                    LegalConsentRow(
-                      value: _agreed,
-                      showError: _triedWithoutAgreeing,
-                      onChanged: _setAgreed,
-                    ),
-                    const SizedBox(height: ZSpace.x3),
+                    const SizedBox(height: ZSpace.x4),
                     BusyButton(
                       label: 'logIn'.tr(),
                       busy: _busy,
@@ -205,12 +187,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ? const CircularProgressIndicator()
                           : TextButton(
                               onPressed: () {
-                                if (!_mustAgree()) return;
+                                _consent();
                                 ref.read(guestProvider.notifier).signIn();
                               },
                               child: Text('continueAsGuest'.tr()),
                             ),
                     ),
+                    const SizedBox(height: ZSpace.x3),
+                    const LegalConsentNotice(),
                   ],
                 ),
               ),
