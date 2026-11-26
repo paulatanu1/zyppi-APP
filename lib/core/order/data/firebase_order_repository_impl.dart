@@ -84,6 +84,7 @@ class FirebaseOrderRepository implements OrderRepository {
     } on FirebaseFunctionsException catch (e) {
       if (e.code == 'failed-precondition' &&
           (e.message == 'TOO_LATE_TO_CANCEL' ||
+              e.message == 'SHOP_PACKED' ||
               e.message == 'ALREADY_CANCELLED')) {
         throw const OrderCancelTooLate();
       }
@@ -183,6 +184,17 @@ Order orderFromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     replacementOf: d['replacementOf'] as String?,
     refundStatus: d['refundStatus'] as String?,
     refundedPaise: (d['refundedPaise'] as num?)?.round(),
+    removedItemNames: [
+      for (final r in (d['removedItems'] as List?) ?? const [])
+        if (r is Map)
+          for (final i in (r['items'] as List?) ?? const [])
+            if (i is Map && i['name'] is String) i['name'] as String,
+    ],
+    removedValuePaise: [
+      for (final r in (d['removedItems'] as List?) ?? const [])
+        if (r is Map && r['valuePaise'] is num)
+          (r['valuePaise'] as num).round(),
+    ].fold(0, (a, b) => a + b),
   );
 }
 

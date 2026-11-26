@@ -58,6 +58,13 @@ abstract class Order with _$Order {
 
     /// Paise refunded online so far.
     int? refundedPaise,
+
+    /// Items a shop couldn't supply, dropped from the order after it was
+    /// placed (functions/src/orders/partial_cancel.ts). Empty usually.
+    @Default(<String>[]) List<String> removedItemNames,
+
+    /// What came back for [removedItemNames] (refund, wallet or less cash).
+    @Default(0) int removedValuePaise,
   }) = _Order;
 
   factory Order.fromJson(Map<String, dynamic> json) => _$OrderFromJson(json);

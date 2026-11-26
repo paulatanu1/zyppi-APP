@@ -57,6 +57,19 @@ void main() {
     expect(find.text('Payment received, order not confirmed'), findsNothing);
   });
 
+  testWidgets('items a shop could not supply are listed with the money back', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      const Scaffold(
+        body: RemovedItemsLine(names: ['Bread', 'Eggs'], valuePaise: 9000),
+      ),
+    );
+    expect(find.textContaining("couldn't supply Bread, Eggs"), findsOneWidget);
+    expect(find.textContaining('90'), findsOneWidget);
+  });
+
   testWidgets('refund progress reads as on its way, refunded or failed', (
     tester,
   ) async {
