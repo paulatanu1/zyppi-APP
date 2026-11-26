@@ -63,24 +63,19 @@ describe("saveProduct barcode reservations", () => {
     });
   });
 
-  it("two simultaneous creations: never two owners; a retry settles it", async () => {
-    // The guarantee is uniqueness. Which caller wins is up to Firestore's
-    // lock handling: production lets the older transaction win, while the
-    // emulator can abort both contenders (seen in CI since 2026-11-24).
-    const results = await Promise.allSettled([saveProduct(riya, product(G, "A")), saveProduct(riya, product(G, "B"))]);
-    const won = results.filter((r) => r.status === "fulfilled").length;
-    expect(won).toBeLessThanOrEqual(1);
-    const holders = async () =>
-      (await db.collection("products").where("variants", "!=", null).get()).docs.filter((d) =>
-        (d.get("variants") as { gtin?: string }[]).some((v) => v.gtin === G),
-      );
-    expect(await holders()).toHaveLength(won);
-    if (won === 0) {
-      // Both aborted: saving again works, and a second copy is refused.
-      await expect(saveProduct(riya, product(G, "A"))).resolves.toMatchObject({ created: true });
-      await expect(saveProduct(riya, product(G, "B"))).rejects.toMatchObject({ message: DUPLICATE_BARCODE });
-    }
-    expect(await holders()).toHaveLength(1);
+  it("two simultaneous creations: exactly one wins", async () => {
+    // Valid names (2–120 characters): with one-letter names both saves were
+    // refused by validation, which looked like a lock problem.
+    const results = await Promise.allSettled([
+      saveProduct(riya, product(G, "Nutella A")),
+      saveProduct(riya, product(G, "Nutella B")),
+    ]);
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    const lost = results.find((r) => r.status === "rejected") as PromiseRejectedResult;
+    expect(lost.reason).toMatchObject({ message: DUPLICATE_BARCODE });
+    const owners = await db.collection("products").where("variants", "!=", null).get();
+    const withG = owners.docs.filter((d) => (d.get("variants") as { gtin?: string }[]).some((v) => v.gtin === G));
+    expect(withG).toHaveLength(1);
   });
 
   it("a stale reservation (barcode no longer on that product) can be taken over", async () => {
